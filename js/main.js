@@ -1,37 +1,176 @@
 /* =========================================================
-   ZET BURGERS — app logic
-   - event-driven particle background (canvas)
-   - daypart palette switching (time-of-day event)
-   - cursor glow + card 3D tilt (pointer events)
-   - growing-card modal
-   - scroll reveal, nav shrink, counters
-   - reservation form
+   ZET BURGERS — app logic (fluid edition)
+   One unified rAF loop drives every motion via lerp:
+   - inertial smooth scroll (Lenis-style) with scroll-velocity skew
+   - parallax layers, scroll-progress bar
+   - lerped cursor glow, magnetic buttons, smoothed 3D card tilt
+   - event-driven particle background (pointer · scroll · time-of-day)
+   - growing-card modal, scroll reveal, counters, reservation form
    ========================================================= */
 (() => {
   "use strict";
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const finePointer  = window.matchMedia("(pointer: fine)").matches;
   const $  = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const lerp  = (a, b, t) => a + (b - a) * t;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(v, hi));
+
+  /* ---------- shared motion state (read by the rAF loop) ---------- */
+  const M = {
+    pointerX: innerWidth / 2, pointerY: innerHeight / 2,   // raw target
+    glowX: innerWidth / 2,    glowY: innerHeight / 2,      // smoothed
+    scrollVel: 0,                                          // px/frame from smooth scroll
+    skew: 0,                                               // eased skew applied to <main>
+    tiltCard: null,                                        // currently hovered card + targets
+  };
 
   /* ---------- loader ---------- */
   window.addEventListener("load", () => {
     const loader = $("#loader");
     setTimeout(() => loader && loader.classList.add("done"), reduceMotion ? 0 : 1100);
   });
-
-  /* ---------- year ---------- */
   $("#year").textContent = new Date().getFullYear();
 
   /* =========================================================
-     DAYPART — switch palette + background mood by time of day.
-     This is the core "background reacts to events" feature.
+     INERTIAL SMOOTH SCROLL  (desktop + fine pointer only)
+     ========================================================= */
+  const Scroll = (() => {
+    const enabled = !reduceMotion && finePointer;
+    let target = window.scrollY, current = window.scrollY, running = false;
+    const EASE = 0.09;
+    const maxScroll = () => document.documentElement.scrollHeight - innerHeight;
+
+    function start() { if (!running) { running = true; requestAnimationFrame(loop); } }
+    function loop() {
+      const prev = current;
+      current = lerp(current, target, EASE);
+      M.scrollVel = current - prev;
+      if (Math.abs(target - current) < 0.35) {
+        current = target; M.scrollVel = 0; running = false;
+        window.scrollTo(0, Math.round(current));
+        return;
+      }
+      window.scrollTo(0, current);
+      requestAnimationFrame(loop);
+    }
+    function onWheel(e) {
+      if (e.ctrlKey) return;            // let pinch-zoom through
+      e.preventDefault();
+      target = clamp(target + e.deltaY, 0, maxScroll());
+      start();
+    }
+    function scrollToY(y, snap) {
+      target = clamp(y, 0, maxScroll());
+      if (snap || !enabled) { current = target; window.scrollTo(0, target); }
+      else start();
+    }
+    if (enabled) {
+      window.addEventListener("wheel", onWheel, { passive: false });
+      // keep in sync when scrolled by keyboard / scrollbar / programmatic native scroll
+      window.addEventListener("scroll", () => {
+        if (!running) { current = target = window.scrollY; }
+      }, { passive: true });
+      window.addEventListener("resize", () => { target = clamp(target, 0, maxScroll()); });
+    }
+    return { scrollToY, get enabled() { return enabled; } };
+  })();
+
+  // smooth anchor navigation through the inertial scroller
+  $$('a[href^="#"]').forEach(a => {
+    a.addEventListener("click", e => {
+      const id = a.getAttribute("href");
+      if (id.length < 2) return;
+      const el = $(id);
+      if (!el) return;
+      e.preventDefault();
+      const y = el.getBoundingClientRect().top + window.scrollY - 80;
+      Scroll.scrollToY(y);
+    });
+  });
+
+  /* =========================================================
+     POINTER + MAGNETIC BUTTONS (targets only; lerp in the loop)
+     ========================================================= */
+  window.addEventListener("pointermove", e => {
+    M.pointerX = e.clientX; M.pointerY = e.clientY;
+    document.body.classList.add("has-pointer");
+  }, { passive: true });
+
+  const magnets = $$(".btn, .nav__brand");
+  magnets.forEach(el => {
+    el._mag = { x: 0, y: 0, tx: 0, ty: 0 };
+    if (!finePointer || reduceMotion) return;
+    el.addEventListener("pointermove", e => {
+      const r = el.getBoundingClientRect();
+      el._mag.tx = (e.clientX - (r.left + r.width / 2)) * 0.28;
+      el._mag.ty = (e.clientY - (r.top + r.height / 2)) * 0.4;
+    });
+    el.addEventListener("pointerleave", () => { el._mag.tx = 0; el._mag.ty = 0; });
+  });
+
+  /* ---------- parallax targets ---------- */
+  const parallax = $$("[data-parallax]").map(el => ({ el, speed: parseFloat(el.dataset.parallax) || 0.1 }));
+
+  /* ---------- scroll progress ---------- */
+  const progress = $("#scroll-progress");
+
+  /* =========================================================
+     THE UNIFIED rAF LOOP — everything pointer/scroll-driven
+     ========================================================= */
+  const mainEl = $("main");
+  const glow = $("#cursor-glow");
+  function tick() {
+    // cursor glow follows pointer with inertia
+    M.glowX = lerp(M.glowX, M.pointerX, 0.16);
+    M.glowY = lerp(M.glowY, M.pointerY, 0.16);
+    glow.style.transform = `translate(${M.glowX}px, ${M.glowY}px)`;
+
+    // scroll-velocity skew on the whole content (the "fluid" signature)
+    if (!reduceMotion) {
+      const targetSkew = clamp(M.scrollVel * 0.035, -2.4, 2.4);
+      M.skew = lerp(M.skew, targetSkew, 0.12);
+      mainEl.style.transform = Math.abs(M.skew) > 0.01 ? `skewY(${M.skew.toFixed(3)}deg)` : "";
+
+      // parallax layers
+      for (const p of parallax) {
+        p.el.style.transform = `translate3d(0, ${(-window.scrollY * p.speed).toFixed(1)}px, 0)`;
+      }
+    }
+
+    // magnetic buttons
+    for (const el of magnets) {
+      const m = el._mag;
+      m.x = lerp(m.x, m.tx, 0.18); m.y = lerp(m.y, m.ty, 0.18);
+      el.style.transform = (Math.abs(m.x) + Math.abs(m.y) > 0.1)
+        ? `translate(${m.x.toFixed(2)}px, ${m.y.toFixed(2)}px)` : "";
+    }
+
+    // smoothed 3D tilt for the hovered card
+    const c = M.tiltCard;
+    if (c) {
+      c.rx = lerp(c.rx, c.trx, 0.14); c.ry = lerp(c.ry, c.try, 0.14);
+      c.el.style.transform =
+        `translateY(-8px) perspective(820px) rotateX(${c.rx.toFixed(2)}deg) rotateY(${c.ry.toFixed(2)}deg)`;
+      if (c.releasing && Math.abs(c.rx) < 0.05 && Math.abs(c.ry) < 0.05) {
+        c.el.style.transform = ""; M.tiltCard = null;
+      }
+    }
+
+    // scroll progress bar
+    const max = document.documentElement.scrollHeight - innerHeight;
+    progress.style.transform = `scaleX(${max > 0 ? clamp(window.scrollY / max, 0, 1) : 0})`;
+
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* =========================================================
+     DAYPART — palette/mood by time of day (background event)
      ========================================================= */
   const DAYPARTS = [
-    { key: "night",   from: 0,  label: "Noapte" },
-    { key: "morning", from: 6,  label: "Dimineață" },
-    { key: "day",     from: 11, label: "Zi" },
-    { key: "sunset",  from: 18, label: "Apus" },
-    { key: "night",   from: 22, label: "Noapte" },
+    { key: "night",   from: 0 },  { key: "morning", from: 6 },
+    { key: "day",     from: 11 }, { key: "sunset",  from: 18 }, { key: "night", from: 22 },
   ];
   let manualDaypart = null;
   function currentDaypart() {
@@ -41,12 +180,7 @@
     for (const d of DAYPARTS) if (h >= d.from) pick = d;
     return pick.key;
   }
-  function applyDaypart(key) {
-    document.body.dataset.daypart = key;
-    bg.recolor();
-  }
-
-  // manual cycle via the 🌗 toggle
+  function applyDaypart(key) { document.body.dataset.daypart = key; bg.recolor(); }
   const cycle = ["morning", "day", "sunset", "night"];
   $("#theme-toggle").addEventListener("click", () => {
     const now = manualDaypart || currentDaypart();
@@ -54,32 +188,25 @@
     applyDaypart(manualDaypart);
   });
 
-  /* =========================================================
-     OPEN / CLOSED status (another time-based event)
-     ========================================================= */
+  /* ---------- open / closed status ---------- */
   function refreshOpenStatus() {
     const d = new Date(), day = d.getDay(), h = d.getHours();
-    // 0=Sun … 6=Sat
     let open, close;
-    if (day === 0)            { open = 13; close = 22; }
-    else if (day === 5 || day === 6) { open = 12; close = 25; } // till 01:00
-    else                      { open = 12; close = 23; }
+    if (day === 0) { open = 13; close = 22; }
+    else if (day === 5 || day === 6) { open = 12; close = 25; }
+    else { open = 12; close = 23; }
     const isOpen = h >= open && h < close;
-    const el = $("#open-status"), label = $("#open-label");
-    el.classList.toggle("open", isOpen);
-    label.textContent = isOpen ? "Deschis acum" : "Închis";
+    $("#open-status").classList.toggle("open", isOpen);
+    $("#open-label").textContent = isOpen ? "Deschis acum" : "Închis";
   }
 
   /* =========================================================
-     CANVAS BACKGROUND — floating embers/particles.
-     Reacts to: scroll velocity, pointer position, daypart color.
+     CANVAS BACKGROUND — embers reacting to pointer + scroll vel
      ========================================================= */
   const bg = (() => {
     const canvas = $("#bg-canvas");
     const ctx = canvas.getContext("2d");
-    let w, h, dpr, particles = [], color = "#ff5e3a", color2 = "#ffd23f";
-    const pointer = { x: -9999, y: -9999, active: false };
-    let scrollBoost = 0;
+    let w, h, dpr, particles = [], color = "#ff5e3a", color2 = "#ffd23f", raf;
 
     function readColors() {
       const cs = getComputedStyle(document.body);
@@ -100,41 +227,33 @@
     }
     function spawn(initial) {
       return {
-        x: Math.random() * w,
-        y: initial ? Math.random() * h : h + 20 * dpr,
+        x: Math.random() * w, y: initial ? Math.random() * h : h + 20 * dpr,
         r: (Math.random() * 2.4 + 0.6) * dpr,
         vy: (Math.random() * 0.5 + 0.15) * dpr,
         vx: (Math.random() - 0.5) * 0.3 * dpr,
-        a: Math.random() * 0.5 + 0.15,
-        tw: Math.random() * Math.PI * 2,
+        a: Math.random() * 0.5 + 0.15, tw: Math.random() * Math.PI * 2,
       };
     }
     function step() {
       ctx.clearRect(0, 0, w, h);
-      scrollBoost *= 0.92;
+      const boost = Math.min(Math.abs(M.scrollVel) * 0.05, 6);
       for (let p of particles) {
         p.tw += 0.03;
-        p.y -= p.vy * (1 + scrollBoost);
+        p.y -= p.vy * (1 + boost);
         p.x += p.vx + Math.sin(p.tw) * 0.2 * dpr;
-
-        // pointer repulsion — particles drift away from cursor
-        if (pointer.active) {
-          const dx = p.x - pointer.x * dpr, dy = p.y - pointer.y * dpr;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 120 * dpr && dist > 0.1) {
-            const force = (120 * dpr - dist) / (120 * dpr);
-            p.x += (dx / dist) * force * 2.4 * dpr;
-            p.y += (dy / dist) * force * 2.4 * dpr;
-          }
+        const px = M.pointerX * dpr, py = M.pointerY * dpr;
+        const dx = p.x - px, dy = p.y - py, dist = Math.hypot(dx, dy);
+        if (document.body.classList.contains("has-pointer") && dist < 120 * dpr && dist > 0.1) {
+          const force = (120 * dpr - dist) / (120 * dpr);
+          p.x += (dx / dist) * force * 2.4 * dpr;
+          p.y += (dy / dist) * force * 2.4 * dpr;
         }
         if (p.y < -20 * dpr) Object.assign(p, spawn(false));
-
         const flick = 0.6 + Math.sin(p.tw) * 0.4;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = hexA(p.tw % 1 > 0.5 ? color : color2, p.a * flick);
-        ctx.shadowBlur = 12 * dpr;
-        ctx.shadowColor = color;
+        ctx.shadowBlur = 12 * dpr; ctx.shadowColor = color;
         ctx.fill();
       }
       ctx.shadowBlur = 0;
@@ -146,38 +265,15 @@
       const n = parseInt(hex, 16);
       return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a.toFixed(3)})`;
     }
-
-    let raf;
-    // pointer + scroll events feed the background
-    window.addEventListener("pointermove", e => {
-      pointer.x = e.clientX; pointer.y = e.clientY; pointer.active = true;
-    });
-    window.addEventListener("pointerleave", () => pointer.active = false);
-    let lastScroll = scrollY;
-    window.addEventListener("scroll", () => {
-      scrollBoost = Math.min(scrollBoost + Math.abs(scrollY - lastScroll) * 0.012, 6);
-      lastScroll = scrollY;
-    }, { passive: true });
     window.addEventListener("resize", resize);
-
     return {
-      init() {
-        if (reduceMotion) { readColors(); resize(); ctx.clearRect(0,0,w,h); return; }
-        readColors(); resize(); raf = requestAnimationFrame(step);
-      },
+      init() { readColors(); resize(); if (!reduceMotion) raf = requestAnimationFrame(step); },
       recolor: readColors,
     };
   })();
 
-  /* ---------- cursor glow (pointer event) ---------- */
-  const glow = $("#cursor-glow");
-  window.addEventListener("pointermove", e => {
-    document.body.classList.add("has-pointer");
-    glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
-  }, { passive: true });
-
   /* =========================================================
-     MENU CARDS — render + 3D tilt + growing modal
+     MENU CARDS — render + smoothed tilt + growing modal
      ========================================================= */
   const cards = $("#cards");
   (window.ZET_MENU || []).forEach((item, i) => {
@@ -185,7 +281,7 @@
     el.className = "card reveal";
     el.setAttribute("role", "listitem");
     el.tabIndex = 0;
-    el.style.transitionDelay = `${(i % 4) * 60}ms`;
+    el.style.transitionDelay = `${(i % 4) * 70}ms`;
     el.innerHTML = `
       <div class="card__emoji">${item.emoji}</div>
       <div class="card__body">
@@ -198,30 +294,34 @@
         </div>
       </div>`;
 
-    // pointer-tracked sheen + subtle 3D tilt
     el.addEventListener("pointermove", e => {
       const r = el.getBoundingClientRect();
-      const px = (e.clientX - r.left) / r.width;
-      const py = (e.clientY - r.top) / r.height;
+      const px = (e.clientX - r.left) / r.width, py = (e.clientY - r.top) / r.height;
       el.style.setProperty("--mx", px * 100 + "%");
       el.style.setProperty("--my", py * 100 + "%");
-      if (!reduceMotion) {
-        const rx = (py - 0.5) * -8, ry = (px - 0.5) * 8;
-        el.style.transform = `translateY(-8px) perspective(800px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+      if (reduceMotion) return;
+      if (!M.tiltCard || M.tiltCard.el !== el) {
+        M.tiltCard = { el, rx: 0, ry: 0, trx: 0, try: 0, releasing: false };
+      }
+      M.tiltCard.trx = (py - 0.5) * -9;
+      M.tiltCard.try = (px - 0.5) * 9;
+      M.tiltCard.releasing = false;
+    });
+    el.addEventListener("pointerleave", () => {
+      if (M.tiltCard && M.tiltCard.el === el) {
+        M.tiltCard.trx = 0; M.tiltCard.try = 0; M.tiltCard.releasing = true;
       }
     });
-    el.addEventListener("pointerleave", () => { el.style.transform = ""; });
     el.addEventListener("click", () => openModal(item, el));
-    el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(item, el); } });
-
+    el.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openModal(item, el); }
+    });
     cards.appendChild(el);
   });
 
   /* ---------- growing-card modal ---------- */
-  const modal = $("#card-modal");
-  const panel = $("#modal-panel");
+  const modal = $("#card-modal"), panel = $("#modal-panel");
   let lastFocus = null;
-
   function openModal(item, originEl) {
     lastFocus = originEl;
     panel.innerHTML = `
@@ -237,20 +337,14 @@
           <a href="#reserve" class="btn btn--solid" data-close>Comandă acum</a>
         </div>
       </div>`;
-
-    // origin-aware grow: scale the modal out from the clicked card
     if (!reduceMotion && originEl) {
       const r = originEl.getBoundingClientRect();
       const ox = r.left + r.width / 2 - innerWidth / 2;
       const oy = r.top + r.height / 2 - innerHeight / 2;
-      panel.style.transformOrigin = "center";
-      panel.style.setProperty("--ox", ox + "px");
       panel.animate(
-        [
-          { transform: `translate(${ox}px, ${oy}px) scale(.25)`, opacity: 0 },
-          { transform: "translate(0,0) scale(1)", opacity: 1 },
-        ],
-        { duration: 460, easing: "cubic-bezier(.34,1.56,.64,1)" }
+        [{ transform: `translate(${ox}px, ${oy}px) scale(.2)`, opacity: 0 },
+         { transform: "translate(0,0) scale(1)", opacity: 1 }],
+        { duration: 520, easing: "cubic-bezier(.22,1,.36,1)" }
       );
     }
     modal.classList.add("open");
@@ -265,33 +359,34 @@
     if (lastFocus) lastFocus.focus();
   }
   modal.addEventListener("click", e => { if (e.target.closest("[data-close]")) closeModal(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && modal.classList.contains("open")) closeModal(); });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && modal.classList.contains("open")) closeModal();
+  });
 
   /* =========================================================
-     SCROLL REVEAL
+     SCROLL REVEAL (staggered)
      ========================================================= */
   const io = new IntersectionObserver((entries) => {
     entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
-  }, { threshold: 0.12 });
+  }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
   $$(".reveal").forEach(el => io.observe(el));
 
-  /* ---------- nav shrink on scroll ---------- */
+  /* ---------- nav shrink ---------- */
   const nav = $("#nav");
-  addEventListener("scroll", () => nav.classList.toggle("shrink", scrollY > 40), { passive: true });
+  addEventListener("scroll", () => nav.classList.toggle("shrink", window.scrollY > 40), { passive: true });
 
   /* =========================================================
-     ANIMATED COUNTERS (fire when hero visible)
+     ANIMATED COUNTERS
      ========================================================= */
   function animateCount(el, target, opts = {}) {
-    const { decimals = 0, suffix = "", dur = 1600 } = opts;
+    const { decimals = 0, suffix = "", dur = 1800 } = opts;
     const start = performance.now();
-    function tick(now) {
+    (function tickC(now) {
       const t = Math.min((now - start) / dur, 1);
       const eased = 1 - Math.pow(1 - t, 3);
       el.textContent = (target * eased).toFixed(decimals) + suffix;
-      if (t < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
+      if (t < 1) requestAnimationFrame(tickC);
+    })(start);
   }
   let counted = false;
   const heroIO = new IntersectionObserver((entries) => {
@@ -304,53 +399,38 @@
   }, { threshold: 0.3 });
   heroIO.observe($(".hero"));
 
-  /* ---------- live "orders" ticker (simulated event feed) ---------- */
+  /* ---------- live orders ticker ---------- */
   const ordersEl = $("#live-orders");
   let orders = 12 + Math.floor(Math.random() * 8);
-  function tickOrders() {
+  (function tickOrders() {
     orders = Math.max(6, orders + (Math.random() < 0.6 ? 1 : -1));
     ordersEl.textContent = `${orders} comenzi`;
-  }
-  tickOrders();
-  setInterval(tickOrders, 3200);
+    setTimeout(tickOrders, 3200);
+  })();
 
   /* =========================================================
      RESERVATION FORM
      ========================================================= */
-  const form = $("#reserve-form");
-  const msg = $("#reserve-msg");
-  const dateInput = $("#r-date");
+  const form = $("#reserve-form"), msg = $("#reserve-msg"), dateInput = $("#r-date");
   dateInput.min = new Date().toISOString().split("T")[0];
-
   form.addEventListener("submit", e => {
     e.preventDefault();
-    const name = $("#r-name").value.trim();
-    const phone = $("#r-phone").value.trim();
-    const date = dateInput.value;
-    const guests = $("#r-guests").value;
+    const name = $("#r-name").value.trim(), phone = $("#r-phone").value.trim();
+    const date = dateInput.value, guests = $("#r-guests").value;
     msg.classList.remove("error");
-
     if (!name || !phone || !date) {
       msg.textContent = "Completează numele, telefonul și data, te rugăm.";
-      msg.classList.add("error");
-      return;
+      msg.classList.add("error"); return;
     }
-    // persist locally so a refresh keeps the confirmation context
-    try {
-      localStorage.setItem("zet_last_reservation", JSON.stringify({ name, phone, date, guests, at: Date.now() }));
-    } catch (_) {}
+    try { localStorage.setItem("zet_last_reservation", JSON.stringify({ name, phone, date, guests, at: Date.now() })); } catch (_) {}
     const nice = new Date(date).toLocaleDateString("ro-RO", { weekday: "long", day: "numeric", month: "long" });
     msg.textContent = `Mulțumim, ${name}! Masă pentru ${guests} pe ${nice} — te sunăm pentru confirmare. 🍔`;
-    form.reset();
-    $("#r-guests").value = 2;
+    form.reset(); $("#r-guests").value = 2;
   });
 
-  /* =========================================================
-     BOOT
-     ========================================================= */
+  /* ---------- boot ---------- */
   applyDaypart(currentDaypart());
   bg.init();
   refreshOpenStatus();
-  // re-evaluate time-based events every minute
   setInterval(() => { if (!manualDaypart) applyDaypart(currentDaypart()); refreshOpenStatus(); }, 60000);
 })();

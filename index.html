@@ -21,6 +21,9 @@
   <!-- Cursor glow follows pointer (an "event-based" background reaction) -->
   <div class="cursor-glow" id="cursor-glow" aria-hidden="true"></div>
 
+  <!-- Scroll progress bar -->
+  <div class="scroll-progress" id="scroll-progress" aria-hidden="true"></div>
+
   <!-- Loading veil -->
   <div class="loader" id="loader" aria-hidden="true">
     <div class="loader__logo">🍔</div>
@@ -75,7 +78,7 @@
       </div>
 
       <!-- Floating glass tag -->
-      <div class="hero__float glass" aria-hidden="true">
+      <div class="hero__float glass" data-parallax="0.12" aria-hidden="true">
         <span class="hero__float-emoji">🔥</span>
         <div>
           <strong id="live-orders">— comenzi</strong>
@@ -112,7 +115,7 @@
           </ul>
           <a href="#reserve" class="btn btn--solid">Vreau unul acum</a>
         </div>
-        <div class="signature__art" aria-hidden="true">
+        <div class="signature__art" data-parallax="-0.08" aria-hidden="true">
           <div class="patty p1"></div>
           <div class="patty p2"></div>
           <div class="patty p3"></div>
