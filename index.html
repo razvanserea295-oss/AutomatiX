@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Zet Burgers — burgeri artizanali, smash burgers și rețete signature. Comandă online sau rezervă o masă într-o experiență liquid glass ultra modernă." />
+  <meta name="theme-color" content="#0a0a0f" />
+  <title>Zet Burgers — Smash Burgers Artizanali</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8D%94%3C/text%3E%3C/svg%3E" />
+</head>
+<body data-daypart="day">
+  <!-- Animated, event-driven background canvas -->
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <div class="bg-gradient" aria-hidden="true"></div>
+  <div class="bg-grain" aria-hidden="true"></div>
+
+  <!-- Cursor glow follows pointer (an "event-based" background reaction) -->
+  <div class="cursor-glow" id="cursor-glow" aria-hidden="true"></div>
+
+  <!-- Loading veil -->
+  <div class="loader" id="loader" aria-hidden="true">
+    <div class="loader__logo">🍔</div>
+    <div class="loader__bar"><span></span></div>
+    <div class="loader__text">Se prăjesc burgerii…</div>
+  </div>
+
+  <!-- NAV -->
+  <header class="nav" id="nav">
+    <a href="#home" class="nav__brand" aria-label="Zet Burgers acasă">
+      <span class="nav__mark">🍔</span>
+      <span class="nav__name">ZET<b>BURGERS</b></span>
+    </a>
+    <nav class="nav__links" aria-label="Navigație principală">
+      <a href="#menu">Meniu</a>
+      <a href="#signature">Signature</a>
+      <a href="#story">Povestea</a>
+      <a href="#reserve">Rezervări</a>
+    </nav>
+    <div class="nav__right">
+      <span class="nav__status" id="open-status" title="Status program">
+        <span class="dot"></span><span id="open-label">Verific…</span>
+      </span>
+      <button class="btn btn--ghost" id="theme-toggle" title="Schimbă ambianța" aria-label="Schimbă ambianța">🌗</button>
+      <a href="#reserve" class="btn btn--solid">Comandă</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero" id="home">
+      <div class="hero__glass glass reveal">
+        <p class="hero__eyebrow">Smash burgers · 100% artizanal · Cluj-Napoca</p>
+        <h1 class="hero__title">
+          Burgeri care
+          <span class="hero__shimmer">topesc</span>
+          regulile.
+        </h1>
+        <p class="hero__lead">
+          Carne maturată, chifle brioche coapte zilnic și sosuri signature.
+          O experiență <em>liquid glass</em> unde fiecare detaliu sfârâie.
+        </p>
+        <div class="hero__cta">
+          <a href="#menu" class="btn btn--solid btn--lg">Explorează meniul</a>
+          <a href="#signature" class="btn btn--glass btn--lg">Vezi signature ↗</a>
+        </div>
+        <dl class="hero__stats">
+          <div><dt id="stat-burgers">0</dt><dd>burgeri serviți</dd></div>
+          <div><dt id="stat-rating">0.0</dt><dd>rating mediu</dd></div>
+          <div><dt id="stat-minutes">0</dt><dd>min. preparare</dd></div>
+        </dl>
+      </div>
+
+      <!-- Floating glass tag -->
+      <div class="hero__float glass" aria-hidden="true">
+        <span class="hero__float-emoji">🔥</span>
+        <div>
+          <strong id="live-orders">— comenzi</strong>
+          <small>chiar acum în bucătărie</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- MENU — growing cards -->
+    <section class="section" id="menu">
+      <div class="section__head reveal">
+        <h2 class="section__title">Meniul <span>signature</span></h2>
+        <p class="section__sub">Apasă pe un card — crește și îți dezvăluie tot ce contează.</p>
+      </div>
+
+      <div class="cards" id="cards" role="list"><!-- injected by JS --></div>
+    </section>
+
+    <!-- SIGNATURE strip -->
+    <section class="section signature" id="signature">
+      <div class="signature__inner glass reveal">
+        <div class="signature__copy">
+          <h2 class="section__title">The <span>Zet</span> Smash</h2>
+          <p>
+            Două medalioane de vită smash-uite pe plită încinsă la 250°C,
+            cheddar dublu maturat, ceapă caramelizată în unt brun și
+            sosul nostru secret <b>Zet Sauce</b>. Marginile crocante,
+            mijlocul suculent.
+          </p>
+          <ul class="signature__list">
+            <li>✦ Vită Black Angus maturată 28 zile</li>
+            <li>✦ Chiflă brioche cu unt clarifiat</li>
+            <li>✦ Cartofi triple-cooked, tăiați manual</li>
+          </ul>
+          <a href="#reserve" class="btn btn--solid">Vreau unul acum</a>
+        </div>
+        <div class="signature__art" aria-hidden="true">
+          <div class="patty p1"></div>
+          <div class="patty p2"></div>
+          <div class="patty p3"></div>
+          <div class="signature__price">de la <b>39</b> lei</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STORY / marquee -->
+    <section class="section" id="story">
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee__track">
+          <span>SMASH · SEAR · SIZZLE · SAVOR ·</span>
+          <span>SMASH · SEAR · SIZZLE · SAVOR ·</span>
+          <span>SMASH · SEAR · SIZZLE · SAVOR ·</span>
+        </div>
+      </div>
+      <div class="story reveal">
+        <div class="story__card glass">
+          <h3>01 · Ingrediente</h3>
+          <p>Furnizori locali, livrare zilnică. Nimic congelat, niciodată.</p>
+        </div>
+        <div class="story__card glass">
+          <h3>02 · Tehnică</h3>
+          <p>Smash pe plită din oțel carbon pentru crusta Maillard perfectă.</p>
+        </div>
+        <div class="story__card glass">
+          <h3>03 · Obsesie</h3>
+          <p>Testăm fiecare sos de 40+ ori până devine signature.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESERVE -->
+    <section class="section reserve" id="reserve">
+      <div class="reserve__inner glass reveal">
+        <div class="reserve__copy">
+          <h2 class="section__title">Rezervă o <span>masă</span></h2>
+          <p>Spune-ne când vii. Confirmăm pe loc, fără cont, fără bătăi de cap.</p>
+          <div class="reserve__hours">
+            <span>Lun–Joi 12:00–23:00</span>
+            <span>Vin–Sâm 12:00–01:00</span>
+            <span>Duminică 13:00–22:00</span>
+          </div>
+        </div>
+        <form class="reserve__form" id="reserve-form" novalidate>
+          <div class="field">
+            <input type="text" id="r-name" required placeholder=" " />
+            <label for="r-name">Nume</label>
+          </div>
+          <div class="field">
+            <input type="tel" id="r-phone" required placeholder=" " pattern="[0-9+\s]{6,}" />
+            <label for="r-phone">Telefon</label>
+          </div>
+          <div class="field field--row">
+            <div class="field">
+              <input type="date" id="r-date" required placeholder=" " />
+              <label for="r-date" class="label--static">Data</label>
+            </div>
+            <div class="field">
+              <input type="number" id="r-guests" min="1" max="20" value="2" required placeholder=" " />
+              <label for="r-guests" class="label--static">Persoane</label>
+            </div>
+          </div>
+          <button type="submit" class="btn btn--solid btn--lg btn--block">Trimite rezervarea</button>
+          <p class="reserve__msg" id="reserve-msg" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <span class="nav__mark">🍔</span> ZET<b>BURGERS</b>
+        <p>Str. Memorandumului 12, Cluj-Napoca</p>
+      </div>
+      <div class="footer__cols">
+        <a href="#menu">Meniu</a>
+        <a href="#reserve">Rezervări</a>
+        <a href="https://instagram.com" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://tiktok.com" target="_blank" rel="noopener">TikTok</a>
+      </div>
+    </div>
+    <p class="footer__legal">© <span id="year"></span> Zet Burgers. Toate burgerele rezervate.</p>
+  </footer>
+
+  <!-- Expanded card portal -->
+  <div class="modal" id="card-modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel glass" id="modal-panel"></div>
+  </div>
+
+  <script src="js/menu-data.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
