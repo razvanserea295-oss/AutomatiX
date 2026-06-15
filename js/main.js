@@ -87,6 +87,33 @@
   const nav = $("#nav");
   addEventListener("scroll", () => nav.classList.toggle("shrink", window.scrollY > 30), { passive: true });
 
+  /* ---------- mobile menu ---------- */
+  const navToggle = $("#nav-toggle"), mobileMenu = $("#mobile-menu");
+  function setMenu(open) {
+    document.body.classList.toggle("menu-open", open);
+    navToggle.setAttribute("aria-expanded", String(open));
+    navToggle.setAttribute("aria-label", open ? "Închide meniul" : "Deschide meniul");
+    mobileMenu.setAttribute("aria-hidden", String(!open));
+    document.body.style.overflow = open ? "hidden" : "";
+  }
+  navToggle.addEventListener("click", () => setMenu(!document.body.classList.contains("menu-open")));
+  $$("#mobile-menu a").forEach(a => a.addEventListener("click", () => setMenu(false)));
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && document.body.classList.contains("menu-open")) setMenu(false); });
+  matchMedia("(min-width: 901px)").addEventListener("change", e => { if (e.matches) setMenu(false); });
+
+  /* ---------- scroll-spy: highlight active section in nav ---------- */
+  const navLinks = $$('.nav__links a[href^="#"]');
+  const sections = navLinks.map(a => $(a.getAttribute("href"))).filter(Boolean);
+  if (sections.length) {
+    const spy = new IntersectionObserver((entries) => {
+      entries.forEach(en => {
+        if (!en.isIntersecting) return;
+        navLinks.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + en.target.id));
+      });
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(s => spy.observe(s));
+  }
+
   /* =========================================================
      DAYPART — warm wash shifts by time of day (bg event)
      ========================================================= */

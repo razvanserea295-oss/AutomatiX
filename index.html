@@ -63,8 +63,22 @@
     <div class="nav__right">
       <span class="status" id="open-status"><i></i><span id="open-label">…</span></span>
       <a href="#reserve" class="link-cta">Rezervă o masă</a>
+      <button class="nav__toggle" id="nav-toggle" aria-label="Deschide meniul" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span><span></span>
+      </button>
     </div>
   </header>
+
+  <!-- mobile menu -->
+  <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+    <nav aria-label="Navigație mobilă">
+      <a href="#menu"><span>01</span> Meniu</a>
+      <a href="#signature"><span>02</span> Signature</a>
+      <a href="#story"><span>03</span> Despre</a>
+      <a href="#reserve"><span>04</span> Rezervări</a>
+    </nav>
+    <a href="#reserve" class="btn btn--light mobile-menu__cta">Rezervă o masă</a>
+  </div>
 
   <main id="top">
     <!-- HERO -->
@@ -86,7 +100,14 @@
       </div>
 
       <div class="hero__art" data-parallax="0.06" aria-hidden="true">
-        <svg class="burger" viewBox="0 0 360 300"><use href="#burger-art" /></svg>
+        <svg class="burger" viewBox="0 0 360 300">
+          <g class="steam">
+            <path d="M150 54 q-12 -16 0 -30 q12 -14 0 -28" />
+            <path d="M182 50 q-12 -16 0 -30 q12 -14 0 -28" />
+            <path d="M214 54 q-12 -16 0 -30 q12 -14 0 -28" />
+          </g>
+          <use href="#burger-art" />
+        </svg>
         <!-- rotating editorial seal -->
         <svg class="seal" viewBox="0 0 120 120">
           <defs><path id="seal-path" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0" /></defs>
@@ -95,7 +116,7 @@
         </svg>
       </div>
 
-      <dl class="metrics reveal">
+      <dl class="metrics reveal reveal--stagger">
         <div><dt data-count="128000" data-suffix="+">0</dt><dd>burgeri serviți</dd></div>
         <div><dt data-count="4.9" data-decimals="1">0</dt><dd>rating mediu</dd></div>
         <div><dt data-count="8">0</dt><dd>minute de preparare</dd></div>
@@ -125,7 +146,14 @@
     <!-- SIGNATURE (dark feature) -->
     <section class="signature" id="signature">
       <div class="signature__art reveal" data-parallax="-0.05" aria-hidden="true">
-        <svg class="burger burger--lg" viewBox="0 0 360 300"><use href="#burger-art" /></svg>
+        <svg class="burger burger--lg" viewBox="0 0 360 300">
+          <g class="steam">
+            <path d="M150 54 q-12 -16 0 -30 q12 -14 0 -28" />
+            <path d="M182 50 q-12 -16 0 -30 q12 -14 0 -28" />
+            <path d="M214 54 q-12 -16 0 -30 q12 -14 0 -28" />
+          </g>
+          <use href="#burger-art" />
+        </svg>
       </div>
       <div class="signature__text reveal">
         <span class="index index--light">/ 02 — Signature</span>
