@@ -1,0 +1,43 @@
+# PROMIX Automatix — Cloudflare Tunnel configuration.
+#
+# This is the no-port-forwarding option: cloudflared makes an outbound
+# connection to Cloudflare's edge, and Cloudflare exposes a public HTTPS URL
+# that proxies back through the tunnel. Works behind NAT, no public IP
+# required, no inbound firewall rule needed.
+#
+# One-time setup (on the server PC, as user 'admin'):
+#   1. curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 -o /usr/local/bin/cloudflared
+#      sudo chmod +x /usr/local/bin/cloudflared
+#   2. cloudflared tunnel login
+#      # opens browser, authorizes Cloudflare account
+#   3. cloudflared tunnel create promix
+#      # outputs: Created tunnel <NAME> with id <UUID>
+#   4. cloudflared tunnel route dns promix promix.example.com
+#      # creates the public DNS record automatically
+#   5. Edit this file: replace <TUNNEL_UUID> below with the id from step 3
+#      and `promix.example.com` with your hostname.
+#   6. sudo cp deploy/cloudflared/config.yml /etc/cloudflared/config.yml
+#      sudo cp ~/.cloudflared/<TUNNEL_UUID>.json /etc/cloudflared/
+#      sudo cp deploy/cloudflared/cloudflared.service /etc/systemd/system/
+#      sudo systemctl daemon-reload
+#      sudo systemctl enable --now cloudflared
+#
+# Then on promix-server.service set PROMIX_TRUST_PROXY=1 and (recommended)
+# PROMIX_ALLOWED_ORIGINS=https://promix.example.com.
+
+tunnel: <TUNNEL_UUID>
+credentials-file: /etc/cloudflared/<TUNNEL_UUID>.json
+
+ingress:
+  # Public hostname — must match `cloudflared tunnel route dns ...` above.
+  - hostname: promix.example.com
+    service: http://localhost:3500
+    originRequest:
+      # Don't buffer responses — keeps long-running command requests snappy.
+      noTLSVerify: false
+      connectTimeout: 30s
+      tlsTimeout: 10s
+      keepAliveTimeout: 90s
+      httpHostHeader: localhost
+  # Catch-all — required by cloudflared. 404 on anything else.
+  - service: http_status:404

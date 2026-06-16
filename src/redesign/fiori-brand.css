@@ -1,0 +1,111 @@
+/* ============================================================================
+   Automatix brand over SAP Fiori Horizon.
+   Horizon exposes its theme parameters as CSS custom properties (per OpenUI5
+   docs: "CSS Custom Properties for Theming"). Overriding them here — with extra
+   specificity (:root:root) so we win regardless of the theme's inject order —
+   cascades into the web components' shadow DOM. This de-genericizes the default
+   light-grey shell + SAP-blue accent into a branded navy shell + emerald accent.
+   ========================================================================== */
+:root:root {
+  /* --- Branded shell bar (Horizon default: light grey #eff1f2, dark text) --- */
+  --sapShellColor: #16213a;
+  --sapShell_Background: #16213a;
+  --sapShell_BackgroundImage: none;
+  --sapShell_BackgroundGradient: none;
+  --sapShell_BorderColor: #16213a;
+  --sapShell_TextColor: #eaf0f8;
+  --sapShell_InteractiveTextColor: #eaf0f8;
+  --sapShell_InteractiveBackgroundColor: #16213a;
+  --sapShell_Hover_Background: #243352;
+  --sapShell_Active_Background: #0f1830;
+  --sapShell_Hover_Foreground: #ffffff;
+
+  /* --- Brand accent (Horizon default: SAP blue #0070f2) → emerald --- */
+  --sapBrandColor: #12936a;
+  --sapHighlightColor: #12936a;
+  --sapActiveColor: #0e7d5a;
+  --sapSelectedColor: #12936a;
+  --sapContent_Selected_TextColor: #0e7d5a;
+  --sapContent_Selected_ForegroundColor: #12936a; /* was SAP blue #0064d9 — selected nav text/icon */
+  --sapContent_Selected_BackgroundColor: #e6f5ef;
+
+  /* Emphasized (primary) buttons */
+  --sapButton_Emphasized_Background: #12936a;
+  --sapButton_Emphasized_Hover_Background: #0e7d5a;
+  --sapButton_Emphasized_Active_Background: #0c6b4d;
+  --sapButton_Emphasized_BorderColor: #12936a;
+  --sapButton_Emphasized_Hover_BorderColor: #0e7d5a;
+  --sapButton_Emphasized_TextColor: #ffffff;
+
+  /* Selection (lists, tables, side navigation) */
+  --sapList_SelectionBackgroundColor: #d8f0e7;
+  --sapList_SelectionBorderColor: #12936a;
+  --sapList_SelectionHoverBackground: #c9ebde;
+  --sapList_Hover_SelectionBackground: #c9ebde;
+}
+
+/* ---- SideNavigation: dark navy rail, cohesive with the ShellBar -----------
+   Host bg defaults to white (bland). Set it dark and recolor items light via
+   scoped CSS vars (they inherit into each item's shadow DOM — the inner item
+   div exposes no ::part, so vars are the only lever). The popover/overflow menu
+   is portalled to <body> so it keeps the default light theme. */
+ui5-side-navigation {
+  background: #16213a;
+  --sapList_Background: #16213a;
+  --sapGroup_ContentBackground: #16213a;
+  --sapList_TextColor: #c7d2e4;
+  --sapTextColor: #c7d2e4;
+  --sapContent_IconColor: #c7d2e4;
+  --sapContent_NonInteractiveIconColor: #c7d2e4;
+  --sapList_Hover_Background: #233250;
+  --sapList_BorderColor: #233250;
+  --sapGroup_ContentBorderColor: #233250;
+  --sapGroup_TitleTextColor: #8fa1bd;
+}
+/* Active workspace: emerald pill + bright emerald label/icon */
+ui5-side-navigation-item[selected],
+ui5-side-navigation-sub-item[selected] {
+  --sapList_SelectionBackgroundColor: #123a30;
+  --sapList_SelectionHoverBackground: #16463a;
+  --sapList_SelectionBorderColor: #2bb583;
+  --sapList_TextColor: #36d39a;
+  --sapTextColor: #36d39a;
+  --sapContent_IconColor: #36d39a;
+  --sapContent_NonInteractiveIconColor: #36d39a;
+}
+
+/* The ShellBar sits on the dark brand background, but Horizon defaults its
+   content color to the dark page text color (#111) → icons/buttons render
+   dark-on-dark. Outer-document rules on the host beat the component's internal
+   :host color, and shell icons inherit it via currentColor → force it light. */
+ui5-shellbar {
+  color: var(--sapShell_TextColor);
+  --sapTextColor: var(--sapShell_TextColor);
+  --sapContent_IconColor: var(--sapShell_TextColor);
+  --sapContent_NonInteractiveIconColor: var(--sapShell_TextColor);
+}
+
+/* ---- Dark mode (sap_horizon_dark) -----------------------------------------
+   The navy shell + emerald brand carry over; only re-tune the emerald for dark
+   contrast and the list-selection tints (Horizon dark defaults are far too
+   light against the dark page). The `.dark` class is toggled by themeStore in
+   lockstep with the UI5 theme (see src/ui5-config.ts). */
+:root:root.dark {
+  --sapBrandColor: #2bb583;
+  --sapHighlightColor: #2bb583;
+  --sapActiveColor: #36d39a;
+  --sapSelectedColor: #2bb583;
+  --sapContent_Selected_ForegroundColor: #36d39a;
+  --sapContent_Selected_TextColor: #36d39a;
+  --sapContent_Selected_BackgroundColor: #123a30;
+
+  --sapButton_Emphasized_Background: #12936a;
+  --sapButton_Emphasized_Hover_Background: #0e7d5a;
+  --sapButton_Emphasized_Active_Background: #0c6b4d;
+  --sapButton_Emphasized_BorderColor: #12936a;
+
+  --sapList_SelectionBackgroundColor: #123a30;
+  --sapList_SelectionBorderColor: #2bb583;
+  --sapList_SelectionHoverBackground: #16463a;
+  --sapList_Hover_SelectionBackground: #16463a;
+}

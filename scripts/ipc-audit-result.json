@@ -1,0 +1,1562 @@
+{
+  "summary": {
+    "totalCalledNames": 307,
+    "totalRegisteredNames": 407,
+    "missing": 20,
+    "notInvokedButCalled": 4,
+    "dead": 120,
+    "dynamicCalls": 2,
+    "dynamicRegister": 2
+  },
+  "missing": [
+    {
+      "name": "ai_service_start",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/pages/settings/SettingsPage.tsx",
+          "line": 724,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "ai_service_status",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/pages/settings/SettingsPage.tsx",
+          "line": 714,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "ai_service_stop",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/pages/settings/SettingsPage.tsx",
+          "line": 734,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "ai_token_get",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/App.tsx",
+          "line": 693,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "app_quit",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/lib/quitApplication.ts",
+          "line": 13,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "audit_count",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/components/settings/AuditLogPanel.tsx",
+          "line": 50,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "audit_export_csv",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/components/settings/AuditLogPanel.tsx",
+          "line": 73,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "audit_list",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/components/settings/AuditLogPanel.tsx",
+          "line": 49,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "creds_clear",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/App.tsx",
+          "line": 844,
+          "via": "electron.invoke"
+        },
+        {
+          "file": "src/pages/LoginPage.tsx",
+          "line": 94,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "creds_load",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/App.tsx",
+          "line": 760,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "creds_save",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/pages/LoginPage.tsx",
+          "line": 88,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "dialog_open_directory",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/pages/PartsTreePage.tsx",
+          "line": 563,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "dialog_open_file",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/utils/dxfResolver.ts",
+          "line": 47,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "get_local_ip",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/pages/settings/SettingsPage.tsx",
+          "line": 573,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "log_get_path",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/components/settings/AboutPanel.tsx",
+          "line": 292,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "server_start",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/pages/settings/SettingsPage.tsx",
+          "line": 582,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "server_status",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/pages/settings/SettingsPage.tsx",
+          "line": 567,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "server_stop",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/pages/settings/SettingsPage.tsx",
+          "line": 591,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "updater_get_status",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/components/settings/AboutPanel.tsx",
+          "line": 315,
+          "via": "electron.invoke"
+        }
+      ]
+    },
+    {
+      "name": "window_set_title_bar_theme",
+      "via": "electron.invoke",
+      "calledAt": [
+        {
+          "file": "src/store/themeStore.ts",
+          "line": 33,
+          "via": "electron.invoke"
+        }
+      ]
+    }
+  ],
+  "notInvokedButCalled": [
+    {
+      "name": "backup_list",
+      "via": "apiCommand",
+      "calledAt": [
+        {
+          "file": "src/pages/settings/SettingsPage.tsx",
+          "line": 886,
+          "via": "apiCommand"
+        }
+      ],
+      "registeredAt": [
+        {
+          "file": "server/commandRouter.ts",
+          "line": 214
+        }
+      ],
+      "owner": {
+        "ownerFn": "registerCommandHandlers",
+        "file": "server/commandRouter.ts"
+      }
+    },
+    {
+      "name": "backup_run_now",
+      "via": "apiCommand",
+      "calledAt": [
+        {
+          "file": "src/pages/settings/SettingsPage.tsx",
+          "line": 902,
+          "via": "apiCommand"
+        }
+      ],
+      "registeredAt": [
+        {
+          "file": "server/commandRouter.ts",
+          "line": 219
+        }
+      ],
+      "owner": {
+        "ownerFn": "registerCommandHandlers",
+        "file": "server/commandRouter.ts"
+      }
+    },
+    {
+      "name": "backup_status",
+      "via": "apiCommand",
+      "calledAt": [
+        {
+          "file": "src/pages/settings/SettingsPage.tsx",
+          "line": 885,
+          "via": "apiCommand"
+        }
+      ],
+      "registeredAt": [
+        {
+          "file": "server/commandRouter.ts",
+          "line": 199
+        }
+      ],
+      "owner": {
+        "ownerFn": "registerCommandHandlers",
+        "file": "server/commandRouter.ts"
+      }
+    },
+    {
+      "name": "log_renderer",
+      "via": "electron.invoke+fetch",
+      "calledAt": [
+        {
+          "file": "src/components/ErrorBoundary.tsx",
+          "line": 38,
+          "via": "electron.invoke"
+        },
+        {
+          "file": "src/components/ErrorBoundary.tsx",
+          "line": 57,
+          "via": "fetch"
+        }
+      ],
+      "registeredAt": [
+        {
+          "file": "server/commandRouter.ts",
+          "line": 97
+        }
+      ],
+      "owner": {
+        "ownerFn": "registerCommandHandlers",
+        "file": "server/commandRouter.ts"
+      }
+    }
+  ],
+  "dead": [
+    {
+      "name": "add_engineering_bom_item",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/engineering.ts",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "name": "add_project_comment",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/projects.ts",
+          "line": 90
+        }
+      ]
+    },
+    {
+      "name": "ai_ask",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/ai.ts",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "name": "ai_search_documents",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/ai.ts",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "name": "approve_supplier_invoice",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/threeWayMatch.ts",
+          "line": 40
+        }
+      ]
+    },
+    {
+      "name": "award_rfq",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/rfq.ts",
+          "line": 33
+        }
+      ]
+    },
+    {
+      "name": "bulk_import_project_pieces",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/pieces.ts",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "name": "cleanup_sessions",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/auth.ts",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "name": "clear_demo_step6",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/demoSeed.ts",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "name": "cmd",
+      "registeredAt": [
+        {
+          "file": "electron/commands/registry.ts",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "name": "compare_rfq",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/rfq.ts",
+          "line": 39
+        }
+      ]
+    },
+    {
+      "name": "compute_three_way_match",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/threeWayMatch.ts",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "name": "create_aviz",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/productionDocs.ts",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "name": "create_bon_consum",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/productionDocs.ts",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "name": "create_compliance_task",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/finance.ts",
+          "line": 48
+        }
+      ]
+    },
+    {
+      "name": "create_engineering_node",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/engineering.ts",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "name": "create_goods_receipt",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/goodsReceipts.ts",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "name": "create_invoice",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/productionDocs.ts",
+          "line": 39
+        }
+      ]
+    },
+    {
+      "name": "create_material_consumption",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/materials.ts",
+          "line": 41
+        }
+      ]
+    },
+    {
+      "name": "create_moderation_report",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/workspace.ts",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "name": "create_piece_material_requirement",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/pieces.ts",
+          "line": 57
+        }
+      ]
+    },
+    {
+      "name": "create_piece_order_request",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/piecesOrdering.ts",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "name": "create_project_revenue",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/finance.ts",
+          "line": 66
+        }
+      ]
+    },
+    {
+      "name": "create_project_stage_custom",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/pieces.ts",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "name": "create_rfq",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/rfq.ts",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "name": "create_supplier_invoice",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/threeWayMatch.ts",
+          "line": 21
+        }
+      ]
+    },
+    {
+      "name": "delete_engineering_bom_item",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/engineering.ts",
+          "line": 38
+        }
+      ]
+    },
+    {
+      "name": "delete_engineering_node",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/engineering.ts",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "name": "delete_goods_receipt",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/goodsReceipts.ts",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "name": "delete_parts_tree_node",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/partsTree.ts",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "name": "delete_piece_material_requirement",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/pieces.ts",
+          "line": 63
+        }
+      ]
+    },
+    {
+      "name": "delete_project_briefing",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/projectBriefings.ts",
+          "line": 63
+        }
+      ]
+    },
+    {
+      "name": "delete_rfq",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/rfq.ts",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "name": "delete_service_ticket",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/serviceTickets.ts",
+          "line": 41
+        }
+      ]
+    },
+    {
+      "name": "delete_signature",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/signatures.ts",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "name": "delete_supplier_invoice",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/threeWayMatch.ts",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "name": "email_delete_account",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/email.ts",
+          "line": 28
+        }
+      ]
+    },
+    {
+      "name": "email_delete_draft",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/email.ts",
+          "line": 142
+        }
+      ]
+    },
+    {
+      "name": "email_get_drafts",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/email.ts",
+          "line": 138
+        }
+      ]
+    },
+    {
+      "name": "email_get_unread_count",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/email.ts",
+          "line": 149
+        }
+      ]
+    },
+    {
+      "name": "email_list_threads",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/email.ts",
+          "line": 86
+        }
+      ]
+    },
+    {
+      "name": "email_mark_read",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/email.ts",
+          "line": 90
+        }
+      ]
+    },
+    {
+      "name": "email_save_draft",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/email.ts",
+          "line": 130
+        }
+      ]
+    },
+    {
+      "name": "escalate_overdue_handoffs",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/handoffs.ts",
+          "line": 44
+        }
+      ]
+    },
+    {
+      "name": "export_personal_data",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/workspace.ts",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "name": "generate_handoff_ai_summary",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/handoffs.ts",
+          "line": 49
+        }
+      ]
+    },
+    {
+      "name": "get_all_interventions",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/stations.ts",
+          "line": 42
+        }
+      ]
+    },
+    {
+      "name": "get_all_maintenance_plans",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/stations.ts",
+          "line": 55
+        }
+      ]
+    },
+    {
+      "name": "get_all_parts",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/stations.ts",
+          "line": 64
+        }
+      ]
+    },
+    {
+      "name": "get_aviz",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/productionDocs.ts",
+          "line": 25
+        }
+      ]
+    },
+    {
+      "name": "get_bon_consum",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/productionDocs.ts",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "name": "get_checklists",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/checklist.ts",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "name": "get_compliance_tasks",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/finance.ts",
+          "line": 42
+        }
+      ]
+    },
+    {
+      "name": "get_contract_by_project",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/contracts.ts",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "name": "get_contract_revisions",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/contracts.ts",
+          "line": 36
+        }
+      ]
+    },
+    {
+      "name": "get_demo_step6_status",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/demoSeed.ts",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "name": "get_engineering_bom",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/engineering.ts",
+          "line": 30
+        }
+      ]
+    },
+    {
+      "name": "get_engineering_tree",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/engineering.ts",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "name": "get_finance_invoice",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/finance.ts",
+          "line": 97
+        }
+      ]
+    },
+    {
+      "name": "get_fisa_template",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/fisaTemplates.ts",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "name": "get_goods_receipt",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/goodsReceipts.ts",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "name": "get_handoff",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/handoffs.ts",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "name": "get_lead_notes",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/sales.ts",
+          "line": 58
+        }
+      ]
+    },
+    {
+      "name": "get_matching_thresholds",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/threeWayMatch.ts",
+          "line": 58
+        }
+      ]
+    },
+    {
+      "name": "get_material_needs",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/engineering.ts",
+          "line": 42
+        }
+      ]
+    },
+    {
+      "name": "get_moderation_dashboard",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/workspace.ts",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "name": "get_operatii_config",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/tipPiese.ts",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "name": "get_piece_service",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/maintenance.ts",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "name": "get_project",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/projects.ts",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "name": "get_project_briefing",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/projectBriefings.ts",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "name": "get_project_history",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/projects.ts",
+          "line": 96
+        }
+      ]
+    },
+    {
+      "name": "get_project_revenues",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/finance.ts",
+          "line": 60
+        }
+      ]
+    },
+    {
+      "name": "get_project_stages",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/projects.ts",
+          "line": 52
+        }
+      ]
+    },
+    {
+      "name": "get_quotation",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/quotations.ts",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "name": "get_rfq",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/rfq.ts",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "name": "get_section_templates",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/contracts.ts",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "name": "get_stage_transitions",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/production.ts",
+          "line": 13
+        }
+      ]
+    },
+    {
+      "name": "get_station_ticket_history",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/serviceTickets.ts",
+          "line": 66
+        }
+      ]
+    },
+    {
+      "name": "get_supplier_invoice",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/threeWayMatch.ts",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "name": "get_system_monitor",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/workspace.ts",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "name": "get_tip_piese",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/tipPiese.ts",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "name": "get_unread_mention_count",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/personalTasks.ts",
+          "line": 97
+        }
+      ]
+    },
+    {
+      "name": "get_user",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/users.ts",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "name": "get_workspace_profile",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/workspace.ts",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "name": "get_x",
+      "registeredAt": [
+        {
+          "file": "electron/commands/cmdArgs.ts",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "name": "import_personal_data",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/workspace.ts",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "name": "list_avize_by_project",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/productionDocs.ts",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "name": "list_bon_consums_by_project",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/productionDocs.ts",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "name": "list_goods_receipts",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/goodsReceipts.ts",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "name": "list_invoices_by_project",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/productionDocs.ts",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "name": "list_piece_material_requirements",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/pieces.ts",
+          "line": 52
+        }
+      ]
+    },
+    {
+      "name": "list_rfqs",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/rfq.ts",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "name": "list_supplier_invoices",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/threeWayMatch.ts",
+          "line": 6
+        }
+      ]
+    },
+    {
+      "name": "mark_quotation_viewed",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/quotations.ts",
+          "line": 67
+        }
+      ]
+    },
+    {
+      "name": "move_engineering_node",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/engineering.ts",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "name": "move_project_to_stage",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/production.ts",
+          "line": 20
+        }
+      ]
+    },
+    {
+      "name": "read_excel_file",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/bomImport.ts",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "name": "record_supplier_invoice_payment",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/threeWayMatch.ts",
+          "line": 52
+        }
+      ]
+    },
+    {
+      "name": "reject_supplier_invoice",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/threeWayMatch.ts",
+          "line": 46
+        }
+      ]
+    },
+    {
+      "name": "release_engineering_tree",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/engineering.ts",
+          "line": 26
+        }
+      ]
+    },
+    {
+      "name": "resolve_moderation_report",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/workspace.ts",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "name": "save_operatii_config",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/tipPiese.ts",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "name": "seed_demo_step6",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/demoSeed.ts",
+          "line": 22
+        }
+      ]
+    },
+    {
+      "name": "send_rfq_invitations",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/rfq.ts",
+          "line": 27
+        }
+      ]
+    },
+    {
+      "name": "time_list_entries",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/timeTracking.ts",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "name": "time_piece_breakdown",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/timeTracking.ts",
+          "line": 39
+        }
+      ]
+    },
+    {
+      "name": "time_update_piece_estimate",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/timeTracking.ts",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "name": "time_update_user_rate",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/timeTracking.ts",
+          "line": 52
+        }
+      ]
+    },
+    {
+      "name": "time_weekly_rollup",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/timeTracking.ts",
+          "line": 33
+        }
+      ]
+    },
+    {
+      "name": "update_compliance_task",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/finance.ts",
+          "line": 54
+        }
+      ]
+    },
+    {
+      "name": "update_engineering_node",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/engineering.ts",
+          "line": 14
+        }
+      ]
+    },
+    {
+      "name": "update_matching_thresholds",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/threeWayMatch.ts",
+          "line": 62
+        }
+      ]
+    },
+    {
+      "name": "update_project_briefing",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/projectBriefings.ts",
+          "line": 24
+        }
+      ]
+    },
+    {
+      "name": "update_project_stage",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/projects.ts",
+          "line": 109
+        }
+      ]
+    },
+    {
+      "name": "update_project_stage_custom",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/pieces.ts",
+          "line": 16
+        }
+      ]
+    },
+    {
+      "name": "update_quotation",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/quotations.ts",
+          "line": 32
+        }
+      ]
+    },
+    {
+      "name": "update_workspace_profile",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/workspace.ts",
+          "line": 10
+        }
+      ]
+    },
+    {
+      "name": "update_x",
+      "registeredAt": [
+        {
+          "file": "electron/commands/cmdArgs.ts",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "name": "updater_get_version",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/system.ts",
+          "line": 179
+        }
+      ]
+    },
+    {
+      "name": "upsert_finance_override",
+      "registeredAt": [
+        {
+          "file": "electron/ipc/finance.ts",
+          "line": 72
+        }
+      ]
+    }
+  ],
+  "deadNames": [
+    "add_engineering_bom_item",
+    "add_project_comment",
+    "ai_ask",
+    "ai_search_documents",
+    "approve_supplier_invoice",
+    "award_rfq",
+    "bulk_import_project_pieces",
+    "cleanup_sessions",
+    "clear_demo_step6",
+    "cmd",
+    "compare_rfq",
+    "compute_three_way_match",
+    "create_aviz",
+    "create_bon_consum",
+    "create_compliance_task",
+    "create_engineering_node",
+    "create_goods_receipt",
+    "create_invoice",
+    "create_material_consumption",
+    "create_moderation_report",
+    "create_piece_material_requirement",
+    "create_piece_order_request",
+    "create_project_revenue",
+    "create_project_stage_custom",
+    "create_rfq",
+    "create_supplier_invoice",
+    "delete_engineering_bom_item",
+    "delete_engineering_node",
+    "delete_goods_receipt",
+    "delete_parts_tree_node",
+    "delete_piece_material_requirement",
+    "delete_project_briefing",
+    "delete_rfq",
+    "delete_service_ticket",
+    "delete_signature",
+    "delete_supplier_invoice",
+    "email_delete_account",
+    "email_delete_draft",
+    "email_get_drafts",
+    "email_get_unread_count",
+    "email_list_threads",
+    "email_mark_read",
+    "email_save_draft",
+    "escalate_overdue_handoffs",
+    "export_personal_data",
+    "generate_handoff_ai_summary",
+    "get_all_interventions",
+    "get_all_maintenance_plans",
+    "get_all_parts",
+    "get_aviz",
+    "get_bon_consum",
+    "get_checklists",
+    "get_compliance_tasks",
+    "get_contract_by_project",
+    "get_contract_revisions",
+    "get_demo_step6_status",
+    "get_engineering_bom",
+    "get_engineering_tree",
+    "get_finance_invoice",
+    "get_fisa_template",
+    "get_goods_receipt",
+    "get_handoff",
+    "get_lead_notes",
+    "get_matching_thresholds",
+    "get_material_needs",
+    "get_moderation_dashboard",
+    "get_operatii_config",
+    "get_piece_service",
+    "get_project",
+    "get_project_briefing",
+    "get_project_history",
+    "get_project_revenues",
+    "get_project_stages",
+    "get_quotation",
+    "get_rfq",
+    "get_section_templates",
+    "get_stage_transitions",
+    "get_station_ticket_history",
+    "get_supplier_invoice",
+    "get_system_monitor",
+    "get_tip_piese",
+    "get_unread_mention_count",
+    "get_user",
+    "get_workspace_profile",
+    "get_x",
+    "import_personal_data",
+    "list_avize_by_project",
+    "list_bon_consums_by_project",
+    "list_goods_receipts",
+    "list_invoices_by_project",
+    "list_piece_material_requirements",
+    "list_rfqs",
+    "list_supplier_invoices",
+    "mark_quotation_viewed",
+    "move_engineering_node",
+    "move_project_to_stage",
+    "read_excel_file",
+    "record_supplier_invoice_payment",
+    "reject_supplier_invoice",
+    "release_engineering_tree",
+    "resolve_moderation_report",
+    "save_operatii_config",
+    "seed_demo_step6",
+    "send_rfq_invitations",
+    "time_list_entries",
+    "time_piece_breakdown",
+    "time_update_piece_estimate",
+    "time_update_user_rate",
+    "time_weekly_rollup",
+    "update_compliance_task",
+    "update_engineering_node",
+    "update_matching_thresholds",
+    "update_project_briefing",
+    "update_project_stage",
+    "update_project_stage_custom",
+    "update_quotation",
+    "update_workspace_profile",
+    "update_x",
+    "updater_get_version",
+    "upsert_finance_override"
+  ],
+  "dynamicCalls": [
+    {
+      "file": "src/api/commands.ts",
+      "line": 131,
+      "snippet": "apiCommand<T>(   command: string,   requestBody?: Record<string, unkno"
+    },
+    {
+      "file": "src/hooks/useCrudData.ts",
+      "line": 37,
+      "snippet": "apiCommand<T[]>(command, options?.params);       setData(result);     "
+    }
+  ],
+  "dynamicRegister": [
+    {
+      "file": "electron/commands/registry.ts",
+      "line": 4,
+      "snippet": "ipcRegister(name, handler)`:  *   1. is stored in an in-memo"
+    },
+    {
+      "file": "electron/commands/registry.ts",
+      "line": 47,
+      "snippet": "ipcRegister<A = any, R = any>(name: string, handler: Handler"
+    }
+  ],
+  "invokedFnsCount": 58,
+  "registerFnsDefined": 62,
+  "registerFnsNotInvoked": [
+    "registerCommandHandlers"
+  ]
+}

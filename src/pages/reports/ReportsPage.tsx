@@ -1,0 +1,339 @@
+import { useState, useEffect, useCallback } from 'react';
+import { BarChart3, Download, Save, Trash2, Plus, Loader2, X, Database, Columns, Bookmark, Table } from 'lucide-react';
+import { apiCommand } from '@/api/commands';
+import type { User } from '@/core/types';
+import Button from '@/components/ui/Button';
+import Page from '@/components/ui/Page';
+import { HeroHeader, GlassCard, MetricValue } from '@/components/ui';
+import { toast } from '@/store/toastStore';
+
+interface ColumnDef { field: string; label: string; type: 'string' | 'number' | 'date' | 'currency'; }
+interface SourceDef { name: string; label: string; columns: ColumnDef[]; filterable_fields: string[]; }
+interface Filter { field: string; op: string; value: any; value2?: any; }
+interface Report { source: string; columns: ColumnDef[]; rows: any[]; total_rows: number; totals?: Record<string, number>; }
+interface Preset { id: number; name: string; source: string; config: any; is_shared: boolean; }
+
+const OP_LABELS: Record<string, string> = {
+  eq: '=', neq: '≠', contains: 'conține', gt: '>', gte: '≥', lt: '<', lte: '≤', between: 'între',
+};
+
+export default function ReportsPage({ user: _user }: { user: User | null }) {
+  const [sources, setSources] = useState<SourceDef[]>([]);
+  const [sourceName, setSourceName] = useState('projects');
+  const [columns, setColumns] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState<Filter[]>([]);
+  const [sortField, setSortField] = useState('');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [report, setReport] = useState<Report | null>(null);
+  const [running, setRunning] = useState(false);
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [presetName, setPresetName] = useState('');
+
+  useEffect(() => {
+    apiCommand<SourceDef[]>('get_report_sources').then(s => {
+      setSources(s);
+      const def = s.find(x => x.name === sourceName);
+      if (def) setColumns(new Set(def.columns.map(c => c.field)));
+    });
+    refreshPresets();
+  }, []);
+
+  const refreshPresets = useCallback(() => {
+    apiCommand<Preset[]>('list_report_presets').then(setPresets).catch(() => setPresets([]));
+  }, []);
+
+  const source = sources.find(s => s.name === sourceName);
+
+  const switchSource = (name: string) => {
+    setSourceName(name);
+    setReport(null);
+    setFilters([]);
+    const def = sources.find(s => s.name === name);
+    if (def) setColumns(new Set(def.columns.map(c => c.field)));
+  };
+
+  const run = async () => {
+    setRunning(true);
+    try {
+      const r = await apiCommand<Report>('run_report', {
+        config: {
+          source: sourceName,
+          columns: Array.from(columns),
+          filters,
+          sort: sortField ? { field: sortField, dir: sortDir } : undefined,
+          limit: 1000,
+        },
+      });
+      setReport(r);
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Eroare'); }
+    finally { setRunning(false); }
+  };
+
+  const exportExcel = async () => {
+    if (!report) return;
+    try {
+      const XLSX = await import('xlsx');
+      const ws = XLSX.utils.aoa_to_sheet([
+        report.columns.map(c => c.label),
+        ...report.rows.map(r => report.columns.map(c => r[c.field] ?? '')),
+      ]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Raport');
+      XLSX.writeFile(wb, `raport-${sourceName}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      toast.success('Export Excel descarcat');
+    } catch (err) { toast.error('Eroare export'); }
+  };
+
+  const savePreset = async () => {
+    if (!presetName.trim()) { toast.error('Denumire preset obligatorie'); return; }
+    try {
+      await apiCommand('save_report_preset', {
+        request: {
+          name: presetName.trim(), source: sourceName,
+          config: {
+            source: sourceName, columns: Array.from(columns), filters,
+            sort: sortField ? { field: sortField, dir: sortDir } : undefined,
+          },
+        },
+      });
+      toast.success('Preset salvat');
+      setPresetName('');
+      refreshPresets();
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Eroare'); }
+  };
+
+  const loadPreset = (p: Preset) => {
+    setSourceName(p.source);
+    setColumns(new Set(p.config.columns || []));
+    setFilters(p.config.filters || []);
+    if (p.config.sort) { setSortField(p.config.sort.field); setSortDir(p.config.sort.dir); }
+  };
+
+  const deletePreset = async (id: number) => {
+    try {
+      await apiCommand('delete_report_preset', { id });
+      refreshPresets();
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Eroare'); }
+  };
+
+  return (
+    <Page className="mod-shell !overflow-hidden">
+      {}
+      <div className="px-5 pt-4 pb-8 shrink-0 space-y-4">
+        <HeroHeader
+          className="enter-up" style={{ animationDelay: '0ms' }}
+          eyebrow="Rapoarte"
+          icon={BarChart3}
+          title="Generator rapoarte"
+          subtitle="Construiește rapoarte cu coloane și filtre, exportă Excel"
+          actions={report ? (
+            <Button size="sm" variant="outline" onClick={exportExcel}>
+              <Download className="h-3.5 w-3.5" /> Export Excel
+            </Button>
+          ) : undefined}
+        />
+        <div className="mod-kpis enter-up" style={{ animationDelay: '80ms' }}>
+          <KpiMini icon={Database} label="Surse disponibile" value={sources.length} />
+          <KpiMini icon={Columns}  label="Coloane selectate" value={columns.size} />
+          <KpiMini icon={Bookmark} label="Presete salvate"   value={presets.length} />
+          <KpiMini icon={Table}    label="Rânduri rezultat"  value={report?.total_rows ?? 0} />
+        </div>
+      </div>
+
+      {}
+      <div className="flex flex-1 min-h-0 overflow-hidden gap-4 px-5 pb-5 enter-up" style={{ animationDelay: '160ms' }}>
+        {}
+        <GlassCard size="regular" className="w-80 shrink-0 !p-0 overflow-y-auto flex flex-col">
+          {}
+          <div className="p-4 border-b border-line">
+            <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted block mb-1">Sursa</label>
+            <select value={sourceName} onChange={e => switchSource(e.target.value)} className="w-full px-3 py-2 text-sm border border-line bg-surface-primary">
+              {sources.map(s => <option key={s.name} value={s.name}>{s.label}</option>)}
+            </select>
+          </div>
+
+          {}
+          {source && (
+            <div className="p-4 border-b border-line">
+              <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted block mb-1">Coloane</label>
+              <div className="space-y-0 border border-line bg-surface-primary max-h-60 overflow-y-auto">
+                {source.columns.map(c => (
+                  <label key={c.field} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-surface-tertiary/40 px-2 py-1.5 border-b border-line last:border-b-0">
+                    <input type="checkbox" checked={columns.has(c.field)} onChange={e => {
+                      setColumns(prev => {
+                        const n = new Set(prev);
+                        if (e.target.checked) n.add(c.field); else n.delete(c.field);
+                        return n;
+                      });
+                    }} />
+                    <span className="text-content-primary">{c.label}</span>
+                    <span className="text-pm-2xs text-content-muted ml-auto">{c.type}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {}
+          {source && (
+            <div className="p-4 border-b border-line">
+              <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted block mb-1">Filtre</label>
+              <div className="space-y-1.5">
+                {filters.map((f, idx) => (
+                  <div key={idx} className="grid grid-cols-12 gap-1 items-center">
+                    <select value={f.field} onChange={e => setFilters(prev => prev.map((x, i) => i === idx ? { ...x, field: e.target.value } : x))}
+                      className="col-span-5 text-xs px-1 py-1 border border-line bg-surface-primary">
+                      {source.filterable_fields.map(field => {
+                        const col = source.columns.find(c => c.field === field);
+                        return <option key={field} value={field}>{col?.label || field}</option>;
+                      })}
+                    </select>
+                    <select value={f.op} onChange={e => setFilters(prev => prev.map((x, i) => i === idx ? { ...x, op: e.target.value } : x))}
+                      className="col-span-2 text-xs px-1 py-1 border border-line bg-surface-primary">
+                      {Object.entries(OP_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                    </select>
+                    <input value={f.value || ''} onChange={e => setFilters(prev => prev.map((x, i) => i === idx ? { ...x, value: e.target.value } : x))}
+                      className="col-span-4 text-xs px-1 py-1 border border-line bg-surface-primary" placeholder="valoare" />
+                    <button onClick={() => setFilters(prev => prev.filter((_, i) => i !== idx))} className="col-span-1 text-content-muted hover:text-status-red">
+                      <X className="h-3 w-3 mx-auto" />
+                    </button>
+                  </div>
+                ))}
+                <Button size="sm" variant="outline" onClick={() => setFilters(prev => [...prev, { field: source.filterable_fields[0] || '', op: 'eq', value: '' }])}>
+                  <Plus className="h-3 w-3" /> Adaugă filtru
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {}
+          {source && (
+            <div className="p-4 border-b border-line">
+              <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted block mb-1">Sortare</label>
+              <div className="grid grid-cols-3 gap-1">
+                <select value={sortField} onChange={e => setSortField(e.target.value)}
+                  className="col-span-2 text-xs px-2 py-1 border border-line bg-surface-primary">
+                  <option value="">— fără —</option>
+                  {source.columns.map(c => <option key={c.field} value={c.field}>{c.label}</option>)}
+                </select>
+                <select value={sortDir} onChange={e => setSortDir(e.target.value as any)}
+                  className="text-xs px-2 py-1 border border-line bg-surface-primary">
+                  <option value="asc">↑</option>
+                  <option value="desc">↓</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {}
+          <div className="p-4 border-b border-line">
+            <Button size="sm" onClick={run} disabled={running} className="w-full">
+              {running ? <Loader2 className="h-3 w-3 animate-spin" /> : <BarChart3 className="h-3 w-3" />} Ruleaza raportul
+            </Button>
+          </div>
+
+          {}
+          <div className="p-4">
+            <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted block mb-1">Save preset</label>
+            <div className="flex gap-1">
+              <input value={presetName} onChange={e => setPresetName(e.target.value)} placeholder="Nume preset"
+                className="flex-1 text-xs px-2 py-1 border border-line bg-surface-primary" />
+              <button onClick={savePreset} className="p-1.5 text-accent hover:bg-accent/10">
+                <Save className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            {presets.length > 0 && (
+              <div className="mt-2 space-y-0">
+                {presets.map(p => (
+                  <div key={p.id} className="flex items-center gap-1 text-xs bg-surface-primary border border-line border-t-0 first:border-t px-2 py-1.5">
+                    <button onClick={() => loadPreset(p)} className="flex-1 text-left text-content-primary hover:text-accent">{p.name}</button>
+                    <span className="text-pm-2xs text-content-muted">{p.source}</span>
+                    <button onClick={() => deletePreset(p.id)} className="text-content-muted hover:text-status-red">
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </GlassCard>
+
+        {}
+        <GlassCard size="regular" className="flex-1 !p-0 overflow-auto">
+          {!report ? (
+            <div className="flex items-center justify-center h-full text-xs text-content-muted">
+              Configureaza raportul in panoul din stanga si apasa <strong className="ml-1">Ruleaza</strong>
+            </div>
+          ) : (
+            <div className="flex flex-col h-full">
+              {}
+              <div className="flex items-center justify-between px-4 py-2.5 bg-surface-secondary border-b border-line">
+                <h2 className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Rezultate — {report.total_rows} {report.total_rows === 1 ? 'înregistrare' : 'înregistrări'}</h2>
+                <Button size="sm" variant="outline" onClick={exportExcel}><Download className="h-3 w-3" /> Export Excel</Button>
+              </div>
+
+              {}
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-xs">
+                  <thead className="sticky top-0 z-10 bg-surface-secondary shadow-[inset_0_-1px_0_var(--color-border)]">
+                    <tr>
+                      {report.columns.map(c => (
+                        <th key={c.field} className="text-left px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">
+                          {c.label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {report.rows.map((r, idx) => (
+                      <tr key={idx} className="border-b border-line hover:bg-surface-tertiary/30 bg-surface-secondary">
+                        {report.columns.map(c => (
+                          <td key={c.field} className={`px-3 py-2 ${c.type === 'currency' || c.type === 'number' ? 'text-right tabular-nums' : ''}`}>
+                            {c.type === 'currency' && r[c.field] != null
+                              ? Number(r[c.field]).toFixed(2)
+                              : (r[c.field] ?? '—')}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                  {report.totals && Object.keys(report.totals).length > 0 && (
+                    <tfoot>
+                      <tr className="border-t-2 border-line bg-surface-tertiary/60 font-semibold">
+                        {report.columns.map(c => (
+                          <td key={c.field} className={`px-3 py-2 ${c.type === 'currency' || c.type === 'number' ? 'text-right tabular-nums' : ''}`}>
+                            {(c.type === 'currency' || c.type === 'number') && report.totals?.[c.field] != null
+                              ? Number(report.totals[c.field]).toFixed(2) + (c.type === 'currency' ? ' RON' : '')
+                              : (c === report.columns[0] ? 'TOTAL' : '')}
+                          </td>
+                        ))}
+                      </tr>
+                    </tfoot>
+                  )}
+                </table>
+              </div>
+            </div>
+          )}
+        </GlassCard>
+      </div>
+    </Page>
+  );
+}
+
+
+function KpiMini({ icon: Icon, label, value, warn }: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string; value: number; warn?: boolean;
+}) {
+  return (
+    <GlassCard size="compact" className="flex items-center gap-3.5 !p-5">
+      <span className="h-11 w-11 rounded-xl bg-accent/12 text-accent flex items-center justify-center shrink-0">
+        <Icon className="h-5 w-5" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted truncate">{label}</p>
+        <MetricValue value={value} size="display" warn={warn} className="mt-0.5 block" />
+      </div>
+    </GlassCard>
+  );
+}

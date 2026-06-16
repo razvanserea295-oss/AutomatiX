@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.promix.automatix",
+  "productName": "automatiX",
+  "copyright": "Copyright © 2026 Promix Technologies",
+  "directories": {
+    "output": "dist-installer",
+    "buildResources": "build"
+  },
+  "asar": false,
+  "files": [
+    "dist-electron/**/*",
+    "dist-server/**/*",
+    "dist/**/*",
+    "package.json",
+    "!**/*.{map,md,ts}",
+    "!**/{test,tests,__tests__,e2e}/**",
+    "!dist/downloads/**",
+    "!**/*.exe"
+  ],
+  "extraMetadata": {
+    "main": "dist-electron/main.js"
+  },
+  "win": {
+    "icon": "build/icon.png",
+    "target": [
+      { "target": "nsis", "arch": ["x64"] }
+    ]
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "automatiX",
+    "artifactName": "Automatix-Setup-${version}.${ext}",
+    "uninstallDisplayName": "automatiX ${version}"
+  },
+  "mac": {
+    "icon": "build/icon.png",
+    "category": "public.app-category.business",
+    "target": ["dmg"]
+  },
+  "linux": {
+    "icon": "build/icon.png",
+    "category": "Office",
+    "target": ["AppImage"]
+  },
+  "publish": null
+}

@@ -1,0 +1,93 @@
+
+
+
+
+
+
+
+
+
+
+
+
+import { ChevronDown, ChevronsUpDown, ChevronUp } from 'lucide-react';
+import type { SortState } from '@/hooks/useSort';
+
+
+
+
+
+
+export const TH_TEXT = 'text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted';
+
+
+
+
+
+
+
+export const THEAD_STICKY = 'sticky top-0 z-10 bg-surface-secondary shadow-[inset_0_-1px_0_var(--color-border)]';
+
+interface ThProps {
+  align?: 'left' | 'right' | 'center';
+  className?: string;
+  children?: React.ReactNode;
+}
+
+
+export function Th({ align = 'left', className = '', children }: ThProps) {
+  const alignCls = align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
+  return (
+    <th scope="col" className={`px-3 py-2 ${TH_TEXT} ${alignCls} ${className}`}>
+      {children}
+    </th>
+  );
+}
+
+interface SortableThProps<TKey extends string> {
+  sortKey: TKey;
+  sort: SortState<TKey>;
+  onSort: (key: TKey) => void;
+  align?: 'left' | 'right' | 'center';
+  className?: string;
+  
+  resizeHandle?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+export default function SortableTh<TKey extends string>({
+  sortKey,
+  sort,
+  onSort,
+  align = 'left',
+  className = '',
+  resizeHandle,
+  children,
+}: SortableThProps<TKey>) {
+  const active = sort.key === sortKey;
+  const Icon = !active ? ChevronsUpDown : sort.dir === 'asc' ? ChevronUp : ChevronDown;
+  const justify = align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start';
+
+  return (
+    <th
+      scope="col"
+      aria-sort={active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none'}
+      className={`relative px-3 py-2 ${className}`}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={`group inline-flex w-full items-center gap-1 ${justify} text-pm-2xs font-bold uppercase tracking-[0.14em] transition-colors ${
+          active ? 'text-content-primary' : 'text-content-muted hover:text-content-secondary'
+        }`}
+      >
+        <span className="truncate">{children}</span>
+        <Icon
+          className={`h-3 w-3 shrink-0 transition-opacity ${active ? 'opacity-100' : 'opacity-40 group-hover:opacity-80'}`}
+          aria-hidden
+        />
+      </button>
+      {resizeHandle}
+    </th>
+  );
+}

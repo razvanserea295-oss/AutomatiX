@@ -1,0 +1,345 @@
+/* ============================================================================
+ * Dashboard — ambient background, glass surfaces, entry orchestration.
+ *
+ * Presentation only. Reuses the app's existing `aurora-drift-*` keyframes
+ * (index.css) and the live teal/graphite token ladder (--color-accent #2DD4BF,
+ * --color-bg-* near-black). Reduced-motion is already neutralised globally in
+ * index.css (animation-duration: 0.01ms !important), so every animation here
+ * degrades to "show final state instantly" for free.
+ * ==========================================================================*/
+
+/* Shell that hosts the animated background behind the scrolling content. */
+.dash-shell { position: relative; isolation: isolate; }
+
+/* ---- Animated background (first layer, never interactive) ---------------- */
+.dash-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout paint;
+}
+
+.dash-bg__orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(120px);
+  will-change: transform;
+}
+.dash-bg__orb--1 {
+  width: 46rem; height: 46rem; top: -16rem; left: -10rem; opacity: 0.18;
+  background: radial-gradient(circle at center, var(--color-accent), transparent 62%);
+  animation: aurora-drift-1 52s ease-in-out infinite alternate;
+}
+.dash-bg__orb--2 {
+  width: 40rem; height: 40rem; top: 22%; right: -14rem; opacity: 0.13;
+  background: radial-gradient(circle at center, var(--color-accent), transparent 60%);
+  animation: aurora-drift-2 44s ease-in-out infinite alternate;
+  animation-delay: -8s;
+}
+.dash-bg__orb--3 {
+  width: 34rem; height: 34rem; bottom: -18rem; left: 28%; opacity: 0.08;
+  background: radial-gradient(circle at center, var(--status-purple), transparent 65%);
+  animation: aurora-drift-3 60s ease-in-out infinite alternate;
+  animation-delay: -20s;
+}
+
+/* Subtle dot grid drifting diagonally — barely-there structure. */
+.dash-bg__grid {
+  position: absolute;
+  inset: -2px;
+  opacity: 0.4;
+  background-image: radial-gradient(var(--color-border-subtle) 1px, transparent 1.4px);
+  background-size: 26px 26px;
+  animation: dashGridDrift 140s linear infinite;
+}
+
+/* A few floating light particles — capped, transform/opacity only. */
+.dash-bg__particles { position: absolute; inset: 0; }
+.dash-bg__p {
+  position: absolute;
+  width: 2px; height: 2px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  box-shadow: 0 0 6px 1px rgba(45, 212, 191, 0.35);
+  opacity: 0.3;
+  will-change: transform, opacity;
+  animation-name: dashFloat;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+/* Edge vignette toward the page canvas so content stays the focus. */
+.dash-bg__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 80% at 50% 35%, transparent 55%, var(--color-bg-page) 100%);
+}
+
+/* Pause everything when the tab is hidden (set by the component). */
+.dash-bg.is-paused .dash-bg__orb,
+.dash-bg.is-paused .dash-bg__grid,
+.dash-bg.is-paused .dash-bg__p { animation-play-state: paused; }
+
+@keyframes dashGridDrift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-26px, -26px, 0); }
+}
+@keyframes dashFloat {
+  0%   { transform: translate3d(0, 0, 0); opacity: 0.2; }
+  50%  { opacity: 0.75; }
+  100% { transform: translate3d(0, -28px, 0); opacity: 0.2; }
+}
+
+/* ---- Glass surfaces (sit above the background) -------------------------- */
+.dash-glass {
+  background: var(--color-bg-secondary);
+  background: color-mix(in srgb, var(--color-bg-secondary) 80%, transparent);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  border: 1px solid var(--color-border-subtle);
+  box-shadow: var(--elevation-2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Interactive cards lift toward the cursor with an accent glow. */
+.dash-card {
+  border-radius: var(--radius-lg, 6px);
+  transition:
+    transform var(--dur-base, 220ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)),
+    box-shadow var(--dur-base, 220ms) ease,
+    border-color var(--dur-fast, 120ms) ease;
+}
+.dash-card--interactive { cursor: pointer; }
+.dash-card--interactive:hover {
+  transform: translateY(-2px) scale(1.005);
+  border-color: var(--color-accent-muted);
+  box-shadow:
+    var(--elevation-3),
+    0 0 0 1px rgba(45, 212, 191, 0.18),
+    0 8px 32px rgba(45, 212, 191, 0.10);
+}
+
+/* ---- KPI card: rotating conic accent ring revealed on hover ------------- */
+.dash-kpi { position: relative; overflow: hidden; }
+.dash-kpi:hover {
+  transform: translateY(-2px) scale(1.005);
+  border-color: var(--color-accent-muted);
+  box-shadow:
+    var(--elevation-3),
+    0 0 0 1px rgba(45, 212, 191, 0.18),
+    0 8px 32px rgba(45, 212, 191, 0.10);
+}
+.dash-kpi::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from 0deg, transparent 0deg, var(--color-accent) 70deg, transparent 150deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--dur-base, 220ms) ease;
+  animation: dashSpin 12s linear infinite;
+  animation-play-state: paused;
+  pointer-events: none;
+}
+.dash-kpi:hover::before { opacity: 0.7; animation-play-state: running; }
+
+@keyframes dashSpin { to { transform: rotate(360deg); } }
+
+/* Final glow dot at the end of a KPI sparkline / trend. */
+.dash-kpi__trend-bounce { animation: dashBounce 420ms var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both; }
+@keyframes dashBounce {
+  0%   { transform: translateY(4px) scale(0.7); opacity: 0; }
+  60%  { transform: translateY(-1px) scale(1.05); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* ---- Bento grid (built from scratch) ----------------------------------- *
+ * Container-query driven (responds to the dashboard's own width, not the
+ * viewport) with three states: wide ≥1200, medium 768–1199, compact <768.
+ * ------------------------------------------------------------------------- */
+.dashboard {
+  container-type: inline-size;
+  container-name: dashboard;
+}
+
+/* Centered, breathing canvas — capped at 1440px so it never stretches to the
+   wall on ultra-wide screens. Generous gaps between major rows. */
+.dash-canvas {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding: 32px 40px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Rows — a big KPI row, a cinematic chart, then asymmetric secondary/footer. */
+.dash-row-kpi {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+.dash-row-secondary,
+.dash-row-footer {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;   /* asymmetric, not a rigid 50/50 */
+  gap: 24px;
+  align-items: stretch;               /* equalize card heights → no gap below a short card */
+}
+
+/* Airy floating surface — soft diffuse shadow, large radius, hairline border,
+   glassy over the ambient background. */
+.dash-airy {
+  position: relative;
+  border-radius: var(--radius-2xl, 14px);
+  padding: 28px;
+  background: var(--color-bg-secondary);
+  background: color-mix(in srgb, var(--color-bg-secondary) 72%, transparent);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle) 55%, transparent);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  min-width: 0;
+}
+.dash-airy--hover {
+  transition:
+    transform var(--dur-base, 220ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)),
+    box-shadow var(--dur-base, 220ms) ease,
+    border-color var(--dur-fast, 120ms) ease;
+}
+.dash-airy--hover:hover {
+  transform: translateY(-1px);                 /* gentle, not a big jump */
+  border-color: var(--color-accent-muted);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(45, 212, 191, 0.14);
+}
+
+/* Hero — tall, calm, lots of vertical room. */
+.dash-hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  min-height: 132px;
+  padding: 32px 36px;
+}
+
+/* Cinematic chart hero. */
+.dash-chart-hero { min-height: 360px; display: flex; flex-direction: column; }
+
+/* Section heading inside an airy card. */
+.dash-zone__head { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.dash-zone__title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-muted); }
+
+/* medium — Tab portrait */
+@container dashboard (max-width: 1199px) {
+  .dash-canvas { padding: 24px 24px 36px; gap: 20px; }
+  .dash-row-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-row-secondary, .dash-row-footer { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* compact — phone */
+@container dashboard (max-width: 767px) {
+  .dash-canvas { padding: 16px 16px 32px; gap: 20px; }
+  .dash-row-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .dash-airy { padding: 20px; }
+  .dash-hero { padding: 22px; min-height: 0; }
+}
+
+/* Fallback for engines without container-query support. */
+@supports not (container-type: inline-size) {
+  .dash-row-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dash-row-secondary, .dash-row-footer { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---- KPI: one big "featured" card + a column of compact "split" cards ---- *
+ * Size variation on purpose — the hero metric (profit) dominates, the rest sit
+ * beside it lighter and quieter. ----------------------------------------------*/
+.dash-kpi-feature {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 20px;
+  align-items: stretch;
+}
+.dash-kpi-feature__splits {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Featured metric — tall, tinted, huge number. */
+.dash-kpi-feat {
+  position: relative;
+  overflow: hidden;
+  min-height: 232px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.dash-kpi-feat::after {                 /* gentle accent wash, top-left → out */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(45, 212, 191, 0.10), transparent 58%);
+  pointer-events: none;
+}
+.dash-kpi-feat__wm {                    /* oversized watermark glyph, very faint */
+  position: absolute;
+  right: -18px;
+  bottom: -22px;
+  width: 150px;
+  height: 150px;
+  color: var(--color-accent);
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* Compact split metric — icon block + value, horizontal. */
+.dash-kpi-split {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 22px;
+  flex: 1;
+}
+
+/* medium / compact — feature on top, splits in a row/stack beneath. */
+@container dashboard (max-width: 1199px) {
+  .dash-kpi-feature { grid-template-columns: minmax(0, 1fr); }
+  .dash-kpi-feature__splits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dash-kpi-feat { min-height: 180px; }
+}
+@container dashboard (max-width: 767px) {
+  .dash-kpi-feature__splits { grid-template-columns: minmax(0, 1fr); }
+  .dash-kpi-feat { min-height: 0; padding: 24px; }
+}
+@supports not (container-type: inline-size) {
+  .dash-kpi-feature { grid-template-columns: minmax(0, 1fr); }
+  .dash-kpi-feature__splits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* ---- Maintenance screen — indeterminate progress sweep ----------------- */
+.maint-progress { animation: maintSlide 1.6s ease-in-out infinite; }
+@keyframes maintSlide {
+  0%   { transform: translateX(-120%); }
+  100% { transform: translateX(420%); }
+}
+
+/* ---- Entry orchestration (staggered via inline animation-delay) --------- */
+.dash-enter {
+  opacity: 0;
+  animation: dashEnter var(--dur-cinematic, 500ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+}
+@keyframes dashEnter {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}

@@ -1,0 +1,28 @@
+[Unit]
+Description=PROMIX Automatix ERP Server (Node.js)
+After=network-online.target promix-ai-service.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+WorkingDirectory=/home/admin/Automatix-Dev
+Environment=NODE_ENV=production
+Environment=PROMIX_PORT=3500
+Environment=PROMIX_UPDATES_DIR=/home/admin/Automatix-Dev/updates
+# Remote-access knobs — see deploy/REMOTE_ACCESS.md.
+# Uncomment when fronted by a TLS reverse proxy (Caddy / nginx / Cloudflare Tunnel):
+#   Environment=PROMIX_TRUST_PROXY=1
+#   Environment=PROMIX_ALLOWED_ORIGINS=https://app.example.com
+# Use an EnvironmentFile for secrets so they don't live in this unit file:
+#   EnvironmentFile=/etc/promix/server.env
+ExecStart=/usr/bin/node /home/admin/Automatix-Dev/dist-server/server/index.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/var/log/promix/server.log
+StandardError=append:/var/log/promix/server.log
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

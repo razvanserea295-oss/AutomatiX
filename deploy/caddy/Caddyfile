@@ -1,0 +1,61 @@
+# PROMIX Automatix — Caddy reverse proxy for public HTTPS access.
+#
+# Caddy auto-provisions Let's Encrypt certificates on first request, so the
+# only setup is pointing your DNS A record at this PC's public IP and opening
+# inbound 80/443.
+#
+# Deploy:
+#   sudo apt install caddy
+#   sudo cp deploy/caddy/Caddyfile /etc/caddy/Caddyfile
+#   # edit the hostname below to match your domain
+#   sudo systemctl reload caddy
+#
+# Then on the systemd unit promix-server.service set:
+#   Environment=PROMIX_TRUST_PROXY=1
+#   Environment=PROMIX_ALLOWED_ORIGINS=https://promix.example.com
+#
+# This config does NOT expose the AI service (port 8100) — keep it LAN-only.
+
+promix.example.com {
+    encode gzip
+
+    # Reasonable header hygiene for a public ERP endpoint.
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options    "nosniff"
+        Referrer-Policy           "no-referrer"
+        # Don't leak the upstream Express server.
+        -Server
+    }
+
+    # Health probe — public so monitoring can hit it without auth.
+    @health path /api/health
+    handle @health {
+        reverse_proxy 127.0.0.1:3500
+    }
+
+    # Auto-updater payloads — already public by design (signed installers).
+    @updates path /api/update/*
+    handle @updates {
+        reverse_proxy 127.0.0.1:3500
+    }
+
+    # Everything else (the /api/cmd/* command bus). Limit body size to defend
+    # against memory-exhaustion uploads beyond what the Node server allows.
+    request_body {
+        max_size 60MB
+    }
+
+    reverse_proxy 127.0.0.1:3500 {
+        # Pass real client IP through to Express. The Node server reads
+        # X-Forwarded-For when PROMIX_TRUST_PROXY=1 is set.
+        header_up X-Real-IP        {remote_host}
+        header_up X-Forwarded-For  {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        # Don't let upstream HTTP errors leak detail to the public.
+        transport http {
+            response_header_timeout 30s
+            read_timeout            60s
+        }
+    }
+}

@@ -1,0 +1,20 @@
+[Unit]
+Description=PROMIX Automatix AI Service (Rust + Vulkan GPU inference)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=admin
+Group=admin
+SupplementaryGroups=video render
+WorkingDirectory=/home/admin/Automatix-Dev/ai-service
+ExecStart=/home/admin/Automatix-Dev/ai-service/target/release/ai-service --config /home/admin/Automatix-Dev/ai-service/config.toml
+Restart=on-failure
+RestartSec=5
+StandardOutput=append:/var/log/promix/ai-service.log
+StandardError=append:/var/log/promix/ai-service.log
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

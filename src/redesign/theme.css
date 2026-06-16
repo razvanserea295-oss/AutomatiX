@@ -1,0 +1,450 @@
+/* ============================================================================
+ * redesign/theme.css — motion / layout / view-transition utilities for the
+ * NEW Modern-SaaS UI. Companion to redesign/index.css (which owns the color +
+ * surface tokens). Colors are NOT redefined here.
+ *
+ * Load-bearing blocks preserved verbatim from the old theme.css so navigation
+ * keeps working: the View Transitions rules (page slide), the perf-tier
+ * overrides, the `.animate-page-in` fallback, density modes, and the
+ * ds-skeleton / ds-tab-indicator / ds-sparkline primitive micro-styles.
+ * The airy direction drops the animated aurora background: `.app-surface` is a
+ * SOLID page canvas (no translucency over an ambient layer).
+ * ==========================================================================*/
+
+:root {
+  /* Motion */
+  --dur-instant:   80ms;
+  --dur-fast:      120ms;
+  --dur-base:      220ms;
+  --dur-slow:      360ms;
+  --dur-cinematic: 600ms;
+  --ease-standard:   cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-anticipate: cubic-bezier(0.68, -0.55, 0.27, 1.55);
+
+  /* Opacity scale */
+  --o-04: 0.04; --o-08: 0.08; --o-12: 0.12; --o-18: 0.18; --o-35: 0.35;
+
+  /* Named z-index scale */
+  --z-bg: 0; --z-surface: 1; --z-overlay: 20; --z-dropdown: 40; --z-modal: 60; --z-toast: 80;
+
+  /* Soft shadow scale (diffuse, no glass) */
+  --shadow-glass-sm:  var(--elevation-1);
+  --shadow-glass-md:  var(--elevation-2);
+  --shadow-glass-lg:  var(--elevation-3);
+  --shadow-glass-glow: var(--ring-soft);
+
+  /* Page surface translucency OVER the mesh wallpaper. HIGHER = more solid /
+     legible (LOWER = more mesh shows). Kept MOSTLY solid: a subtle mesh wash
+     reads through, but the surface is opaque enough that (a) dense data stays
+     legible and (b) there is no see-through "glass glitch" during a page
+     transition or while a lazy page is still loading. Forced fully opaque during
+     a view transition (see `html.vt-active .app-surface` below). */
+  --page-surface-alpha: 80%;
+
+  /* Display typography rhythm */
+  --text-display:    34px;
+  --text-display-lg: 44px;
+}
+
+/* ============================================================================
+ * Density modes — local spacing. (No ambient intensity any more; solid canvas.)
+ * ==========================================================================*/
+.density-compact  { --ds-gap: 12px; --ds-pad: 16px; --page-surface-alpha: 92%; }
+.density-regular  { --ds-gap: 20px; --ds-pad: 24px; --page-surface-alpha: 84%; }
+.density-spacious { --ds-gap: 32px; --ds-pad: 32px; --page-surface-alpha: 72%; }
+
+/* ============================================================================
+ * Hover affordances — gentle (no glow halos in the airy direction).
+ * ==========================================================================*/
+.hover-lift { transition: box-shadow var(--dur-base) ease, border-color var(--dur-fast) ease; }
+.hover-lift:hover { border-color: var(--color-border); box-shadow: var(--elevation-2); }
+.hover-glow { transition: box-shadow var(--dur-base) ease, border-color var(--dur-fast) ease; }
+.hover-glow:hover { border-color: var(--color-accent-muted); box-shadow: var(--ring-soft); }
+
+/* ============================================================================
+ * Entry animations (opt-in via .enter-* + optional inline delay)
+ * ==========================================================================*/
+.enter-up,
+.enter-fade,
+.enter-scale { opacity: 0; will-change: transform, opacity; }
+.enter-up    { animation: dsEnterUp    420ms var(--ease-out-expo) both; }
+.enter-fade  { animation: dsEnterFade  var(--dur-slow) var(--ease-standard) both; }
+.enter-scale { animation: dsEnterScale var(--dur-slow) var(--ease-out-expo) both; }
+@keyframes dsEnterUp    { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes dsEnterFade  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dsEnterScale { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
+
+/* ============================================================================
+ * Form controls — indigo accent focus ring. Scoped to page content so it also
+ * covers in-page modals.
+ * ==========================================================================*/
+.app-surface input:not([type='checkbox']):not([type='radio']):focus,
+.app-surface select:focus,
+.app-surface textarea:focus {
+  border-color: var(--color-accent) !important;
+  box-shadow: var(--ring-soft);
+  outline: none;
+}
+
+/* ============================================================================
+ * Primary CTA — flat indigo with a subtle lift (no constant glow).
+ * ==========================================================================*/
+.btn-accent-glow {
+  background-color: var(--color-accent);
+  box-shadow: 0 1px 8px rgba(5, 150, 105, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform var(--dur-fast) var(--ease-apple, ease), box-shadow var(--dur-fast) ease;
+}
+.btn-accent-glow:hover { transform: translateY(-1px); box-shadow: 0 2px 12px rgba(5, 150, 105, 0.22); }
+.btn-accent-glow:active { transform: translateY(0); }
+
+/* ============================================================================
+ * Display typography
+ * ==========================================================================*/
+.text-display    { font-size: var(--text-display);    line-height: 1.05; font-weight: 600; letter-spacing: -0.02em; font-feature-settings: 'tnum'; }
+.text-display-lg { font-size: var(--text-display-lg); line-height: 1.02; font-weight: 700; letter-spacing: -0.025em; font-feature-settings: 'tnum'; }
+
+/* ============================================================================
+ * App background — ENTERPRISE canvas (rendered by AppBackground.tsx). A
+ * restrained, STATIC treatment (no animation): a faint monochrome technical
+ * grid + a soft vignette (light) / top-glow + vignette (dark). Sits behind the
+ * page content; the frosted chrome + translucent page surface let it read
+ * subtly, while solid cards sit cleanly on top. Cheap to paint → no perf-tier
+ * or reduced-motion handling needed.
+ * ==========================================================================*/
+.mesh-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: var(--color-bg-page);
+  background-image:
+    linear-gradient(to right, rgba(17, 17, 17, 0.01) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(17, 17, 17, 0.01) 1px, transparent 1px),
+    radial-gradient(ellipse 120% 115% at 50% 40%, transparent 62%, rgba(17, 17, 17, 0.03));
+  background-size: 52px 52px, 52px 52px, 100% 100%;
+  background-position: center;
+}
+.dark .mesh-bg {
+  background-color: #050607;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    radial-gradient(110% 70% at 50% -8%, rgba(255, 255, 255, 0.015), transparent 50%),
+    radial-gradient(ellipse 120% 120% at 50% 42%, transparent 52%, rgba(0, 0, 0, 0.52));
+  background-size: 52px 52px, 52px 52px, 100% 100%, 100% 100%;
+  background-position: center;
+}
+
+/* Slow, subtle drifting glows — muted enterprise canvas. This background is
+   now a calm, static neutral field without floating color or motion. */
+.app-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: var(--color-bg-page);
+  background-image:
+    radial-gradient(circle at 20% 12%, rgba(255,255,255,0.04), transparent 22%),
+    radial-gradient(circle at 80% 18%, rgba(255,255,255,0.02), transparent 20%);
+}
+.dark .app-bg {
+  background-color: #050607;
+  background-image:
+    radial-gradient(circle at 18% 10%, rgba(255,255,255,0.02), transparent 20%),
+    radial-gradient(circle at 82% 20%, rgba(255,255,255,0.01), transparent 18%);
+}
+.mesh-bg,
+.mesh-blob,
+.mesh-blob-1,
+.mesh-blob-2,
+.mesh-blob-3 {
+  display: none !important;
+}
+@media (prefers-reduced-motion: reduce) { .anim-glow, .hover-wiggle:hover { animation: none !important; } }
+
+/* Page surface — translucent over the mesh so the wallpaper shows through
+   behind content (solid cards still sit cleanly on top). Density raises the
+   opacity on dense pages for legibility (see --page-surface-alpha above). */
+.app-surface {
+  background-color: color-mix(in srgb, var(--color-bg-page) var(--page-surface-alpha, 84%), transparent);
+  /* Eases the subtle mesh back in AFTER a transition settles (opaque → wash). */
+  transition: background-color 280ms var(--ease-standard, ease);
+}
+/* During a view transition the surface is FULLY OPAQUE and snaps instantly, so
+   the captured old/new snapshots never show the mesh through (no doubling, no
+   see-through "glass glitch"). When `vt-active` clears on `.finished`, the base
+   rule's 280ms transition gently fades the mesh wash back in. */
+html.vt-active .app-surface { background-color: var(--color-bg-page); transition: none; }
+
+/* ============================================================================
+ * Page transitions (View Transitions API) — LOAD-BEARING, preserved verbatim.
+ * Directional slide of the page content (`page`); the shell stays put.
+ * ==========================================================================*/
+/* SHARED-ELEMENT MORPH. We deliberately do NOT name the page wrapper, so any
+   element carrying its own `view-transition-name` (via the primitives' `vtName`
+   prop or the .vt helper) is "lifted" and MORPHS — position, size and corner
+   radius animate between the old card and the next page's card — while
+   everything else crossfades through the default `root` snapshot.
+   Names must be unique among elements present at capture time; the list page
+   and the detail page are never in the DOM together, so list `card-42` morphs
+   into detail `card-42`. */
+
+/* Morphing groups (named cards) — fluid + slightly springy; THIS is the star:
+   a card with a `vtName` that exists on both pages physically morphs (position,
+   size, corner-radius) from the list card into the next page's hero card. */
+::view-transition-group(*) {
+  animation-duration: var(--vt-morph-dur, 520ms);
+  animation-timing-function: var(--vt-morph-ease, cubic-bezier(0.34, 1.12, 0.34, 1));
+}
+::view-transition-image-pair(*) { isolation: isolate; }
+::view-transition-old(*),
+::view-transition-new(*) { height: 100%; }
+
+/* SHELL STAYS STATIC. Just-in-time we name ONLY the content wrapper `page`
+   (pageTransitions.ts toggles `html.vt-active` around the transition), so the
+   `root` snapshot is everything ELSE — the titlebar, the sidebar/navbar, the
+   mesh background — and we HOLD it (no animation on old/new root → zero shell
+   motion, zero blink). Only `page` (the content panel) transitions. This is the
+   original "very good" page/subpage transition, restored. */
+html.vt-active .page-vt-root { view-transition-name: page; }
+::view-transition-group(root) { animation-duration: 0ms; }
+::view-transition-old(root),
+::view-transition-new(root) { animation: none; }
+
+/* TOP SELECTOR STAYS STATIC TOO. The workspace tab bar carries `.vt-ws-selector`;
+   just-in-time we give it its own name so it is LIFTED out of `page` and HELD
+   (no old/new animation) — exactly like the shell. Result: the tabs at the top
+   never move; only the content BELOW them morphs. */
+html.vt-active .vt-ws-selector { view-transition-name: ws-selector; }
+::view-transition-group(ws-selector) { animation-duration: 0ms; }
+::view-transition-old(ws-selector),
+::view-transition-new(ws-selector) { animation: none; }
+
+/* CONTENT PANEL — MORPH (scale + dissolve), flash-free, INSIDE the static shell.
+   The outgoing page recedes + fades while the incoming page emerges + scales into
+   place, so every navigation reads as a smooth morph rather than a flat slide.
+   Direction-aware: forward grows the new page UP from slightly small; back lets it
+   settle DOWN from slightly large. Named cards inside `page` are lifted out and
+   physically MORPH (position/size/radius) on top of this — a layered, high-end feel.
+   Uses transform+opacity (compositor-friendly) with a springy settle; a hair of
+   blur on the exiting snapshot sells the dissolve. */
+::view-transition-group(page) {
+  animation-duration: var(--vt-page-dur, 460ms);
+  animation-timing-function: var(--vt-morph-ease, cubic-bezier(0.34, 1.12, 0.34, 1));
+}
+::view-transition-old(page) { animation: vtPageOutFwd 280ms var(--ease-standard, cubic-bezier(0.22,1,0.36,1)) both; }
+::view-transition-new(page) { animation: vtPageInFwd  460ms var(--vt-morph-ease, cubic-bezier(0.34,1.12,0.34,1)) both; }
+html[data-vt-dir='back'] ::view-transition-old(page) { animation: vtPageOutBack 280ms var(--ease-standard, cubic-bezier(0.22,1,0.36,1)) both; }
+html[data-vt-dir='back'] ::view-transition-new(page) { animation: vtPageInBack  460ms var(--vt-morph-ease, cubic-bezier(0.34,1.12,0.34,1)) both; }
+
+@keyframes vtPageInFwd   { from { opacity: 0; transform: scale(0.955); } to { opacity: 1; transform: scale(1); } }
+@keyframes vtPageOutFwd  { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.022); filter: blur(2px); } }
+@keyframes vtPageInBack  { from { opacity: 0; transform: scale(1.03); }  to { opacity: 1; transform: scale(1); } }
+@keyframes vtPageOutBack { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.972); filter: blur(2px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*) { animation-duration: 1ms !important; }
+  ::view-transition-old(page) { animation: none !important; }
+  ::view-transition-new(page) { animation-duration: 120ms !important; animation-name: vtFade !important; transform: none !important; }
+}
+@keyframes vtFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* VT supported → it owns the entry; disable the CSS page-in fallback. */
+html.vt-supported .animate-page-in { animation: none !important; }
+
+@keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.animate-page-in { animation: pageIn 240ms var(--ease-out-expo) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin { animation: none !important; }
+}
+
+/* Marker class for morphing elements (the `view-transition-name` does the work).
+   No paint containment — it would clip the card's soft drop shadow. */
+.vt-morph { isolation: isolate; }
+
+/* ============================================================================
+ * Optional module layout — centered canvas + KPI row + bento. Available for
+ * dashboard-style pages; do NOT force on master-detail/board pages.
+ * ==========================================================================*/
+.mod-shell  { container-type: inline-size; container-name: mod; }
+.mod-canvas { width: 100%; max-width: 1480px; margin-inline: auto; padding: 28px 28px 40px; display: flex; flex-direction: column; gap: 24px; }
+.mod-kpis   { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.mod-bento  { display: grid; grid-template-columns: 1.7fr 1fr; gap: 24px; align-items: start; }
+.mod-aside  { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+@container mod (max-width: 1199px) {
+  .mod-canvas { padding: 22px 20px 32px; gap: 20px; }
+  .mod-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mod-bento { grid-template-columns: minmax(0, 1fr); }
+}
+@container mod (max-width: 767px) {
+  .mod-canvas { padding: 16px 14px 28px; gap: 16px; }
+  .mod-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+}
+@supports not (container-type: inline-size) {
+  .mod-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mod-bento { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Horizontal-scroll edge fade (wide Kanban boards) */
+.scroll-fade-x {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+}
+
+/* ============================================================================
+ * Primitive micro-styles (Sparkline / AnimatedTabs / Skeleton) — accent-driven
+ * (indigo follows the theme; no hardcoded teal).
+ * ==========================================================================*/
+.ds-sparkline.is-animated .ds-spark-line {
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: dsDraw var(--dur-cinematic) var(--ease-out-expo) forwards;
+}
+@keyframes dsDraw { to { stroke-dashoffset: 0; } }
+
+.ds-tab-indicator {
+  transition: left var(--dur-base) var(--ease-spring), width var(--dur-base) var(--ease-spring);
+  background: var(--color-accent);
+}
+
+.ds-skeleton { position: relative; overflow: hidden; background: var(--color-bg-tertiary); }
+.ds-skeleton::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 20%, color-mix(in srgb, var(--color-bg-elevated) 70%, transparent) 50%, transparent 80%);
+  transform: translateX(-100%);
+  animation: dsShimmer 1.5s linear infinite;
+}
+@keyframes dsShimmer { to { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .ds-skeleton::after { animation: none; }
+  .ds-skeleton { animation: dsPulse 1.6s ease-in-out infinite; }
+}
+@keyframes dsPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+/* ============================================================================
+ * Rendering-cost utilities
+ * ==========================================================================*/
+.perf-contain { contain: layout style; }
+.cv-auto { content-visibility: auto; contain-intrinsic-size: auto 120px; }
+
+/* ============================================================================
+ * Performance tiers — <html data-perf-tier="low|medium|high">. `high` = full.
+ * These only cheapen the heaviest effects on mid/low devices. Keep selectors
+ * tier-prefixed. (The airy UI has far less blur, so the overrides are lean.)
+ * ==========================================================================*/
+html[data-perf-tier='medium'] .surface-glass,
+html[data-perf-tier='medium'] .surface-glass-strong {
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+          backdrop-filter: saturate(140%) blur(8px);
+}
+html[data-perf-tier='low'] .surface-glass,
+html[data-perf-tier='low'] .surface-glass-strong {
+  -webkit-backdrop-filter: saturate(130%) blur(4px);
+          backdrop-filter: saturate(130%) blur(4px);
+}
+html[data-perf-tier='low'] ::view-transition-group(*),
+html[data-perf-tier='low'] ::view-transition-old(page),
+html[data-perf-tier='low'] ::view-transition-new(page) { animation-duration: 140ms !important; }
+html[data-perf-tier='low'] .enter-up,
+html[data-perf-tier='low'] .enter-fade,
+html[data-perf-tier='low'] .enter-scale { animation-duration: 160ms; }
+/* Big staggered lists/grids: cut the per-child duration AND collapse the
+   cascade on low-end devices so a long table doesn't paint a slow wave. */
+html[data-perf-tier='low'] .stagger-in > * { animation-duration: 160ms; animation-delay: 0ms !important; }
+html[data-perf-tier='low'] .ds-sparkline.is-animated .ds-spark-line { animation-duration: 200ms; }
+
+/* ============================================================================
+ * DETAIL ANIMATIONS — micro-interactions that "put the dot on the i". Applied
+ * app-wide via element/utility selectors so every surface gets life. All are
+ * GPU-friendly (transform/opacity) and fully neutralised under reduced-motion.
+ * ==========================================================================*/
+
+/* Every glass card gets a gentle springy hover lift + deeper shadow. */
+:where(.app-surface) .surface-card {
+  transition: transform var(--dur-base) var(--ease-spring), box-shadow var(--dur-base) ease, border-color var(--dur-fast) ease;
+}
+@media (hover: hover) {
+  :where(.app-surface) .surface-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-soft-lg); }
+}
+/* Never fight the page View Transition (the new page's cards are mid-capture). */
+html.vt-active :where(.app-surface) .surface-card { transition: none; transform: none; }
+
+/* Buttons: springy press + hover feedback for any redesign button. */
+button:not(:disabled) { transition: transform var(--dur-fast) var(--ease-spring), filter var(--dur-fast) ease, box-shadow var(--dur-fast) ease; }
+@media (hover: hover) { button:not(:disabled):hover { filter: brightness(1.03); } }
+button:not(:disabled):active { transform: scale(0.97); }
+
+/* List / table rows: quick highlight on hover. */
+tbody tr { transition: background-color var(--dur-fast) ease, transform var(--dur-fast) ease; }
+
+/* Reusable entrance / attention keyframes + opt-in utility classes. */
+@keyframes popIn    { 0% { opacity: 0; transform: scale(0.82); } 60% { transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes riseIn   { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes floatY   { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes glowPulse{ 0%, 50%, 100% { box-shadow: none; } }
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+@keyframes wiggle   { 0%,100% { transform: rotate(0); } 25% { transform: rotate(0); } 75% { transform: rotate(0); } }
+.anim-pop       { animation: popIn 360ms var(--ease-spring) both; }
+.anim-rise      { animation: riseIn 460ms var(--ease-apple) both; }
+.anim-float     { animation: none !important; }
+.anim-glow      { animation: none !important; }
+.anim-spin-slow { animation: none !important; }
+.hover-wiggle:hover { animation: none !important; }
+
+/* Staggered children — opt-in: add `stagger-in` to a list/grid container. */
+.stagger-in > * { animation: riseIn 480ms var(--ease-apple) both; }
+.stagger-in > *:nth-child(1) { animation-delay: 0ms; }    .stagger-in > *:nth-child(2) { animation-delay: 45ms; }
+.stagger-in > *:nth-child(3) { animation-delay: 90ms; }   .stagger-in > *:nth-child(4) { animation-delay: 135ms; }
+.stagger-in > *:nth-child(5) { animation-delay: 180ms; }  .stagger-in > *:nth-child(6) { animation-delay: 225ms; }
+.stagger-in > *:nth-child(7) { animation-delay: 270ms; }  .stagger-in > *:nth-child(8) { animation-delay: 315ms; }
+.stagger-in > *:nth-child(n+9) { animation-delay: 360ms; }
+
+/* Bar / connector grow-in — width/height-AGNOSTIC (scale + fixed origin), so it
+   works on any progress/capacity/aging bar without knowing its target width.
+   Add `anim-bar-grow` to a horizontal fill, `anim-grow-y` to a vertical line. */
+@keyframes barGrowX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes growY    { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.anim-bar-grow { transform-origin: left center; animation: barGrowX 720ms var(--ease-out-expo, cubic-bezier(0.16,1,0.3,1)) both; }
+.anim-grow-y   { transform-origin: top center;  animation: growY 480ms var(--ease-out-expo, cubic-bezier(0.16,1,0.3,1)) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  :where(.app-surface) .surface-card:hover { transform: none; }
+  button:not(:disabled):active { transform: none; }
+  .anim-pop, .anim-rise, .anim-float, .anim-glow, .anim-spin-slow, .hover-wiggle:hover,
+  .anim-bar-grow, .anim-grow-y, .stagger-in > * { animation: none !important; }
+}
+html[data-perf-tier='low'] .anim-bar-grow,
+html[data-perf-tier='low'] .anim-grow-y { animation-duration: 200ms; }
+
+/* ============================================================================
+ * COMPAT — styles that the EXISTING (not-yet-rebuilt) components reference, so
+ * the whole app re-skins cleanly to the monochrome/Apple language the moment
+ * main.tsx loads this stylesheet. These shrink as components get rebuilt.
+ * ==========================================================================*/
+
+/* Legacy GlassCard + glassy panels → calm, highly legible card surfaces. */
+.glass-surface,
+.glass-elevated,
+.glass-floating {
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Legacy ambient background (AppBackground) → no colored orbs; solid canvas. */
+.app-bg { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.app-bg__orb, .app-bg__grid, .app-bg__particles, .app-bg__p, .app-bg__vignette { display: none !important; }
+.app-circuit-bg { position: relative; isolation: isolate; }
+
+/* Legacy aurora backdrops (boot loader, first-run wizard, login orbs) → calm
+   monochrome surfaces (no colored aurora). The gear/logo itself still shows. */
+.boot-loader { background: var(--color-bg-page); color: var(--color-text-primary); }
+.boot-loader-orb, .boot-ring, .boot-gear-halo { display: none !important; }
+.aurora-backdrop { background: var(--color-bg-page); }
+.aurora-backdrop-orb, .login-aurora-orb { display: none !important; }

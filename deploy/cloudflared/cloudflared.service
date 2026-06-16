@@ -1,0 +1,21 @@
+[Unit]
+Description=Cloudflare Tunnel for PROMIX Automatix
+After=network-online.target promix-server.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cloudflared
+Group=cloudflared
+ExecStart=/usr/local/bin/cloudflared tunnel --config /etc/cloudflared/config.yml run
+Restart=on-failure
+RestartSec=5
+# Tunnels are unprivileged — drop perms.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/cloudflared
+
+[Install]
+WantedBy=multi-user.target

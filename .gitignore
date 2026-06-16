@@ -1,0 +1,22 @@
+node_modules/
+dist/
+dist-electron/
+dist-server/
+data/
+release/
+*.db
+.claude/
+playwright-report/
+test-results/
+ai-service/target/
+ai-service/target-linux/
+ai-service/target-win/
+ai-service/dist/
+# Real config (with secrets) — track only the .example template. Existing
+# checkouts must `git rm --cached ai-service/config.toml` after updating.
+ai-service/config.toml
+
+# Desktop build artifacts (large)
+dist-installer/
+public/downloads/*.exe
+build/icon.png

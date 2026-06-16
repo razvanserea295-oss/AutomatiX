@@ -1,0 +1,58 @@
+# Promix Automatix — production stack: the Node app behind Caddy, which
+# terminates TLS and gets/renews Let's Encrypt certificates automatically.
+#
+# Quick start:
+#   1. cp .env.example .env   &&   edit .env (set PROMIX_DOMAIN + PROMIX_DB_KEY)
+#   2. point your domain's DNS A/AAAA record at this host
+#   3. docker compose up -d --build
+#
+# See DEPLOY.md for the full guide.
+
+services:
+  app:
+    build: .
+    # Or pull the released image instead of building:
+    # image: ghcr.io/OWNER/REPO:latest
+    restart: unless-stopped
+    environment:
+      PROMIX_PORT: "3500"
+      # Behind Caddy → read real client IPs from X-Forwarded-For.
+      PROMIX_TRUST_PROXY: "1"
+      # Lock CORS to your public origin so a malicious site can't ride a
+      # logged-in user's session.
+      PROMIX_ALLOWED_ORIGINS: "https://${PROMIX_DOMAIN}"
+      PROMIX_PUBLIC_URL: "https://${PROMIX_DOMAIN}"
+      # 64-hex-char AES key for the at-rest DB. Set in .env. If omitted, the app
+      # generates data/.dbkey on first boot (back it up — losing it is fatal).
+      PROMIX_DB_KEY: "${PROMIX_DB_KEY:-}"
+    volumes:
+      - promix-data:/app/data
+    expose:
+      - "3500"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3500/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    environment:
+      PROMIX_DOMAIN: "${PROMIX_DOMAIN}"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data       # persists issued certificates
+      - caddy-config:/config
+
+volumes:
+  promix-data:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,25 @@
+# Caddy reverse proxy for Promix Automatix.
+# Terminates TLS (automatic Let's Encrypt certs for {$PROMIX_DOMAIN}) and
+# forwards to the app container on :3500. The domain comes from the
+# PROMIX_DOMAIN env var (set in .env / docker-compose).
+
+{$PROMIX_DOMAIN} {
+	encode zstd gzip
+
+	# Stream Server-Sent Events (/api/events) without buffering so live
+	# updates and the 25s heartbeat reach the browser immediately.
+	@sse path /api/events
+	reverse_proxy @sse app:3500 {
+		flush_interval -1
+	}
+
+	reverse_proxy app:3500
+
+	# Basic security headers (Caddy already adds HSTS on HTTPS sites).
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}
