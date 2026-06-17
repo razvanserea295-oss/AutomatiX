@@ -203,7 +203,7 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
       </div>
 
       {tab === 'supervision' && (
-        <Page.Body key="supervision" fit padding="comfortable" maxWidth="wide" className="enter-fade">
+        <Page.Body key="supervision" fit padding="comfortable" maxWidth="wide" className="enter-fade overflow-y-auto">
           {}
           <div className="shrink-0 grid grid-cols-2 md:grid-cols-4 gap-4 enter-up" style={{ animationDelay: '80ms' }}>
             <KpiCard
@@ -237,10 +237,10 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
           </div>
 
           {}
-          <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-4">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
 
             {}
-            <Card className="xl:col-span-8 enter-up flex flex-col min-h-0 max-xl:max-h-[60vh]" style={{ animationDelay: '140ms' }}>
+            <Card className="xl:col-span-8 enter-up flex flex-col max-h-[55vh]" style={{ animationDelay: '140ms' }}>
               <CardHeader
                 className="shrink-0"
                 title="Predări în supraveghere"
@@ -288,7 +288,7 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
             </Card>
 
             {}
-            <Card className="xl:col-span-4 enter-up flex flex-col min-h-0 max-xl:max-h-[50vh]" style={{ animationDelay: '200ms' }}>
+            <Card className="xl:col-span-4 enter-up flex flex-col max-h-[55vh]" style={{ animationDelay: '200ms' }}>
               <CardHeader
                 className="shrink-0"
                 title="Anomalii detectate"

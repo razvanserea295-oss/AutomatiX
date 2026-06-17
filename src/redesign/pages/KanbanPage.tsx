@@ -134,6 +134,13 @@ function isCompletedStage(name: string): boolean {
   return /finaliz|complet|livr|terminat|gata|done|închis|inchis/i.test(name || '');
 }
 
+// DB stage names arrive in mixed casing ("Ofertare / Contractare" next to
+// "necesar materiale - stoc hală"). Sentence-case the first letter so every
+// column header reads on one rule, without touching the rest of the label.
+function sentenceCase(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
 
 
 
@@ -356,7 +363,7 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
         <ViewerBanner page="production" />
 
         {}
-        <div className="px-5 pt-5 pb-4 shrink-0">
+        <div className="px-6 pt-5 pb-4 shrink-0">
           <HeroHeader
             className="enter-up"
             style={{ animationDelay: '0ms' }}
@@ -371,16 +378,16 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
 
         {}
         {!isPiecesMode && stats && (
-          <div className="px-5 pb-5 shrink-0">
+          <div className="px-6 pb-5 shrink-0">
             <div
               className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 enter-up stagger-in"
               style={{ animationDelay: '80ms' }}
             >
-              <KpiCard label="Total proiecte" value={stats.total ?? 0}        icon={Layers}        iconColor="text-status-blue" />
-              <KpiCard label="În producție"   value={stats.in_production ?? 0} icon={Clock}         iconColor="text-status-teal" />
-              <KpiCard label="Aprobate"       value={stats.approved ?? 0}      icon={CheckCircle2}  iconColor="text-status-green" />
-              <KpiCard label="Blocate"        value={stats.blocked ?? 0}       icon={AlertTriangle} iconColor="text-status-red" />
-              <KpiCard label="Finalizate"     value={stats.completed ?? 0}     icon={BarChart3}     iconColor="text-accent" />
+              <KpiCard compact label="Total proiecte" value={stats.total ?? 0}        icon={Layers}        iconColor="text-status-blue" />
+              <KpiCard compact label="În producție"   value={stats.in_production ?? 0} icon={Clock}         iconColor="text-status-teal" />
+              <KpiCard compact label="Aprobate"       value={stats.approved ?? 0}      icon={CheckCircle2}  iconColor="text-status-green" />
+              <KpiCard compact label="Blocate"        value={stats.blocked ?? 0}       icon={AlertTriangle} iconColor="text-status-red" />
+              <KpiCard compact label="Finalizate"     value={stats.completed ?? 0}     icon={BarChart3}     iconColor="text-accent" />
             </div>
           </div>
         )}
@@ -502,7 +509,7 @@ function StageColumn({
         className="flex items-center justify-between gap-2 px-3.5 py-3 border-b border-line/70"
         style={{ borderTop: `3px solid ${color}` }}
       >
-        <h3 className="text-pm-sm font-semibold text-content-primary truncate">{name}</h3>
+        <h3 className="text-pm-sm font-semibold text-content-primary truncate">{sentenceCase(name)}</h3>
         <span className="inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-lg bg-surface-tertiary text-pm-2xs font-semibold text-content-muted tabular-nums">
           {animCount}
         </span>
@@ -578,7 +585,7 @@ function ProjectsBoard({
   };
 
   return (
-    <div className="flex flex-1 min-h-0 gap-4 px-5 pb-4 overflow-hidden enter-fade">
+    <div className="flex flex-1 min-h-0 gap-4 px-6 pb-4 overflow-hidden enter-fade">
       {}
       <div className="flex flex-1 min-w-0 gap-3 overflow-x-auto overflow-y-hidden scroll-fade-x pb-1">
         {active.map((col, i) => renderCol(col, i, false))}
@@ -586,7 +593,7 @@ function ProjectsBoard({
 
       {}
       {doneCols.length > 0 && (
-        <aside className="flex w-[300px] shrink-0 flex-col min-h-0 gap-3 overflow-y-auto pb-1">
+        <aside className="flex w-[300px] shrink-0 flex-col min-h-0 gap-3 overflow-y-auto border-l border-line/60 pl-4 ml-1 pb-1">
           <div className="flex items-center gap-2 px-1 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">
             <CircleCheckBig className="h-3.5 w-3.5 text-status-green" />
             Finalizate
@@ -716,7 +723,7 @@ function PiecesBoard({
 }) {
   if (columns.length === 0) {
     return (
-      <div className="flex flex-1 px-5 pb-4">
+      <div className="flex flex-1 px-6 pb-4">
         <Card tone="subtle" className="flex flex-1 items-center justify-center">
           <EmptyState
             icon={Package}
@@ -770,7 +777,7 @@ function PiecesBoard({
   };
 
   return (
-    <div className="flex flex-1 min-h-0 gap-4 px-5 pb-4 overflow-hidden enter-fade">
+    <div className="flex flex-1 min-h-0 gap-4 px-6 pb-4 overflow-hidden enter-fade">
       {}
       <div className="flex flex-1 min-w-0 gap-3 overflow-x-auto overflow-y-hidden scroll-fade-x pb-1">
         {active.map((col, i) => renderCol(col, i, false))}
@@ -778,7 +785,7 @@ function PiecesBoard({
 
       {}
       {doneCols.length > 0 && (
-        <aside className="flex w-[280px] shrink-0 flex-col min-h-0 gap-3 overflow-y-auto pb-1">
+        <aside className="flex w-[280px] shrink-0 flex-col min-h-0 gap-3 overflow-y-auto border-l border-line/60 pl-4 ml-1 pb-1">
           <div className="flex items-center gap-2 px-1 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">
             <CircleCheckBig className="h-3.5 w-3.5 text-status-green" />
             Finalizate

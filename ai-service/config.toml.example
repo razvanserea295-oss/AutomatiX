@@ -1,0 +1,51 @@
+# ============================================================
+# AI Service Configuration — PROMIX Automatix (LOCAL, WINDOWS)
+# Local GPU inference on Nvidia RTX 5060 Ti via CUDA.
+#
+# TEMPLATE — copy to config.toml and fill in the real values:
+#     cp config.toml.example config.toml
+# config.toml is git-ignored and MUST NOT be committed (it holds a real
+# service-account password). Generate/rotate that account with:
+#     node scripts/create-aiservice-user.mjs
+# ============================================================
+
+[server]
+# SECURITY: bind to loopback only — the AI service must NOT be reachable
+# from the LAN or the internet directly. External access goes through the
+# Express proxy at /ai/* with a PROMIX JWT auth gate. Binding to 0.0.0.0
+# previously meant any device on the LAN could call /chat directly and run
+# arbitrary SQL via the agent's `query_database` tool. (Audit finding:
+# CRITICAL.)
+host = "127.0.0.1"
+port = 8100
+
+[model]
+# Qwen2.5-7B-Instruct Q4_K_M — fits entirely on RTX 5060 Ti 8GB VRAM.
+path = "C:/APLICATIE AUTOMATIX/PromixData/models/Qwen2.5-7B-Instruct-Q4_K_M.gguf"
+gpu_layers = 999
+ctx_size = 16384
+threads = 0
+
+[database]
+# Note: the DB at data/promix.db is AES-GCM encrypted, so the sqlx
+# query_database tool currently can't read it. Keeping the URL here just so
+# the connect() at boot doesn't error.
+url = "sqlite:///C:/PATH/TO/data/promix.db"
+
+[erp]
+api_base_url = "http://localhost:3500"
+# Bootstrap-only account. Per-request authorization comes from the caller's
+# JWT (forwarded by the client via `user_token` in /chat). This account is
+# used solely so the Rust process can boot (login on startup) and as a
+# locked-down fallback for any /chat call that doesn't carry a user_token.
+# Role is the most restrictive active role available.
+service_username = "aiservice"
+# Set this from the output of scripts/create-aiservice-user.mjs. NEVER commit
+# the real value — keep it only in the git-ignored config.toml.
+service_password = "CHANGE_ME"
+
+[auth]
+# Empty = /chat is unauthenticated. Acceptable on localhost; if you ever expose
+# port 8100 beyond the LAN, set a token here AND store it in the UI's
+# localStorage key `promix_ai_token` (Settings → AI service token).
+api_token = ""

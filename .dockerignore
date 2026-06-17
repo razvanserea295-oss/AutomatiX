@@ -1,0 +1,44 @@
+# Dependencies & build outputs (rebuilt inside the image)
+node_modules
+dist
+dist-server
+
+# Runtime state — CRITICAL: never bake the encrypted DB or its .dbkey into an
+# image, and don't bloat the build context with backups/updates.
+data
+backups
+updates
+**/*.bak
+.audit-salvage.json
+
+# Native / Rust artifacts (ai-service builds separately)
+ai-service/target
+src-tauri
+src-tauri/target
+**/*.rs.bk
+
+# Git & IDE
+.git
+.gitignore
+.github
+.cursor
+.vscode
+.idea
+
+# Logs & local env (never bake secrets)
+*.log
+.env
+.env.*
+!.env.example
+
+# Tests & docs (not needed at runtime)
+coverage
+tests/e2e
+playwright-report
+test-results
+*.md
+!README.md
+
+# OS
+.DS_Store
+Thumbs.db

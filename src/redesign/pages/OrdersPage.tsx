@@ -132,9 +132,7 @@ export default function OrdersPage({ user: _user }: { user: User | null }) {
             <ClipboardList className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <p className="text-pm-eyebrow text-accent mb-1 flex items-center gap-2">
-              <span className="inline-block h-px w-3.5 bg-accent/50" aria-hidden /> Restaurant
-            </p>
+            {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
             <h1 className="text-pm-2xl font-semibold text-content-primary truncate leading-tight">Comenzi</h1>
             <p className="mt-1 text-pm-sm text-content-muted">Preia comenzi și urmărește-le până la livrare</p>
           </div>

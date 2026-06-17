@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "Promix Automatix",
+  "short_name": "Automatix",
+  "description": "ERP Promix Automatix — proiecte, producție, financiar, echipă. Aplicație client conectată la serverul Automatix.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "lang": "ro",
+  "dir": "ltr",
+  "background_color": "#FFFFFF",
+  "theme_color": "#059669",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

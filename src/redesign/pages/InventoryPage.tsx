@@ -1,18 +1,11 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
-  DynamicPage, DynamicPageTitle, DynamicPageHeader,
-  Title, Label, Text, ObjectStatus, Toolbar, ToolbarButton,
-  FilterBar, FilterGroupItem, Select, Option, Input,
-  AnalyticalTable, Button, Dialog, Bar,
-} from '@ui5/webcomponents-react';
-import ButtonDesign from '@ui5/webcomponents/dist/types/ButtonDesign.js';
-import ValueState from '@ui5/webcomponents-base/dist/types/ValueState.js';
-import addIcon from '@ui5/webcomponents-icons/dist/add.js';
-import editIcon from '@ui5/webcomponents-icons/dist/edit.js';
-import deleteIcon from '@ui5/webcomponents-icons/dist/delete.js';
-import historyIcon from '@ui5/webcomponents-icons/dist/history.js';
+  Package, AlertTriangle, Ban, TrendingDown, Wallet, History, Plus,
+  Pencil, Trash2, Search, X as XIcon, Loader2,
+} from 'lucide-react';
 
 import type { User } from '@/core/types';
+import { cn } from '@/lib/cn';
 import { useMaterialStore, type Material } from '@/store/materialStore';
 import { useSettingsStore, useMoney } from '@/store/settingsStore';
 import { apiCommand } from '@/api/commands';
@@ -20,7 +13,16 @@ import { useViewerMode } from '@/hooks/useViewerMode';
 import { toast } from '@/store/toastStore';
 import { confirmDialog } from '@/components/ConfirmDialog';
 
-// ── Stock-status helpers (preserved verbatim from the prior implementation) ──
+import Page from '@/redesign/ui/Page';
+import Card from '@/redesign/ui/Card';
+import KpiCard from '@/redesign/ui/KpiCard';
+import Button from '@/redesign/ui/Button';
+import IconButton from '@/redesign/ui/IconButton';
+import StatusBadge from '@/redesign/ui/StatusBadge';
+import type { StatusTone } from '@/lib/statusTokens';
+import { filterSearchInputCls, filterSearchIconCls, filterSelectCls } from '@/redesign/ui/filterControls';
+
+// ── Stock-status helpers (preserved verbatim) ──
 function qtyOf(m: Material): number { return m.quantity ?? m.stock ?? 0; }
 function minOf(m: Material): number { return m.minimum_threshold ?? m.min_stock ?? 0; }
 function isLowStock(m: Material): boolean {
@@ -31,10 +33,10 @@ function isOutOfStock(m: Material): boolean {
   const s = (m.status || '').toLowerCase();
   return s === 'epuizat' || s === 'out_of_stock' || qtyOf(m) === 0;
 }
-function stockState(m: Material): { state: ValueState; label: string } {
-  if (isOutOfStock(m)) return { state: ValueState.Negative, label: 'Epuizat' };
-  if (isLowStock(m)) return { state: ValueState.Critical, label: 'Stoc redus' };
-  return { state: ValueState.Positive, label: 'În stoc' };
+function stockBadge(m: Material): { tone: StatusTone; label: string } {
+  if (isOutOfStock(m)) return { tone: 'danger', label: 'Epuizat' };
+  if (isLowStock(m)) return { tone: 'warning', label: 'Stoc redus' };
+  return { tone: 'success', label: 'În stoc' };
 }
 
 type FormState = {
@@ -47,16 +49,11 @@ const EMPTY_FORM: FormState = {
   unit_cost: '0', currency: 'RON', supplier: '', location: '',
 };
 
-function Kpi({ label, value, state }: { label: string; value: number | string; state?: ValueState }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', minWidth: '5rem' }}>
-      <Label>{label}</Label>
-      <Title level="H4" style={state && state !== ValueState.None ? { color: `var(--sapField_${state}Color, inherit)` } : undefined}>
-        {String(value)}
-      </Title>
-    </div>
-  );
-}
+interface ConsumptionRow { date?: string; created_at?: string; material_name?: string; material?: string; project_name?: string; project?: string; quantity?: number; user_name?: string; user?: string }
+interface Col<T> { key: string; header: string; align?: 'end'; render?: (row: T) => React.ReactNode }
+
+const inputCls = 'w-full h-9 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary focus:outline-none focus:border-accent/50';
+const labelCls = 'text-pm-2xs font-bold uppercase tracking-wide text-content-muted';
 
 export default function InventoryPage({ user: _user }: { user: User | null }) {
   const isViewer = useViewerMode('materials');
@@ -79,19 +76,19 @@ export default function InventoryPage({ user: _user }: { user: User | null }) {
   const [filterCategory, setFilterCategory] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [histOpen, setHistOpen] = useState(false);
-  const [consumptions, setConsumptions] = useState<any[]>([]);
+  const [consumptions, setConsumptions] = useState<ConsumptionRow[]>([]);
 
   useEffect(() => {
     void fetchMaterials();
     void fetchLocations();
     void loadSettings();
-    apiCommand<any[]>('get_material_consumptions')
+    apiCommand<ConsumptionRow[]>('get_material_consumptions')
       .then(d => setConsumptions(Array.isArray(d) ? d : []))
       .catch(() => setConsumptions([]));
   }, [fetchMaterials, fetchLocations, loadSettings]);
 
   const categories = useMemo(
-    () => [...new Set(materials.map(m => m.category).filter(Boolean))].sort(),
+    () => [...new Set(materials.map(m => m.category).filter(Boolean))].sort() as string[],
     [materials],
   );
 
@@ -130,7 +127,7 @@ export default function InventoryPage({ user: _user }: { user: User | null }) {
   }, []);
 
   const handleDelete = useCallback(async (m: Material) => {
-    if (!(await confirmDialog({ title: 'Șterge materialul?', body: `„${m.name}" va fi eliminat. Acțiunea nu poate fi anulată.`, danger: true }))) return;
+    if (!(await confirmDialog({ title: 'Șterge materialul?', body: `„${m.name}” va fi eliminat. Acțiunea nu poate fi anulată.`, danger: true }))) return;
     try { await deleteMaterial(m.id); toast.success('Material șters'); }
     catch (err) { toast.error(err instanceof Error ? err.message : 'Eroare la ștergere'); }
   }, [deleteMaterial]);
@@ -150,170 +147,200 @@ export default function InventoryPage({ user: _user }: { user: User | null }) {
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Eroare la salvare'); }
   }, [form, editId, createMaterial, updateMaterial]);
 
-  const set = (k: keyof FormState) => (v: string) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setForm(f => ({ ...f, [k]: e.target.value }));
 
-  const columns = useMemo<any[]>(() => [
-    { Header: 'Denumire', accessor: 'name', Cell: ({ row }: any) => <Text>{row.original.name}</Text> },
-    { Header: 'Categorie', accessor: 'category' },
-    { Header: 'Unitate', accessor: 'unit', width: 90 },
-    { Header: 'Cantitate', accessor: 'quantity', hAlign: 'End', width: 110, Cell: ({ row }: any) => qtyOf(row.original) },
-    { Header: 'Prag minim', accessor: 'minimum_threshold', hAlign: 'End', width: 110, Cell: ({ row }: any) => minOf(row.original) },
-    { Header: 'Furnizor', accessor: 'supplier_name' },
+  const columns: Col<Material>[] = [
+    { key: 'name', header: 'Denumire', render: m => <span className="font-medium text-content-primary">{m.name}</span> },
+    { key: 'category', header: 'Categorie', render: m => m.category || '—' },
+    { key: 'unit', header: 'Unitate', render: m => m.unit || '—' },
+    { key: 'quantity', header: 'Cantitate', align: 'end', render: m => qtyOf(m) },
+    { key: 'min', header: 'Prag minim', align: 'end', render: m => minOf(m) },
+    { key: 'supplier', header: 'Furnizor', render: m => m.supplier_name || '—' },
+    { key: 'status', header: 'Status', render: m => { const s = stockBadge(m); return <StatusBadge tone={s.tone} label={s.label} size="xs" />; } },
     {
-      Header: 'Status', accessor: 'status', width: 130,
-      Cell: ({ row }: any) => {
-        const s = stockState(row.original);
-        return <ObjectStatus state={s.state}>{s.label}</ObjectStatus>;
-      },
-    },
-    {
-      Header: 'Acțiuni', id: 'actions', disableSortBy: true, hAlign: 'End', width: 110,
-      Cell: ({ row }: any) => (
-        isViewer ? null : (
-          <div style={{ display: 'flex', gap: '0.25rem' }}>
-            <Button design={ButtonDesign.Transparent} icon={editIcon} tooltip="Editează" onClick={() => openEdit(row.original)} />
-            <Button design={ButtonDesign.Transparent} icon={deleteIcon} tooltip="Șterge" onClick={() => handleDelete(row.original)} />
-          </div>
-        )
+      key: 'actions', header: '', align: 'end', render: m => isViewer ? null : (
+        <span className="inline-flex items-center gap-1 justify-end">
+          <IconButton intent="primary" size="sm" title="Editează" onClick={() => openEdit(m)}><Pencil aria-hidden /></IconButton>
+          <IconButton intent="danger" size="sm" title="Șterge" onClick={() => handleDelete(m)}><Trash2 aria-hidden /></IconButton>
+        </span>
       ),
     },
-  ], [isViewer, openEdit, handleDelete]);
+  ];
 
-  const histColumns = useMemo<any[]>(() => [
-    { Header: 'Data', accessor: 'date', Cell: ({ row }: any) => row.original.date ?? row.original.created_at ?? '—' },
-    { Header: 'Material', accessor: 'material_name', Cell: ({ row }: any) => row.original.material_name ?? row.original.material ?? '—' },
-    { Header: 'Proiect', accessor: 'project_name', Cell: ({ row }: any) => row.original.project_name ?? row.original.project ?? '—' },
-    { Header: 'Cantitate', accessor: 'quantity', hAlign: 'End', Cell: ({ row }: any) => row.original.quantity ?? '—' },
-    { Header: 'Utilizator', accessor: 'user_name', Cell: ({ row }: any) => row.original.user_name ?? row.original.user ?? '—' },
-  ], []);
+  const histColumns: Col<ConsumptionRow>[] = [
+    { key: 'date', header: 'Data', render: r => <span className="tabular-nums text-content-muted">{r.date ?? r.created_at ?? '—'}</span> },
+    { key: 'material', header: 'Material', render: r => r.material_name ?? r.material ?? '—' },
+    { key: 'project', header: 'Proiect', render: r => r.project_name ?? r.project ?? '—' },
+    { key: 'quantity', header: 'Cantitate', align: 'end', render: r => r.quantity ?? '—' },
+    { key: 'user', header: 'Utilizator', render: r => r.user_name ?? r.user ?? '—' },
+  ];
 
   return (
-    <>
-      <DynamicPage
-        style={{ height: '100%' }}
-        titleArea={
-          <DynamicPageTitle
-            heading={<Title>Inventar</Title>}
-            subheading={<Text>Catalog de materiale, stocuri, valoare și consumuri</Text>}
-            actionsBar={
-              <Toolbar design="Transparent">
-                <ToolbarButton icon={historyIcon} text="Istoric consumuri" onClick={() => setHistOpen(true)} />
-                <ToolbarButton design={ButtonDesign.Emphasized} icon={addIcon} text="Adaugă material" onClick={openCreate} disabled={isViewer} />
-              </Toolbar>
-            }
-          >
-            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-              <Kpi label="Total articole" value={metrics.total} />
-              <Kpi label="Stoc redus" value={metrics.lowStock} state={metrics.lowStock > 0 ? ValueState.Critical : ValueState.None} />
-              <Kpi label="Epuizat" value={metrics.outOfStock} state={metrics.outOfStock > 0 ? ValueState.Negative : ValueState.None} />
-              <Kpi label="Sub prag" value={metrics.subPrag} state={metrics.subPrag > 0 ? ValueState.Critical : ValueState.None} />
-              <Kpi label="Valoare inventar" value={money(Math.round(metrics.totalValue), 'RON')} />
+    <Page fit>
+      <Page.Body fit maxWidth="full" padding="flush" className="!gap-0 overflow-hidden">
+
+        {/* Header */}
+        <div className="px-6 pt-5 pb-4 shrink-0 border-b border-line/60">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex items-center gap-4 min-w-0">
+              <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
+                <Package className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <h1 className="text-pm-lg font-semibold text-content-primary leading-tight truncate">Inventar</h1>
+                <p className="mt-0.5 text-pm-sm text-content-muted">Catalog de materiale, stocuri, valoare și consumuri</p>
+              </div>
             </div>
-          </DynamicPageTitle>
-        }
-        headerArea={
-          <DynamicPageHeader>
-            <FilterBar hideToolbar>
-              <FilterGroupItem label="Caută" filterKey="q">
-                <Input placeholder="Denumire, categorie, furnizor…" value={search} onInput={(e) => setSearch((e.target as any).value ?? '')} />
-              </FilterGroupItem>
-              <FilterGroupItem label="Categorie" filterKey="category">
-                <Select onChange={(e) => setFilterCategory(String(e.detail.selectedOption.dataset.value ?? ''))}>
-                  <Option data-value="">Toate</Option>
-                  {categories.map(c => <Option key={c} data-value={c}>{c}</Option>)}
-                </Select>
-              </FilterGroupItem>
-              <FilterGroupItem label="Status" filterKey="status">
-                <Select onChange={(e) => setFilterStatus(String(e.detail.selectedOption.dataset.value ?? ''))}>
-                  <Option data-value="">Toate</Option>
-                  <Option data-value="ok">În stoc</Option>
-                  <Option data-value="low">Stoc redus</Option>
-                  <Option data-value="out">Epuizat</Option>
-                </Select>
-              </FilterGroupItem>
-            </FilterBar>
-          </DynamicPageHeader>
-        }
-      >
-        <AnalyticalTable
-          columns={columns}
-          data={data}
-          loading={loading}
-          visibleRowCountMode="Auto"
-          minRows={1}
-          noDataText="Niciun material găsit"
-          filterable
-          sortable
-        />
-      </DynamicPage>
+            <div className="flex items-center gap-2.5 shrink-0">
+              <Button variant="secondary" size="md" onClick={() => setHistOpen(true)}><History className="h-4 w-4" /> Istoric consumuri</Button>
+              {!isViewer && <Button size="md" onClick={openCreate}><Plus className="h-4 w-4" /> Adaugă material</Button>}
+            </div>
+          </div>
+        </div>
+
+        {/* KPIs — Valoare inventar is the hero */}
+        <div className="px-6 pt-4 shrink-0">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+            <KpiCard label="Total articole" icon={Package} value={metrics.total} />
+            <KpiCard label="Stoc redus" icon={AlertTriangle} value={metrics.lowStock} iconColor={metrics.lowStock > 0 ? 'text-status-amber' : undefined} />
+            <KpiCard label="Epuizat" icon={Ban} value={metrics.outOfStock} iconColor={metrics.outOfStock > 0 ? 'text-status-red' : undefined} />
+            <KpiCard label="Sub prag" icon={TrendingDown} value={metrics.subPrag} iconColor={metrics.subPrag > 0 ? 'text-status-amber' : undefined} />
+            <KpiCard hero className="col-span-2 lg:col-span-2" label="Valoare inventar" icon={Wallet} value={money(Math.round(metrics.totalValue), 'RON')} />
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="px-6 pt-4 shrink-0 flex flex-wrap items-center gap-2.5">
+          <div className="relative grow max-w-sm">
+            <Search className={filterSearchIconCls} aria-hidden />
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Denumire, categorie, furnizor…" aria-label="Caută material" className={`${filterSearchInputCls} !w-full`} />
+          </div>
+          <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className={filterSelectCls(filterCategory !== '')}>
+            <option value="">Toate categoriile</option>
+            {categories.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className={filterSelectCls(filterStatus !== '')}>
+            <option value="">Toate statusurile</option>
+            <option value="ok">În stoc</option>
+            <option value="low">Stoc redus</option>
+            <option value="out">Epuizat</option>
+          </select>
+          <span className="ml-auto text-pm-2xs text-content-muted tabular-nums">{data.length} / {materials.length}</span>
+        </div>
+
+        {/* Table */}
+        <div className="flex-1 min-h-0 overflow-auto px-6 py-4">
+          <Card padding="none" className="min-w-0 overflow-hidden">
+            {loading ? (
+              <div className="flex items-center justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-content-muted" /></div>
+            ) : (
+              <DataTable columns={columns} rows={data} empty="Niciun material găsit" />
+            )}
+          </Card>
+        </div>
+      </Page.Body>
 
       {/* Create / edit material */}
-      <Dialog
-        open={dialogOpen}
-        headerText={editId != null ? 'Editează material' : 'Adaugă material'}
-        onClose={() => setDialogOpen(false)}
-        footer={
-          <Bar
-            design="Footer"
-            endContent={
-              <>
-                <Button design={ButtonDesign.Emphasized} onClick={save}>Salvează</Button>
-                <Button design={ButtonDesign.Transparent} onClick={() => setDialogOpen(false)}>Anulează</Button>
-              </>
-            }
-          />
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '24rem', padding: '0.5rem 0' }}>
-          <div><Label required>Denumire</Label><Input style={{ width: '100%' }} value={form.name} onInput={(e) => set('name')((e.target as any).value)} /></div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <div style={{ flex: 1 }}><Label required>Categorie</Label><Input style={{ width: '100%' }} value={form.category} onInput={(e) => set('category')((e.target as any).value)} /></div>
-            <div style={{ flex: 1 }}><Label required>Unitate</Label><Input style={{ width: '100%' }} value={form.unit} onInput={(e) => set('unit')((e.target as any).value)} placeholder="buc, kg, m…" /></div>
+      {dialogOpen && (
+        <Modal title={editId != null ? 'Editează material' : 'Adaugă material'} onClose={() => setDialogOpen(false)}
+          footer={<><Button variant="secondary" size="sm" onClick={() => setDialogOpen(false)}>Anulează</Button><Button size="sm" onClick={save}>Salvează</Button></>}>
+          <Field label="Denumire" required>
+            <input className={inputCls} value={form.name} onChange={set('name')} />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Categorie" required><input className={inputCls} value={form.category} onChange={set('category')} /></Field>
+            <Field label="Unitate" required><input className={inputCls} value={form.unit} onChange={set('unit')} placeholder="buc, kg, m…" /></Field>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <div style={{ flex: 1 }}><Label required>Cantitate</Label><Input type="Number" style={{ width: '100%' }} value={form.stock} onInput={(e) => set('stock')((e.target as any).value)} /></div>
-            <div style={{ flex: 1 }}><Label required>Prag minim</Label><Input type="Number" style={{ width: '100%' }} value={form.min_stock} onInput={(e) => set('min_stock')((e.target as any).value)} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Cantitate" required><input type="number" className={inputCls} value={form.stock} onChange={set('stock')} /></Field>
+            <Field label="Prag minim" required><input type="number" className={inputCls} value={form.min_stock} onChange={set('min_stock')} /></Field>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <div style={{ flex: 1 }}><Label required>Cost unitar</Label><Input type="Number" style={{ width: '100%' }} value={form.unit_cost} onInput={(e) => set('unit_cost')((e.target as any).value)} /></div>
-            <div style={{ flex: 1 }}><Label>Monedă</Label>
-              <Select style={{ width: '100%' }} onChange={(e) => set('currency')(String(e.detail.selectedOption.dataset.value ?? 'RON'))}>
-                <Option data-value="RON" selected={form.currency === 'RON'}>RON</Option>
-                <Option data-value="EUR" selected={form.currency === 'EUR'}>EUR</Option>
-              </Select>
-            </div>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Cost unitar" required><input type="number" className={inputCls} value={form.unit_cost} onChange={set('unit_cost')} /></Field>
+            <Field label="Monedă">
+              <select className={inputCls} value={form.currency} onChange={set('currency')}>
+                <option value="RON">RON</option>
+                <option value="EUR">EUR</option>
+              </select>
+            </Field>
           </div>
-          <div><Label>Furnizor</Label><Input style={{ width: '100%' }} value={form.supplier} onInput={(e) => set('supplier')((e.target as any).value)} /></div>
-          <div><Label>Locație</Label>
+          <Field label="Furnizor"><input className={inputCls} value={form.supplier} onChange={set('supplier')} /></Field>
+          <Field label="Locație">
             {locations.length > 0 ? (
-              <Select style={{ width: '100%' }} onChange={(e) => set('location')(String(e.detail.selectedOption.dataset.value ?? ''))}>
-                <Option data-value="">—</Option>
-                {locations.map(l => <Option key={l.id} data-value={l.name} selected={l.name === form.location}>{l.name} ({l.code})</Option>)}
-              </Select>
+              <select className={inputCls} value={form.location} onChange={set('location')}>
+                <option value="">—</option>
+                {locations.map(l => <option key={l.id} value={l.name}>{l.name} ({l.code})</option>)}
+              </select>
             ) : (
-              <Input style={{ width: '100%' }} value={form.location} onInput={(e) => set('location')((e.target as any).value)} placeholder="Locație depozit" />
+              <input className={inputCls} value={form.location} onChange={set('location')} placeholder="Locație depozit" />
             )}
-          </div>
-        </div>
-      </Dialog>
+          </Field>
+        </Modal>
+      )}
 
       {/* Consumption history */}
-      <Dialog
-        open={histOpen}
-        headerText="Istoric consumuri"
-        onClose={() => setHistOpen(false)}
-        footer={<Bar design="Footer" endContent={<Button design={ButtonDesign.Transparent} onClick={() => setHistOpen(false)}>Închide</Button>} />}
-      >
-        <div style={{ minWidth: '40rem', maxWidth: '52rem', height: '24rem' }}>
-          <AnalyticalTable
-            columns={histColumns}
-            data={consumptions}
-            visibleRowCountMode="Auto"
-            minRows={1}
-            noDataText="Niciun consum înregistrat"
-          />
-        </div>
-      </Dialog>
-    </>
+      {histOpen && (
+        <Modal title="Istoric consumuri" onClose={() => setHistOpen(false)} wide
+          footer={<Button variant="secondary" size="sm" onClick={() => setHistOpen(false)}>Închide</Button>}>
+          <div className="max-h-[60vh] overflow-auto -mx-4">
+            <DataTable columns={histColumns} rows={consumptions} empty="Niciun consum înregistrat" />
+          </div>
+        </Modal>
+      )}
+    </Page>
+  );
+}
+
+// ── Reusable Tailwind table ──
+function DataTable<T>({ columns, rows, empty }: { columns: Col<T>[]; rows: T[]; empty: string }) {
+  if (rows.length === 0) return <div className="py-16 text-center text-pm-sm text-content-muted">{empty}</div>;
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="bg-surface-tertiary/40">
+            {columns.map(c => (
+              <th key={c.key} className={cn('px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.08em] text-content-muted whitespace-nowrap border-b border-line', c.align === 'end' && 'text-right')}>{c.header}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} className="border-b border-line/50 last:border-b-0 hover:bg-surface-tertiary/30 transition-colors">
+              {columns.map(c => (
+                <td key={c.key} className={cn('px-3 py-2 text-pm-sm text-content-secondary whitespace-nowrap', c.align === 'end' && 'text-right tabular-nums')}>
+                  {c.render ? c.render(row) : ((row as Record<string, unknown>)[c.key] as React.ReactNode) ?? '—'}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className={labelCls}>{label}{required && <span className="text-status-red"> *</span>}</label>
+      <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+function Modal({ title, onClose, children, footer, wide }: { title: string; onClose: () => void; children: React.ReactNode; footer: React.ReactNode; wide?: boolean }) {
+  return (
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className={cn('w-full max-h-[88vh] overflow-y-auto rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)]', wide ? 'max-w-3xl' : 'max-w-lg')} onClick={e => e.stopPropagation()}>
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line/70 bg-surface-primary px-4 py-3">
+          <h3 className="text-pm-sm font-semibold text-content-primary truncate">{title}</h3>
+          <button onClick={onClose} className="p-1 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary" aria-label="Închide"><XIcon className="h-4 w-4" /></button>
+        </header>
+        <div className="p-4 space-y-3">{children}</div>
+        <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-line/70 bg-surface-primary px-4 py-3">{footer}</div>
+      </div>
+    </div>
   );
 }

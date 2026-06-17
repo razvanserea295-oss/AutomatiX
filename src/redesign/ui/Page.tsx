@@ -47,17 +47,24 @@ interface PageBodyProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
 }
 
+// Side gutters must be UNIFORM page-to-page. Two things used to break that:
+// (1) every padding variant had a different horizontal value (px-5/6/8), and
+// (2) `wide`/`narrow` capped + centered the content, so on a normal screen the
+// edge-to-content gap jumped around (and looked "too large"). Fix: one
+// horizontal padding for all non-flush variants, and let `wide` fill the
+// content column on normal screens (only capping on ultra-wide) so it matches
+// the `full` pages. `narrow` stays a genuine reading width for forms.
 const maxWidthClass = {
-  narrow: 'max-w-[1120px]',
-  wide:   'max-w-[1400px]',
+  narrow: 'max-w-[1280px]',
+  wide:   'max-w-[1920px]',
   full:   'max-w-none',
 };
 
 const padClass = {
   flush:       'px-0 py-0',
-  tight:       'px-5 py-5',
+  tight:       'px-6 py-4',
   comfortable: 'px-6 py-6',
-  spacious:    'px-8 py-7',
+  spacious:    'px-6 py-8',
 };
 
 

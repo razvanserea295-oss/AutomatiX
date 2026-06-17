@@ -41,7 +41,7 @@
      legible and (b) there is no see-through "glass glitch" during a page
      transition or while a lazy page is still loading. Forced fully opaque during
      a view transition (see `html.vt-active .app-surface` below). */
-  --page-surface-alpha: 80%;
+  --page-surface-alpha: 60%;
 
   /* Display typography rhythm */
   --text-display:    34px;
@@ -51,9 +51,9 @@
 /* ============================================================================
  * Density modes — local spacing. (No ambient intensity any more; solid canvas.)
  * ==========================================================================*/
-.density-compact  { --ds-gap: 12px; --ds-pad: 16px; --page-surface-alpha: 92%; }
-.density-regular  { --ds-gap: 20px; --ds-pad: 24px; --page-surface-alpha: 84%; }
-.density-spacious { --ds-gap: 32px; --ds-pad: 32px; --page-surface-alpha: 72%; }
+.density-compact  { --ds-gap: 12px; --ds-pad: 16px; --page-surface-alpha: 72%; }
+.density-regular  { --ds-gap: 20px; --ds-pad: 24px; --page-surface-alpha: 64%; }
+.density-spacious { --ds-gap: 32px; --ds-pad: 32px; --page-surface-alpha: 52%; }
 
 /* ============================================================================
  * Hover affordances — gentle (no glow halos in the airy direction).
@@ -157,13 +157,29 @@
     radial-gradient(circle at 18% 10%, rgba(255,255,255,0.02), transparent 20%),
     radial-gradient(circle at 82% 20%, rgba(255,255,255,0.01), transparent 18%);
 }
-.mesh-bg,
-.mesh-blob,
-.mesh-blob-1,
-.mesh-blob-2,
-.mesh-blob-3 {
-  display: none !important;
+/* ── Living ambient — premium animated aurora behind the page surface. ──────
+   Big, soft, brand-tinted orbs that drift + scale + breathe on GPU transforms
+   (composited → cheap). Reads through the translucent `.app-surface`; solid
+   cards sit cleanly on top. Frozen on low perf-tier + reduced-motion. Tune the
+   intensity with the orb opacity below + `--page-surface-alpha` above. */
+.mesh-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  will-change: transform, opacity;
 }
+.mesh-blob-1 { width: 50vw; height: 50vw; left: -12%; top: -18%;   background: radial-gradient(circle, rgba(16,185,129,0.55), transparent 68%); animation: meshDrift1 30s ease-in-out infinite alternate; }
+.mesh-blob-2 { width: 46vw; height: 46vw; right: -14%; top: -6%;    background: radial-gradient(circle, rgba(45,212,191,0.50), transparent 68%); animation: meshDrift2 38s ease-in-out infinite alternate; animation-delay: -7s; }
+.mesh-blob-3 { width: 52vw; height: 52vw; left: 28%;  bottom: -24%; background: radial-gradient(circle, rgba(99,102,241,0.40), transparent 70%); animation: meshDrift3 46s ease-in-out infinite alternate; animation-delay: -18s; }
+.dark .mesh-blob-1 { background: radial-gradient(circle, rgba(16,185,129,0.34), transparent 70%); }
+.dark .mesh-blob-2 { background: radial-gradient(circle, rgba(45,212,191,0.30), transparent 70%); }
+.dark .mesh-blob-3 { background: radial-gradient(circle, rgba(129,140,248,0.26), transparent 72%); }
+@keyframes meshDrift1 { from { transform: translate3d(0,0,0) scale(1);    } to { transform: translate3d(8vw, 7vh, 0)  scale(1.25); } }
+@keyframes meshDrift2 { from { transform: translate3d(0,0,0) scale(1.15); } to { transform: translate3d(-7vw, 8vh, 0) scale(0.95); } }
+@keyframes meshDrift3 { from { transform: translate3d(0,0,0) scale(1);    } to { transform: translate3d(6vw, -6vh, 0) scale(1.22); } }
+html[data-perf-tier='low'] .mesh-blob { animation: none !important; filter: blur(70px); }
+@media (prefers-reduced-motion: reduce) { .mesh-blob { animation: none !important; } }
 @media (prefers-reduced-motion: reduce) { .anim-glow, .hover-wiggle:hover { animation: none !important; } }
 
 /* Page surface — translucent over the mesh so the wallpaper shows through

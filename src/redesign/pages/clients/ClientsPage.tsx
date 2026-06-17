@@ -1,17 +1,12 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import {
-  DynamicPage, DynamicPageTitle, DynamicPageHeader,
-  Title, Label, Text, ObjectStatus, Toolbar, ToolbarButton,
-  FilterBar, FilterGroupItem, Input,
-  AnalyticalTable, Button, Dialog, Bar, TextArea,
-} from '@ui5/webcomponents-react';
-import ButtonDesign from '@ui5/webcomponents/dist/types/ButtonDesign.js';
-import ValueState from '@ui5/webcomponents-base/dist/types/ValueState.js';
-import addIcon from '@ui5/webcomponents-icons/dist/add.js';
-import editIcon from '@ui5/webcomponents-icons/dist/edit.js';
-import deleteIcon from '@ui5/webcomponents-icons/dist/delete.js';
+  Users, Plus, Search, Building2, Mail, Phone, MapPin, Pencil, Trash2,
+  FolderKanban, DollarSign, Landmark, Hash, Loader2, X as XIcon, FileText,
+} from 'lucide-react';
 
 import type { User, Project, Client } from '@/core/types';
+import { cn } from '@/lib/cn';
 import { useClientStore } from '@/store/clientStore';
 import { useProjectStore } from '@/store/projectStore';
 import { useMoney } from '@/store/settingsStore';
@@ -23,23 +18,22 @@ import { projectStatus } from '@/lib/statusTokens';
 import type { AnafCompanyInfo } from '@/components/AnafLookupButton';
 import ClientsEnhancements from '@/pages/clients/ClientsEnhancements';
 
-// Extra DB-backed client fields not in the Client type (CUI, fiscal & banking data)
+import Page from '@/redesign/ui/Page';
+import Card from '@/redesign/ui/Card';
+import KpiCard from '@/redesign/ui/KpiCard';
+import Button from '@/redesign/ui/Button';
+import IconButton from '@/redesign/ui/IconButton';
+import StatusBadge from '@/redesign/ui/StatusBadge';
+import SectionHeader from '@/redesign/ui/SectionHeader';
+import EmptyState from '@/redesign/ui/EmptyState';
+import { filterSearchInputCls, filterSearchIconCls } from '@/redesign/ui/filterControls';
+import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
+
+// DB-backed fiscal/banking fields not in the base Client type.
 type ClientRow = Client & {
   cui?: string; reg_com?: string; city?: string; county?: string;
   bank_name?: string; iban?: string; notes?: string;
 };
-
-const STATUS_TONE_TO_STATE: Record<string, ValueState> = {
-  success: ValueState.Positive,
-  warning: ValueState.Critical,
-  danger: ValueState.Negative,
-  info: ValueState.Information,
-  progress: ValueState.Information,
-};
-function projectState(status: string): { state: ValueState; label: string } {
-  const t = projectStatus(status);
-  return { state: STATUS_TONE_TO_STATE[t.tone] ?? ValueState.None, label: t.label };
-}
 
 type FormState = {
   name: string; cui: string; reg_com: string; contact_person: string;
@@ -51,14 +45,22 @@ const EMPTY_FORM: FormState = {
   address: '', city: '', county: '', bank_name: '', iban: '', notes: '',
 };
 
-function Kpi({ label, value }: { label: string; value: number | string }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', minWidth: '5rem' }}>
-      <Label>{label}</Label>
-      <Title level="H4">{String(value)}</Title>
-    </div>
-  );
+// Projects carry their value in estimated_value (budget is legacy/empty). The
+// old page summed `budget` only → "Valoare proiecte" was always 0.
+function projectValue(p: Project): number {
+  return (p as { estimated_value?: number; budget?: number }).estimated_value ?? p.budget ?? 0;
 }
+function isProjectActive(p: Project): boolean {
+  return p.status !== 'finalizat' && p.status !== 'anulat';
+}
+function initials(name: string): string {
+  return (name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]).join('').toUpperCase() || '?';
+}
+
+const inputCls =
+  'w-full h-9 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary ' +
+  'placeholder:text-content-muted/70 focus:outline-none focus:border-accent/50';
+const fieldLabelCls = 'text-pm-2xs font-bold uppercase tracking-wide text-content-muted';
 
 export default function ClientsPage({ user: _user }: { user: User | null }) {
   const isViewer = useViewerMode('clients');
@@ -73,53 +75,66 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
   const fetchProjects = useProjectStore(s => s.fetchProjects);
   const money = useMoney();
 
+  const [search, setSearch] = useState('');
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  // Create / edit dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [anafLoading, setAnafLoading] = useState(false);
-  const [search, setSearch] = useState('');
-  const [detailId, setDetailId] = useState<number | null>(null);
 
-  useEffect(() => {
-    void fetchClients();
-    void fetchProjects();
-  }, [fetchClients, fetchProjects]);
+  useEffect(() => { void fetchClients(); void fetchProjects(); }, [fetchClients, fetchProjects]);
 
-  const activeProjects = useMemo(
-    () => projects.filter(p => p.status !== 'finalizat' && p.status !== 'anulat'),
-    [projects],
-  );
   const projectsByClient = useMemo(() => {
     const map = new Map<number, Project[]>();
     projects.forEach(p => { const arr = map.get(p.client_id) || []; arr.push(p); map.set(p.client_id, arr); });
     return map;
   }, [projects]);
 
+  const statsFor = useCallback((id: number) => {
+    const ps = projectsByClient.get(id) || [];
+    const active = ps.filter(isProjectActive);
+    return { count: ps.length, active: active.length, value: ps.reduce((s, p) => s + projectValue(p), 0), isActive: active.length > 0 };
+  }, [projectsByClient]);
+
+  const activeProjects = useMemo(() => projects.filter(isProjectActive), [projects]);
   const metrics = useMemo(() => ({
     total: clients.length,
     activeClients: new Set(activeProjects.map(p => p.client_id)).size,
     activeProjects: activeProjects.length,
-    revenue: activeProjects.reduce((s, p) => s + (p.budget || 0), 0),
+    // FIX: value lives in estimated_value, not budget.
+    portfolio: activeProjects.reduce((s, p) => s + projectValue(p), 0),
   }), [clients.length, activeProjects]);
 
-  const data = useMemo(() => {
+  // Filter + sort most-valuable-first so the portfolio prioritises itself.
+  const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return clients;
-    return clients.filter(c =>
+    const base = !q ? clients : clients.filter(c =>
       (c.name || '').toLowerCase().includes(q) ||
       (c.contact_person || '').toLowerCase().includes(q) ||
       (c.email || '').toLowerCase().includes(q) ||
       (c.phone || '').toLowerCase().includes(q),
     );
-  }, [clients, search]);
+    return [...base].sort((a, b) => statsFor(b.id).value - statsFor(a.id).value);
+  }, [clients, search, statsFor]);
 
-  const detailClient = useMemo(
-    () => (detailId == null ? null : clients.find(c => c.id === detailId) ?? null),
-    [clients, detailId],
+  const selected = useMemo(() => clients.find(c => c.id === selectedId) ?? null, [clients, selectedId]);
+  const selectedProjects = useMemo(
+    () => (selected ? [...(projectsByClient.get(selected.id) || [])].sort((a, b) => projectValue(b) - projectValue(a)) : []),
+    [selected, projectsByClient],
   );
-  const detailProjects = detailClient ? (projectsByClient.get(detailClient.id) || []) : [];
 
+  // Auto-select the first (most valuable) client so the detail isn't blank.
+  useEffect(() => {
+    if (selectedId != null) return;
+    if (filtered.length > 0) setSelectedId(filtered[0].id);
+  }, [filtered, selectedId]);
+
+  const selectClient = (id: number) => startMorphTransition(() => flushSync(() => setSelectedId(id)), { dir: 'forward' });
+
+  // ── CRUD ──
   const openCreate = useCallback(() => { setEditId(null); setForm(EMPTY_FORM); setDialogOpen(true); }, []);
   const openEdit = useCallback((c: ClientRow) => {
     setEditId(c.id);
@@ -135,15 +150,15 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
   const handleDelete = useCallback(async (c: ClientRow) => {
     const linked = projects.filter(p => p.client_id === c.id).length;
     const msg = linked > 0
-      ? `Sigur Doriți sa ștergeți acest client? Atenție: are ${linked} proiect(e) asociat(e) ce vor rămâne fără client.`
-      : 'Sigur Doriți sa ștergeți acest client?';
+      ? `Sigur ștergi acest client? Are ${linked} proiect(e) asociat(e) ce vor rămâne fără client.`
+      : 'Sigur ștergi acest client?';
     if (!(await confirmDialog({ title: 'Șterge clientul?', body: msg, danger: true }))) return;
     try {
       await deleteClient(c.id);
-      if (detailId === c.id) setDetailId(null);
-      toast.success('Client sters cu succes');
+      if (selectedId === c.id) setSelectedId(null);
+      toast.success('Client șters');
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Eroare la ștergere'); }
-  }, [deleteClient, projects, detailId]);
+  }, [deleteClient, projects, selectedId]);
 
   const save = useCallback(async () => {
     if (!form.name.trim()) { toast.error('Nume obligatoriu'); return; }
@@ -158,18 +173,14 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
   }, [form, editId, createClient, updateClient]);
 
   const anafLookup = useCallback(async () => {
-    if (!form.cui.trim()) { toast.error('Introduceți CUI-ul'); return; }
+    if (!form.cui.trim()) { toast.error('Introdu CUI-ul'); return; }
     setAnafLoading(true);
     try {
       const info = await apiCommand<AnafCompanyInfo>('anaf_lookup_cui', { cui: form.cui });
       setForm(f => ({
         ...f,
-        name: info.denumire || f.name,
-        cui: info.cui || f.cui,
-        reg_com: info.reg_com || f.reg_com,
-        address: info.adresa || f.address,
-        city: info.oras || f.city,
-        county: info.judet || f.county,
+        name: info.denumire || f.name, cui: info.cui || f.cui, reg_com: info.reg_com || f.reg_com,
+        address: info.adresa || f.address, city: info.oras || f.city, county: info.judet || f.county,
         phone: info.telefon || f.phone,
       }));
       toast.success('Date ANAF preluate');
@@ -177,120 +188,97 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
     finally { setAnafLoading(false); }
   }, [form.cui]);
 
-  const set = (k: keyof FormState) => (v: string) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setForm(f => ({ ...f, [k]: e.target.value }));
 
-  const columns = useMemo<any[]>(() => [
-    { Header: 'Nume', accessor: 'name', Cell: ({ row }: any) => <Text>{row.original.name}</Text> },
-    { Header: 'Persoană contact', accessor: 'contact_person' },
-    { Header: 'Email', accessor: 'email' },
-    { Header: 'Telefon', accessor: 'phone', width: 150 },
-    {
-      Header: 'Acțiuni', id: 'actions', disableSortBy: true, hAlign: 'End', width: 110,
-      Cell: ({ row }: any) => (
-        isViewer ? null : (
-          <div style={{ display: 'flex', gap: '0.25rem' }}>
-            <Button design={ButtonDesign.Transparent} icon={editIcon} tooltip="Editează" onClick={(e: any) => { e.stopPropagation?.(); openEdit(row.original); }} />
-            <Button design={ButtonDesign.Transparent} icon={deleteIcon} tooltip="Șterge" onClick={(e: any) => { e.stopPropagation?.(); handleDelete(row.original); }} />
-          </div>
-        )
-      ),
-    },
-  ], [isViewer, openEdit, handleDelete]);
+  if (loading && clients.length === 0) {
+    return <div className="flex flex-1 items-center justify-center bg-surface-page"><Loader2 className="h-6 w-6 animate-spin text-content-muted" /></div>;
+  }
+
+  const selStats = selected ? statsFor(selected.id) : null;
 
   return (
-    <>
-      <DynamicPage
-        style={{ height: '100%' }}
-        titleArea={
-          <DynamicPageTitle
-            heading={<Title>Clienți</Title>}
-            subheading={<Text>Portofoliu de clienți, proiecte asociate și instrumente CRM</Text>}
-            actionsBar={
-              <Toolbar design="Transparent">
-                <ToolbarButton design={ButtonDesign.Emphasized} icon={addIcon} text="Adaugă client" onClick={openCreate} disabled={isViewer} />
-              </Toolbar>
-            }
-          >
-            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-              <Kpi label="Total clienți" value={metrics.total} />
-              <Kpi label="Clienți activi" value={metrics.activeClients} />
-              <Kpi label="Proiecte active" value={metrics.activeProjects} />
-              <Kpi label="Valoare proiecte" value={money(metrics.revenue, 'RON')} />
+    <Page fit>
+      <Page.Body fit maxWidth="wide" padding="comfortable" className="relative">
+
+        <header className="enter-up shrink-0 flex flex-col gap-4 pb-3.5 border-b border-line/60 xl:flex-row xl:items-center xl:justify-between" style={{ animationDelay: '0ms' }}>
+          <div className="flex items-center gap-4 min-w-0">
+            <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
+              <Users className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <h1 className="text-pm-lg font-semibold text-content-primary leading-tight truncate">Portofoliu clienți</h1>
+              <p className="mt-0.5 text-pm-sm text-content-muted">Clienți, proiecte asociate și instrumente CRM</p>
             </div>
-          </DynamicPageTitle>
-        }
-        headerArea={
-          <DynamicPageHeader>
-            <FilterBar hideToolbar>
-              <FilterGroupItem label="Caută" filterKey="q">
-                <Input placeholder="Client, contact, email, telefon…" value={search} onInput={(e) => setSearch((e.target as any).value ?? '')} />
-              </FilterGroupItem>
-            </FilterBar>
-          </DynamicPageHeader>
-        }
-      >
-        <AnalyticalTable
-          columns={columns}
-          data={data}
-          loading={loading}
-          visibleRowCountMode="Auto"
-          minRows={1}
-          noDataText="Niciun client găsit"
-          filterable
-          sortable
-          onRowClick={(e: any) => { const r = e?.detail?.row?.original; if (r) setDetailId(r.id); }}
-        />
+          </div>
+          {!isViewer && (
+            <div className="flex items-center gap-3 shrink-0">
+              <Button size="md" onClick={openCreate}><Plus className="h-4 w-4" /> Adaugă client</Button>
+            </div>
+          )}
+        </header>
 
-        {/* CRM tools (timeline, scoring, tags, import, communication — local data) */}
-        <div style={{ padding: '1rem 0' }}>
-          <Title level="H4" style={{ marginBottom: '0.5rem' }}>Tools CRM</Title>
-          <ClientsEnhancements clients={clients} />
+        {/* KPI strip — Valoare portofoliu is the hero (and now correct). */}
+        <div className="enter-up shrink-0 grid grid-cols-2 lg:grid-cols-5 gap-4" style={{ animationDelay: '80ms' }}>
+          <KpiCard label="Total clienți" icon={Users} value={metrics.total} />
+          <KpiCard label="Clienți activi" icon={Building2} value={metrics.activeClients} iconColor="text-status-green" />
+          <KpiCard label="Proiecte active" icon={FolderKanban} value={metrics.activeProjects} iconColor="text-status-amber" />
+          <KpiCard hero className="col-span-2 lg:col-span-2" label="Valoare portofoliu" icon={DollarSign} value={money(metrics.portfolio, 'RON')} />
         </div>
-      </DynamicPage>
 
-      {/* Client detail */}
-      <Dialog
-        open={detailClient != null}
-        headerText={detailClient?.name ?? 'Detalii client'}
-        onClose={() => setDetailId(null)}
-        footer={
-          <Bar
-            design="Footer"
-            endContent={
-              <>
-                {!isViewer && detailClient && (
-                  <Button design={ButtonDesign.Transparent} icon={editIcon} onClick={() => { openEdit(detailClient); setDetailId(null); }}>Editează</Button>
-                )}
-                {!isViewer && detailClient && (
-                  <Button design={ButtonDesign.Transparent} icon={deleteIcon} onClick={() => handleDelete(detailClient)}>Șterge</Button>
-                )}
-                <Button design={ButtonDesign.Transparent} onClick={() => setDetailId(null)}>Închide</Button>
-              </>
-            }
-          />
-        }
-      >
-        {detailClient && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '26rem', maxWidth: '34rem', padding: '0.5rem 0' }}>
-            <div><Label>Persoană contact</Label><Text>{detailClient.contact_person || '—'}</Text></div>
-            <div><Label>Email</Label><Text>{detailClient.email || '—'}</Text></div>
-            <div><Label>Telefon</Label><Text>{detailClient.phone || '—'}</Text></div>
-            {detailClient.address ? <div><Label>Adresă</Label><Text>{detailClient.address}</Text></div> : null}
-            <div>
-              <Label>Proiecte ({detailProjects.length})</Label>
-              {detailProjects.length === 0 ? (
-                <Text>Niciun proiect asociat.</Text>
+        {/* Master-detail */}
+        <div className="enter-up flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-5" style={{ animationDelay: '160ms' }}>
+
+          {/* List */}
+          <Card padding="none" className="xl:col-span-4 min-w-0 min-h-0 flex flex-col overflow-hidden">
+            <div className="shrink-0 px-4 pt-4 pb-3 border-b border-line/70">
+              <div className="flex items-center justify-between gap-2 mb-2.5">
+                <h2 className="text-pm-eyebrow font-semibold uppercase tracking-wide text-content-muted">Clienți</h2>
+                <span className="text-pm-2xs text-content-muted tabular-nums px-1.5 py-0.5 rounded-md bg-surface-tertiary">{filtered.length}</span>
+              </div>
+              <div className="relative">
+                <Search className={filterSearchIconCls} aria-hidden />
+                <input
+                  type="text" value={search} onChange={e => setSearch(e.target.value)}
+                  placeholder="Client, contact, email, telefon…" aria-label="Caută client"
+                  className={`${filterSearchInputCls} !w-full`}
+                />
+              </div>
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              {filtered.length === 0 ? (
+                <EmptyState icon={Search} title="Niciun client găsit" description="Încearcă alți termeni sau adaugă unul nou." />
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.25rem' }}>
-                  {detailProjects.map(p => {
-                    const st = projectState(p.status);
-                    const val = p.estimated_value ?? p.budget ?? 0;
+                <div className="stagger-in">
+                  {filtered.map(c => {
+                    const st = statsFor(c.id);
+                    const isSelected = c.id === selectedId;
                     return (
-                      <div key={p.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
-                        <Text>{p.name}</Text>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <ObjectStatus state={st.state}>{st.label}</ObjectStatus>
-                          {val > 0 ? <Label>{money(val, 'RON')}</Label> : null}
+                      <div
+                        key={c.id} role="button" tabIndex={0}
+                        onClick={() => selectClient(c.id)}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectClient(c.id); } }}
+                        aria-label={`Selectează ${c.name}`}
+                        style={{ viewTransitionName: isSelected ? vtName('client', c.id) : undefined }}
+                        className={cn(
+                          'group relative w-full cursor-pointer border-b border-line/60 px-3.5 py-2.5 text-left transition-all duration-150',
+                          isSelected ? 'bg-accent/8 vt-morph' : 'hover:bg-surface-tertiary/40',
+                        )}
+                      >
+                        <span aria-hidden className={cn('absolute left-0 top-0 bottom-0 w-[3px] transition-all', isSelected ? 'bg-accent' : 'bg-transparent group-hover:bg-content-muted/30')} />
+                        <div className="flex items-center gap-3">
+                          <span className={cn('h-9 w-9 shrink-0 rounded-xl flex items-center justify-center text-pm-2xs font-bold', isSelected ? 'bg-accent/15 text-accent' : 'bg-surface-tertiary text-content-secondary')}>
+                            {initials(c.name)}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-pm-sm font-semibold text-content-primary">{c.name}</p>
+                            <p className="truncate text-pm-2xs text-content-muted">{c.contact_person || '—'}</p>
+                          </div>
+                          <div className="shrink-0 text-right">
+                            {st.value > 0 && <p className="text-pm-2xs font-semibold tabular-nums text-content-primary">{money(st.value, 'RON')}</p>}
+                            <p className="text-pm-2xs text-content-muted tabular-nums">{st.count} {st.count === 1 ? 'proiect' : 'proiecte'}</p>
+                          </div>
                         </div>
                       </div>
                     );
@@ -298,56 +286,163 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
                 </div>
               )}
             </div>
+          </Card>
+
+          {/* Detail */}
+          <div className="xl:col-span-8 min-w-0 min-h-0 overflow-y-auto flex flex-col gap-5 pr-0.5">
+            {!selected ? (
+              <Card padding="lg" className="flex flex-col items-center justify-center min-h-[60vh]">
+                <EmptyState icon={Users} title="Niciun client selectat" description="Alege un client din listă pentru a-i vedea fișa completă." />
+              </Card>
+            ) : (
+              <div key={selected.id} className="stagger-in contents">
+                {/* Identity */}
+                <Card padding="lg" tone="elevated" vtName={vtName('client', selected.id)} className="min-w-0">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <span className="h-12 w-12 shrink-0 rounded-2xl bg-accent/15 text-accent flex items-center justify-center text-pm-sm font-bold">{initials(selected.name)}</span>
+                      <div className="min-w-0">
+                        <div className="mb-1"><StatusBadge tone={selStats?.isActive ? 'success' : 'neutral'} label={selStats?.isActive ? 'Activ' : 'Inactiv'} size="xs" /></div>
+                        <h2 className="text-pm-xl font-semibold text-content-primary leading-tight truncate">{selected.name}</h2>
+                        <p className="mt-0.5 text-pm-sm text-content-muted">{selected.contact_person || '—'}</p>
+                      </div>
+                    </div>
+                    {!isViewer && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <IconButton intent="primary" onClick={() => openEdit(selected)} aria-label="Editează clientul"><Pencil aria-hidden /></IconButton>
+                        <IconButton intent="danger" onClick={() => handleDelete(selected)} aria-label="Șterge clientul"><Trash2 aria-hidden /></IconButton>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                  {/* Contact */}
+                  <Card padding="lg" className="min-w-0">
+                    <SectionHeader title="Date de contact" icon={Mail} className="mb-4" />
+                    <dl className="space-y-3">
+                      <DetailRow icon={Mail} label="Email" value={selected.email} href={selected.email ? `mailto:${selected.email}` : undefined} />
+                      <DetailRow icon={Phone} label="Telefon" value={selected.phone} href={selected.phone ? `tel:${selected.phone}` : undefined} />
+                      <DetailRow icon={MapPin} label="Adresă" value={[selected.address, selected.city, selected.county].filter(Boolean).join(', ')} />
+                    </dl>
+                  </Card>
+
+                  {/* Fiscal & banking — data that was collected but never shown before */}
+                  <Card padding="lg" className="min-w-0">
+                    <SectionHeader title="Date fiscale & bancare" icon={Landmark} className="mb-4" />
+                    <dl className="space-y-3">
+                      <DetailRow icon={Hash} label="CUI" value={selected.cui} mono />
+                      <DetailRow icon={FileText} label="Reg. Com." value={selected.reg_com} mono />
+                      <DetailRow icon={Landmark} label="Bancă" value={selected.bank_name} />
+                      <DetailRow icon={Landmark} label="IBAN" value={selected.iban} mono />
+                    </dl>
+                  </Card>
+                </div>
+
+                {selected.notes && (
+                  <Card padding="lg" className="min-w-0">
+                    <SectionHeader title="Note" icon={FileText} className="mb-3" />
+                    <p className="text-pm-sm text-content-secondary whitespace-pre-wrap leading-relaxed">{selected.notes}</p>
+                  </Card>
+                )}
+
+                {/* Projects */}
+                <Card padding="lg" className="min-w-0">
+                  <SectionHeader
+                    title="Proiecte" icon={FolderKanban} className="mb-3"
+                    meta={selStats ? `${selStats.count} total · ${money(selStats.value, 'RON')}` : undefined}
+                  />
+                  {selectedProjects.length === 0 ? (
+                    <p className="text-pm-xs text-content-muted">Niciun proiect asociat.</p>
+                  ) : (
+                    <ul className="-mx-1">
+                      {selectedProjects.map(p => (
+                        <li key={p.id} className="flex items-center justify-between gap-3 px-1 py-2 border-b border-line/40 last:border-b-0">
+                          <span className="text-pm-sm text-content-primary truncate min-w-0">{p.name}</span>
+                          <span className="flex items-center gap-3 shrink-0">
+                            {projectValue(p) > 0 && <span className="text-pm-xs font-medium tabular-nums text-content-secondary">{money(projectValue(p), 'RON')}</span>}
+                            <StatusBadge {...projectStatus(p.status)} size="xs" />
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </Card>
+
+                {/* CRM tools (timeline, scoring, tags, import, communication) */}
+                <Card padding="lg" className="min-w-0">
+                  <SectionHeader title="Instrumente CRM" icon={Users} className="mb-3" />
+                  <ClientsEnhancements clients={clients} />
+                </Card>
+              </div>
+            )}
           </div>
-        )}
-      </Dialog>
+        </div>
+      </Page.Body>
 
       {/* Create / edit client */}
-      <Dialog
-        open={dialogOpen}
-        headerText={editId != null ? 'Editează client' : 'Adaugă client'}
-        onClose={() => setDialogOpen(false)}
-        footer={
-          <Bar
-            design="Footer"
-            endContent={
-              <>
-                <Button design={ButtonDesign.Emphasized} onClick={save} disabled={submitting}>{submitting ? 'Se salvează…' : 'Salvează'}</Button>
-                <Button design={ButtonDesign.Transparent} onClick={() => setDialogOpen(false)}>Anulează</Button>
-              </>
-            }
-          />
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '30rem', padding: '0.5rem 0' }}>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <div style={{ flex: 1 }}>
-              <Label>CUI</Label>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <Input style={{ flex: 1 }} value={form.cui} placeholder="ex: 12345678 sau RO12345678" onInput={(e) => set('cui')((e.target as any).value)} />
-                <Button design={ButtonDesign.Transparent} onClick={anafLookup} disabled={anafLoading || !form.cui.trim()}>{anafLoading ? 'Caut…' : 'ANAF'}</Button>
+      {dialogOpen && (
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4" onClick={() => { if (!submitting) setDialogOpen(false); }}>
+          <div className="w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)]" onClick={e => e.stopPropagation()}>
+            <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line/70 bg-surface-primary px-4 py-3">
+              <h3 className="text-pm-sm font-semibold text-content-primary">{editId != null ? 'Editează client' : 'Adaugă client'}</h3>
+              <button onClick={() => setDialogOpen(false)} className="p-1 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary" aria-label="Închide"><XIcon className="h-4 w-4" /></button>
+            </header>
+            <div className="p-4 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className={fieldLabelCls}>CUI</label>
+                  <div className="mt-1 flex gap-2">
+                    <input className={inputCls} value={form.cui} placeholder="ex: RO12345678" onChange={set('cui')} />
+                    <Button variant="secondary" size="sm" onClick={anafLookup} disabled={anafLoading || !form.cui.trim()}>
+                      {anafLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} ANAF
+                    </Button>
+                  </div>
+                </div>
+                <div><label className={fieldLabelCls}>Reg. Com.</label><input className={`${inputCls} mt-1`} value={form.reg_com} placeholder="J40/1234/2020" onChange={set('reg_com')} /></div>
               </div>
+              <div><label className={fieldLabelCls}>Nume firmă *</label><input className={`${inputCls} mt-1`} value={form.name} onChange={set('name')} /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div><label className={fieldLabelCls}>Persoană contact</label><input className={`${inputCls} mt-1`} value={form.contact_person} onChange={set('contact_person')} /></div>
+                <div><label className={fieldLabelCls}>Email</label><input type="email" className={`${inputCls} mt-1`} value={form.email} onChange={set('email')} /></div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div><label className={fieldLabelCls}>Telefon</label><input type="tel" className={`${inputCls} mt-1`} value={form.phone} onChange={set('phone')} /></div>
+                <div><label className={fieldLabelCls}>Oraș</label><input className={`${inputCls} mt-1`} value={form.city} onChange={set('city')} /></div>
+                <div><label className={fieldLabelCls}>Județ</label><input className={`${inputCls} mt-1`} value={form.county} onChange={set('county')} /></div>
+              </div>
+              <div><label className={fieldLabelCls}>Adresă</label><input className={`${inputCls} mt-1`} value={form.address} onChange={set('address')} /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div><label className={fieldLabelCls}>Bancă</label><input className={`${inputCls} mt-1`} value={form.bank_name} onChange={set('bank_name')} /></div>
+                <div><label className={fieldLabelCls}>IBAN</label><input className={`${inputCls} mt-1`} value={form.iban} onChange={set('iban')} /></div>
+              </div>
+              <div><label className={fieldLabelCls}>Note</label><textarea rows={2} className={`${inputCls} mt-1 h-auto py-2 resize-none`} value={form.notes} onChange={set('notes')} /></div>
             </div>
-            <div style={{ flex: 1 }}><Label>Reg. Com</Label><Input style={{ width: '100%' }} value={form.reg_com} placeholder="J40/1234/2020" onInput={(e) => set('reg_com')((e.target as any).value)} /></div>
+            <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-line/70 bg-surface-primary px-4 py-3">
+              <Button variant="secondary" size="sm" onClick={() => setDialogOpen(false)} disabled={submitting}>Anulează</Button>
+              <Button size="sm" onClick={save} disabled={submitting}>{submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null} Salvează</Button>
+            </div>
           </div>
-          <div><Label required>Nume firmă</Label><Input style={{ width: '100%' }} value={form.name} onInput={(e) => set('name')((e.target as any).value)} /></div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <div style={{ flex: 1 }}><Label>Persoană contact</Label><Input style={{ width: '100%' }} value={form.contact_person} onInput={(e) => set('contact_person')((e.target as any).value)} /></div>
-            <div style={{ flex: 1 }}><Label>Email</Label><Input type="Email" style={{ width: '100%' }} value={form.email} onInput={(e) => set('email')((e.target as any).value)} /></div>
-          </div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <div style={{ flex: 1 }}><Label>Telefon</Label><Input type="Tel" style={{ width: '100%' }} value={form.phone} onInput={(e) => set('phone')((e.target as any).value)} /></div>
-            <div style={{ flex: 1 }}><Label>Oraș</Label><Input style={{ width: '100%' }} value={form.city} onInput={(e) => set('city')((e.target as any).value)} /></div>
-            <div style={{ flex: 1 }}><Label>Județ</Label><Input style={{ width: '100%' }} value={form.county} onInput={(e) => set('county')((e.target as any).value)} /></div>
-          </div>
-          <div><Label>Adresă</Label><Input style={{ width: '100%' }} value={form.address} onInput={(e) => set('address')((e.target as any).value)} /></div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <div style={{ flex: 1 }}><Label>Bancă</Label><Input style={{ width: '100%' }} value={form.bank_name} onInput={(e) => set('bank_name')((e.target as any).value)} /></div>
-            <div style={{ flex: 1 }}><Label>IBAN</Label><Input style={{ width: '100%' }} value={form.iban} onInput={(e) => set('iban')((e.target as any).value)} /></div>
-          </div>
-          <div><Label>Note</Label><TextArea style={{ width: '100%' }} rows={2} value={form.notes} onInput={(e) => set('notes')((e.target as any).value)} /></div>
         </div>
-      </Dialog>
-    </>
+      )}
+    </Page>
+  );
+}
+
+function DetailRow({ icon: Icon, label, value, href, mono }: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string; value?: string | null; href?: string; mono?: boolean;
+}) {
+  const v = (value || '').trim();
+  return (
+    <div className="flex items-start gap-3">
+      <Icon className="h-4 w-4 text-content-muted shrink-0 mt-0.5" aria-hidden />
+      <div className="min-w-0 flex-1">
+        <dt className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">{label}</dt>
+        <dd className={cn('text-pm-sm mt-0.5 break-words', v ? 'text-content-primary' : 'text-content-muted', mono && v && 'font-mono text-pm-xs')}>
+          {v ? (href ? <a href={href} className="hover:text-accent hover:underline">{v}</a> : v) : '—'}
+        </dd>
+      </div>
+    </div>
   );
 }

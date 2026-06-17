@@ -180,9 +180,7 @@ export default function FinancePage({ user: _user }: { user: User | null }) {
               <DollarSign className="h-5 w-5" />
             </span>
             <div className="min-w-0">
-              <p className="text-pm-eyebrow text-accent mb-0.5 flex items-center gap-2">
-                <span className="inline-block h-px w-3.5 bg-accent/50" aria-hidden /> Financiar &amp; Livrare
-              </p>
+              {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
               <h1 className="text-pm-2xl font-semibold text-content-primary truncate leading-tight">Financiar</h1>
               <p className="mt-0.5 text-pm-sm text-content-muted truncate">
                 Venituri, costuri, facturi, cheltuieli și rapoarte de profitabilitate

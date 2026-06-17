@@ -343,3 +343,18 @@
   from { opacity: 0; transform: translateY(16px) scale(0.985); }
   to   { opacity: 1; transform: none; }
 }
+
+/* ---- iOS-style "jiggle" for dashboard edit mode ------------------------- */
+/* Subtle continuous wobble (~±0.6deg) signalling widgets are now movable. The
+   tiny translate keeps the rotation pivot lively, like the iOS home screen. */
+@keyframes iosJiggle {
+  0%   { transform: rotate(-0.6deg) translate(-0.5px, 0); }
+  50%  { transform: rotate(0.6deg)  translate(0.5px, 0); }
+  100% { transform: rotate(-0.6deg) translate(-0.5px, 0); }
+}
+.widget-jiggle { animation: iosJiggle 0.26s ease-in-out infinite; transform-origin: 50% 50%; }
+/* Desync neighbours so the field doesn't wobble in lockstep. */
+.widget-jiggle:nth-child(2n)   { animation-duration: 0.31s; animation-delay: -0.13s; }
+.widget-jiggle:nth-child(3n)   { animation-duration: 0.29s; animation-delay: -0.07s; }
+.widget-jiggle:nth-child(4n+1) { animation-duration: 0.33s; }
+@media (prefers-reduced-motion: reduce) { .widget-jiggle { animation: none; } }

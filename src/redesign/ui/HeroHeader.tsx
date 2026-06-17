@@ -22,7 +22,7 @@ export interface HeroHeaderProps {
 }
 
 export default function HeroHeader({
-  title, subtitle, eyebrow, icon: Icon, breadcrumb, actions, children, className = '', style,
+  title, subtitle, icon: Icon, breadcrumb, actions, children, className = '', style,
 }: HeroHeaderProps) {
   return (
     
@@ -45,12 +45,10 @@ export default function HeroHeader({
             </span>
           )}
           <div className="min-w-0">
-            {eyebrow && (
-              <p className="text-pm-eyebrow text-accent mb-0.5 flex items-center gap-2">
-                <span className="inline-block h-px w-3.5 bg-accent/50" aria-hidden />
-                {eyebrow}
-              </p>
-            )}
+            {/* Eyebrow intentionally NOT rendered: it repeated the workspace name
+                the shell breadcrumb already shows (breadcrumb "Producție" + eyebrow
+                "Producție"). Prop kept in the interface so call sites still compile —
+                same pattern as PageHeader's ignored title. One title is enough. */}
             <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">{title}</h1>
             {subtitle && <p className="mt-1 text-pm-sm text-content-muted">{subtitle}</p>}
           </div>

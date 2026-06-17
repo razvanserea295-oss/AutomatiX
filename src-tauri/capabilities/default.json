@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default capability for the main Automatix window. The app is a thin shell over the HTTP server, so only the Tauri core permission set is needed.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "updater:default",
+    "process:default",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-close",
+    "core:window:allow-start-dragging",
+    "core:window:allow-is-maximized"
+  ]
+}

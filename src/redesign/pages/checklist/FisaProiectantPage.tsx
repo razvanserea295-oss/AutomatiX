@@ -303,11 +303,9 @@ export default function FisaProiectantPage({ user }: { user: User | null }) {
               <ClipboardCheck className="h-5 w-5" />
             </span>
             <div className="min-w-0">
-              <p className="text-pm-eyebrow text-accent mb-1 flex items-center gap-2">
-                <span className="inline-block h-px w-3.5 bg-accent/50" aria-hidden /> Proiectare
-              </p>
-              <h1 className="text-pm-2xl font-semibold text-content-primary truncate leading-tight">Fișa proiectant</h1>
-              <p className="mt-1 text-pm-sm text-content-muted">
+              {/* Eyebrow removed — breadcrumb already shows "Proiectare". */}
+              <h1 className="text-pm-lg font-semibold text-content-primary truncate leading-tight">Fișa proiectant</h1>
+              <p className="mt-0.5 text-pm-sm text-content-muted">
                 Tracking ansambluri + specificații tehnice, pe proiect
               </p>
             </div>
@@ -380,24 +378,28 @@ export default function FisaProiectantPage({ user }: { user: User | null }) {
         </header>
 
         {}
-        <div className="enter-up shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-4" style={{ animationDelay: '80ms' }}>
-          <KpiCard
-            vtName={vtName('fisa-kpi', 'progres')}
-            label="Progres fișă" icon={Gauge} value={`${progressData.pct}%`}
-          />
-          <KpiCard
-            vtName={vtName('fisa-kpi', 'verificate')}
-            label="Puncte verificate" icon={ListChecks} value={progressData.done} iconColor="text-status-green"
-          />
-          <KpiCard
-            vtName={vtName('fisa-kpi', 'total')}
-            label="Total puncte" icon={CheckSquare} value={progressData.total}
-          />
-          <KpiCard
-            vtName={vtName('fisa-kpi', 'ansambluri')}
-            label="Ansambluri" icon={Layers} value={tracking.length}
-          />
-        </div>
+        {/* KPI strip only once a fișă is open — otherwise it's four "0"s above
+            the project picker, which reads as broken/empty. */}
+        {checklist && (
+          <div className="enter-up shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-4" style={{ animationDelay: '80ms' }}>
+            <KpiCard
+              vtName={vtName('fisa-kpi', 'progres')}
+              label="Progres fișă" icon={Gauge} value={`${progressData.pct}%`}
+            />
+            <KpiCard
+              vtName={vtName('fisa-kpi', 'verificate')}
+              label="Puncte verificate" icon={ListChecks} value={progressData.done} iconColor="text-status-green"
+            />
+            <KpiCard
+              vtName={vtName('fisa-kpi', 'total')}
+              label="Total puncte" icon={CheckSquare} value={progressData.total}
+            />
+            <KpiCard
+              vtName={vtName('fisa-kpi', 'ansambluri')}
+              label="Ansambluri" icon={Layers} value={tracking.length}
+            />
+          </div>
+        )}
 
         {
 

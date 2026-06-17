@@ -715,10 +715,7 @@ export default function TutorialPage({ user, onNavigate }: TutorialPageProps) {
               <GraduationCap className="h-5 w-5" />
             </span>
             <div className="min-w-0">
-              <p className="text-pm-eyebrow text-accent mb-0.5 flex items-center gap-2">
-                <span className="inline-block h-px w-3.5 bg-accent/50" aria-hidden />
-                Ajutor
-              </p>
+              {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
               <h1 className="text-pm-2xl font-semibold text-content-primary truncate leading-tight">Tutorial Automatix</h1>
               <p className="text-pm-sm text-content-muted truncate">Ghid complet: pagini, parcurs proiect, sfaturi</p>
             </div>

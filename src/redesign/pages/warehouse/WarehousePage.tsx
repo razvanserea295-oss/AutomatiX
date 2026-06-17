@@ -1,16 +1,10 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
-  DynamicPage, DynamicPageTitle, DynamicPageHeader,
-  Title, Label, Text, ObjectStatus, Toolbar, ToolbarButton,
-  FilterBar, FilterGroupItem, Select, Option, Input, TextArea,
-  AnalyticalTable, Button, Dialog, Bar, MessageStrip,
-  TabContainer, Tab,
-} from '@ui5/webcomponents-react';
-import ButtonDesign from '@ui5/webcomponents/dist/types/ButtonDesign.js';
-import ValueState from '@ui5/webcomponents-base/dist/types/ValueState.js';
-import addIcon from '@ui5/webcomponents-icons/dist/add.js';
+  Warehouse, Plus, AlertTriangle, X as XIcon, Package, MapPin, Bookmark, Loader2,
+} from 'lucide-react';
 
 import type { User } from '@/core/types';
+import { cn } from '@/lib/cn';
 import { apiCommand } from '@/api/commands';
 import { useProjectStore } from '@/store/projectStore';
 import { useMaterialStore } from '@/store/materialStore';
@@ -18,7 +12,14 @@ import { useDashboardStore } from '@/store/dashboardStore';
 import { useViewerMode } from '@/hooks/useViewerMode';
 import { toast } from '@/store/toastStore';
 
-// ── Domain types (preserved verbatim from the prior implementation) ──
+import Page from '@/redesign/ui/Page';
+import Card from '@/redesign/ui/Card';
+import KpiCard from '@/redesign/ui/KpiCard';
+import Button from '@/redesign/ui/Button';
+import StatusBadge from '@/redesign/ui/StatusBadge';
+import type { StatusTone } from '@/lib/statusTokens';
+
+// ── Domain types (preserved verbatim) ──
 interface Movement { id: number; material_name: string; material_code: string; location_name: string | null; movement_type: string; quantity: number; project_name: string | null; notes: string | null; created_by_name: string | null; created_at: string; }
 interface Location { id: number; code: string; name: string; location_type: string; }
 interface Reservation { id: number; project_name: string; node_name: string; material_name: string; quantity_reserved: number; quantity_issued: number; status: string; created_at?: string; }
@@ -26,38 +27,37 @@ interface Reservation { id: number; project_name: string; node_name: string; mat
 type TabKey = 'stock' | 'movements' | 'reservations' | 'locations';
 
 const moveLabels: Record<string, string> = { in: 'Intrare', out: 'Ieșire', transfer: 'Transfer', adjustment: 'Ajustare' };
-const moveState: Record<string, ValueState> = { in: ValueState.Positive, out: ValueState.Negative, transfer: ValueState.Critical, adjustment: ValueState.None };
+const moveTone: Record<string, StatusTone> = { in: 'success', out: 'danger', transfer: 'warning', adjustment: 'neutral' };
 
 const RES_STATUS_LABEL: Record<string, string> = {
   reserved: 'Rezervat', partially_issued: 'Parțial eliberat', fully_issued: 'Eliberat complet', cancelled: 'Anulat',
 };
-function resStatusState(status: string): ValueState {
-  if (status === 'fully_issued') return ValueState.Positive;
-  if (status === 'partially_issued') return ValueState.Critical;
-  if (status === 'cancelled') return ValueState.None;
-  return ValueState.Information;
+function resStatusTone(status: string): StatusTone {
+  if (status === 'fully_issued') return 'success';
+  if (status === 'partially_issued') return 'warning';
+  if (status === 'cancelled') return 'neutral';
+  return 'info';
 }
 
-// ── Movement form ──
-type MoveForm = { material_id: string; movement_type: string; quantity: string; location_id: string; project_id: string; notes: string; };
+// ── Form types (verbatim) ──
+type MoveForm = { material_id: string; movement_type: string; quantity: string; location_id: string; project_id: string; notes: string };
 const EMPTY_MOVE: MoveForm = { material_id: '', movement_type: 'in', quantity: '', location_id: '', project_id: '', notes: '' };
-// ── Reservation form ──
-type ResForm = { project_id: string; material_id: string; quantity_reserved: string; };
+type ResForm = { project_id: string; material_id: string; quantity_reserved: string };
 const EMPTY_RES: ResForm = { project_id: '', material_id: '', quantity_reserved: '' };
-// ── Location form ──
-type LocForm = { name: string; location_type: string; };
+type LocForm = { name: string; location_type: string };
 const EMPTY_LOC: LocForm = { name: '', location_type: 'depozit' };
 
-function Kpi({ label, value, state }: { label: string; value: number | string; state?: ValueState }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', minWidth: '5rem' }}>
-      <Label>{label}</Label>
-      <Title level="H4" style={state && state !== ValueState.None ? { color: `var(--sapField_${state}Color, inherit)` } : undefined}>
-        {String(value)}
-      </Title>
-    </div>
-  );
-}
+const TABS: Array<{ id: TabKey; label: string }> = [
+  { id: 'stock', label: 'Stoc' },
+  { id: 'movements', label: 'Mișcări' },
+  { id: 'reservations', label: 'Rezervări' },
+  { id: 'locations', label: 'Locații' },
+];
+
+const inputCls = 'w-full h-9 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary focus:outline-none focus:border-accent/50';
+const labelCls = 'text-pm-2xs font-bold uppercase tracking-wide text-content-muted';
+
+interface Col<T> { key: string; header: string; align?: 'end'; render?: (row: T) => React.ReactNode }
 
 export default function WarehousePage({ user: _user }: { user: User | null }) {
   const isViewer = useViewerMode('warehouse');
@@ -98,7 +98,7 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
 
   useEffect(() => { fetch(); }, [fetch]);
 
-  // ── Derived stock figures (preserved verbatim) ──
+  // ── Derived stock figures (verbatim) ──
   const reservedByMaterial = useMemo(() => {
     const map = new Map<number, number>();
     for (const r of reservations) {
@@ -137,7 +137,7 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
     return Date.now() - t > SEVEN_DAYS;
   }), [reservations, SEVEN_DAYS]);
 
-  // ── Mutations (preserved verbatim) ──
+  // ── Mutations (verbatim) ──
   const handleRecordMovement = useCallback(async () => {
     try {
       await apiCommand('record_stock_movement', {
@@ -157,10 +157,8 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
   const handleCreateReservation = useCallback(async () => {
     try {
       await apiCommand('create_stock_reservation', {
-        project_id: Number(resForm.project_id),
-        node_id: 0,
-        material_id: Number(resForm.material_id),
-        quantity_reserved: Number(resForm.quantity_reserved),
+        project_id: Number(resForm.project_id), node_id: 0,
+        material_id: Number(resForm.material_id), quantity_reserved: Number(resForm.quantity_reserved),
       });
       toast.success('Rezervare creată');
       setResOpen(false);
@@ -175,14 +173,10 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
       const name = String(locForm.name || '').trim();
       const slug = name.toLowerCase()
         .normalize('NFD').replace(/[̀-ͯ]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .slice(0, 32)
-        .toUpperCase();
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+        .slice(0, 32).toUpperCase();
       const code = slug || `LOC-${Date.now().toString(36).toUpperCase()}`;
-      await apiCommand('create_warehouse_location', {
-        code, name, location_type: locForm.location_type || 'depozit',
-      });
+      await apiCommand('create_warehouse_location', { code, name, location_type: locForm.location_type || 'depozit' });
       toast.success('Locație adăugată');
       setLocOpen(false);
       fetch();
@@ -212,7 +206,6 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Eroare la eliberare'); }
   }, [issueTarget, issueQty, fetch, fetchMaterialsStore]);
 
-  // ── Form helpers ──
   const setMove = (k: keyof MoveForm) => (v: string) => setMoveForm(f => ({ ...f, [k]: v }));
   const setRes = (k: keyof ResForm) => (v: string) => setResForm(f => ({ ...f, [k]: v }));
   const setLoc = (k: keyof LocForm) => (v: string) => setLocForm(f => ({ ...f, [k]: v }));
@@ -221,334 +214,310 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
   const openRes = useCallback(() => { setResForm(EMPTY_RES); setResOpen(true); }, []);
   const openLoc = useCallback(() => { setLocForm(EMPTY_LOC); setLocOpen(true); }, []);
 
-  // ── Table columns ──
-  const stockColumns = useMemo<any[]>(() => [
-    { Header: 'Material', accessor: 'name', Cell: ({ row }: any) => <Text>{row.original.name}</Text> },
-    { Header: 'Categorie', accessor: 'category' },
-    { Header: 'UM', accessor: 'unit', width: 80 },
-    { Header: 'Stoc', accessor: 'stock', hAlign: 'End', width: 100, Cell: ({ row }: any) => row.original.stock },
-    {
-      Header: 'Rezervat', id: 'reserved', hAlign: 'End', width: 110, disableSortBy: true,
-      Cell: ({ row }: any) => { const r = reservedByMaterial.get(row.original.id) ?? 0; return r > 0 ? r : '—'; },
-    },
-    {
-      Header: 'Disponibil', id: 'available', hAlign: 'End', width: 110, disableSortBy: true,
-      Cell: ({ row }: any) => availableStock(row.original),
-    },
-    { Header: 'Minim', accessor: 'min_stock', hAlign: 'End', width: 100 },
-    {
-      Header: 'Status', id: 'status', width: 120, disableSortBy: true,
-      Cell: ({ row }: any) => {
-        const isCritic = availableStock(row.original) <= row.original.min_stock && row.original.min_stock > 0;
-        return <ObjectStatus state={isCritic ? ValueState.Negative : ValueState.Positive}>{isCritic ? 'Critic' : 'OK'}</ObjectStatus>;
-      },
-    },
-  ], [reservedByMaterial, availableStock]);
+  // ── Columns (Tailwind) ──
+  const stockColumns: Col<typeof materials[number]>[] = [
+    { key: 'name', header: 'Material', render: m => <span className="font-medium text-content-primary">{m.name}</span> },
+    { key: 'category', header: 'Categorie', render: m => m.category || '—' },
+    { key: 'unit', header: 'UM' },
+    { key: 'stock', header: 'Stoc', align: 'end' },
+    { key: 'reserved', header: 'Rezervat', align: 'end', render: m => { const r = reservedByMaterial.get(m.id) ?? 0; return r > 0 ? r : '—'; } },
+    { key: 'available', header: 'Disponibil', align: 'end', render: m => availableStock(m) },
+    { key: 'min_stock', header: 'Minim', align: 'end' },
+    { key: 'status', header: 'Status', render: m => {
+      const critic = availableStock(m) <= m.min_stock && m.min_stock > 0;
+      return <StatusBadge tone={critic ? 'danger' : 'success'} label={critic ? 'Critic' : 'OK'} size="xs" />;
+    } },
+  ];
 
-  const movementColumns = useMemo<any[]>(() => [
-    { Header: 'Data', accessor: 'created_at', width: 150, Cell: ({ row }: any) => row.original.created_at?.slice(0, 16) ?? '—' },
-    {
-      Header: 'Tip', accessor: 'movement_type', width: 130,
-      Cell: ({ row }: any) => (
-        <ObjectStatus state={moveState[row.original.movement_type] ?? ValueState.None}>
-          {moveLabels[row.original.movement_type] ?? row.original.movement_type}
-        </ObjectStatus>
-      ),
-    },
-    { Header: 'Material', accessor: 'material_name', Cell: ({ row }: any) => <Text>{row.original.material_name}</Text> },
-    { Header: 'Cantitate', accessor: 'quantity', hAlign: 'End', width: 110 },
-    { Header: 'Locație', accessor: 'location_name', Cell: ({ row }: any) => row.original.location_name ?? '—' },
-    { Header: 'Proiect', accessor: 'project_name', Cell: ({ row }: any) => row.original.project_name ?? '—' },
-    { Header: 'Utilizator', accessor: 'created_by_name', Cell: ({ row }: any) => row.original.created_by_name ?? '—' },
-  ], []);
+  const movementColumns: Col<Movement>[] = [
+    { key: 'created_at', header: 'Data', render: m => <span className="tabular-nums text-content-muted">{m.created_at?.slice(0, 16) ?? '—'}</span> },
+    { key: 'movement_type', header: 'Tip', render: m => <StatusBadge tone={moveTone[m.movement_type] ?? 'neutral'} label={moveLabels[m.movement_type] ?? m.movement_type} size="xs" /> },
+    { key: 'material_name', header: 'Material', render: m => <span className="font-medium text-content-primary">{m.material_name}</span> },
+    { key: 'quantity', header: 'Cantitate', align: 'end' },
+    { key: 'location_name', header: 'Locație', render: m => m.location_name ?? '—' },
+    { key: 'project_name', header: 'Proiect', render: m => m.project_name ?? '—' },
+    { key: 'created_by_name', header: 'Utilizator', render: m => m.created_by_name ?? '—' },
+  ];
 
-  const reservationColumns = useMemo<any[]>(() => [
-    { Header: 'Proiect', accessor: 'project_name', Cell: ({ row }: any) => <Text>{row.original.project_name}</Text> },
-    { Header: 'Nod', accessor: 'node_name', Cell: ({ row }: any) => row.original.node_name ?? '—' },
-    { Header: 'Material', accessor: 'material_name' },
-    { Header: 'Rezervat', accessor: 'quantity_reserved', hAlign: 'End', width: 110 },
-    { Header: 'Eliberat', accessor: 'quantity_issued', hAlign: 'End', width: 110 },
-    {
-      Header: 'Vechime', id: 'age', hAlign: 'End', width: 110, disableSortBy: true,
-      Cell: ({ row }: any) => {
-        const days = ageDays(row.original);
-        if (days == null) return '—';
-        const overdue = isPending(row.original) && days > 7;
-        return <span style={overdue ? { color: 'var(--sapNegativeColor, inherit)', fontWeight: 600 } : undefined}>{days}z{overdue ? ' ⚠' : ''}</span>;
-      },
-    },
-    {
-      Header: 'Status', accessor: 'status', width: 150,
-      Cell: ({ row }: any) => (
-        <ObjectStatus state={resStatusState(row.original.status)}>
-          {RES_STATUS_LABEL[row.original.status] ?? row.original.status}
-        </ObjectStatus>
-      ),
-    },
-    {
-      Header: 'Acțiuni', id: 'actions', disableSortBy: true, hAlign: 'End', width: 120,
-      Cell: ({ row }: any) => (
-        (!isViewer && (row.original.status === 'reserved' || row.original.status === 'partially_issued')) ? (
-          <Button design={ButtonDesign.Transparent} onClick={() => openIssue(row.original)}>Eliberează</Button>
-        ) : null
-      ),
-    },
-  ], [isViewer, openIssue]);
+  const reservationColumns: Col<Reservation>[] = [
+    { key: 'project_name', header: 'Proiect', render: r => <span className="font-medium text-content-primary">{r.project_name}</span> },
+    { key: 'node_name', header: 'Nod', render: r => r.node_name ?? '—' },
+    { key: 'material_name', header: 'Material' },
+    { key: 'quantity_reserved', header: 'Rezervat', align: 'end' },
+    { key: 'quantity_issued', header: 'Eliberat', align: 'end' },
+    { key: 'age', header: 'Vechime', align: 'end', render: r => {
+      const days = ageDays(r);
+      if (days == null) return '—';
+      const overdue = isPending(r) && days > 7;
+      return <span className={cn('tabular-nums', overdue && 'text-status-red font-semibold')}>{days}z{overdue ? ' ⚠' : ''}</span>;
+    } },
+    { key: 'status', header: 'Status', render: r => <StatusBadge tone={resStatusTone(r.status)} label={RES_STATUS_LABEL[r.status] ?? r.status} size="xs" /> },
+    { key: 'actions', header: '', align: 'end', render: r => (
+      (!isViewer && (r.status === 'reserved' || r.status === 'partially_issued'))
+        ? <button onClick={() => openIssue(r)} className="text-pm-xs font-semibold text-accent hover:underline">Eliberează</button>
+        : null
+    ) },
+  ];
 
-  const locationColumns = useMemo<any[]>(() => [
-    { Header: 'Cod', accessor: 'code', width: 160, Cell: ({ row }: any) => <Text>{row.original.code}</Text> },
-    { Header: 'Nume', accessor: 'name' },
-    { Header: 'Tip', accessor: 'location_type' },
-  ], []);
+  const locationColumns: Col<Location>[] = [
+    { key: 'code', header: 'Cod', render: l => <span className="font-mono text-pm-xs text-content-primary">{l.code}</span> },
+    { key: 'name', header: 'Nume', render: l => <span className="font-medium text-content-primary">{l.name}</span> },
+    { key: 'location_type', header: 'Tip', render: l => <span className="capitalize">{l.location_type}</span> },
+  ];
 
-  // ── Primary action depends on the active tab ──
   const primaryAction =
     tab === 'movements' ? { text: 'Mișcare nouă', onClick: openMove } :
     tab === 'reservations' ? { text: 'Rezervare nouă', onClick: openRes } :
     tab === 'locations' ? { text: 'Locație nouă', onClick: openLoc } :
     null;
 
-  const onTabSelect = (e: any) => {
-    const key = e.detail?.tab?.dataset?.tab as TabKey | undefined;
-    if (key) setTab(key);
-  };
+  const viewLabel =
+    tab === 'stock' ? `Stoc curent — ${materials.length} materiale`
+      : tab === 'movements' ? `Mișcări stoc — ${movements.length}`
+        : tab === 'reservations' ? `Rezervări — ${reservations.length}`
+          : `Locații depozit — ${locations.length}`;
 
   return (
-    <>
-      <DynamicPage
-        style={{ height: '100%' }}
-        titleArea={
-          <DynamicPageTitle
-            heading={<Title>Depozit</Title>}
-            subheading={<Text>Stoc, mișcări, rezervări și locații de depozitare</Text>}
-            actionsBar={
-              <Toolbar design="Transparent">
-                {primaryAction && (
-                  <ToolbarButton design={ButtonDesign.Emphasized} icon={addIcon} text={primaryAction.text} onClick={primaryAction.onClick} disabled={isViewer} />
-                )}
-              </Toolbar>
-            }
-          >
-            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-              <Kpi label="Total materiale" value={materials.length} />
-              <Kpi label="Rezervări active" value={activeReservations} />
-              <Kpi label="Locații" value={locations.length} />
-              <Kpi label="Stoc critic" value={lowStock.length} state={lowStock.length > 0 ? ValueState.Negative : ValueState.None} />
-            </div>
-          </DynamicPageTitle>
-        }
-        headerArea={
-          <DynamicPageHeader>
-            <FilterBar hideToolbar>
-              <FilterGroupItem label="Vizualizare" filterKey="view">
-                <Text>
-                  {tab === 'stock' ? `Stoc curent — ${materials.length} materiale`
-                    : tab === 'movements' ? `Mișcări stoc — ${movements.length}`
-                    : tab === 'reservations' ? `Rezervări — ${reservations.length}`
-                    : `Locații depozit — ${locations.length}`}
-                </Text>
-              </FilterGroupItem>
-            </FilterBar>
-          </DynamicPageHeader>
-        }
-      >
-        {/* Alerts: low stock / overdue reservations */}
-        {tab === 'stock' && lowStock.length > 0 && (
-          <MessageStrip design="Negative" hideCloseButton style={{ marginBottom: '0.5rem' }}>
-            {`Stoc critic — ${lowStock.length} ${lowStock.length === 1 ? 'material' : 'materiale'} sub minim: ${lowStock.slice(0, 6).map(m => m.name).join(', ')}${lowStock.length > 6 ? '…' : ''}`}
-          </MessageStrip>
-        )}
-        {tab === 'reservations' && overdueReservations.length > 0 && (
-          <MessageStrip design="Negative" hideCloseButton style={{ marginBottom: '0.5rem' }}>
-            {`${overdueReservations.length} ${overdueReservations.length === 1 ? 'rezervare restantă' : 'rezervări restante'} > 7 zile: ${overdueReservations.slice(0, 6).map(r => r.material_name).join(', ')}${overdueReservations.length > 6 ? '…' : ''}`}
-          </MessageStrip>
-        )}
+    <Page fit>
+      <Page.Body fit maxWidth="full" padding="flush" className="!gap-0 overflow-hidden">
 
-        <TabContainer collapsed onTabSelect={onTabSelect} style={{ height: '100%' }}>
-          <Tab data-tab="stock" text="Stoc" selected={tab === 'stock'}>
-            <AnalyticalTable
-              columns={stockColumns}
-              data={materials}
-              loading={loading}
-              visibleRowCountMode="Auto"
-              minRows={1}
-              noDataText="Niciun material în stoc"
-              filterable
-              sortable
-            />
-          </Tab>
-          <Tab data-tab="movements" text="Mișcări" selected={tab === 'movements'}>
-            <AnalyticalTable
-              columns={movementColumns}
-              data={movements}
-              loading={loading}
-              visibleRowCountMode="Auto"
-              minRows={1}
-              noDataText="Nicio mișcare înregistrată"
-              filterable
-              sortable
-            />
-          </Tab>
-          <Tab data-tab="reservations" text="Rezervări" selected={tab === 'reservations'}>
-            <AnalyticalTable
-              columns={reservationColumns}
-              data={reservations}
-              loading={loading}
-              visibleRowCountMode="Auto"
-              minRows={1}
-              noDataText="Nicio rezervare"
-              filterable
-              sortable
-            />
-          </Tab>
-          <Tab data-tab="locations" text="Locații" selected={tab === 'locations'}>
-            <AnalyticalTable
-              columns={locationColumns}
-              data={locations}
-              loading={loading}
-              visibleRowCountMode="Auto"
-              minRows={1}
-              noDataText="Nicio locație definită"
-              filterable
-              sortable
-            />
-          </Tab>
-        </TabContainer>
-      </DynamicPage>
+        {/* Header */}
+        <div className="px-6 pt-5 pb-4 shrink-0 border-b border-line/60">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex items-center gap-4 min-w-0">
+              <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
+                <Warehouse className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <h1 className="text-pm-lg font-semibold text-content-primary leading-tight truncate">Depozit</h1>
+                <p className="mt-0.5 text-pm-sm text-content-muted">{viewLabel}</p>
+              </div>
+            </div>
+            {!isViewer && primaryAction && (
+              <Button size="md" onClick={primaryAction.onClick}><Plus className="h-4 w-4" /> {primaryAction.text}</Button>
+            )}
+          </div>
+        </div>
+
+        {/* KPIs */}
+        <div className="px-6 pt-4 shrink-0">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <KpiCard label="Total materiale" icon={Package} value={materials.length} />
+            <KpiCard label="Rezervări active" icon={Bookmark} value={activeReservations} iconColor="text-status-blue" />
+            <KpiCard label="Locații" icon={MapPin} value={locations.length} />
+            <KpiCard label="Stoc critic" icon={AlertTriangle} value={lowStock.length} iconColor={lowStock.length > 0 ? 'text-status-red' : undefined} />
+          </div>
+        </div>
+
+        {/* Tab toggle */}
+        <div className="px-6 pt-4 shrink-0">
+          <div className="inline-flex items-center gap-0.5 rounded-xl border border-line bg-surface-secondary p-1" role="group" aria-label="Vizualizare depozit">
+            {TABS.map(t => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setTab(t.id)}
+                aria-pressed={tab === t.id}
+                className={cn(
+                  'h-8 px-3.5 rounded-lg text-pm-xs font-semibold transition-smooth',
+                  tab === t.id ? 'bg-accent text-[var(--color-on-accent)] shadow-[var(--elevation-1)]' : 'text-content-muted hover:text-content-primary hover:bg-surface-tertiary',
+                )}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Alerts */}
+        <div className="px-6 pt-3 shrink-0 space-y-2">
+          {tab === 'stock' && lowStock.length > 0 && (
+            <AlertBanner>Stoc critic — <strong className="font-semibold">{lowStock.length}</strong> {lowStock.length === 1 ? 'material' : 'materiale'} sub minim: {lowStock.slice(0, 6).map(m => m.name).join(', ')}{lowStock.length > 6 ? '…' : ''}</AlertBanner>
+          )}
+          {tab === 'reservations' && overdueReservations.length > 0 && (
+            <AlertBanner><strong className="font-semibold">{overdueReservations.length}</strong> {overdueReservations.length === 1 ? 'rezervare restantă' : 'rezervări restante'} &gt; 7 zile: {overdueReservations.slice(0, 6).map(r => r.material_name).join(', ')}{overdueReservations.length > 6 ? '…' : ''}</AlertBanner>
+          )}
+        </div>
+
+        {/* Table */}
+        <div className="flex-1 min-h-0 overflow-auto px-6 py-4">
+          <Card padding="none" className="min-w-0 overflow-hidden">
+            {loading ? (
+              <div className="flex items-center justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-content-muted" /></div>
+            ) : tab === 'stock' ? (
+              <DataTable columns={stockColumns} rows={materials} empty="Niciun material în stoc" />
+            ) : tab === 'movements' ? (
+              <DataTable columns={movementColumns} rows={movements} empty="Nicio mișcare înregistrată" />
+            ) : tab === 'reservations' ? (
+              <DataTable columns={reservationColumns} rows={reservations} empty="Nicio rezervare" />
+            ) : (
+              <DataTable columns={locationColumns} rows={locations} empty="Nicio locație definită" />
+            )}
+          </Card>
+        </div>
+      </Page.Body>
 
       {/* Record stock movement */}
-      <Dialog
-        open={moveOpen}
-        headerText="Mișcare stoc nouă"
-        onClose={() => setMoveOpen(false)}
-        footer={
-          <Bar design="Footer" endContent={
-            <>
-              <Button design={ButtonDesign.Emphasized} onClick={handleRecordMovement}>Înregistrează</Button>
-              <Button design={ButtonDesign.Transparent} onClick={() => setMoveOpen(false)}>Anulează</Button>
-            </>
-          } />
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '24rem', padding: '0.5rem 0' }}>
-          <div><Label required>Material</Label>
-            <Select style={{ width: '100%' }} onChange={(e) => setMove('material_id')(String(e.detail.selectedOption.dataset.value ?? ''))}>
-              <Option data-value="">—</Option>
-              {materials.map(m => <Option key={m.id} data-value={String(m.id)} selected={String(m.id) === moveForm.material_id}>{m.code} — {m.name}</Option>)}
-            </Select>
+      {moveOpen && (
+        <Modal title="Mișcare stoc nouă" onClose={() => setMoveOpen(false)}
+          footer={<><Button variant="secondary" size="sm" onClick={() => setMoveOpen(false)}>Anulează</Button><Button size="sm" onClick={handleRecordMovement}>Înregistrează</Button></>}>
+          <Field label="Material" required>
+            <select className={inputCls} value={moveForm.material_id} onChange={e => setMove('material_id')(e.target.value)}>
+              <option value="">—</option>
+              {materials.map(m => <option key={m.id} value={String(m.id)}>{m.code} — {m.name}</option>)}
+            </select>
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Tip mișcare" required>
+              <select className={inputCls} value={moveForm.movement_type} onChange={e => setMove('movement_type')(e.target.value)}>
+                <option value="in">Intrare</option>
+                <option value="out">Ieșire</option>
+                <option value="adjustment">Ajustare</option>
+              </select>
+            </Field>
+            <Field label="Cantitate" required>
+              <input type="number" className={inputCls} value={moveForm.quantity} onChange={e => setMove('quantity')(e.target.value)} />
+            </Field>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <div style={{ flex: 1 }}><Label required>Tip mișcare</Label>
-              <Select style={{ width: '100%' }} onChange={(e) => setMove('movement_type')(String(e.detail.selectedOption.dataset.value ?? 'in'))}>
-                <Option data-value="in" selected={moveForm.movement_type === 'in'}>Intrare</Option>
-                <Option data-value="out" selected={moveForm.movement_type === 'out'}>Ieșire</Option>
-                <Option data-value="adjustment" selected={moveForm.movement_type === 'adjustment'}>Ajustare</Option>
-              </Select>
-            </div>
-            <div style={{ flex: 1 }}><Label required>Cantitate</Label><Input type="Number" style={{ width: '100%' }} value={moveForm.quantity} onInput={(e) => setMove('quantity')((e.target as any).value)} /></div>
-          </div>
-          <div><Label>Locație</Label>
-            <Select style={{ width: '100%' }} onChange={(e) => setMove('location_id')(String(e.detail.selectedOption.dataset.value ?? ''))}>
-              <Option data-value="">—</Option>
-              {locations.map(l => <Option key={l.id} data-value={String(l.id)} selected={String(l.id) === moveForm.location_id}>{l.code} — {l.name}</Option>)}
-            </Select>
-          </div>
-          <div><Label>Proiect (pentru cost flow)</Label>
-            <Select style={{ width: '100%' }} onChange={(e) => setMove('project_id')(String(e.detail.selectedOption.dataset.value ?? ''))}>
-              <Option data-value="">—</Option>
-              {projects.map(p => <Option key={p.id} data-value={String(p.id)} selected={String(p.id) === moveForm.project_id}>{p.name}</Option>)}
-            </Select>
-          </div>
-          <div><Label>Note</Label><TextArea style={{ width: '100%' }} rows={3} value={moveForm.notes} onInput={(e) => setMove('notes')((e.target as any).value)} /></div>
-        </div>
-      </Dialog>
+          <Field label="Locație">
+            <select className={inputCls} value={moveForm.location_id} onChange={e => setMove('location_id')(e.target.value)}>
+              <option value="">—</option>
+              {locations.map(l => <option key={l.id} value={String(l.id)}>{l.code} — {l.name}</option>)}
+            </select>
+          </Field>
+          <Field label="Proiect (pentru cost flow)">
+            <select className={inputCls} value={moveForm.project_id} onChange={e => setMove('project_id')(e.target.value)}>
+              <option value="">—</option>
+              {projects.map(p => <option key={p.id} value={String(p.id)}>{p.name}</option>)}
+            </select>
+          </Field>
+          <Field label="Note">
+            <textarea rows={2} className={`${inputCls} h-auto py-2 resize-none`} value={moveForm.notes} onChange={e => setMove('notes')(e.target.value)} />
+          </Field>
+        </Modal>
+      )}
 
       {/* Create reservation */}
-      <Dialog
-        open={resOpen}
-        headerText="Rezervare nouă"
-        onClose={() => setResOpen(false)}
-        footer={
-          <Bar design="Footer" endContent={
-            <>
-              <Button design={ButtonDesign.Emphasized} onClick={handleCreateReservation}>Creează rezervare</Button>
-              <Button design={ButtonDesign.Transparent} onClick={() => setResOpen(false)}>Anulează</Button>
-            </>
-          } />
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '24rem', padding: '0.5rem 0' }}>
-          <div><Label required>Proiect</Label>
-            <Select style={{ width: '100%' }} onChange={(e) => setRes('project_id')(String(e.detail.selectedOption.dataset.value ?? ''))}>
-              <Option data-value="">—</Option>
-              {projects.map(p => <Option key={p.id} data-value={String(p.id)} selected={String(p.id) === resForm.project_id}>{p.name}</Option>)}
-            </Select>
-          </div>
-          <div><Label required>Material</Label>
-            <Select style={{ width: '100%' }} onChange={(e) => setRes('material_id')(String(e.detail.selectedOption.dataset.value ?? ''))}>
-              <Option data-value="">—</Option>
-              {materials.map(m => <Option key={m.id} data-value={String(m.id)} selected={String(m.id) === resForm.material_id}>{m.code} — {m.name}</Option>)}
-            </Select>
-          </div>
-          <div><Label required>Cantitate rezervată</Label><Input type="Number" style={{ width: '100%' }} value={resForm.quantity_reserved} onInput={(e) => setRes('quantity_reserved')((e.target as any).value)} /></div>
-        </div>
-      </Dialog>
+      {resOpen && (
+        <Modal title="Rezervare nouă" onClose={() => setResOpen(false)}
+          footer={<><Button variant="secondary" size="sm" onClick={() => setResOpen(false)}>Anulează</Button><Button size="sm" onClick={handleCreateReservation}>Creează rezervare</Button></>}>
+          <Field label="Proiect" required>
+            <select className={inputCls} value={resForm.project_id} onChange={e => setRes('project_id')(e.target.value)}>
+              <option value="">—</option>
+              {projects.map(p => <option key={p.id} value={String(p.id)}>{p.name}</option>)}
+            </select>
+          </Field>
+          <Field label="Material" required>
+            <select className={inputCls} value={resForm.material_id} onChange={e => setRes('material_id')(e.target.value)}>
+              <option value="">—</option>
+              {materials.map(m => <option key={m.id} value={String(m.id)}>{m.code} — {m.name}</option>)}
+            </select>
+          </Field>
+          <Field label="Cantitate rezervată" required>
+            <input type="number" className={inputCls} value={resForm.quantity_reserved} onChange={e => setRes('quantity_reserved')(e.target.value)} />
+          </Field>
+        </Modal>
+      )}
 
       {/* Create location */}
-      <Dialog
-        open={locOpen}
-        headerText="Locație nouă"
-        onClose={() => setLocOpen(false)}
-        footer={
-          <Bar design="Footer" endContent={
-            <>
-              <Button design={ButtonDesign.Emphasized} onClick={handleCreateLocation}>Adaugă locație</Button>
-              <Button design={ButtonDesign.Transparent} onClick={() => setLocOpen(false)}>Anulează</Button>
-            </>
-          } />
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '22rem', padding: '0.5rem 0' }}>
-          <div><Label required>Nume locație</Label><Input style={{ width: '100%' }} value={locForm.name} onInput={(e) => setLoc('name')((e.target as any).value)} placeholder="Hala principală" /></div>
-          <div><Label>Tip</Label>
-            <Select style={{ width: '100%' }} onChange={(e) => setLoc('location_type')(String(e.detail.selectedOption.dataset.value ?? 'depozit'))}>
-              <Option data-value="depozit" selected={locForm.location_type === 'depozit'}>Depozit</Option>
-              <Option data-value="hala" selected={locForm.location_type === 'hala'}>Hala</Option>
-              <Option data-value="exterior" selected={locForm.location_type === 'exterior'}>Exterior</Option>
-            </Select>
-          </div>
-        </div>
-      </Dialog>
+      {locOpen && (
+        <Modal title="Locație nouă" onClose={() => setLocOpen(false)}
+          footer={<><Button variant="secondary" size="sm" onClick={() => setLocOpen(false)}>Anulează</Button><Button size="sm" onClick={handleCreateLocation}>Adaugă locație</Button></>}>
+          <Field label="Nume locație" required>
+            <input className={inputCls} value={locForm.name} onChange={e => setLoc('name')(e.target.value)} placeholder="Hala principală" />
+          </Field>
+          <Field label="Tip">
+            <select className={inputCls} value={locForm.location_type} onChange={e => setLoc('location_type')(e.target.value)}>
+              <option value="depozit">Depozit</option>
+              <option value="hala">Hala</option>
+              <option value="exterior">Exterior</option>
+            </select>
+          </Field>
+        </Modal>
+      )}
 
       {/* Issue reservation */}
-      <Dialog
-        open={issueTarget !== null}
-        headerText={issueTarget ? `Eliberează rezervare — ${issueTarget.material}` : 'Eliberează rezervare'}
-        onClose={() => setIssueTarget(null)}
-        footer={
-          <Bar design="Footer" endContent={
-            <>
-              <Button design={ButtonDesign.Emphasized} onClick={handleIssue}>Eliberează</Button>
-              <Button design={ButtonDesign.Transparent} onClick={() => setIssueTarget(null)}>Anulează</Button>
-            </>
-          } />
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '22rem', padding: '0.5rem 0' }}>
-          <div>
-            <Label required>Cantitate de eliberat</Label>
-            <Input
-              type="Number"
-              style={{ width: '100%' }}
+      {issueTarget && (
+        <Modal title={`Eliberează rezervare — ${issueTarget.material}`} onClose={() => setIssueTarget(null)}
+          footer={<><Button variant="secondary" size="sm" onClick={() => setIssueTarget(null)}>Anulează</Button><Button size="sm" onClick={handleIssue}>Eliberează</Button></>}>
+          <Field label="Cantitate de eliberat" required>
+            <input
+              type="number"
+              className={cn(inputCls, Number(issueQty) > issueTarget.remaining && '!border-status-red')}
               value={issueQty}
-              placeholder={issueTarget ? `max ${issueTarget.remaining}` : ''}
-              valueState={issueTarget && Number(issueQty) > issueTarget.remaining ? ValueState.Negative : ValueState.None}
-              onInput={(e) => setIssueQty((e.target as any).value)}
+              placeholder={`max ${issueTarget.remaining}`}
+              onChange={e => setIssueQty(e.target.value)}
             />
-            {issueTarget && <Label>{`Rămas disponibil: ${issueTarget.remaining}`}</Label>}
-          </div>
-        </div>
-      </Dialog>
-    </>
+          </Field>
+          <p className="text-pm-xs text-content-muted">Rămas disponibil: <span className="font-semibold tabular-nums text-content-secondary">{issueTarget.remaining}</span></p>
+        </Modal>
+      )}
+    </Page>
+  );
+}
+
+// ── Reusable Tailwind table (fixes the UI5 AnalyticalTable blank-render bug) ──
+function DataTable<T>({ columns, rows, empty }: { columns: Col<T>[]; rows: T[]; empty: string }) {
+  if (rows.length === 0) {
+    return <div className="py-16 text-center text-pm-sm text-content-muted">{empty}</div>;
+  }
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="bg-surface-tertiary/40">
+            {columns.map(c => (
+              <th key={c.key} className={cn('px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.08em] text-content-muted whitespace-nowrap border-b border-line', c.align === 'end' && 'text-right')}>
+                {c.header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr key={i} className="border-b border-line/50 last:border-b-0 hover:bg-surface-tertiary/30 transition-colors">
+              {columns.map(c => (
+                <td key={c.key} className={cn('px-3 py-2 text-pm-sm text-content-secondary whitespace-nowrap', c.align === 'end' && 'text-right tabular-nums')}>
+                  {c.render ? c.render(row) : ((row as Record<string, unknown>)[c.key] as React.ReactNode) ?? '—'}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function AlertBanner({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-2 rounded-xl border border-status-red/30 bg-status-red/5 px-3.5 py-2.5 text-pm-xs text-status-red">
+      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+      <span>{children}</span>
+    </div>
+  );
+}
+
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className={labelCls}>{label}{required && <span className="text-status-red"> *</span>}</label>
+      <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+function Modal({ title, onClose, children, footer }: { title: string; onClose: () => void; children: React.ReactNode; footer: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)]" onClick={e => e.stopPropagation()}>
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line/70 bg-surface-primary px-4 py-3">
+          <h3 className="text-pm-sm font-semibold text-content-primary truncate">{title}</h3>
+          <button onClick={onClose} className="p-1 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary" aria-label="Închide"><XIcon className="h-4 w-4" /></button>
+        </header>
+        <div className="p-4 space-y-3">{children}</div>
+        <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-line/70 bg-surface-primary px-4 py-3">{footer}</div>
+      </div>
+    </div>
   );
 }

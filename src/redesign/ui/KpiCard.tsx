@@ -18,8 +18,14 @@ interface KpiCardProps {
   className?: string;
   
   vtName?: string;
-  
+
   countUp?: boolean;
+  /** Featured "hero" KPI — bigger figure, accent wash + border, raised elevation. */
+  hero?: boolean;
+  /** Slim variant — shorter card, smaller figure; a zero value is muted. For
+   *  strips where the KPIs support a richer main view (e.g. a Kanban board) and
+   *  shouldn't shout, especially when several read 0. */
+  compact?: boolean;
 }
 
 const roNumber = new Intl.NumberFormat('ro-RO');
@@ -50,11 +56,16 @@ function KpiCard({
   className = '',
   vtName,
   countUp = true,
+  hero = false,
+  compact = false,
 }: KpiCardProps) {
-  
-  
-  
+
+
+
   const isNum = typeof value === 'number' && Number.isFinite(value);
+  // A literal-zero KPI carries no information — in compact strips, mute it so the
+  // eye lands on the numbers that matter (HIG: don't give weight to nothing).
+  const isZero = value === 0 || value === '0';
   const animated = useCountUp(isNum && countUp ? value : 0, { from: 0 });
   const display = !isNum
     ? value
@@ -72,12 +83,20 @@ function KpiCard({
 
 
     <div
-      className={`group surface-card surface-lift perf-contain relative flex flex-col bg-surface-primary rounded-2xl border border-line px-5 py-4 min-h-[96px] ${vtName ? 'vt-morph' : ''} ${className}`}
+      className={`group surface-card surface-lift perf-contain relative flex flex-col rounded-2xl ${compact ? 'px-4 py-3' : 'px-5 py-4'} ${
+        hero
+          ? 'bg-gradient-to-br from-accent-muted/55 via-surface-primary to-surface-primary border border-accent/30 shadow-[var(--elevation-3)] min-h-[116px]'
+          : compact
+            ? 'bg-surface-primary border border-line min-h-[64px]'
+            : 'bg-surface-primary border border-line min-h-[96px]'
+      } ${vtName ? 'vt-morph' : ''} ${className}`}
       style={vtName ? ({ viewTransitionName: vtName } as CSSProperties) : undefined}
     >
-      {iconColor && (
+      {(iconColor || hero) && (
         <span
-          className={`absolute left-0 top-4 bottom-4 w-[3px] rounded-r-full transition-all duration-300 ${iconColor.replace('text-', 'bg-')} group-hover:shadow-[0_0_8px_currentColor] group-hover:opacity-90`}
+          className={`absolute left-0 top-4 bottom-4 rounded-r-full transition-all duration-300 group-hover:shadow-[0_0_8px_currentColor] group-hover:opacity-90 ${
+            hero ? 'w-[4px] bg-accent' : `w-[3px] ${(iconColor || 'text-content-muted').replace('text-', 'bg-')}`
+          }`}
           aria-hidden
         />
       )}
@@ -86,14 +105,14 @@ function KpiCard({
           {label}
         </p>
         {Icon && (
-          <Icon className={`h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110 ${iconColor || 'text-content-muted'}`} aria-hidden />
+          <Icon className={`h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110 ${hero ? 'text-accent' : (iconColor || 'text-content-muted')}`} aria-hidden />
         )}
       </div>
       {loading ? (
         <div className="mt-2 h-7 w-20 rounded-lg bg-surface-tertiary animate-pulse" />
       ) : (
-        <div className="mt-2 flex items-baseline gap-2 min-w-0">
-          <span className="text-[28px] font-semibold tabular-nums text-content-primary leading-none truncate tracking-[-0.02em]">
+        <div className={`${compact ? 'mt-1' : 'mt-2'} flex items-baseline gap-2 min-w-0`}>
+          <span className={`font-semibold tabular-nums leading-none truncate tracking-[-0.02em] ${hero ? 'text-[30px]' : compact ? 'text-[20px]' : 'text-[28px]'} ${compact && isZero ? 'text-content-muted/50' : 'text-content-primary'}`}>
             {display}
           </span>
           {trend && trendValue && (

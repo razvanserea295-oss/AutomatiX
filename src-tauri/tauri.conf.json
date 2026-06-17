@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Automatix",
+  "version": "1.1.4",
+  "identifier": "online.automatix.desktop",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build:tauri-frontend"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Automatix",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 1100,
+        "minHeight": 700,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true,
+        "decorations": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "createUpdaterArtifacts": true,
+    "publisher": "Promix",
+    "category": "Business",
+    "shortDescription": "Promix Automatix ERP",
+    "longDescription": "Promix Automatix — ERP desktop shell for the concrete-batching-plant + steel-structures operation. Connects to the Automatix server.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://automatix.online/api/update/latest.json",
+        "http://localhost:3500/api/update/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMwNzlBMkJBOEI5Q0U2QzMKUldURDVweUx1cUo1d09zS3FQdXZJTHF3cGYyaTcvYytWdkI4N3hLQU85MUJpOG9VeGQzclUwNHgK",
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  }
+}

@@ -1,9 +1,9 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import Titlebar from './Titlebar';
 import WorkspacePanel from './WorkspacePanel';
 import StatusBar from './StatusBar';
 import RouteProgress from './RouteProgress';
-import PageTransitionOverlay from './PageTransitionOverlay;
+import PageTransitionOverlay from './PageTransitionOverlay';
 
 
 

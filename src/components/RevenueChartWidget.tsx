@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { TrendingUp, Loader2 } from 'lucide-react';
-import { ComposedChart, Scatter, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ZAxis, ReferenceLine, Label } from 'recharts';
+import { ComposedChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Label } from 'recharts';
 import { apiCommand } from '@/api/commands';
 import { useMoney } from '@/store/settingsStore';
 
@@ -70,28 +70,12 @@ export default function RevenueChartWidget() {
     return out;
   })();
 
-  
-  
-  const series: Array<{ month: string; label: string; amount: number; trend: number | null }> = (() => {
-    const points: Array<{ x: number; y: number }> = [];
-    baseSeries.forEach((p, i) => { if (p.amount > 0) points.push({ x: i, y: p.amount }); });
-
-    if (points.length < 2) {
-      return baseSeries.map(p => ({ ...p, trend: null }));
-    }
-
-    const n = points.length;
-    const sumX = points.reduce((s, p) => s + p.x, 0);
-    const sumY = points.reduce((s, p) => s + p.y, 0);
-    const sumXY = points.reduce((s, p) => s + p.x * p.y, 0);
-    const sumXX = points.reduce((s, p) => s + p.x * p.x, 0);
-    const denom = n * sumXX - sumX * sumX;
-    if (denom === 0) return baseSeries.map(p => ({ ...p, trend: null }));
-    const slope = (n * sumXY - sumX * sumY) / denom;
-    const intercept = (sumY - slope * sumX) / n;
-
-    return baseSeries.map((p, i) => ({ ...p, trend: Math.max(0, slope * i + intercept) }));
-  })();
+  // Plot the ACTUAL monthly revenue (honest, discrete bars). The previous chart
+  // drew a linear-regression "trend" as the hero line which sloped to ~0 at the
+  // last month → it read as "revenue collapsing to zero" and contradicted the
+  // positive Profit KPI. Bars say "this month earned X"; an empty month is just a
+  // short bar, not a doom-line.
+  const series = baseSeries;
 
   const total = series.reduce((s, p) => s + p.amount, 0);
 
@@ -131,7 +115,7 @@ export default function RevenueChartWidget() {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={series} margin={{ top: 10, right: 16, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-subtle)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-subtle)" vertical={false} />
               <XAxis
                 type="category"
                 dataKey="label"
@@ -149,10 +133,8 @@ export default function RevenueChartWidget() {
                 axisLine={{ stroke: 'var(--color-border)' }}
                 width={48}
               />
-              {}
-              <ZAxis type="number" dataKey="amount" range={[40, 220]} />
               <Tooltip
-                cursor={{ strokeDasharray: '3 3', stroke: 'var(--color-border)' }}
+                cursor={{ fill: 'var(--color-accent)', fillOpacity: 0.06 }}
                 contentStyle={{
                   background: 'var(--color-bg-elevated)',
                   border: '1px solid var(--color-border)',
@@ -163,30 +145,22 @@ export default function RevenueChartWidget() {
                 }}
                 labelStyle={{ color: 'var(--color-text-primary)', fontWeight: 600 }}
                 itemStyle={{ color: 'var(--color-text-primary)' }}
-                formatter={(value: number | string, name: string) => {
-                  const label = name === 'trend' ? 'Trend' : 'Venit';
-                  return [money(Number(value), 'RON'), label];
-                }}
+                formatter={(value: number | string) => [money(Number(value), 'RON'), 'Venit']}
               />
-              {}
-              <Line
-                type="linear"
-                dataKey="trend"
-                stroke="var(--color-text-primary)"
-                strokeWidth={2}
-                strokeDasharray="6 4"
-                dot={false}
-                activeDot={false}
-                isAnimationActive={false}
-                connectNulls
-              />
-              <Scatter
+              <defs>
+                <linearGradient id="revBar" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.95} />
+                  <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0.5} />
+                </linearGradient>
+              </defs>
+              {/* Honest monthly-revenue bars. Empty month = short bar, not a crash. */}
+              <Bar
                 dataKey="amount"
                 name="Venit"
-                fill="var(--color-text-primary)"
-                stroke="var(--color-text-primary)"
-                strokeWidth={1}
-                fillOpacity={0.85}
+                fill="url(#revBar)"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={34}
+                isAnimationActive={false}
               />
               {median != null && (
                 <ReferenceLine

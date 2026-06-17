@@ -20,3 +20,24 @@ ai-service/config.toml
 dist-installer/
 public/downloads/*.exe
 build/icon.png
+
+# ── Extra safety: keys/env + large binaries + local backups (added for upload) ──
+.env
+.env.*
+*.pem
+*.key
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.minisign
+.dbkey
+*.apk
+*.aab
+*.tsbuildinfo
+*.log
+.restart-marker
+_comments_backup/
+_codex_current_ui_backup_*/
+_filterbar_backup_*/
+_upload-bundles/

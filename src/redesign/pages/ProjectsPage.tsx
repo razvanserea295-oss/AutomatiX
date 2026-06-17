@@ -322,6 +322,16 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
     [projects, selectedId],
   );
 
+  // Auto-select the first visible project so the detail pane is populated on
+  // load instead of showing a blank 50% of the screen — the master-detail
+  // convention (Mail, Files, Settings). Skips when a deep-link focus is pending
+  // or the user already has a selection; re-fires if a delete clears it.
+  useEffect(() => {
+    if (selectedId != null) return;
+    if (sessionStorage.getItem('promix_focus_project')) return;
+    if (filtered.length > 0) setSelectedId(filtered[0].id);
+  }, [filtered, selectedId]);
+
   
   
   
@@ -433,12 +443,12 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
               <FolderKanban className="h-5 w-5" />
             </span>
             <div className="min-w-0">
-              <p className="text-pm-eyebrow text-accent mb-1 flex items-center gap-2">
-                <span className="inline-block h-px w-3.5 bg-accent/50" aria-hidden /> Proiecte &amp; Contracte
-              </p>
-              <h1 className="text-pm-2xl font-semibold text-content-primary truncate leading-tight">Proiecte</h1>
-              <p className="mt-1 text-pm-sm text-content-muted">
-                Portofoliul de proiecte, etapele de producție și documentele asociate
+              {/* No giant "Proiecte" title — the breadcrumb + tab already say where
+                  you are (design-system rule: location is conveyed by the shell, not
+                  a repeated page H1). One smaller, distinct title + a subtitle. */}
+              <h1 className="text-pm-lg font-semibold text-content-primary leading-tight truncate">Portofoliu proiecte</h1>
+              <p className="mt-0.5 text-pm-sm text-content-muted">
+                Etape de producție, piese și documente — toate într-un singur loc
               </p>
             </div>
           </div>
@@ -453,7 +463,10 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
         </header>
 
         {}
-        <div className="enter-up shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-4" style={{ animationDelay: '80ms' }}>
+        {/* Valoare activă = hero (the one figure not already visible in the list).
+            The three counts stay, but secondary — gives the strip a focal point
+            and stops four equally-loud giant numbers competing. */}
+        <div className="enter-up shrink-0 grid grid-cols-2 lg:grid-cols-5 gap-4" style={{ animationDelay: '80ms' }}>
           <KpiCard
             vtName={vtName('proj-kpi', 'total')}
             label="Total proiecte" icon={FolderKanban} value={projStats.total}
@@ -467,6 +480,8 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
             label="Finalizate" icon={CheckCircle2} value={projStats.done} iconColor="text-status-green"
           />
           <KpiCard
+            hero
+            className="col-span-2 lg:col-span-2"
             vtName={vtName('proj-kpi', 'value')}
             label="Valoare activă" icon={DollarSign} value={money(projStats.value, 'RON')}
           />
@@ -520,7 +535,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                         aria-label={`Selectează proiectul ${project.name}`}
                         style={{ viewTransitionName: isSelected ? vtName('project', project.id) : undefined }}
                         className={cn(
-                          'group relative w-full cursor-pointer border-b border-line/60 px-4 py-3 text-left transition-all duration-150',
+                          'group relative w-full cursor-pointer border-b border-line/60 px-4 py-2.5 text-left transition-all duration-150',
                           isSelected
                             ? 'bg-accent/8 vt-morph'
                             : 'hover:bg-surface-tertiary/40',
@@ -547,7 +562,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                             <p className="mt-0.5 truncate text-pm-xs text-content-muted">
                               {getClientName(project)}
                             </p>
-                            <div className="mt-1.5">
+                            <div className="mt-1">
                               <StatusBadge {...projectStatus(project.status)} size="xs" />
                             </div>
                           </div>

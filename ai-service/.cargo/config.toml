@@ -1,0 +1,5 @@
+[build]
+# Default cargo target dir. The previous Windows path ("C:\aib") broke Linux
+# builds by appending invalid segments to LD_LIBRARY_PATH. Change only if you
+# know what you're doing (keep Linux/Windows-compatible).
+target-dir = "target"

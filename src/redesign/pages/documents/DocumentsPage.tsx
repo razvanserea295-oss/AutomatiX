@@ -570,10 +570,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                 <FileText className="h-5 w-5 text-accent" aria-hidden />
               </span>
               <div className="min-w-0">
-                <p className="text-pm-eyebrow text-accent flex items-center gap-2">
-                  <span className="inline-block h-px w-3.5 bg-accent/50" aria-hidden />
-                  Financiar
-                </p>
+                {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
                 <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">Documente</h1>
               </div>
             </div>

@@ -21,7 +21,7 @@ export interface HeroHeaderProps {
 }
 
 export default function HeroHeader({
-  title, subtitle, eyebrow, icon: Icon, breadcrumb, actions, children, className = '', style,
+  title, subtitle, icon: Icon, breadcrumb, actions, children, className = '', style,
 }: HeroHeaderProps) {
   return (
     <header
@@ -37,7 +37,8 @@ export default function HeroHeader({
             </span>
           )}
           <div className="min-w-0">
-            {eyebrow && <p className="text-pm-2xs font-bold uppercase tracking-[0.16em] text-accent/80 mb-1">{eyebrow}</p>}
+            {/* Eyebrow not rendered — it repeated the workspace name the breadcrumb
+                already shows. Prop kept in the interface for call-site compat. */}
             <h1 className="text-display-lg font-semibold text-content-primary truncate">{title}</h1>
             {subtitle && <p className="mt-1.5 text-pm-sm text-content-muted">{subtitle}</p>}
           </div>

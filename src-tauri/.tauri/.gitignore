@@ -1,0 +1,5 @@
+# NEVER commit the updater signing key or its password. Whoever holds the
+# private key can sign malicious updates that every client will trust and
+# install. Keep these backed up SECURELY off-repo.
+*
+!.gitignore

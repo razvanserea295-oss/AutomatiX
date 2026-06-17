@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "online.automatix.twa",
+      "sha256_cert_fingerprints": [
+        "12:FA:DB:54:9A:31:B7:F0:9C:36:A8:36:B8:F5:76:52:17:7B:B1:27:8F:8B:34:3C:28:74:2F:64:30:95:F1:79"
+      ]
+    }
+  }
+]

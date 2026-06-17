@@ -1,0 +1,46 @@
+[package]
+name = "automatix"
+version = "1.1.4"
+description = "Promix Automatix — desktop shell"
+authors = ["Promix"]
+edition = "2021"
+rust-version = "1.77"
+
+# The library that `main.rs` calls into (Tauri 2 desktop/mobile-ready layout).
+[lib]
+name = "automatix_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Auto-updater: checks a signed `latest.json` endpoint, downloads + verifies the
+# NSIS installer against the public key in tauri.conf.json, runs it, then the
+# process plugin relaunches the app.
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
+
+[features]
+# Default release profile keeps the binary lean.
+custom-protocol = ["tauri/custom-protocol"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Release profile — optimized for a small, fast desktop binary. The Rust side is
+# only a thin WebView2 host (no heavy compute at runtime), so we optimize hard
+# for SIZE. Mirrors Tauri's official "reduce app size" recommendations.
+#   opt-level = "s"   → size-optimized codegen
+#   lto = true        → whole-program link-time optimization
+#   codegen-units = 1 → best cross-module optimization (smallest output)
+#   panic = "abort"   → drop unwinding tables / landing pads
+#   strip = true      → strip symbols from the final binary
+# Trade-off: noticeably slower release compiles (full LTO, single codegen unit).
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

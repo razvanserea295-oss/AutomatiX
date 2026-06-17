@@ -75,7 +75,11 @@ export async function seedDemoData(db: Database): Promise<void> {
   
   
   const viewerRole = roleId(db, 'viewer', managerRole);
-  insUser(DEMO_USERNAME, 'Cont Demo (prezentare)', viewerRole);
+  // Real-sounding first name so the dashboard greeting reads "Bună, Andrei"
+  // (not "Bună, Cont" — the greeting takes the first token of full_name). The
+  // "Demo" surname keeps the account obviously a presentation account everywhere
+  // the full name shows (status bar, account menu).
+  insUser(DEMO_USERNAME, 'Andrei Demo', viewerRole);
 
   const people = [
     ['ana.maria', 'Ana Maria Ionescu'], ['ion.stanescu', 'Ion Stănescu'],

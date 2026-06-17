@@ -159,10 +159,7 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
         <div className="enter-up shrink-0 pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-wrap items-center gap-4">
             <div className="min-w-0">
-              <p className="text-pm-eyebrow text-accent mb-1.5 flex items-center gap-2">
-                <span className="inline-block h-px w-3.5 bg-accent/50 anim-bar-grow" aria-hidden />
-                Rapoarte
-              </p>
+              {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
               <div className="flex items-center gap-2.5">
                 <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                   <BarChart3 className="h-5 w-5" />

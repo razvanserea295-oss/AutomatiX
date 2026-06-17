@@ -249,10 +249,7 @@ export default function DeplasariPage({ user }: { user: User | null }) {
                 <MapPin className="h-5 w-5 text-accent" aria-hidden />
               </span>
               <div className="min-w-0">
-                <p className="text-pm-eyebrow text-accent flex items-center gap-2">
-                  <span className="inline-block h-px w-3.5 bg-accent/50" aria-hidden />
-                  Personal
-                </p>
+                {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
                 <div className="flex items-center gap-2.5 min-w-0">
                   <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">Deplasări</h1>
                   {activeDeplasari.length > 0 && (
