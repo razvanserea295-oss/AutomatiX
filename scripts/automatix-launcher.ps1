@@ -21,6 +21,28 @@ New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
 $NodeLog     = Join-Path $LogDir 'node-server.log'
 $CloudfLog   = Join-Path $LogDir 'cloudflared.log'
 $PidFile     = Join-Path $LogDir 'automatix.pids.json'
+$ArchiveDir  = Join-Path $LogDir 'archive'
+New-Item -ItemType Directory -Path $ArchiveDir -Force | Out-Null
+
+# Start-Process -RedirectStandardOutput OVERWRITES the log on each launch, so a
+# restart used to destroy the previous run's log (incl. the crash that caused it)
+# and a single long run could grow unbounded. Rotate the existing log into
+# logs\archive\ before it gets truncated, keeping the newest $Keep per stream so
+# disk stays bounded and crash forensics survive a restart.
+function Rotate-Log {
+  param([string]$Path, [int]$Keep = 10)
+  if (-not (Test-Path $Path)) { return }
+  try {
+    if ((Get-Item $Path).Length -lt 1) { return }   # skip empty
+    $base  = [System.IO.Path]::GetFileName($Path)
+    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    Move-Item -Path $Path -Destination (Join-Path $ArchiveDir "$base.$stamp") -Force
+    Get-ChildItem -Path $ArchiveDir -Filter "$base.*" |
+      Sort-Object LastWriteTime -Descending |
+      Select-Object -Skip $Keep |
+      ForEach-Object { Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue }
+  } catch {}
+}
 
 Clear-Host
 Write-Host ''
@@ -86,6 +108,13 @@ $env:PROMIX_TRUST_PROXY = '1'
 $env:PROMIX_ALLOWED_ORIGINS = 'https://automatix.online'
 # 8 GB heap — generous for the migrated DB (now ~28 MB) plus upload buffers.
 $env:NODE_OPTIONS = '--max-old-space-size=8192'
+# Off-site backup mirror (STRONGLY recommended): point this at another physical
+# disk, a NAS share (\\server\share\automatix), or a OneDrive/Google Drive synced
+# folder for real off-site safety. Only the ENCRYPTED .db is copied (never the key).
+# Uncomment and set:
+# $env:PROMIX_BACKUP_MIRROR_DIR = 'D:\AutomatixBackups'
+Rotate-Log $NodeLog
+Rotate-Log "$NodeLog.err"
 $quotedNodeJs = '"' + $NodeServerJs + '"'
 $nodeProc = Start-Process -FilePath 'node' `
                           -ArgumentList $quotedNodeJs `
@@ -114,6 +143,8 @@ Write-Host ''
 # Start cloudflared.
 # -------------------------------------------------------------------------
 Write-Host '[3/3] Pornesc tunelul cloudflared...' -ForegroundColor Yellow
+Rotate-Log $CloudfLog
+Rotate-Log "$CloudfLog.err"
 $tunProc = Start-Process -FilePath $CloudflaredExe `
                          -ArgumentList @('tunnel', '--config', $CloudflaredCfg, 'run') `
                          -WindowStyle Hidden `

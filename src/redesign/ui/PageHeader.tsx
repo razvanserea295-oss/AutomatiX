@@ -53,14 +53,14 @@ export default function PageHeader<T extends string = string>({
   
   
   return (
-    <div className="relative shrink-0 border-b border-line/70 bg-surface-secondary">
+    <div className="relative shrink-0 border-b border-line/60 bg-surface-secondary surface-frost">
       {(hasBack || hasActions) && (
         <div className="flex items-center gap-3 px-5 h-14">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
-              className="shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-line text-pm-sm font-medium text-content-secondary bg-surface-primary transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-tertiary hover:text-content-primary focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
+              className="shrink-0 inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-xl border border-line text-pm-sm font-medium text-content-secondary bg-surface-primary transition-smooth duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-tertiary hover:text-content-primary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Înapoi
@@ -68,8 +68,8 @@ export default function PageHeader<T extends string = string>({
           )}
 
           {(icon || title) && (
-            <div className="flex items-center gap-2.5 min-w-0">
-              {icon && <span className="shrink-0 text-accent [&>svg]:h-[18px] [&>svg]:w-[18px]">{icon}</span>}
+            <div className="flex items-center gap-2 min-w-0">
+              {icon && <span className="shrink-0 inline-flex items-center justify-center text-accent [&>svg]:h-[18px] [&>svg]:w-[18px]">{icon}</span>}
               {title && (
                 <div className="min-w-0">
                   <h1 className="text-pm-md font-semibold tracking-tight text-content-primary truncate leading-tight">{title}</h1>

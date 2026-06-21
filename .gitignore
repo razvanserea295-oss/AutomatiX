@@ -41,3 +41,11 @@ _comments_backup/
 _codex_current_ui_backup_*/
 _filterbar_backup_*/
 _upload-bundles/
+
+# ── GitHub upload exclusions (large data / DB backups / editor) ──
+backups/
+*.zip
+.vscode/
+.idea/
+.update-staging/
+.env.tauri

@@ -65,30 +65,12 @@ export type NavGroupDef = {
 
 export function getNavGroupsForRole(
   roleName: string | undefined | null,
-  businessType?: string | null,
 ): NavGroupDef[] {
   const r = normalizeRole(roleName);
 
-
-
-
-
-  if (businessType === 'restaurant') {
-    const systemId = r === 'admin' ? 'sistem-workspace' : 'settings';
-    return [
-      { title: '', itemIds: ['restaurant-workspace', 'personal-workspace'] },
-      { title: '', itemIds: [
-        'procurement-workspace',
-        'finance-workspace',
-        'instrumente-workspace',
-        systemId,
-      ] },
-    ];
-  }
-
   if (r === 'admin') {
     return [
-      { title: '', itemIds: ['dashboard', 'manager-control', 'personal-workspace'] },
+      { title: '', itemIds: ['dashboard', 'personal-workspace'] },
       { title: '', itemIds: [
         'sales-workspace',
         'projects-contracts-workspace',
@@ -104,7 +86,7 @@ export function getNavGroupsForRole(
 
   
   return [
-    { title: '', itemIds: ['dashboard', 'manager-control', 'personal-workspace'] },
+    { title: '', itemIds: ['dashboard', 'personal-workspace'] },
     { title: '', itemIds: [
       'sales-workspace',
       'projects-contracts-workspace',

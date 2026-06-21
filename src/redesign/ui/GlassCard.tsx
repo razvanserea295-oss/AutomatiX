@@ -10,7 +10,7 @@ export type GlassCardSize = 'compact' | 'regular' | 'hero';
 
 const PAD: Record<GlassCardSize, string> = { compact: 'p-4', regular: 'p-6', hero: 'p-8' };
 
-const RADIUS: Record<GlassCardSize, string> = { compact: 'rounded-xl', regular: 'rounded-xl', hero: 'rounded-xl' };
+const RADIUS: Record<GlassCardSize, string> = { compact: 'rounded-2xl', regular: 'rounded-2xl', hero: 'rounded-2xl' };
 
 export interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
   size?: GlassCardSize;
@@ -25,7 +25,7 @@ export default function GlassCard({
 }: GlassCardProps) {
   return (
     <div
-      className={`surface-card surface-card-elevated bg-surface-elevated border border-line ${RADIUS[size]} ${PAD[size]} ${interactive ? 'card-interactive cursor-pointer' : ''} ${vtName ? 'vt-morph' : ''} ${className}`}
+      className={`pm-card pm-card-pad surface-card surface-card-elevated bg-surface-elevated border border-line ${RADIUS[size]} ${PAD[size]} ${interactive ? 'card-interactive cursor-pointer transition-smooth duration-150 active:scale-[0.99]' : ''} ${vtName ? 'vt-morph' : ''} ${className}`}
       style={vtName ? ({ viewTransitionName: vtName, ...style } as CSSProperties) : style}
       {...rest}
     >

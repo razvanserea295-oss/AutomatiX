@@ -42,7 +42,7 @@
   --shadow-glass-sm:  0 1px 2px rgba(0, 0, 0, 0.32);
   --shadow-glass-md:  0 8px 32px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   --shadow-glass-lg:  0 16px 44px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  --shadow-glass-glow: 0 0 0 1px rgba(45, 212, 191, 0.18), 0 8px 32px rgba(45, 212, 191, 0.12);
+  --shadow-glass-glow: 0 0 0 1px rgba(77, 134, 255, 0.18), 0 8px 32px rgba(77, 134, 255, 0.12);
 
   /* ---- Ambient gradient-mesh values (used by AppBackground) ----------- */
   --mesh-accent: var(--color-accent);          /* teal */
@@ -92,17 +92,17 @@
   box-shadow:
     0 18px 56px rgba(0, 0, 0, 0.20),
     0 2px 8px rgba(0, 0, 0, 0.08),
-    0 0 0 1px rgba(45, 212, 191, 0.07),
+    0 0 0 1px rgba(77, 134, 255, 0.07),
     inset 0 1px 0 rgba(255, 255, 255, 0.10);
 }
 .glass-elevated {
   background: color-mix(in srgb, var(--color-bg-secondary) 50%, transparent);
-  box-shadow: var(--shadow-glass-lg), 0 0 0 1px rgba(45, 212, 191, 0.10), inset 0 1px 0 rgba(45, 212, 191, 0.12);
+  box-shadow: var(--shadow-glass-lg), 0 0 0 1px rgba(77, 134, 255, 0.10), inset 0 1px 0 rgba(77, 134, 255, 0.12);
   -webkit-backdrop-filter: blur(16px) saturate(185%); backdrop-filter: blur(16px) saturate(185%);
 }
 .glass-floating {
   background: color-mix(in srgb, var(--color-bg-elevated) 58%, transparent);
-  box-shadow: var(--shadow-glass-lg), 0 24px 64px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(45, 212, 191, 0.12);
+  box-shadow: var(--shadow-glass-lg), 0 24px 64px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(77, 134, 255, 0.12);
   -webkit-backdrop-filter: blur(20px) saturate(190%); backdrop-filter: blur(20px) saturate(190%);
 }
 
@@ -115,7 +115,7 @@
 .hover-lift:hover {
   transform: translateY(-3px) scale(1.008);
   border-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
-  box-shadow: var(--shadow-glass-lg), 0 0 0 1px rgba(45, 212, 191, 0.22), 0 14px 44px rgba(45, 212, 191, 0.16);
+  box-shadow: var(--shadow-glass-lg), 0 0 0 1px rgba(77, 134, 255, 0.22), 0 14px 44px rgba(77, 134, 255, 0.16);
 }
 .hover-glow {
   transition: box-shadow var(--dur-base) ease, border-color var(--dur-fast) ease;
@@ -144,7 +144,7 @@
 .app-surface select:focus,
 .app-surface textarea:focus {
   border-color: var(--color-accent) !important;
-  box-shadow: 0 0 0 4px rgba(45, 212, 191, 0.20);
+  box-shadow: 0 0 0 4px rgba(77, 134, 255, 0.20);
   outline: none;
 }
 
@@ -154,13 +154,13 @@
  * ==========================================================================*/
 .btn-accent-glow {
   background-image: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 82%, #ffffff), var(--color-accent) 55%, color-mix(in srgb, var(--color-accent) 70%, #0E7490));
-  box-shadow: 0 0 22px rgba(45, 212, 191, 0.38), var(--elevation-1, 0 1px 2px rgba(0,0,0,0.4));
+  box-shadow: 0 0 22px rgba(77, 134, 255, 0.38), var(--elevation-1, 0 1px 2px rgba(0,0,0,0.4));
   transition: box-shadow var(--dur-base) ease, filter var(--dur-fast) ease, transform var(--dur-fast) var(--ease-spring);
 }
 .btn-accent-glow:hover {
   filter: brightness(1.06);
   transform: translateY(-1px);
-  box-shadow: 0 0 34px rgba(45, 212, 191, 0.55), var(--elevation-2, 0 4px 12px rgba(0,0,0,0.5));
+  box-shadow: 0 0 34px rgba(77, 134, 255, 0.55), var(--elevation-2, 0 4px 12px rgba(0,0,0,0.5));
 }
 
 /* ============================================================================
@@ -209,7 +209,7 @@
 .app-bg__p {
   position: absolute; width: 2px; height: 2px; border-radius: 999px;
   background: var(--color-accent);
-  box-shadow: 0 0 6px 1px rgba(45, 212, 191, 0.35);
+  box-shadow: 0 0 6px 1px rgba(77, 134, 255, 0.35);
   opacity: var(--o-35);
   will-change: transform, opacity;
   animation: dsFloat ease-in-out infinite alternate;
@@ -320,7 +320,7 @@ html.vt-supported .animate-page-in { animation: none !important; }
 
 .ds-tab-indicator {
   transition: left var(--dur-base) var(--ease-spring), width var(--dur-base) var(--ease-spring);
-  box-shadow: 0 0 18px rgba(45, 212, 191, 0.35), inset 0 0 0 1px rgba(45, 212, 191, 0.40);
+  box-shadow: 0 0 18px rgba(77, 134, 255, 0.35), inset 0 0 0 1px rgba(77, 134, 255, 0.40);
 }
 
 .ds-skeleton { position: relative; overflow: hidden; background: var(--color-bg-secondary); }

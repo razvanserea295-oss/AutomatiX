@@ -44,7 +44,7 @@ export default function AccessDeniedView({ pageId, pageLabel, roleLabel, onGoHom
         </p>
         <button
           onClick={onGoHome}
-          className="inline-flex items-center gap-2 h-10 px-5 rounded-md bg-accent text-pm-sm font-semibold text-surface-primary hover:bg-accent/90 active:scale-[0.97] transition-all"
+          className="inline-flex items-center gap-2 h-10 px-5 rounded-md bg-accent text-pm-sm font-semibold text-[var(--color-on-accent)] hover:bg-accent/90 active:scale-[0.97] transition-all"
         >
           <ArrowLeft className="h-4 w-4" />
           Înapoi la Dashboard

@@ -107,7 +107,6 @@ const ALL_PAGES: { id: string; label: string; group: string }[] = [
   { id: 'tutorial',        label: 'Tutorial',          group: 'Instrumente' },
   { id: 'email',           label: 'Email',             group: 'Instrumente' },
   { id: 'chat',            label: 'Mesaje (Chat)',     group: 'Instrumente' },
-  { id: 'ai',              label: 'AI Assistant',      group: 'Instrumente' },
   { id: 'alerts',          label: 'Alerte',            group: 'Instrumente' },
 
   
@@ -315,9 +314,9 @@ export default function UsersPage(_props: { user: User | null }) {
 
 
 }
-        <div className="enter-up shrink-0 pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
+        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
               <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                 <Users className="h-5 w-5 text-accent" aria-hidden />
               </span>
@@ -414,19 +413,19 @@ export default function UsersPage(_props: { user: User | null }) {
                       key={u.id}
                       onClick={() => pickUser(u)}
                       style={{ viewTransitionName: selected?.id === u.id ? vtName('user', u.id) : undefined }}
-                      className={`group w-full text-left px-4 py-3 border-b border-line/60 last:border-b-0 flex items-center gap-3 hover:bg-surface-tertiary/40 transition-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-inset ${selected?.id === u.id ? 'border-l-2 border-l-accent bg-accent/5 vt-morph' : ''}`}
+                      className={`group w-full text-left px-4 py-3 border-b border-line/60 last:border-b-0 flex items-center gap-3 hover:bg-surface-tertiary/40 active:scale-[0.99] transition-smooth duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-inset ${selected?.id === u.id ? 'border-l-2 border-l-accent bg-accent/5 vt-morph' : ''}`}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-pm-2xs font-bold text-surface-primary shrink-0 ${ROLE_AVATAR_BG[u.role_name] || '[background:var(--role-hala-solid)]'}`}>
                         {getInitials(u.full_name || u.username)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-content-primary truncate">{u.full_name || u.username}</p>
+                        <p className="text-pm-base font-medium text-content-primary truncate">{u.full_name || u.username}</p>
                         {u.job_title && (
                           <p className="text-pm-2xs text-accent truncate font-medium" title={u.job_title}>{u.job_title}</p>
                         )}
                         <p className="text-pm-2xs text-content-muted truncate">{u.email}</p>
                       </div>
-                      <span className={`text-pm-2xs px-2 py-0.5 rounded shrink-0 ${ROLE_COLORS[u.role_name] || 'bg-surface-tertiary text-content-secondary'}`}>
+                      <span className={`text-pm-2xs px-2 py-0.5 rounded-lg shrink-0 ${ROLE_COLORS[u.role_name] || 'bg-surface-tertiary text-content-secondary'}`}>
                         {ROLE_LABELS[u.role_name] || u.role_name}
                       </span>
                     </button>
@@ -457,7 +456,7 @@ export default function UsersPage(_props: { user: User | null }) {
                 <GlassCard size="regular" className="!p-0 overflow-hidden vt-morph" vtName={vtName('user', selected.id)}>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5">
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-sm font-bold text-surface-primary shrink-0 ${ROLE_AVATAR_BG[selected.role_name] || '[background:var(--role-hala-solid)]'}`}>
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-pm-md font-bold text-surface-primary shrink-0 ${ROLE_AVATAR_BG[selected.role_name] || '[background:var(--role-hala-solid)]'}`}>
                         {getInitials(selected.full_name || selected.username)}
                       </div>
                       <div className="min-w-0">
@@ -467,7 +466,7 @@ export default function UsersPage(_props: { user: User | null }) {
                         )}
                         <p className="text-pm-sm text-content-muted truncate">@{selected.username} — {selected.email}</p>
                         <div className="flex items-center gap-2 mt-2">
-                          <span className={`text-pm-2xs px-2 py-0.5 rounded ${ROLE_COLORS[selected.role_name] || 'bg-surface-tertiary text-content-secondary'}`}>
+                          <span className={`text-pm-2xs px-2 py-0.5 rounded-lg ${ROLE_COLORS[selected.role_name] || 'bg-surface-tertiary text-content-secondary'}`}>
                             {ROLE_LABELS[selected.role_name] || selected.role_name}
                           </span>
                           <StatusBadge tone={selected.active ? 'success' : 'neutral'} label={selected.active ? 'Activ' : 'Inactiv'} size="xs" />
@@ -499,14 +498,14 @@ export default function UsersPage(_props: { user: User | null }) {
 
                   {}
                   <GlassCard size="regular" className="xl:col-span-7 !p-0 overflow-hidden">
-                    <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-line/70">
-                      <h4 className="text-xs font-semibold uppercase tracking-wide text-content-muted flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-accent" /> Acces pagini (override)
+                    <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line/70">
+                      <h4 className="text-pm-sm font-semibold uppercase tracking-wide text-content-muted flex items-center gap-2 min-w-0 truncate">
+                        <Shield className="h-4 w-4 text-accent shrink-0" /> Acces pagini (override)
                       </h4>
                       <SaveButton onClick={savePages} state={saveState} label="Salvează permisiuni" />
                     </div>
                     <div className="px-5 py-4">
-                      <p className="text-xs text-content-muted mb-3">
+                      <p className="text-pm-sm text-content-muted mb-3">
                         Bifeaza paginile la care userul are acces. Daca nicio pagina nu e bifata, se folosesc setarile implicite ale rolului.
                       </p>
 
@@ -515,7 +514,7 @@ export default function UsersPage(_props: { user: User | null }) {
                         const groupPages = ALL_PAGES.filter(p => p.group === group);
                         return (
                           <div key={group} className="border-b border-line last:border-b-0 pb-3 mb-3 last:mb-0 last:pb-0">
-                            <p className="text-pm-2xs font-extrabold uppercase tracking-[0.2em] text-content-muted py-1 mb-1.5">{group}</p>
+                            <p className="text-pm-2xs font-extrabold uppercase tracking-[0.2em] text-content-muted py-1 mb-2">{group}</p>
                             <div>
                               {groupPages.map(page => {
                                 
@@ -525,10 +524,10 @@ export default function UsersPage(_props: { user: User | null }) {
                                 const stored = customPages[page.id];
                                 const level = stored === undefined ? 'inherit' : stored;
                                 return (
-                                  <div key={page.id} className="flex items-center justify-between px-2 py-1.5 border-b border-line/30 last:border-b-0 hover:bg-surface-tertiary/30 transition-colors">
-                                    <span className="text-xs text-content-primary">{page.label}</span>
+                                  <div key={page.id} className="flex items-center justify-between gap-3 px-2 py-1.5 rounded-lg border-b border-line/30 last:border-b-0 hover:bg-surface-tertiary/30 transition-smooth duration-150">
+                                    <span className="text-pm-sm text-content-primary min-w-0 truncate">{page.label}</span>
                                     <select value={level} onChange={e => setPageAccess(page.id, e.target.value)}
-                                      className={`text-xs border px-2 py-1 rounded-lg ${
+                                      className={`shrink-0 text-pm-sm border px-2 py-1 rounded-lg transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                                         level === 'full'   ? 'border-status-green/40 bg-status-green/10 text-status-green' :
                                         level === 'viewer' ? 'border-status-amber/40 bg-status-amber/10 text-status-amber' :
                                         level === 'denied' ? 'border-status-red/40 bg-status-red/10 text-status-red' :
@@ -554,14 +553,14 @@ export default function UsersPage(_props: { user: User | null }) {
 
 }
                   <GlassCard size="regular" className="xl:col-span-5 !p-0 overflow-hidden">
-                    <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-line/70">
-                      <h4 className="text-xs font-semibold uppercase tracking-wide text-content-muted flex items-center gap-2">
-                        <LayoutDashboard className="h-4 w-4 text-accent" /> Configurare dashboard
+                    <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line/70">
+                      <h4 className="text-pm-sm font-semibold uppercase tracking-wide text-content-muted flex items-center gap-2 min-w-0 truncate">
+                        <LayoutDashboard className="h-4 w-4 text-accent shrink-0" /> Configurare dashboard
                       </h4>
                       <SaveButton onClick={saveDashboardConfig} state={dashSaveState} label="Salvează dashboard" />
                     </div>
                     <div className="px-5 py-4">
-                      <p className="text-xs text-content-muted mb-3">
+                      <p className="text-pm-sm text-content-muted mb-3">
                         Bifează ce widget-uri vede acest utilizator când deschide Dashboard. Cele debifate sunt ascunse complet.
                       </p>
                       <div className="flex items-center gap-2 mb-3">
@@ -576,14 +575,14 @@ export default function UsersPage(_props: { user: User | null }) {
                           const visible = dashboardWidgets[w.id] ?? true;
                           return (
                             <li key={w.id} className="border-b border-line/30 last:border-b-0">
-                              <label className="flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-surface-tertiary/30 rounded">
+                              <label className="flex items-center gap-2 px-2 py-1.5 cursor-pointer hover:bg-surface-tertiary/30 rounded-lg transition-smooth duration-150">
                                 <input
                                   type="checkbox"
                                   checked={visible}
                                   onChange={e => toggleDashboardWidget(w.id, e.target.checked)}
-                                  className="h-3.5 w-3.5 accent-[var(--color-accent)]"
+                                  className="h-3.5 w-3.5 shrink-0 accent-[var(--color-accent)] rounded focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                                 />
-                                <span className={`text-xs flex-1 ${visible ? 'text-content-primary' : 'text-content-muted line-through'}`}>
+                                <span className={`text-pm-sm flex-1 min-w-0 truncate ${visible ? 'text-content-primary' : 'text-content-muted line-through'}`}>
                                   {w.label}
                                 </span>
                               </label>

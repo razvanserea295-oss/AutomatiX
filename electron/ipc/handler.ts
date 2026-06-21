@@ -15,6 +15,7 @@ try {
 import { registerAuthHandlers } from './auth';
 import { registerDashboardHandlers } from './dashboard';
 import { registerProjectHandlers } from './projects';
+import { registerSharedStorageHandlers } from './sharedStorage';
 import { registerMaterialHandlers } from './materials';
 import { registerMenuHandlers } from './menu';
 import { registerOrderHandlers } from './orders';
@@ -158,6 +159,7 @@ const REGISTRARS: ReadonlyArray<[string, () => void]> = [
   ['activityLog', registerActivityLogHandlers],
   ['setup', registerSetupHandlers],
   ['pdfExport', registerPdfExportHandlers],
+  ['sharedStorage', registerSharedStorageHandlers],
 ];
 
 export function registerAllHandlers(): void {

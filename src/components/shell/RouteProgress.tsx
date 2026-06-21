@@ -52,10 +52,10 @@ export default function RouteProgress({ routeKey }: Props) {
 
   if (phase === 'idle') return null;
 
-  const width =
-    phase === 'rising'    ? '90%' :
-    phase === 'finishing' ? '100%' :
-                '100%';
+  const scaleX =
+    phase === 'rising'    ? 0.9 :
+    phase === 'finishing' ? 1 :
+                1;
   const opacity = phase === 'fading' ? 0 : 1;
 
   return (
@@ -68,8 +68,8 @@ export default function RouteProgress({ routeKey }: Props) {
       className="pointer-events-none absolute left-0 right-0 top-0 z-20 h-[2px] motion-reduce:hidden"
     >
       <div
-        className="h-full bg-accent shadow-none transition-[width,opacity] duration-200 ease-out"
-        style={{ width, opacity, transitionDuration: phase === 'rising' ? '260ms' : '200ms' }}
+        className="h-full w-full origin-left bg-accent transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+        style={{ transform: `scaleX(${scaleX})`, opacity, transitionDuration: phase === 'rising' ? '260ms' : '200ms' }}
       />
     </div>
   );

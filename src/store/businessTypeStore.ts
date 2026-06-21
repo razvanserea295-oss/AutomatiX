@@ -11,7 +11,7 @@ interface BusinessTypeState {
   fetch: (force?: boolean) => Promise<BusinessType>;
   // Clear the cache so the NEXT fetch() re-resolves the business type from the
   // server. Called on logout so a tenant switch on a shared device doesn't keep
-  // showing the previous tenant's navigation (same bug family as the ZET nav).
+  // showing the previous tenant's navigation.
   reset: () => void;
 }
 

@@ -149,7 +149,7 @@ export default function BroadcastsAdminPanel(): JSX.Element {
           {!composing && (
             <button
               onClick={() => setComposing(true)}
-              className="h-8 px-3 bg-accent text-pm-xs font-semibold text-surface-primary hover:opacity-90 inline-flex items-center gap-1.5"
+              className="h-8 px-3 bg-accent text-pm-xs font-semibold text-[var(--color-on-accent)] hover:opacity-90 inline-flex items-center gap-1.5"
             >
               <Plus className="h-3.5 w-3.5" /> Anunț nou
             </button>
@@ -243,7 +243,7 @@ export default function BroadcastsAdminPanel(): JSX.Element {
               type="button"
               onClick={send}
               disabled={sending || !title.trim() || !body.trim()}
-              className="h-8 px-4 bg-accent text-pm-xs font-semibold text-surface-primary hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
+              className="h-8 px-4 bg-accent text-pm-xs font-semibold text-[var(--color-on-accent)] hover:opacity-90 disabled:opacity-50 inline-flex items-center gap-1.5"
             >
               {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
               {sending ? 'Se trimite...' : 'Trimite la toți userii'}

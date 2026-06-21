@@ -139,7 +139,7 @@ export default function DxfViewer({ sldprtPath, dxfPath: overridePath, compact }
         <FileWarning className="h-6 w-6 text-content-muted" />
         <span className="text-xs text-content-muted">DXF negasit automat</span>
         <button onClick={handleManualPick}
-          className="mt-1 px-3 py-1.5 rounded bg-accent text-surface-primary text-xs font-medium flex items-center gap-1.5 hover:opacity-90">
+          className="mt-1 px-3 py-1.5 rounded bg-accent text-[var(--color-on-accent)] text-xs font-medium flex items-center gap-1.5 hover:opacity-90">
           <Search className="h-3 w-3" /> Caută DXF manual
         </button>
         {sldprtPath && (

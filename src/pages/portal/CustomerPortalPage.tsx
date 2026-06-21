@@ -18,16 +18,16 @@ interface PortalView {
 }
 
 const STAGE_TONE: Record<string, string> = {
-  finalizat: 'bg-emerald-100 text-emerald-700 border-emerald-300',
-  in_desfasurare: 'bg-amber-100 text-amber-700 border-amber-300',
-  planificat: 'bg-slate-100 text-slate-600 border-slate-300',
+  finalizat: 'bg-status-green/12 text-status-green ring-1 ring-status-green/20',
+  in_desfasurare: 'bg-status-amber/12 text-status-amber ring-1 ring-status-amber/20',
+  planificat: 'bg-surface-secondary text-content-secondary ring-1 ring-line/70',
 };
 
 const SEVERITY_TONE: Record<string, string> = {
-  critical: 'bg-red-100 text-red-700',
-  high: 'bg-amber-100 text-amber-700',
-  medium: 'bg-teal-100 text-teal-700',
-  low: 'bg-stone-100 text-stone-600',
+  critical: 'bg-status-red/12 text-status-red ring-1 ring-status-red/20',
+  high: 'bg-status-amber/12 text-status-amber ring-1 ring-status-amber/20',
+  medium: 'bg-status-teal/12 text-status-teal ring-1 ring-status-teal/20',
+  low: 'bg-surface-secondary text-content-secondary ring-1 ring-line/70',
 };
 
 function fmtCurrency(v: number, currency = 'RON'): string {
@@ -66,19 +66,19 @@ export default function CustomerPortalPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
+      <div className="min-h-screen flex items-center justify-center bg-surface-page">
+        <Loader2 className="h-8 w-8 animate-spin text-content-muted" />
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-        <div className="max-w-md w-full bg-white rounded-lg shadow border border-slate-200 p-8 text-center">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-slate-900 mb-2">Acces invalid</h1>
-          <p className="text-sm text-slate-600">{error || 'Link-ul portalului este invalid sau a expirat.'}</p>
+      <div className="min-h-screen flex items-center justify-center bg-surface-page p-6">
+        <div className="max-w-md w-full bg-surface-primary rounded-2xl shadow-[var(--elevation-2)] border border-line p-8 text-center anim-scale-in">
+          <AlertTriangle className="h-12 w-12 text-status-red mx-auto mb-4" />
+          <h1 className="text-pm-xl font-bold text-content-primary mb-2">Acces invalid</h1>
+          <p className="text-pm-base text-content-secondary">{error || 'Link-ul portalului este invalid sau a expirat.'}</p>
         </div>
       </div>
     );
@@ -104,38 +104,38 @@ export default function CustomerPortalPage() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-slate-900">Portal client</h1>
-            <p className="text-xs text-slate-500">Vizualizare proiect — read-only</p>
+    <div className="min-h-screen bg-surface-page">
+      <header className="bg-surface-primary border-b border-line">
+        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-pm-lg font-bold text-content-primary">Portal client</h1>
+            <p className="text-pm-sm text-content-muted">Vizualizare proiect — read-only</p>
           </div>
           {data.project.client_name && (
-            <span className="text-sm text-slate-700 font-medium">{data.project.client_name}</span>
+            <span className="min-w-0 truncate text-pm-md text-content-secondary font-medium">{data.project.client_name}</span>
           )}
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
-        <section className="bg-white rounded-lg shadow border border-slate-200 p-6">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900">{data.project.name}</h2>
+        <section className="bg-surface-primary rounded-2xl shadow-[var(--elevation-1)] border border-line p-6 anim-slide-up">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div className="min-w-0">
+              <h2 className="text-pm-2xl font-bold text-content-primary truncate">{data.project.name}</h2>
               {data.project.stage_name && (
-                <p className="text-sm text-slate-600 mt-1">Etapă curentă: <strong>{data.project.stage_name}</strong></p>
+                <p className="text-pm-base text-content-secondary mt-1">Etapă curentă: <strong className="text-content-primary">{data.project.stage_name}</strong></p>
               )}
             </div>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-700 uppercase">
+            <span className="shrink-0 px-3 py-1 rounded-full text-pm-xs font-semibold bg-status-teal/12 text-status-teal ring-1 ring-status-teal/20 uppercase">
               {data.project.status}
             </span>
           </div>
 
           {data.project.description && (
-            <p className="text-sm text-slate-700 mb-4">{data.project.description}</p>
+            <p className="text-pm-base text-content-secondary mb-4">{data.project.description}</p>
           )}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
             <Stat icon={Calendar} label="Start" value={fmtDate(data.project.start_date)} />
             <Stat icon={Calendar} label="Termen" value={fmtDate(data.project.deadline)} />
             <Stat icon={Package} label="Piese" value={`${data.pieces_summary.total}`} />
@@ -144,10 +144,10 @@ export default function CustomerPortalPage() {
 
           {data.pieces_summary.total > 0 && (
             <div className="mt-4">
-              <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all" style={{ width: `${pct}%` }} />
+              <div className="h-3 rounded-full bg-surface-secondary overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-status-teal to-status-green" style={{ width: `${pct}%` }} />
               </div>
-              <p className="text-xs text-slate-500 mt-1.5">
+              <p className="text-pm-sm text-content-muted mt-2">
                 {data.pieces_summary.fabricat + data.pieces_summary.livrat + data.pieces_summary.montat + data.pieces_summary.testat} din {data.pieces_summary.total} piese complete
               </p>
             </div>
@@ -155,20 +155,20 @@ export default function CustomerPortalPage() {
         </section>
 
         {data.custom_stages.length > 0 && (
-          <section className="bg-white rounded-lg shadow border border-slate-200 p-6">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-4">Etape proiect</h3>
-            <div className="space-y-2">
+          <section className="bg-surface-primary rounded-2xl shadow-[var(--elevation-1)] border border-line p-6 anim-slide-up">
+            <h3 className="text-pm-sm font-bold uppercase tracking-wide text-content-muted mb-4">Etape proiect</h3>
+            <div className="space-y-1">
               {data.custom_stages.map((s, idx) => (
-                <div key={s.id} className="flex items-center gap-3">
-                  <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                    s.status === 'finalizat' ? 'bg-emerald-500 text-white'
-                    : s.status === 'in_desfasurare' ? 'bg-amber-500 text-white'
-                    : 'bg-slate-200 text-slate-500'
+                <div key={s.id} className="flex items-center gap-3 -mx-2 px-2 py-2 rounded-lg transition-smooth duration-150 hover:bg-surface-tertiary">
+                  <div className={`shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-pm-xs font-bold ${
+                    s.status === 'finalizat' ? 'bg-status-green text-white'
+                    : s.status === 'in_desfasurare' ? 'bg-status-amber text-white'
+                    : 'bg-surface-secondary text-content-muted'
                   }`}>
                     {s.status === 'finalizat' ? '✓' : idx + 1}
                   </div>
-                  <span className="flex-1 text-sm text-slate-800">{s.name}</span>
-                  <span className={`text-xs px-2 py-0.5 rounded border ${STAGE_TONE[s.status] || 'bg-slate-100 text-slate-600 border-slate-300'}`}>
+                  <span className="flex-1 min-w-0 truncate text-pm-base text-content-primary">{s.name}</span>
+                  <span className={`shrink-0 text-pm-xs px-2 py-1 rounded-lg ${STAGE_TONE[s.status] || 'bg-surface-secondary text-content-secondary ring-1 ring-line/70'}`}>
                     {s.status}
                   </span>
                 </div>
@@ -178,21 +178,21 @@ export default function CustomerPortalPage() {
         )}
 
         {data.contracts.length > 0 && (
-          <section className="bg-white rounded-lg shadow border border-slate-200 p-6">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-4 flex items-center gap-2">
+          <section className="bg-surface-primary rounded-2xl shadow-[var(--elevation-1)] border border-line p-6 anim-slide-up">
+            <h3 className="text-pm-sm font-bold uppercase tracking-wide text-content-muted mb-4 flex items-center gap-2">
               <FileText className="h-4 w-4" /> Contracte ({data.contracts.length})
             </h3>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-line/70">
               {data.contracts.map(c => (
-                <div key={c.id} className="py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{c.contract_code} <span className="text-slate-400 text-xs">rev. {c.revision}</span></p>
-                    <p className="text-xs text-slate-600">{c.title}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">{fmtDate(c.created_at)}</p>
+                <div key={c.id} className="py-3 flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-pm-base font-semibold text-content-primary truncate">{c.contract_code} <span className="text-content-muted text-pm-xs">rev. {c.revision}</span></p>
+                    <p className="text-pm-xs text-content-secondary truncate">{c.title}</p>
+                    <p className="text-pm-xs text-content-muted mt-1">{fmtDate(c.created_at)}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-slate-900 tabular-nums">{fmtCurrency(c.sale_price)}</p>
-                    <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 uppercase">{c.status}</span>
+                  <div className="shrink-0 text-right">
+                    <p className="text-pm-base font-semibold text-content-primary tabular-nums">{fmtCurrency(c.sale_price)}</p>
+                    <span className="inline-block mt-1 text-pm-xs px-2 py-1 rounded-lg bg-surface-secondary text-content-secondary uppercase">{c.status}</span>
                   </div>
                 </div>
               ))}
@@ -201,8 +201,8 @@ export default function CustomerPortalPage() {
         )}
 
         {data.invoices.length > 0 && (
-          <section className="bg-white rounded-lg shadow border border-slate-200 p-6">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-4 flex items-center gap-2">
+          <section className="bg-surface-primary rounded-2xl shadow-[var(--elevation-1)] border border-line p-6 anim-slide-up">
+            <h3 className="text-pm-sm font-bold uppercase tracking-wide text-content-muted mb-4 flex items-center gap-2">
               <Receipt className="h-4 w-4" /> Facturi ({data.invoices.length})
             </h3>
             {invoiceCurrencies.map(cur => {
@@ -210,73 +210,75 @@ export default function CustomerPortalPage() {
               return (
                 <div key={cur} className="mb-4">
                   {invoiceCurrencies.length > 1 && (
-                    <p className="text-xs font-semibold text-slate-400 mb-1">{cur}</p>
+                    <p className="text-pm-xs font-semibold text-content-muted mb-1">{cur}</p>
                   )}
-                  <div className="grid grid-cols-3 gap-3 text-center">
-                    <div className="bg-slate-50 rounded p-3">
-                      <p className="text-xs text-slate-500">Total facturat</p>
-                      <p className="text-lg font-bold text-slate-900 tabular-nums">{fmtCurrency(t.total, cur)}</p>
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="min-w-0 bg-surface-secondary rounded-lg p-3">
+                      <p className="text-pm-xs text-content-muted truncate">Total facturat</p>
+                      <p className="text-pm-lg font-bold text-content-primary tabular-nums truncate">{fmtCurrency(t.total, cur)}</p>
                     </div>
-                    <div className="bg-emerald-50 rounded p-3">
-                      <p className="text-xs text-emerald-600">Plătit</p>
-                      <p className="text-lg font-bold text-emerald-700 tabular-nums">{fmtCurrency(t.paid, cur)}</p>
+                    <div className="min-w-0 bg-status-green/12 rounded-lg p-3">
+                      <p className="text-pm-xs text-status-green truncate">Plătit</p>
+                      <p className="text-pm-lg font-bold text-status-green tabular-nums truncate">{fmtCurrency(t.paid, cur)}</p>
                     </div>
-                    <div className="bg-red-50 rounded p-3">
-                      <p className="text-xs text-red-600">Restant</p>
-                      <p className="text-lg font-bold text-red-700 tabular-nums">{fmtCurrency(t.remaining, cur)}</p>
+                    <div className="min-w-0 bg-status-red/12 rounded-lg p-3">
+                      <p className="text-pm-xs text-status-red truncate">Restant</p>
+                      <p className="text-pm-lg font-bold text-status-red tabular-nums truncate">{fmtCurrency(t.remaining, cur)}</p>
                     </div>
                   </div>
                 </div>
               );
             })}
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs text-slate-500 uppercase border-b border-slate-200">
-                  <th className="text-left py-2">Nr.</th>
-                  <th className="text-left">Emis</th>
-                  <th className="text-left">Scadență</th>
-                  <th className="text-right">Total</th>
-                  <th className="text-right">Restant</th>
-                  <th className="text-left pl-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.invoices.map(i => (
-                  <tr key={i.id} className="border-b border-slate-100">
-                    <td className="py-2 font-mono text-xs text-slate-700">{i.invoice_number}</td>
-                    <td className="text-xs text-slate-600">{fmtDate(i.issue_date)}</td>
-                    <td className="text-xs text-slate-600">{fmtDate(i.due_date)}</td>
-                    <td className="text-right tabular-nums font-semibold text-slate-900">{fmtCurrency(i.total, i.currency)}</td>
-                    <td className={`text-right tabular-nums font-semibold ${i.remaining > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                      {fmtCurrency(i.remaining, i.currency)}
-                    </td>
-                    <td className="pl-3">
-                      <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 uppercase">{i.status}</span>
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-pm-base">
+                <thead>
+                  <tr className="text-pm-xs text-content-muted uppercase border-b border-line">
+                    <th className="text-left py-2">Nr.</th>
+                    <th className="text-left">Emis</th>
+                    <th className="text-left">Scadență</th>
+                    <th className="text-right">Total</th>
+                    <th className="text-right">Restant</th>
+                    <th className="text-left pl-3">Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {data.invoices.map(i => (
+                    <tr key={i.id} className="border-b border-line/70 transition-smooth duration-150 hover:bg-surface-tertiary">
+                      <td className="py-2 font-mono text-pm-xs text-content-secondary whitespace-nowrap">{i.invoice_number}</td>
+                      <td className="text-pm-xs text-content-secondary whitespace-nowrap">{fmtDate(i.issue_date)}</td>
+                      <td className="text-pm-xs text-content-secondary whitespace-nowrap">{fmtDate(i.due_date)}</td>
+                      <td className="text-right tabular-nums font-semibold text-content-primary whitespace-nowrap">{fmtCurrency(i.total, i.currency)}</td>
+                      <td className={`text-right tabular-nums font-semibold whitespace-nowrap ${i.remaining > 0 ? 'text-status-red' : 'text-status-green'}`}>
+                        {fmtCurrency(i.remaining, i.currency)}
+                      </td>
+                      <td className="pl-3">
+                        <span className="inline-block text-pm-xs px-2 py-1 rounded-lg bg-surface-secondary text-content-secondary uppercase whitespace-nowrap">{i.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         )}
 
         {data.service_tickets.length > 0 && (
-          <section className="bg-white rounded-lg shadow border border-slate-200 p-6">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-4 flex items-center gap-2">
+          <section className="bg-surface-primary rounded-2xl shadow-[var(--elevation-1)] border border-line p-6 anim-slide-up">
+            <h3 className="text-pm-sm font-bold uppercase tracking-wide text-content-muted mb-4 flex items-center gap-2">
               <Wrench className="h-4 w-4" /> Tichete service
-              <span className="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-600 normal-case">{openTickets} deschise</span>
+              <span className="text-pm-xs bg-surface-secondary px-2 py-1 rounded-lg text-content-secondary normal-case">{openTickets} deschise</span>
             </h3>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-line/70">
               {data.service_tickets.map(t => (
-                <div key={t.id} className="py-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-semibold text-slate-900">{t.ticket_number} — {t.title}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded font-semibold ${SEVERITY_TONE[t.severity] || 'bg-slate-100 text-slate-600'}`}>
+                <div key={t.id} className="py-3 -mx-2 px-2 rounded-lg transition-smooth duration-150 hover:bg-surface-tertiary">
+                  <div className="flex items-center justify-between gap-3 mb-1">
+                    <p className="min-w-0 truncate text-pm-base font-semibold text-content-primary">{t.ticket_number} — {t.title}</p>
+                    <span className={`shrink-0 text-pm-xs px-2 py-1 rounded-lg font-semibold ${SEVERITY_TONE[t.severity] || 'bg-surface-secondary text-content-secondary ring-1 ring-line/70'}`}>
                       {t.severity}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500">
-                    Deschis {fmtDate(t.created_at)} • Status: <strong>{t.status}</strong>
+                  <p className="text-pm-xs text-content-muted">
+                    Deschis {fmtDate(t.created_at)} • Status: <strong className="text-content-secondary">{t.status}</strong>
                     {t.resolved_at && <> • Rezolvat {fmtDate(t.resolved_at)}</>}
                   </p>
                 </div>
@@ -285,7 +287,7 @@ export default function CustomerPortalPage() {
           </section>
         )}
 
-        <footer className="text-center text-xs text-slate-400 py-4">
+        <footer className="text-center text-pm-xs text-content-muted py-4">
           Portal client — actualizat live • Read-only
         </footer>
       </main>
@@ -295,11 +297,11 @@ export default function CustomerPortalPage() {
 
 function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
-    <div className="bg-slate-50 rounded p-3">
-      <div className="flex items-center gap-1.5 text-xs text-slate-500 uppercase mb-1">
-        <Icon className="h-3 w-3" /> {label}
+    <div className="min-w-0 bg-surface-secondary rounded-lg p-3">
+      <div className="flex items-center gap-1 text-pm-xs text-content-muted uppercase mb-1">
+        <Icon className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{label}</span>
       </div>
-      <p className="text-base font-semibold text-slate-900">{value}</p>
+      <p className="text-pm-md font-semibold text-content-primary truncate">{value}</p>
     </div>
   );
 }

@@ -189,7 +189,7 @@ export default function BroadcastPopup(): JSX.Element | null {
             autoFocus
             onClick={handleDismiss}
             disabled={dismissing}
-            className="rounded px-4 py-1.5 bg-accent text-surface-primary text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center gap-1.5"
+            className="rounded px-4 py-1.5 bg-accent text-[var(--color-on-accent)] text-xs font-semibold hover:opacity-90 disabled:opacity-50 transition-opacity flex items-center gap-1.5"
           >
             <X className="h-3.5 w-3.5" />
             {queue.length > 1 ? 'Am înțeles · Următorul' : 'Am înțeles'}

@@ -28,7 +28,7 @@ interface AvatarProps {
 }
 
 const sizing = {
-  xs: { box: 'h-5 w-5',  text: 'text-[9px]',  dot: 'h-1.5 w-1.5 ring-1' },
+  xs: { box: 'h-5 w-5',  text: 'text-pm-2xs', dot: 'h-1.5 w-1.5 ring-1' },
   sm: { box: 'h-6 w-6',  text: 'text-pm-2xs', dot: 'h-2 w-2 ring-1' },
   md: { box: 'h-8 w-8',  text: 'text-pm-xs',  dot: 'h-2.5 w-2.5 ring-2' },
   lg: { box: 'h-10 w-10', text: 'text-pm-sm', dot: 'h-3 w-3 ring-2' },
@@ -70,17 +70,17 @@ export default function Avatar({ name, src, alt, size = 'md', online, tone, clas
         <img
           src={src}
           alt={alt ?? name ?? 'avatar'}
-          className="h-full w-full rounded-full object-cover ring-1 ring-line/60"
+          className="h-full w-full rounded-full object-cover ring-1 ring-line/60 transition-smooth duration-150"
         />
       ) : (
-        <span className={`h-full w-full rounded-full inline-flex items-center justify-center font-semibold ring-1 ${toneClasses[resolvedTone]}`}>
+        <span className={`h-full w-full rounded-full inline-flex items-center justify-center font-semibold ring-1 transition-smooth duration-150 ${toneClasses[resolvedTone]}`}>
           {children ?? (name ? <span className={s.text}>{getInitials(name)}</span> : null)}
         </span>
       )}
       {online && (
         <span
           aria-label="Online"
-          className={`absolute -bottom-0 -right-0 rounded-full bg-status-green ring-surface-primary ${s.dot}`}
+          className={`absolute bottom-0 right-0 rounded-full bg-status-green ring-surface-primary anim-scale-in ${s.dot}`}
         />
       )}
     </span>

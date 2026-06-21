@@ -1,6 +1,7 @@
 import { STORAGE_KEYS, getStorage, setStorage, removeStorage } from './localStorage';
+import { getRuntimeWindow, isBrowserWebRuntime } from '@/lib/runtime';
 
-const BUILD_DEFAULT_SERVER_URL: string = (import.meta.env.VITE_DEFAULT_SERVER_URL || '').trim().replace(/\/+$/, '');
+const BUILD_DEFAULT_SERVER_URL: string = (import.meta.env.VITE_DEFAULT_SERVER_URL || 'https://automatix.online').trim().replace(/\/+$/, '');
 
 
 
@@ -16,14 +17,7 @@ const BUILD_DEFAULT_SERVER_URL: string = (import.meta.env.VITE_DEFAULT_SERVER_UR
 /** True in a plain browser tab (not Electron/Tauri desktop). Multi-tenant
  *  path-prefix routing + the login broker only apply here. */
 export function isBrowserWeb(): boolean {
-  const w = window as unknown as {
-    electron?: unknown; location?: Location;
-    __TAURI_INTERNALS__?: unknown; __TAURI__?: unknown;
-  };
-  const isTauri = typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in w || '__TAURI__' in w);
-  return typeof window !== 'undefined'
-    && !('electron' in w) && !isTauri
-    && !!w.location && (w.location.protocol === 'http:' || w.location.protocol === 'https:');
+  return isBrowserWebRuntime();
 }
 
 export function getServerUrl(): string {
@@ -33,27 +27,16 @@ export function getServerUrl(): string {
   
   
   
-  const w = window as unknown as {
-    electron?: unknown; location?: Location;
-    __TAURI_INTERNALS__?: unknown; __TAURI__?: unknown;
-  };
-  const isTauri =
-    typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in w || '__TAURI__' in w);
-  const isBrowserWeb =
-    typeof window !== 'undefined' &&
-    !('electron' in w) &&
-    !isTauri &&
-    w.location &&
-    (w.location.protocol === 'http:' || w.location.protocol === 'https:');
+  const w = getRuntimeWindow();
 
-  if (isBrowserWeb) {
+  if (isBrowserWebRuntime() && w) {
     // Multi-tenant: when a firm was chosen in the pre-login chooser, route the
     // whole app to that tenant via a same-origin path prefix /t/<slug> (the prod
     // server reverse-proxies it to the right tenant backend). No subdomain, so
     // everything stays same-origin (CSP/CORS unchanged). All ~30 call sites that
     // build `${getServerUrl()}/api/...` become tenant-aware from this one line.
     const slug = getStorage(STORAGE_KEYS.TENANT_SLUG);
-    return slug ? `${w.location!.origin}/t/${slug}` : w.location!.origin;
+    return slug ? `${w.location.origin}/t/${slug}` : w.location.origin;
   }
 
   const stored = getStorage(STORAGE_KEYS.SERVER_URL) || BUILD_DEFAULT_SERVER_URL;

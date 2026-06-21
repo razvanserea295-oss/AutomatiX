@@ -90,19 +90,19 @@ export function ConfirmDialogHost(): JSX.Element | null {
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="confirm-title"
-        className="relative w-full max-w-md rounded-2xl border border-line bg-surface-elevated shadow-[var(--elevation-4)] overflow-hidden anim-scale-in"
+        className="relative w-full max-w-md rounded-2xl border border-line/60 surface-glass-strong shadow-[var(--elevation-4)] overflow-hidden anim-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           aria-label="Închide"
           onClick={() => resolve(false)}
-          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-xl text-content-muted transition-all duration-150 hover:bg-surface-tertiary hover:text-content-primary focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
+          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-xl text-content-muted transition-smooth duration-150 hover:bg-surface-tertiary hover:text-content-primary active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:opacity-40"
         >
           <X className="h-4 w-4" />
         </button>
 
-        <div className="flex items-start gap-3.5 px-6 pt-6">
+        <div className="flex items-start gap-4 px-6 pt-6">
           {pending.danger && (
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-status-red/15 text-status-red">
               <AlertTriangle className="h-5 w-5" />
@@ -113,7 +113,7 @@ export function ConfirmDialogHost(): JSX.Element | null {
               {pending.title}
             </h2>
             {pending.body && (
-              <p className="mt-1.5 text-pm-sm text-content-secondary leading-relaxed">{pending.body}</p>
+              <p className="mt-2 text-pm-sm text-content-secondary leading-relaxed">{pending.body}</p>
             )}
             {pending.hint && (
               <p className="mt-2 text-pm-xs text-content-muted leading-relaxed">{pending.hint}</p>
@@ -121,7 +121,7 @@ export function ConfirmDialogHost(): JSX.Element | null {
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-end gap-2 border-t border-line/70 bg-surface-secondary px-6 py-4">
+        <div className="mt-6 flex items-center justify-end gap-2 border-t border-line/50 bg-surface-secondary px-6 py-4">
           <Button variant="ghost" size="md" onClick={() => resolve(false)}>
             {cancelLabel}
           </Button>

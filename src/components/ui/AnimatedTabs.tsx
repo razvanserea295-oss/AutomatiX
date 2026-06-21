@@ -29,10 +29,10 @@ export default function AnimatedTabs({ tabs, active, onChange, className = '' }:
   }, [active, tabs]);
 
   return (
-    <div ref={ref} role="tablist" className={`relative inline-flex items-center gap-1 rounded-full bg-surface-tertiary/40 p-1 ${className}`}>
+    <div ref={ref} role="tablist" className={`relative inline-flex items-center gap-1 rounded-full border border-line bg-surface-secondary p-1 ${className}`}>
       <span
         aria-hidden
-        className="ds-tab-indicator absolute top-1 bottom-1 rounded-full bg-accent/25"
+        className="absolute top-1 bottom-1 rounded-full bg-accent/20 transition-all duration-250 ease-[cubic-bezier(0.25,1,0.5,1)]"
         style={{ left: ind.left, width: ind.width }}
       />
       {tabs.map((t) => {
@@ -45,11 +45,11 @@ export default function AnimatedTabs({ tabs, active, onChange, className = '' }:
             aria-selected={on}
             data-tab={t.id}
             onClick={() => onChange(t.id)}
-            className={`relative z-[1] inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-pm-xs font-medium transition-colors ${
+            className={`relative z-[1] inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-pm-xs font-medium transition-colors duration-150 ${
               on ? 'text-accent' : 'text-content-secondary hover:text-content-primary'
             }`}
           >
-            {Icon && <Icon className="h-3.5 w-3.5" />}
+            {Icon && <Icon className={`h-3.5 w-3.5 ${on ? 'text-accent' : ''}`} />}
             {t.label}
           </button>
         );

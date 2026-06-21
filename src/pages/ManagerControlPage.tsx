@@ -19,6 +19,7 @@ import type { StatusTone } from '@/lib/statusTokens';
 import type { User } from '@/core/types';
 import EmptyState from '@/components/EmptyState';
 import Button from '@/components/ui/Button';
+import CenteredDialog from '@/components/ui/CenteredDialog';
 import ManagerEnhancements from '@/pages/manager/ManagerEnhancements';
 import UserActivityLog from '@/pages/manager/UserActivityLog';
 
@@ -252,55 +253,55 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
 
       {}
       {forcing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setForcing(null)}>
-          <div className="bg-surface-secondary rounded-lg border-2 border-status-red shadow-xl w-full max-w-lg p-5" onClick={e => e.stopPropagation()}>
-            <h3 className="text-base font-semibold text-status-red mb-1 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" /> Forțare tranziție
-            </h3>
-            <p className="text-xs text-content-muted mb-3">
-              Forțezi tranziția pentru proiectul <strong>{forcing.project_name}</strong> de la{' '}
-              <strong>{forcing.from_stage_name}</strong> la <strong>{forcing.to_stage_name}</strong>.
-              Acțiunea va fi logată în istoric ca "forced by Manager".
-            </p>
-            <label className="block text-pm-2xs font-semibold uppercase tracking-wide text-content-muted mb-1">
-              Motiv (obligatoriu)
-            </label>
-            <textarea
-              value={forceReason}
-              onChange={e => setForceReason(e.target.value)}
-              rows={3}
-              placeholder="Ex: deadline urgent, rolul destinatar nedisponibil, decizie executivă..."
-              className="w-full rounded border border-line bg-surface-primary px-3 py-2 text-xs text-content-primary"
-              autoFocus
+        <CenteredDialog
+          isOpen={true}
+          onClose={() => setForcing(null)}
+          title="Forțare tranziție"
+          size="lg"
+        >
+          <p className="text-pm-2xs text-content-muted -mt-3 mb-3">
+            Forțezi tranziția pentru proiectul <strong>{forcing.project_name}</strong> de la{' '}
+            <strong>{forcing.from_stage_name}</strong> la <strong>{forcing.to_stage_name}</strong>.
+            Acțiunea va fi logată în istoric ca "forced by Manager".
+          </p>
+          <label className="block text-pm-2xs font-semibold uppercase tracking-wide text-content-muted mb-1">
+            Motiv (obligatoriu)
+          </label>
+          <textarea
+            value={forceReason}
+            onChange={e => setForceReason(e.target.value)}
+            rows={3}
+            placeholder="Ex: deadline urgent, rolul destinatar nedisponibil, decizie executivă..."
+            className="w-full rounded border border-line bg-surface-primary px-3 py-2 text-pm-sm text-content-primary focus:outline-none focus:border-accent transition-smooth"
+            autoFocus
+          />
+          <label className="mt-3 flex items-center gap-2 text-pm-xs text-content-secondary cursor-pointer">
+            <input
+              type="checkbox"
+              checked={forceConfirmed}
+              onChange={e => setForceConfirmed(e.target.checked)}
+              className="h-3.5 w-3.5 accent-[var(--color-accent)] transition-smooth"
             />
-            <label className="mt-3 flex items-center gap-2 text-xs text-content-secondary cursor-pointer">
-              <input
-                type="checkbox"
-                checked={forceConfirmed}
-                onChange={e => setForceConfirmed(e.target.checked)}
-                className="h-3.5 w-3.5 accent-[var(--color-accent)]"
-              />
-              Confirm că vreau să forțez tranziția în ciuda lipsei de accept
-            </label>
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => { setForcing(null); setForceReason(''); setForceConfirmed(false); }}
-                className="h-8 px-3 rounded border border-line text-xs font-semibold text-content-secondary hover:bg-surface-tertiary"
-              >
-                Anulează
-              </button>
-              <button
-                type="button"
-                onClick={submitForce}
-                disabled={!forceReason.trim() || !forceConfirmed || actingId !== null}
-                className="h-8 px-4 rounded bg-status-red text-xs font-semibold text-white hover:opacity-90 disabled:opacity-40"
-              >
-                {actingId !== null ? 'Se forțează...' : 'Forțează'}
-              </button>
-            </div>
+            Confirm că vreau să forțez tranziția în ciuda lipsei de accept
+          </label>
+          <div className="flex justify-end gap-2 pt-4 mt-4 border-t border-line">
+            <button
+              type="button"
+              onClick={() => { setForcing(null); setForceReason(''); setForceConfirmed(false); }}
+              className="h-8 px-3 rounded border border-line text-pm-2xs font-semibold text-content-secondary hover:bg-surface-tertiary transition-smooth"
+            >
+              Anulează
+            </button>
+            <button
+              type="button"
+              onClick={submitForce}
+              disabled={!forceReason.trim() || !forceConfirmed || actingId !== null}
+              className="h-8 px-4 rounded bg-status-red text-pm-2xs font-semibold text-white hover:opacity-90 disabled:opacity-40 transition-smooth active:scale-[0.97]"
+            >
+              {actingId !== null ? 'Se forțează...' : 'Forțează'}
+            </button>
           </div>
-        </div>
+        </CenteredDialog>
       )}
     </Page>
   );

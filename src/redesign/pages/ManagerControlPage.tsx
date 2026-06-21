@@ -64,6 +64,8 @@ import StatusBadge from '@/redesign/ui/StatusBadge';
 import HeroHeader from '@/redesign/ui/HeroHeader';
 import AnimatedTabs from '@/redesign/ui/AnimatedTabs';
 import EmptyState from '@/redesign/ui/EmptyState';
+import CardGrid, { type CardGridItem } from '@/redesign/ui/CardGrid';
+import EditLayoutButton from '@/redesign/ui/EditLayoutButton';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
 
 interface Anomaly {
@@ -97,6 +99,7 @@ const sevTone = (severity: string): StatusTone =>
 export default function ManagerControlPage({ user }: { user: User | null }) {
   const role = (user?.role_name || '').toLowerCase();
   const isManager = role === 'admin' || role === 'manager';
+  const userKey = String(user?.id ?? user?.username ?? 'anon');
   const [tab, setTab] = useState<'supervision' | 'activity'>('supervision');
 
   const pending = useHandoffStore(s => s.pending);
@@ -174,6 +177,61 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
 
   const overdue = pending.filter(h => new Date(h.sla_due_at).getTime() < Date.now());
 
+  const kpiItems: CardGridItem[] = [
+    {
+      id: 'pending',
+      label: 'Predări pendinte',
+      node: (
+        <KpiCard
+          vtName={vtName('mgr-kpi', 'pending')}
+          label="Predări pendinte"
+          value={pending.length}
+          icon={Clock}
+          iconColor="text-accent"
+        />
+      ),
+    },
+    {
+      id: 'overdue',
+      label: 'Predări blocate >24h',
+      node: (
+        <KpiCard
+          vtName={vtName('mgr-kpi', 'overdue')}
+          label="Predări blocate >24h"
+          value={overdue.length}
+          icon={AlertTriangle}
+          iconColor={overdue.length > 0 ? 'text-status-red' : 'text-content-muted'}
+        />
+      ),
+    },
+    {
+      id: 'urgent',
+      label: 'Predări urgente',
+      node: (
+        <KpiCard
+          vtName={vtName('mgr-kpi', 'urgent')}
+          label="Predări urgente"
+          value={pending.filter(h => h.is_urgent).length}
+          icon={Flame}
+          iconColor={pending.some(h => h.is_urgent) ? 'text-status-amber' : 'text-content-muted'}
+        />
+      ),
+    },
+    {
+      id: 'anomalies',
+      label: 'Anomalii nerezolvate',
+      node: (
+        <KpiCard
+          vtName={vtName('mgr-kpi', 'anomalies')}
+          label="Anomalii nerezolvate"
+          value={anomalies.length}
+          icon={Shield}
+          iconColor={anomalies.some(a => a.severity === 'critical') ? 'text-status-red' : 'text-content-muted'}
+        />
+      ),
+    },
+  ];
+
   return (
     <Page fit className="mod-shell">
       {}
@@ -197,6 +255,7 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
                 />
               )}
               {tab === 'supervision' && <Button size="sm" onClick={detectAnomalies}>Rulează detecție</Button>}
+              {tab === 'supervision' && <EditLayoutButton />}
             </div>
           }
         />
@@ -205,34 +264,13 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
       {tab === 'supervision' && (
         <Page.Body key="supervision" fit padding="comfortable" maxWidth="wide" className="enter-fade overflow-y-auto">
           {}
-          <div className="shrink-0 grid grid-cols-2 md:grid-cols-4 gap-4 enter-up" style={{ animationDelay: '80ms' }}>
-            <KpiCard
-              vtName={vtName('mgr-kpi', 'pending')}
-              label="Predări pendinte"
-              value={pending.length}
-              icon={Clock}
-              iconColor="text-accent"
-            />
-            <KpiCard
-              vtName={vtName('mgr-kpi', 'overdue')}
-              label="Predări blocate >24h"
-              value={overdue.length}
-              icon={AlertTriangle}
-              iconColor={overdue.length > 0 ? 'text-status-red' : 'text-content-muted'}
-            />
-            <KpiCard
-              vtName={vtName('mgr-kpi', 'urgent')}
-              label="Predări urgente"
-              value={pending.filter(h => h.is_urgent).length}
-              icon={Flame}
-              iconColor={pending.some(h => h.is_urgent) ? 'text-status-amber' : 'text-content-muted'}
-            />
-            <KpiCard
-              vtName={vtName('mgr-kpi', 'anomalies')}
-              label="Anomalii nerezolvate"
-              value={anomalies.length}
-              icon={Shield}
-              iconColor={anomalies.some(a => a.severity === 'critical') ? 'text-status-red' : 'text-content-muted'}
+          <div className="enter-up" style={{ animationDelay: '80ms' }}>
+            <CardGrid
+              region="manager-control:kpis"
+              userKey={userKey}
+              cols={4}
+              className="shrink-0"
+              items={kpiItems}
             />
           </div>
 
@@ -247,7 +285,7 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
                 subtitle="Manager poate forța tranziții sau marca urgent"
                 actions={<StatusBadge tone="neutral" label={`${pending.length} pendinte`} size="sm" />}
               />
-              <CardBody className="flex-1 min-h-0 overflow-y-auto space-y-5">
+              <CardBody className="flex-1 min-h-0 overflow-y-auto space-y-4">
                 {}
                 {overdue.length > 0 && (
                   <div className="space-y-2">
@@ -311,7 +349,7 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
                     {anomalies.map(a => (
                       <div
                         key={a.id}
-                        className={`rounded-xl border-l-4 px-3 py-2.5 ${SEV_COLORS[a.severity] ?? SEV_COLORS.low} bg-surface-secondary`}
+                        className={`rounded-xl border-l-4 px-3 py-3 transition-smooth duration-150 hover:shadow-[var(--elevation-2)] ${SEV_COLORS[a.severity] ?? SEV_COLORS.low} bg-surface-secondary`}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
@@ -372,7 +410,7 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
             onClick={e => e.stopPropagation()}
           >
             <h3 className="text-pm-base font-semibold text-status-red mb-1 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" /> Forțare tranziție
+              <AlertTriangle className="h-4 w-4 shrink-0" /> Forțare tranziție
             </h3>
             <p className="text-pm-xs text-content-muted mb-3">
               Forțezi tranziția pentru proiectul <strong>{forcing.project_name}</strong> de la{' '}
@@ -387,19 +425,19 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
               onChange={e => setForceReason(e.target.value)}
               rows={3}
               placeholder="Ex: deadline urgent, rolul destinatar nedisponibil, decizie executivă..."
-              className="w-full rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm text-content-primary focus:outline-none focus:border-accent/50"
+              className="w-full rounded-xl border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]"
               autoFocus
             />
-            <label className="mt-3 flex items-center gap-2 text-pm-xs text-content-secondary cursor-pointer">
+            <label className="mt-3 flex items-center gap-2 text-pm-xs text-content-secondary cursor-pointer transition-smooth duration-150 hover:text-content-primary">
               <input
                 type="checkbox"
                 checked={forceConfirmed}
                 onChange={e => setForceConfirmed(e.target.checked)}
-                className="h-3.5 w-3.5 accent-[var(--color-accent)]"
+                className="h-3.5 w-3.5 rounded accent-[var(--color-accent)] transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
               />
               Confirm că vreau să forțez tranziția în ciuda lipsei de accept
             </label>
-            <div className="mt-5 flex justify-end gap-2">
+            <div className="mt-6 flex justify-end gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -432,7 +470,7 @@ function HandoffRow({ handoff, onForce, onUrgent, acting }: {
   const overdue = new Date(handoff.sla_due_at).getTime() < Date.now();
   return (
     <div
-      className={`rounded-xl border px-3 py-2.5 vt-morph ${handoff.is_urgent ? 'border-status-red/40 bg-status-red/5' : overdue ? 'border-status-amber/40 bg-status-amber/5' : 'border-line bg-surface-secondary'}`}
+      className={`rounded-xl border px-3 py-3 vt-morph transition-smooth duration-150 hover:shadow-[var(--elevation-2)] ${handoff.is_urgent ? 'border-status-red/40 bg-status-red/5' : overdue ? 'border-status-amber/40 bg-status-amber/5' : 'border-line bg-surface-secondary'}`}
       style={{ viewTransitionName: vtName('handoff', handoff.id) }}
     >
       <div className="flex items-start justify-between gap-2">
@@ -463,7 +501,7 @@ function HandoffRow({ handoff, onForce, onUrgent, acting }: {
             disabled={acting}
             title={handoff.is_urgent ? 'Elimină urgent' : 'Marchează urgent'}
             aria-label={handoff.is_urgent ? 'Elimină marcaj urgent' : 'Marchează urgent'}
-            className={`h-7 px-2 rounded-lg text-pm-xs font-semibold flex items-center gap-1 transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] motion-reduce:transition-none disabled:opacity-40 disabled:pointer-events-none ${
+            className={`h-7 px-2 rounded-lg text-pm-xs font-semibold inline-flex items-center justify-center gap-1 whitespace-nowrap transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] motion-reduce:transition-none disabled:opacity-40 disabled:pointer-events-none ${
               handoff.is_urgent
                 ? 'bg-status-red/20 text-status-red hover:bg-status-red/30'
                 : 'bg-status-amber/15 text-status-amber hover:bg-status-amber/25'
@@ -478,7 +516,7 @@ function HandoffRow({ handoff, onForce, onUrgent, acting }: {
             disabled={acting}
             title="Forțează tranziție"
             aria-label="Forțează tranziție"
-            className="h-7 px-2 rounded-lg bg-status-red text-white text-pm-xs font-semibold transition-smooth duration-150 hover:bg-status-red/90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] motion-reduce:transition-none disabled:opacity-40 disabled:pointer-events-none"
+            className="h-7 px-2 rounded-lg bg-status-red text-white text-pm-xs font-semibold inline-flex items-center justify-center whitespace-nowrap transition-smooth duration-150 hover:bg-status-red/90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] motion-reduce:transition-none disabled:opacity-40 disabled:pointer-events-none"
           >
             Forțează
           </button>

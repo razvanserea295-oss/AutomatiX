@@ -97,16 +97,12 @@ export default function AutoBackupPanel() {
 
   const download = useCallback(async (name: string) => {
     try {
-      const r = await apiCommand<{ name: string; base64: string }>('auto_backup_download', { name });
-      const bin = atob(r.base64);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      const blob = new Blob([bytes], { type: 'application/zip' });
-      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = r.name;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      a.href = `${window.location.origin}/api/auto-backup/${encodeURIComponent(name)}`;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } catch (e: unknown) {
       toast.error(getErrorMessage(e, 'Descărcare eșuată'));
     }

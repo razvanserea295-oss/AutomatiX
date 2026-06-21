@@ -102,6 +102,14 @@ export function getDb(): Database {
 
 const SAVE_DEBOUNCE_MS = 500;
 let _saveTimer: NodeJS.Timeout | null = null;
+let _lastSaveAt = 0;
+
+/** Epoch ms of the last SUCCESSFUL snapshot write (0 if none yet this run).
+ *  Surfaced by /api/health so monitoring can detect a server whose saves are
+ *  silently failing (last-save age keeps growing). */
+export function getLastSaveAt(): number {
+  return _lastSaveAt;
+}
 
 export function saveDatabase(): void {
   if (!_db) return;
@@ -129,6 +137,7 @@ function saveDatabaseNow(): void {
   
   const blob = key ? encryptDb(plaintext, key) : plaintext;
   atomicWrite(getDbPath(), blob);
+  _lastSaveAt = Date.now();
 }
 
 

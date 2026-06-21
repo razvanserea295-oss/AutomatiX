@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { THEMES, DEFAULT_THEME, type Theme } from '@/config/constants';
 import { STORAGE_KEYS, getStorage, setStorage } from '@/config/localStorage';
+import { isElectronRuntime } from '@/lib/runtime';
 
 interface ThemeState {
   theme: Theme;
@@ -28,7 +29,7 @@ export function applyTheme(theme: Theme): void {
   if (theme === THEMES.DARK) root.classList.add('dark');
   else root.classList.remove('dark');
 
-  if ('electron' in window) {
+  if (isElectronRuntime()) {
     try {
       window.electron.invoke('window_set_title_bar_theme', { mode: theme });
     } catch {  }

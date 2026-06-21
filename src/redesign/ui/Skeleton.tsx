@@ -9,7 +9,7 @@
 import type { CSSProperties } from 'react';
 
 
-const R = { sm: 'rounded-md', md: 'rounded-lg', lg: 'rounded-xl', full: 'rounded-full' } as const;
+const R = { sm: 'rounded-lg', md: 'rounded-lg', lg: 'rounded-xl', full: 'rounded-full' } as const;
 
 export interface SkeletonProps {
   width?: string | number;
@@ -23,7 +23,7 @@ export default function Skeleton({ width = '100%', height = 16, rounded = 'md', 
   return (
     <span
       aria-hidden="true"
-      className={`ds-skeleton block ${R[rounded]} ${className}`}
+      className={`ds-skeleton anim-fade-in block ${R[rounded]} ${className}`}
       style={{ width, height, ...style }}
     />
   );

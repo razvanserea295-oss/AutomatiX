@@ -59,9 +59,9 @@ export default function SaveButton({
       type="button"
       onClick={onClick}
       disabled={disabled || state === 'saving'}
-      className={`relative shrink-0 inline-flex items-center gap-1.5 h-10 px-4 rounded-xl text-pm-sm font-semibold whitespace-nowrap select-none transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50 disabled:saturate-50 ${stateStyles[state]} ${className}`}
+      className={`relative shrink-0 inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl text-pm-sm font-semibold whitespace-nowrap select-none transition-smooth duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50 disabled:saturate-50 ${stateStyles[state]} ${className}`}
     >
-      <span className="relative z-[1] inline-flex items-center gap-1.5">
+      <span key={state} className="relative z-[1] inline-flex items-center justify-center gap-1.5 anim-fade-in">
         <Icon className={`h-4 w-4 shrink-0 ${state === 'saving' ? 'animate-spin' : ''}`} />
         {text}
       </span>

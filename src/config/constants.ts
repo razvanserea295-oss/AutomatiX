@@ -22,7 +22,6 @@ export const PAGE_IDS = {
   DOCUMENTS: 'documents',
   FINANCE: 'finance',
   ALERTS: 'alerts',
-  AI: 'ai',
   USERS: 'users',
   SETTINGS: 'settings',
   OPERATII_CONFIG: 'operatii-config',
@@ -41,11 +40,6 @@ export const PAGE_IDS = {
   EMAIL: 'email',
   MAINTENANCE: 'maintenance',
 
-  MENU: 'menu',
-  ORDERS: 'orders',
-  RECIPES: 'recipes',
-  RESERVATIONS: 'reservations',
-  TABLES: 'tables',
   QUOTATIONS: 'quotations',
   CALENDAR: 'calendar',
   TIME_TRACKING: 'time-tracking',
@@ -68,7 +62,6 @@ export const PAGE_IDS = {
   INSTRUMENTE_WORKSPACE: 'instrumente-workspace',
   PERSONAL_WORKSPACE: 'personal-workspace',
   SISTEM_WORKSPACE: 'sistem-workspace',
-  RESTAURANT_WORKSPACE: 'restaurant-workspace',
 } as const;
 
 export type PageId = (typeof PAGE_IDS)[keyof typeof PAGE_IDS];
@@ -103,7 +96,6 @@ export const PAGE_TITLES: Record<PageId, string> = {
   [PAGE_IDS.DOCUMENTS]: 'Documente',
   [PAGE_IDS.FINANCE]: 'Financiar',
   [PAGE_IDS.ALERTS]: 'Alerte',
-  [PAGE_IDS.AI]: 'AI',
   [PAGE_IDS.USERS]: 'Utilizatori',
   [PAGE_IDS.SETTINGS]: 'Setări',
   [PAGE_IDS.OPERATII_CONFIG]: 'Operații',
@@ -121,9 +113,6 @@ export const PAGE_TITLES: Record<PageId, string> = {
   [PAGE_IDS.CHAT]: 'Mesaje',
   [PAGE_IDS.EMAIL]: 'Email',
   [PAGE_IDS.MAINTENANCE]: 'Service',
-  [PAGE_IDS.MENU]: 'Meniu',
-  [PAGE_IDS.ORDERS]: 'Comenzi',
-  [PAGE_IDS.RECIPES]: 'Rețete',
   [PAGE_IDS.QUOTATIONS]: 'Oferte',
   [PAGE_IDS.CALENDAR]: 'Calendar',
   [PAGE_IDS.TIME_TRACKING]: 'Pontaj',
@@ -144,10 +133,7 @@ export const PAGE_TITLES: Record<PageId, string> = {
   [PAGE_IDS.PROJECTS_CONTRACTS_WORKSPACE]: 'Proiecte & Contracte',
   [PAGE_IDS.INSTRUMENTE_WORKSPACE]: 'Instrumente',
   [PAGE_IDS.PERSONAL_WORKSPACE]: 'Personal',
-  [PAGE_IDS.SISTEM_WORKSPACE]: 'Sistem',
-  [PAGE_IDS.RESTAURANT_WORKSPACE]: 'Restaurant',
-  [PAGE_IDS.RESERVATIONS]: 'Rezervări',
-  [PAGE_IDS.TABLES]: 'Mese',
+  [PAGE_IDS.SISTEM_WORKSPACE]: 'Setări',
 };
 
 

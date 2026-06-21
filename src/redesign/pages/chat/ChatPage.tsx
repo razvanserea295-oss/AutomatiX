@@ -55,7 +55,6 @@ import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import EmptyState from '@/redesign/ui/EmptyState';
 import { confirmDialog } from '@/redesign/ui/ConfirmDialog';
 import { filterSearchInputCls, filterSearchIconCls } from '@/redesign/ui/filterControls';
@@ -485,16 +484,6 @@ export default function ChatPage({ user }: ChatPageProps) {
       ? groupSettings.group_avatar
       : activeConvoData?.group_avatar ?? null;
 
-  
-  const totalConvos = convos.length;
-  const totalUnread = convos.reduce((sum, c) => sum + (c.unread_count || 0), 0);
-  const totalGroups = convos.filter(c => c.is_group).length;
-  const activeLabel = activeConvoData
-    ? (activeConvoData.is_group ? (activeConvoData.group_name || 'Grup') : activeConvoData.other_user_name)
-    : '—';
-
-  
-  
   const selectConvo = (id: number) => {
     startMorphTransition(() => flushSync(() => setActiveConvo(id)), { dir: 'forward' });
   };
@@ -510,7 +499,7 @@ export default function ChatPage({ user }: ChatPageProps) {
         {
 
 }
-        <div className="shrink-0 pb-3.5 border-b border-line/60 enter-up">
+        <div className="shrink-0 pb-4 border-b border-line/60 enter-up">
           <div className="flex flex-col lg:flex-row lg:items-center gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
@@ -547,21 +536,9 @@ export default function ChatPage({ user }: ChatPageProps) {
 
         {
 
-}
-        <div className="shrink-0 enter-up" style={{ animationDelay: '70ms' }}>
-          <Page.Kpis cols={4}>
-            <KpiCard label="Conversații" value={totalConvos} icon={MessageCircle} iconColor="text-accent" />
-            <KpiCard label="Necitite"    value={totalUnread}  icon={CheckCheck}    iconColor="text-status-amber" hint={totalUnread > 0 ? 'mesaje noi' : 'totul citit'} />
-            <KpiCard label="Grupuri"     value={totalGroups}  icon={UsersIcon}     iconColor="text-status-blue" />
-            <KpiCard label="Activă"      value={activeLabel}  icon={Eye}           iconColor="text-status-teal" hint={activeConvoData?.is_group ? 'grup' : (activeConvoData ? activeConvoData.other_user_role : 'niciuna selectată')} />
-          </Page.Kpis>
-        </div>
-
-        {
-
 
 }
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 flex-1 min-h-0 enter-up" style={{ animationDelay: '140ms' }}>
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0 enter-up" style={{ animationDelay: '70ms' }}>
 
           {}
           <aside className="xl:col-span-4 min-w-0 min-h-0 flex flex-col">
@@ -585,7 +562,7 @@ export default function ChatPage({ user }: ChatPageProps) {
                   return (
                     <button key={c.id} onClick={() => selectConvo(c.id)}
                       style={{ viewTransitionName: active ? vtName('chat', c.id) : undefined }}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors border-b border-line/40 ${
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] border-b border-line/40 ${
                         active ? 'bg-accent/5 border-l-2 border-l-accent vt-morph' : 'hover:bg-surface-tertiary'
                       }`}>
                       {c.is_group && c.group_avatar ? (
@@ -607,7 +584,7 @@ export default function ChatPage({ user }: ChatPageProps) {
                             {c.last_message || 'Niciun mesaj'}
                           </p>
                           {c.unread_count > 0 && (
-                            <span className="anim-pop flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-accent text-surface-primary text-pm-2xs font-bold tabular-nums">{c.unread_count}</span>
+                            <span className="anim-pop flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-accent text-[var(--color-on-accent)] text-pm-2xs font-bold tabular-nums">{c.unread_count}</span>
                           )}
                         </div>
                       </div>
@@ -661,7 +638,7 @@ export default function ChatPage({ user }: ChatPageProps) {
                       onClick={() => activeConvoData?.is_group && openGroupSettings()}
                       disabled={!activeConvoData?.is_group}
                       className={`flex items-center gap-3 min-w-0 rounded-xl ${
-                        activeConvoData?.is_group ? 'hover:bg-surface-tertiary px-1.5 py-1 -mx-1.5 transition-colors cursor-pointer' : 'cursor-default'
+                        activeConvoData?.is_group ? 'hover:bg-surface-tertiary px-1.5 py-1 -mx-1.5 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] cursor-pointer' : 'cursor-default'
                       }`}
                       title={activeConvoData?.is_group ? 'Detalii grup' : undefined}
                     >
@@ -726,7 +703,7 @@ export default function ChatPage({ user }: ChatPageProps) {
                             {}
                             {m.message_type === 'file' && m.attachment_name && isImage(m.attachment_name) && m.attachment_data && (
                               <button onClick={() => setPreviewImage(`data:image/${m.attachment_name!.split('.').pop()};base64,${m.attachment_data}`)}
-                                className="block mb-1.5 overflow-hidden rounded-xl hover:opacity-90 transition-opacity">
+                                className="block mb-1.5 overflow-hidden rounded-xl hover:opacity-90 transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                                 <img src={`data:image/${m.attachment_name.split('.').pop()};base64,${m.attachment_data}`}
                                   alt={m.attachment_name} loading="lazy" decoding="async" className="max-w-[280px] max-h-[200px] object-cover rounded-xl" />
                               </button>
@@ -735,9 +712,9 @@ export default function ChatPage({ user }: ChatPageProps) {
                             {}
                             {m.message_type === 'file' && m.attachment_name && !isImage(m.attachment_name) && m.attachment_data && (
                               <button onClick={() => downloadBlob(m.attachment_data!, m.attachment_name!)}
-                                className={`flex items-center gap-2 mb-1.5 px-2.5 py-2 rounded-xl border w-full ${
+                                className={`flex items-center gap-2 mb-1.5 px-2.5 py-2 rounded-xl border w-full min-w-0 ${
                                   m.is_mine ? 'border-accent/20 hover:bg-accent/5' : 'border-line hover:bg-surface-tertiary'
-                                } transition-colors`}>
+                                } transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]`}>
                                 <FileText className="h-4 w-4 shrink-0" />
                                 <div className="text-left min-w-0 flex-1">
                                   <p className="text-xs font-medium truncate">{m.attachment_name}</p>
@@ -779,7 +756,7 @@ export default function ChatPage({ user }: ChatPageProps) {
 
                   {}
                   {dragging && (
-                    <div className="absolute inset-0 bg-accent/5 border-2 border-dashed border-accent/30 rounded-2xl flex items-center justify-center z-10 pointer-events-none">
+                    <div className="absolute inset-0 bg-accent/5 border-2 border-dashed border-accent/30 rounded-2xl flex items-center justify-center z-10 pointer-events-none anim-fade-in">
                       <div className="text-center">
                         <ImageIcon className="h-8 w-8 mx-auto mb-2 text-accent" />
                         <p className="text-sm font-medium text-accent">Trage fisierele aici</p>
@@ -794,7 +771,7 @@ export default function ChatPage({ user }: ChatPageProps) {
                         <div key={i} className="anim-pop flex items-center gap-1.5 px-2 py-1 rounded-lg bg-surface-tertiary text-xs text-content-primary">
                           {isImage(f.name) ? <ImageIcon className="h-3 w-3" /> : <Paperclip className="h-3 w-3" />}
                           <span className="truncate max-w-[120px]">{f.name}</span>
-                          <button onClick={() => setPendingFiles(prev => prev.filter((_, j) => j !== i))} className="text-content-muted hover:text-status-red">
+                          <button onClick={() => setPendingFiles(prev => prev.filter((_, j) => j !== i))} className="inline-flex items-center justify-center rounded text-content-muted transition-smooth duration-150 hover:text-status-red active:scale-90 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                             <X className="h-3 w-3" />
                           </button>
                         </div>
@@ -819,7 +796,7 @@ export default function ChatPage({ user }: ChatPageProps) {
                       onPaste={handlePaste}
                       rows={1}
                       placeholder="Scrie un mesaj... (Ctrl+V pt screenshot)"
-                      className="flex-1 min-h-[36px] max-h-[120px] resize-none bg-surface-primary border border-line rounded-xl text-xs text-content-primary placeholder:text-content-muted focus:outline-none focus:ring-1 focus:ring-accent/60 px-3 py-2"
+                      className="flex-1 min-w-0 min-h-[36px] max-h-[120px] resize-none bg-surface-primary border border-line rounded-xl text-xs text-content-primary placeholder:text-content-muted transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)] px-3 py-2"
                     />
                     <Button
                       size="sm"
@@ -841,7 +818,7 @@ export default function ChatPage({ user }: ChatPageProps) {
 
         {}
         {showNewChat && (
-          <aside className="absolute right-0 top-0 bottom-0 z-30 w-full sm:w-[400px] bg-surface-elevated border-l border-line rounded-l-2xl shadow-[var(--elevation-4)] flex flex-col anim-slide-up">
+          <aside className="absolute right-0 top-0 bottom-0 z-30 w-full sm:w-[400px] bg-surface-elevated border-l border-line rounded-l-2xl shadow-[var(--elevation-4)] flex flex-col anim-slide-in-right">
             <div className="shrink-0 flex items-center justify-between gap-3 px-5 h-14 border-b border-line/70">
               <h2 className="text-pm-md font-semibold text-content-primary truncate">Conversatie noua</h2>
               <IconButton onClick={() => setShowNewChat(false)} aria-label="Închide"><X className="h-4 w-4" /></IconButton>
@@ -849,13 +826,13 @@ export default function ChatPage({ user }: ChatPageProps) {
             <div className="flex-1 min-h-0 overflow-y-auto stagger-in">
               {allUsers.map(u => (
                 <button key={u.id} onClick={() => startChat(u.id)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-surface-tertiary transition-colors border-b border-line/40">
-                  <div className={`h-8 w-8 rounded-full flex items-center justify-center text-pm-2xs font-bold text-surface-primary ${
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-surface-tertiary transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] border-b border-line/40">
+                  <div className={`h-8 w-8 rounded-full flex items-center justify-center text-pm-2xs font-bold text-surface-primary shrink-0 ${
                     ROLE_COLORS[u.role_name?.toLowerCase()] || 'bg-content-muted'
                   }`}>{getInitials(u.full_name)}</div>
-                  <div>
-                    <p className="text-xs font-medium text-content-primary">{u.full_name}</p>
-                    <p className="text-pm-2xs text-content-muted">{u.role_name}</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-content-primary truncate">{u.full_name}</p>
+                    <p className="text-pm-2xs text-content-muted truncate">{u.role_name}</p>
                   </div>
                 </button>
               ))}
@@ -865,27 +842,27 @@ export default function ChatPage({ user }: ChatPageProps) {
 
         {}
         {showNewGroup && (
-          <aside className="absolute right-0 top-0 bottom-0 z-30 w-full sm:w-[440px] bg-surface-elevated border-l border-line rounded-l-2xl shadow-[var(--elevation-4)] flex flex-col anim-slide-up">
+          <aside className="absolute right-0 top-0 bottom-0 z-30 w-full sm:w-[440px] bg-surface-elevated border-l border-line rounded-l-2xl shadow-[var(--elevation-4)] flex flex-col anim-slide-in-right">
             <div className="shrink-0 flex items-center justify-between gap-3 px-5 h-14 border-b border-line/70">
               <h2 className="text-pm-md font-semibold text-content-primary truncate">Grup nou</h2>
               <IconButton onClick={() => setShowNewGroup(false)} aria-label="Închide"><X className="h-4 w-4" /></IconButton>
             </div>
             <div className="p-3 border-b border-line shrink-0">
               <input value={groupName} onChange={e => setGroupName(e.target.value)} placeholder="Numele grupului..."
-                className="w-full h-9 border border-line rounded-xl bg-surface-primary px-3 text-xs text-content-primary placeholder:text-content-muted focus:outline-none focus:ring-1 focus:ring-accent/60" />
+                className="w-full h-9 border border-line rounded-xl bg-surface-primary px-3 text-xs text-content-primary placeholder:text-content-muted transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)]" />
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto">
               {allUsers.map(u => (
-                <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 hover:bg-surface-tertiary cursor-pointer border-b border-line/40">
+                <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 hover:bg-surface-tertiary transition-smooth duration-150 cursor-pointer border-b border-line/40">
                   <input type="checkbox" checked={groupMembers.includes(u.id)}
                     onChange={e => setGroupMembers(prev => e.target.checked ? [...prev, u.id] : prev.filter(id => id !== u.id))}
-                    className="h-3.5 w-3.5 rounded border border-line accent-[var(--color-accent)]" />
-                  <div className={`h-7 w-7 rounded-full flex items-center justify-center text-pm-2xs font-bold text-surface-primary ${
+                    className="h-3.5 w-3.5 shrink-0 rounded border border-line accent-[var(--color-accent)] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]" />
+                  <div className={`h-7 w-7 rounded-full flex items-center justify-center text-pm-2xs font-bold text-surface-primary shrink-0 ${
                     ROLE_COLORS[u.role_name?.toLowerCase()] || 'bg-content-muted'
                   }`}>{getInitials(u.full_name)}</div>
-                  <div>
-                    <p className="text-xs text-content-primary">{u.full_name}</p>
-                    <p className="text-pm-2xs text-content-muted">{u.role_name}</p>
+                  <div className="min-w-0">
+                    <p className="text-xs text-content-primary truncate">{u.full_name}</p>
+                    <p className="text-pm-2xs text-content-muted truncate">{u.role_name}</p>
                   </div>
                 </label>
               ))}
@@ -900,7 +877,7 @@ export default function ChatPage({ user }: ChatPageProps) {
 
         {}
         {(groupSettings || groupSettingsLoading) && (
-          <aside className="absolute right-0 top-0 bottom-0 z-30 w-full sm:w-[440px] bg-surface-elevated border-l border-line rounded-l-2xl shadow-[var(--elevation-4)] flex flex-col anim-slide-up">
+          <aside className="absolute right-0 top-0 bottom-0 z-30 w-full sm:w-[440px] bg-surface-elevated border-l border-line rounded-l-2xl shadow-[var(--elevation-4)] flex flex-col anim-slide-in-right">
             <div className="shrink-0 flex items-center justify-between gap-3 px-5 h-14 border-b border-line/70">
               <h2 className="text-pm-md font-semibold text-content-primary truncate">Detalii grup</h2>
               <IconButton onClick={closeGroupSettings} aria-label="Închide"><X className="h-4 w-4" /></IconButton>
@@ -928,7 +905,7 @@ export default function ChatPage({ user }: ChatPageProps) {
                         <button
                           onClick={() => groupAvatarInputRef.current?.click()}
                           title="Schimbă poza"
-                          className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-accent text-surface-primary flex items-center justify-center shadow-md hover:bg-accent/90"
+                          className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-accent text-[var(--color-on-accent)] flex items-center justify-center shadow-[var(--elevation-2)] transition-smooth duration-150 hover:bg-accent/90 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                         >
                           <Camera className="h-3.5 w-3.5" />
                         </button>
@@ -956,7 +933,7 @@ export default function ChatPage({ user }: ChatPageProps) {
                             if (e.key === 'Enter') void saveGroupName();
                             if (e.key === 'Escape') { setEditingGroupName(false); setGroupNameDraft(groupSettings.group_name); }
                           }}
-                          className="flex-1 h-8 border border-line rounded-xl bg-surface-primary px-2.5 text-sm text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60"
+                          className="flex-1 min-w-0 h-8 border border-line rounded-xl bg-surface-primary px-2.5 text-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)]"
                         />
                         <Button size="sm" onClick={() => void saveGroupName()} disabled={!groupNameDraft.trim()}>Salvează</Button>
                       </div>
@@ -967,7 +944,7 @@ export default function ChatPage({ user }: ChatPageProps) {
                           <button
                             onClick={() => { setEditingGroupName(true); setGroupNameDraft(groupSettings.group_name); }}
                             title="Editează"
-                            className="p-1 text-content-muted hover:text-accent"
+                            className="inline-flex items-center justify-center p-1 rounded-lg text-content-muted transition-smooth duration-150 hover:text-accent active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                           >
                             <Edit2 className="h-3 w-3" />
                           </button>
@@ -992,7 +969,7 @@ export default function ChatPage({ user }: ChatPageProps) {
                     {isGroupAdmin && (
                       <button
                         onClick={() => { setShowAddMembers(true); setAddMembersIds([]); }}
-                        className="flex items-center gap-1 text-pm-2xs text-accent hover:underline"
+                        className="inline-flex items-center gap-1 rounded-lg px-1.5 py-0.5 -mr-1.5 text-pm-2xs text-accent transition-smooth duration-150 hover:underline active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                       >
                         <UserPlus className="h-3 w-3" /> Adaugă
                       </button>
@@ -1000,7 +977,7 @@ export default function ChatPage({ user }: ChatPageProps) {
                   </div>
                   <ul className="stagger-in">
                     {groupSettings.members.map(m => (
-                      <li key={m.user_id} className="group flex items-center gap-2.5 px-3 py-2 border-b border-line/40 hover:bg-surface-tertiary/40 transition-colors">
+                      <li key={m.user_id} className="group flex items-center gap-2.5 px-3 py-2 border-b border-line/40 hover:bg-surface-tertiary/40 transition-smooth duration-150">
                         <div className={`h-8 w-8 rounded-full flex items-center justify-center text-pm-2xs font-bold text-surface-primary shrink-0 ${
                           ROLE_COLORS[m.role_name?.toLowerCase()] || 'bg-content-muted'
                         }`}>{getInitials(m.full_name)}</div>
@@ -1051,7 +1028,7 @@ export default function ChatPage({ user }: ChatPageProps) {
                 
                 <>
                   <div className="p-3 border-b border-line shrink-0 flex items-center justify-between">
-                    <button onClick={() => { setShowAddMembers(false); setAddMembersIds([]); }} className="text-pm-xs text-content-muted hover:text-accent flex items-center gap-1">
+                    <button onClick={() => { setShowAddMembers(false); setAddMembersIds([]); }} className="inline-flex items-center gap-1 rounded-lg px-1.5 py-0.5 -ml-1.5 text-pm-xs text-content-muted transition-smooth duration-150 hover:text-accent active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                       <ChevronLeft className="h-3.5 w-3.5" /> Înapoi
                     </button>
                     <span className="text-pm-2xs text-content-muted">{addMembersIds.length} selectați</span>
@@ -1060,19 +1037,19 @@ export default function ChatPage({ user }: ChatPageProps) {
                     {allUsers
                       .filter(u => !groupSettings.members.some(m => m.user_id === u.id))
                       .map(u => (
-                        <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 hover:bg-surface-tertiary cursor-pointer border-b border-line/40">
+                        <label key={u.id} className="flex items-center gap-2.5 px-3 py-2 hover:bg-surface-tertiary transition-smooth duration-150 cursor-pointer border-b border-line/40">
                           <input
                             type="checkbox"
                             checked={addMembersIds.includes(u.id)}
                             onChange={e => setAddMembersIds(prev => e.target.checked ? [...prev, u.id] : prev.filter(id => id !== u.id))}
-                            className="h-3.5 w-3.5 rounded border border-line accent-[var(--color-accent)]"
+                            className="h-3.5 w-3.5 shrink-0 rounded border border-line accent-[var(--color-accent)] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                           />
-                          <div className={`h-7 w-7 rounded-full flex items-center justify-center text-pm-2xs font-bold text-surface-primary ${
+                          <div className={`h-7 w-7 rounded-full flex items-center justify-center text-pm-2xs font-bold text-surface-primary shrink-0 ${
                             ROLE_COLORS[u.role_name?.toLowerCase()] || 'bg-content-muted'
                           }`}>{getInitials(u.full_name)}</div>
-                          <div>
-                            <p className="text-xs text-content-primary">{u.full_name}</p>
-                            <p className="text-pm-2xs text-content-muted">{u.role_name}</p>
+                          <div className="min-w-0">
+                            <p className="text-xs text-content-primary truncate">{u.full_name}</p>
+                            <p className="text-pm-2xs text-content-muted truncate">{u.role_name}</p>
                           </div>
                         </label>
                       ))}
@@ -1095,9 +1072,9 @@ export default function ChatPage({ user }: ChatPageProps) {
 
         {}
         {previewImage && (
-          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center cursor-pointer" onClick={() => setPreviewImage(null)}>
-            <img src={previewImage} alt="Preview" className="max-w-[90vw] max-h-[90vh] object-contain rounded-2xl shadow-2xl" />
-            <button className="absolute top-4 right-4 text-surface-primary/80 hover:text-surface-primary"><X className="h-6 w-6" /></button>
+          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center cursor-pointer anim-fade-in" onClick={() => setPreviewImage(null)}>
+            <img src={previewImage} alt="Preview" className="max-w-[90vw] max-h-[90vh] object-contain rounded-2xl shadow-[var(--elevation-4)] anim-scale-in" />
+            <button className="absolute top-4 right-4 inline-flex items-center justify-center h-9 w-9 rounded-xl text-surface-primary/80 transition-smooth duration-150 hover:text-surface-primary active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><X className="h-6 w-6" /></button>
           </div>
         )}
 

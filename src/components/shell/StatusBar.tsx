@@ -40,17 +40,17 @@ export default function StatusBar({ currentPage, userName, roleName }: StatusBar
   const time = now.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div className="h-6 bg-surface-rail border-t border-white/8 flex items-center justify-between px-4 text-[10px] text-white/50 shrink-0 select-none font-mono tracking-wide">
-      <div className="flex items-center gap-2.5 min-w-0">
+    <div className="shell-status h-6 bg-surface-rail border-t border-white/8 flex items-center justify-between px-4 text-pm-2xs text-white/50 shrink-0 select-none font-mono tracking-wide">
+      <div className="flex items-center gap-2 min-w-0">
         <span className="truncate">{currentPage}</span>
-        <span className="text-white/20">|</span>
+        <span className="text-white/20 shrink-0">|</span>
         <span className="truncate">{userName}{roleName ? ` · ${roleName}` : ''}</span>
       </div>
-      <div className="flex items-center gap-2.5 shrink-0">
+      <div className="flex items-center gap-2 shrink-0">
         <span className="tabular-nums">{time}</span>
         <span className="text-white/20">|</span>
-        <span className="flex items-center gap-1.5">
-          <span className={`inline-block h-1.5 w-1.5 rounded-full ${dotClass}`} />
+        <span className="flex items-center gap-1">
+          <span className={`inline-block h-1.5 w-1.5 rounded-full transition-colors duration-150 ${dotClass}`} />
           {label}
         </span>
       </div>

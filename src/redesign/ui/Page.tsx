@@ -16,15 +16,14 @@ interface PageProps extends HTMLAttributes<HTMLDivElement> {
 
 
   fit?: boolean;
+  layout?: 'col' | 'row';
   children: ReactNode;
 }
 
-
-
-function Page({ fit = false, children, className = '', ...rest }: PageProps) {
+function Page({ fit = false, layout = 'col', children, className = '', ...rest }: PageProps) {
   return (
     <div
-      className={`app-surface flex flex-1 flex-col min-h-0 ${fit ? 'overflow-hidden' : 'overflow-y-auto'} ${className}`}
+      className={`app-surface flex flex-1 ${layout === 'row' ? 'flex-row' : 'flex-col'} min-h-0 ${fit ? 'overflow-hidden' : 'overflow-y-auto'} ${className}`}
       {...rest}
     >
       {children}
@@ -69,16 +68,16 @@ const padClass = {
 
 
 function PageBody({
-  maxWidth = 'narrow',
+  maxWidth = 'wide',
   padding = 'comfortable',
   fit = false,
   className = '',
   children,
   ...rest
 }: PageBodyProps) {
-  const layout = fit ? 'flex flex-1 flex-col min-h-0 gap-6' : 'space-y-7';
+  const layout = fit ? 'flex flex-1 flex-col min-h-0 gap-6' : 'space-y-6';
   return (
-    <div className={`mx-auto w-full ${maxWidthClass[maxWidth]} ${padClass[padding]} ${layout} ${className}`} {...rest}>
+    <div className={`page-body mx-auto w-full ${maxWidthClass[maxWidth]} ${padClass[padding]} ${layout} ${className}`} {...rest}>
       {children}
     </div>
   );

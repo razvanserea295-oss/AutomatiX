@@ -11,10 +11,7 @@
 
 
 export function isTauri(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    ('__TAURI_INTERNALS__' in window || '__TAURI__' in window)
-  );
+  return isTauriRuntime();
 }
 
 export type UpdateInfo = {
@@ -94,3 +91,4 @@ export async function installPendingUpdate(
   const { relaunch } = await import('@tauri-apps/plugin-process');
   await relaunch();
 }
+import { isTauriRuntime } from '@/lib/runtime';

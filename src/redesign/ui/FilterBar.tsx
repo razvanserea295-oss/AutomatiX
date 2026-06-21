@@ -76,7 +76,7 @@ export default function FilterBar({
   const hasActive = localSearch.trim() !== '' || (filters?.some(f => f.value) ?? false);
 
   return (
-    <div className="flex items-center gap-2.5 flex-wrap">
+    <div className="flex items-center gap-2 flex-wrap">
       {}
       <div className="relative group">
         <Search className={filterSearchIconCls} />
@@ -92,7 +92,7 @@ export default function FilterBar({
             type="button"
             onClick={() => emitSearch('', true)}
             aria-label="Golește căutarea"
-            className={filterClearInlineBtnCls}
+            className={`${filterClearInlineBtnCls} anim-scale-in active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]`}
           >
             <XIcon className="h-3.5 w-3.5" />
           </button>
@@ -123,7 +123,7 @@ export default function FilterBar({
             filters?.forEach(f => f.onChange(''));
             onClearAll?.();
           }}
-          className={filterResetBtnCls}
+          className={`${filterResetBtnCls} anim-scale-in active:scale-[0.98]`}
         >
           <XIcon className="h-3.5 w-3.5" />
           Resetează

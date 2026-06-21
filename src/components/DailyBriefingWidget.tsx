@@ -256,7 +256,7 @@ export default function DailyBriefingWidget({ onNavigate }: { onNavigate?: (page
                       : null;
                     const inner = (
                       <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="text-pm-2xs uppercase tracking-wide text-content-muted truncate" title={it.label}>{it.label}</span>
+                        <span className="text-pm-2xs uppercase tracking-wide text-content-muted line-clamp-2 leading-snug" title={it.label}>{it.label}</span>
                         <span className={`text-pm-md tabular-nums font-semibold leading-tight ${TONE_TEXT[it.tone ?? 'gray']}`}>
                           {it.value}
                         </span>

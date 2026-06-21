@@ -46,7 +46,7 @@ import {
   GraduationCap, Target, FolderKanban, ScrollText, ClipboardCheck,
   Factory, Package, CircleDollarSign, CheckCircle2,
   ChevronRight, ChevronDown, PlayCircle, Building2, FileText,
-  Wrench, Network, BarChart3, MessageCircle, Bot, Bell,
+  Wrench, Network, BarChart3, MessageCircle, Bell,
   Settings, Users, Warehouse, ShoppingCart, Calendar, Mail,
   Search, BookOpen, Lightbulb, ArrowRight, X, Activity,
   Hammer, MapPin, ListChecks, Gauge, LayoutDashboard, Inbox,
@@ -344,7 +344,6 @@ const PAGES_GUIDE: PageEntry[] = [
   { icon: GraduationCap,   title: 'Tutorial',          desc: 'Acest ghid: parcurs proiect, listă pagini, sfaturi.', page: 'tutorial',        group: 'Instrumente', keywords: 'help ajutor ghid' },
   { icon: Mail,            title: 'Email',             desc: 'Client IMAP/SMTP integrat. Setări persistente per user (Setări → Email).', page: 'email',           group: 'Instrumente', keywords: 'email imap smtp inbox' },
   { icon: MessageCircle,   title: 'Mesaje (Chat)',     desc: 'Chat intern cu grupuri. Detalii grup (poză, membri, admini) la click pe avatar.', page: 'chat',            group: 'Instrumente', keywords: 'chat mesagerie' },
-  { icon: Bot,             title: 'AI Assistant',      desc: 'Chat AI cu acces la date — întrebări despre proiecte, generări de rapoarte, query DB.', page: 'ai',              group: 'Instrumente', keywords: 'ai asistent llm chatbot' },
   { icon: Bell,            title: 'Alerte',            desc: 'Notificări sistem: handoff-uri, deadlines, stoc redus. Cooldown 7 zile pe alerte confirmate.', page: 'alerts',          group: 'Instrumente', keywords: 'notificari alerta acknowledged' },
 
   
@@ -438,11 +437,11 @@ function LifecycleTimeline({ sections, onNavigate }: { sections: TutorialSection
             <button
               type="button"
               onClick={() => setExpanded(isOpen ? null : section.id)}
-              className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-surface-tertiary/40 transition-colors text-left"
+              className="w-full flex items-center gap-3 px-5 py-4 hover:bg-surface-tertiary/40 transition-smooth duration-150 text-left focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
             >
               <div className="relative flex flex-col items-center shrink-0">
                 <div className={`h-9 w-9 rounded-xl flex items-center justify-center ${isOpen ? 'bg-accent/12 ring-1 ring-accent/30' : 'bg-surface-tertiary'}`}>
-                  <Icon className={`h-[18px] w-[18px] ${isOpen ? section.color : 'text-content-muted'}`} />
+                  <Icon className={`h-[18px] w-[18px] shrink-0 ${isOpen ? section.color : 'text-content-muted'}`} />
                 </div>
                 {si < sections.length - 1 && (
                   <div className="absolute top-full left-1/2 -translate-x-1/2 w-px h-3 bg-line anim-grow-y" />
@@ -450,10 +449,10 @@ function LifecycleTimeline({ sections, onNavigate }: { sections: TutorialSection
               </div>
 
               <div className="flex-1 min-w-0">
-                <p className={`text-[14px] font-semibold ${isOpen ? 'text-content-primary' : 'text-content-secondary'}`}>
+                <p className={`text-pm-md font-semibold truncate ${isOpen ? 'text-content-primary' : 'text-content-secondary'}`}>
                   {section.title}
                 </p>
-                <p className="text-pm-xs text-content-muted">{section.subtitle}</p>
+                <p className="text-pm-xs text-content-muted truncate">{section.subtitle}</p>
               </div>
 
               {isOpen
@@ -475,7 +474,7 @@ function LifecycleTimeline({ sections, onNavigate }: { sections: TutorialSection
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-content-primary">{step.title}</p>
+                        <p className="text-pm-base font-semibold text-content-primary">{step.title}</p>
                         <p className="text-pm-sm text-content-secondary mt-0.5">{step.description}</p>
 
                         {step.details.length > 0 && (
@@ -504,9 +503,9 @@ function LifecycleTimeline({ sections, onNavigate }: { sections: TutorialSection
                           <button
                             type="button"
                             onClick={() => onNavigate(step.page!)}
-                            className="mt-2 inline-flex items-center gap-1 text-pm-xs font-medium text-accent hover:underline"
+                            className="group/link mt-2 inline-flex items-center gap-1 rounded-lg text-pm-xs font-medium text-accent transition-smooth duration-150 hover:underline active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                           >
-                            Deschide pagina <ArrowRight className="h-3 w-3" />
+                            Deschide pagina <ArrowRight className="h-3 w-3 transition-transform duration-150 group-hover/link:translate-x-0.5" />
                           </button>
                         )}
                       </div>
@@ -535,13 +534,13 @@ function PagesDirectory({ pages, onNavigate }: { pages: PageEntry[]; onNavigate:
   }, [pages]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {byGroup.map(([group, items]) => (
         <div key={group}>
-          <div className="flex items-center gap-2.5 mb-3">
-            <p className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">{group}</p>
+          <div className="flex items-center gap-2 mb-3">
+            <p className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted truncate">{group}</p>
             <span className="h-px flex-1 bg-line/70" aria-hidden />
-            <span className="text-pm-2xs text-content-muted tabular-nums">{items.length}</span>
+            <span className="text-pm-2xs text-content-muted tabular-nums shrink-0">{items.length}</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-3 stagger-in">
             {items.map((p) => {
@@ -551,13 +550,13 @@ function PagesDirectory({ pages, onNavigate }: { pages: PageEntry[]; onNavigate:
                   key={p.page}
                   type="button"
                   onClick={() => onNavigate(p.page)}
-                  className="flex items-start gap-3 rounded-xl border border-line/70 bg-surface-secondary p-4 hover:bg-surface-tertiary/40 hover:border-accent/30 hover:shadow-[var(--elevation-1)] hover:-translate-y-0.5 transition-all motion-reduce:transform-none text-left group"
+                  className="flex items-start gap-3 rounded-xl border border-line/70 bg-surface-secondary p-4 hover:bg-surface-tertiary/40 hover:border-accent/30 hover:shadow-[var(--elevation-1)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-150 motion-reduce:transform-none text-left group focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                 >
                   <div className="h-8 w-8 rounded-lg bg-accent/8 flex items-center justify-center shrink-0 group-hover:bg-accent/15 group-hover:scale-105 transition-all motion-reduce:transform-none">
                     <Icon className="h-4 w-4 text-accent" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-semibold text-content-primary group-hover:text-accent transition-colors">{p.title}</p>
+                    <p className="text-pm-base font-semibold text-content-primary group-hover:text-accent transition-colors truncate">{p.title}</p>
                     <p className="text-pm-xs text-content-muted mt-0.5 line-clamp-2">{p.desc}</p>
                   </div>
                 </button>
@@ -578,10 +577,10 @@ function TipsGrid({ tips }: { tips: TipEntry[] }) {
         return (
           <div key={i} className="rounded-xl border border-line/70 bg-surface-secondary p-5">
             <div className="flex items-center gap-2 mb-2">
-              <div className="h-7 w-7 rounded-lg bg-accent/8 flex items-center justify-center">
+              <div className="h-7 w-7 rounded-lg bg-accent/8 flex items-center justify-center shrink-0">
                 <Icon className="h-3.5 w-3.5 text-accent" />
               </div>
-              <p className="text-[13px] font-semibold text-content-primary">{tip.title}</p>
+              <p className="text-pm-base font-semibold text-content-primary truncate">{tip.title}</p>
             </div>
             <p className="text-pm-sm text-content-secondary leading-relaxed">{tip.body}</p>
           </div>
@@ -631,22 +630,22 @@ function SearchResults({ hits, query, onNavigate }: { hits: SearchHit[]; query: 
               const Icon = h.icon;
               const clickable = !!h.page;
               const inner = (
-                <div className="flex items-start gap-3 px-5 py-3 border-b border-line/40 hover:bg-surface-tertiary/30 transition-colors">
+                <div className="flex items-start gap-3 px-5 py-3 border-b border-line/40 transition-colors group-hover/hit:bg-surface-tertiary/30">
                   <div className="h-8 w-8 rounded-lg bg-accent/8 flex items-center justify-center shrink-0">
                     <Icon className="h-4 w-4 text-accent" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-[13px] font-semibold text-content-primary">{h.title}</p>
+                      <p className="text-pm-base font-semibold text-content-primary">{h.title}</p>
                       {h.meta && <span className="text-pm-2xs text-content-muted">· {h.meta}</span>}
                     </div>
                     <p className="text-pm-xs text-content-muted mt-0.5 line-clamp-2">{h.body}</p>
                   </div>
-                  {clickable && <ArrowRight className="h-3.5 w-3.5 text-content-muted shrink-0 self-center" />}
+                  {clickable && <ArrowRight className="h-3.5 w-3.5 text-content-muted shrink-0 self-center transition-transform duration-150 group-hover/hit:translate-x-0.5" />}
                 </div>
               );
               return clickable ? (
-                <button key={i} type="button" onClick={() => onNavigate(h.page!)} className="w-full text-left">
+                <button key={i} type="button" onClick={() => onNavigate(h.page!)} className="group/hit block w-full text-left transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] focus-visible:relative focus-visible:z-10">
                   {inner}
                 </button>
               ) : (
@@ -709,7 +708,7 @@ export default function TutorialPage({ user, onNavigate }: TutorialPageProps) {
         {/* ── 1. HEADER ROW — identity (left) + global search promoted into the
                band (right). The old top tab-strip is gone; nav moved to the rail.
                Bare (no card chrome) + thin bottom separator; pinned shrink-0. */}
-        <div className="shrink-0 flex flex-col gap-4 pb-3.5 border-b border-line/60 lg:flex-row lg:items-center lg:justify-between">
+        <div className="shrink-0 flex flex-col gap-4 pb-4 border-b border-line/60 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
               <GraduationCap className="h-5 w-5" />
@@ -753,13 +752,13 @@ export default function TutorialPage({ user, onNavigate }: TutorialPageProps) {
         {
 
 }
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
           {}
           <aside className="lg:col-span-4 xl:col-span-3 min-h-0 overflow-y-auto space-y-4 pr-0.5">
             <div className="rounded-2xl bg-accent/5 border border-accent/15 p-4 enter-up">
               <div className="flex items-center gap-2 mb-1.5">
                 <PlayCircle className="h-4 w-4 text-accent shrink-0" />
-                <p className="text-[13px] font-semibold text-content-primary">
+                <p className="text-pm-base font-semibold text-content-primary truncate">
                   Bine ai venit, {user.full_name || user.username}!
                 </p>
               </div>
@@ -780,7 +779,7 @@ export default function TutorialPage({ user, onNavigate }: TutorialPageProps) {
                     type="button"
                     onClick={() => selectTab(item.id)}
                     aria-pressed={isActive}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left border-b border-line/60 last:border-b-0 transition-colors ${
+                    className={`group/nav w-full flex items-center gap-3 px-4 py-3 text-left border-b border-line/60 last:border-b-0 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] focus-visible:relative focus-visible:z-10 ${
                       isActive ? 'bg-accent-muted' : 'hover:bg-surface-tertiary/40'
                     } ${searching ? 'opacity-60' : ''}`}
                   >
@@ -790,12 +789,12 @@ export default function TutorialPage({ user, onNavigate }: TutorialPageProps) {
                       <NavIcon className="h-4 w-4" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className={`block text-[13px] font-semibold ${isActive ? 'text-accent' : 'text-content-primary'}`}>
+                      <span className={`block text-pm-base font-semibold truncate ${isActive ? 'text-accent' : 'text-content-primary'}`}>
                         {item.label}
                       </span>
                       <span className="block text-pm-2xs text-content-muted truncate">{item.desc}</span>
                     </span>
-                    <ChevronRight className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-accent' : 'text-content-muted'}`} />
+                    <ChevronRight className={`h-3.5 w-3.5 shrink-0 transition-transform duration-150 group-hover/nav:translate-x-0.5 ${isActive ? 'text-accent' : 'text-content-muted'}`} />
                   </button>
                 );
               })}
@@ -829,13 +828,13 @@ export default function TutorialPage({ user, onNavigate }: TutorialPageProps) {
                 className="vt-morph"
                 style={{ viewTransitionName: vtName('tutorial-pane', tab) } as React.CSSProperties}
               >
-                <div key={tab} className="flex items-center gap-2.5 mb-4 enter-fade">
+                <div key={tab} className="flex items-center gap-2 mb-4 enter-fade">
                   <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0 anim-pop">
                     <active.icon className="h-4 w-4" />
                   </span>
                   <div className="min-w-0">
-                    <h2 className="text-pm-lg font-semibold text-content-primary leading-tight">{active.label}</h2>
-                    <p className="text-pm-xs text-content-muted">{active.desc}</p>
+                    <h2 className="text-pm-lg font-semibold text-content-primary leading-tight truncate">{active.label}</h2>
+                    <p className="text-pm-xs text-content-muted truncate">{active.desc}</p>
                   </div>
                 </div>
 

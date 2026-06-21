@@ -31,7 +31,7 @@ export const TH_TEXT = 'text-pm-2xs font-bold uppercase tracking-[0.14em] text-c
 
 
 export const THEAD_STICKY =
-  'sticky top-0 z-10 bg-surface-secondary shadow-[inset_0_-1px_0_var(--color-border)]';
+  'sticky top-0 z-10 bg-surface-secondary backdrop-blur-[18px] backdrop-saturate-[150%] shadow-[inset_0_-1px_0_var(--color-border)]';
 
 interface ThProps {
   align?: 'left' | 'right' | 'center';
@@ -82,13 +82,13 @@ export default function SortableTh<TKey extends string>({
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className={`group inline-flex w-full items-center gap-1.5 ${justify} rounded-lg px-1.5 py-1 -mx-1.5 -my-1 text-pm-2xs font-bold uppercase tracking-[0.14em] transition-colors duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
+        className={`group inline-flex w-full items-center gap-1.5 ${justify} rounded-lg px-1.5 py-1 -mx-1.5 -my-1 text-pm-2xs font-bold uppercase tracking-[0.14em] transition-smooth duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
           active
             ? 'text-accent hover:bg-accent-muted'
             : 'text-content-muted hover:bg-surface-tertiary hover:text-content-secondary'
         }`}
       >
-        <span className="truncate">{children}</span>
+        <span className="min-w-0 truncate">{children}</span>
         <Icon
           className={`h-3 w-3 shrink-0 transition-opacity duration-150 ${active ? 'opacity-100' : 'opacity-40 group-hover:opacity-80'}`}
           aria-hidden

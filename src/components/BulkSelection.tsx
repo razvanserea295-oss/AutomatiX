@@ -102,7 +102,7 @@ export function BulkActionBar<T>({ count, items, actions, onClear }: {
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-surface-primary border border-line shadow-lg rounded-lg px-4 py-2.5 flex items-center gap-3 min-w-[400px]">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-surface-primary border border-line shadow-lg rounded-lg px-4 py-2.5 flex items-center gap-3 min-w-0 max-w-[calc(100vw-1.5rem)] sm:min-w-[400px]">
       <span className="text-sm font-semibold text-content-primary">
         {count} selectate
       </span>

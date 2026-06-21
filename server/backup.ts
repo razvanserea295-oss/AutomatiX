@@ -26,8 +26,15 @@ import path from 'path';
 import { getDbPath, getDataDir } from './db';
 
 const KEEP_BACKUPS = 14;
-const COOLDOWN_MS  = 24 * 60 * 60 * 1000;       
-const INTERVAL_MS  = 6  * 60 * 60 * 1000;       
+const COOLDOWN_MS  = 24 * 60 * 60 * 1000;
+const INTERVAL_MS  = 6  * 60 * 60 * 1000;
+
+// Off-site mirror: a directory on ANOTHER disk / a NAS-UNC share / a cloud-synced
+// folder (OneDrive, Google Drive, Dropbox). All local backups otherwise sit on
+// the SAME disk as the live DB — one disk failure or ransomware loses everything.
+// We mirror only the ENCRYPTED .db snapshot, never .dbkey, so an off-machine copy
+// is useless without the separately-held key.
+const MIRROR_DIR = (process.env.PROMIX_BACKUP_MIRROR_DIR || '').trim();
 
 export const BACKUP_CONFIG = {
   intervalHours: 6,
@@ -76,6 +83,60 @@ function listSnapshots(): Array<{ name: string; mtime: number }> {
     .sort((a, b) => b.mtime - a.mtime);
 }
 
+export function isMirrorConfigured(): boolean {
+  return MIRROR_DIR.length > 0;
+}
+
+// Resolve (and create) the mirror dir. Returns null if unset, or if the path is
+// currently unreachable (e.g. a NAS share that's offline) — never throws.
+function resolveMirrorDir(): string | null {
+  if (!MIRROR_DIR) return null;
+  try {
+    fs.mkdirSync(MIRROR_DIR, { recursive: true });
+    return MIRROR_DIR;
+  } catch (e) {
+    console.error('[backup] off-site mirror unavailable:', MIRROR_DIR, e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
+// Copy one ENCRYPTED backup off-site (temp + rename so a partial copy is never
+// seen as complete), verify size, then rotate the mirror. NEVER copies .dbkey.
+// Best-effort: a mirror failure must not break the local backup.
+export async function mirrorBackup(srcBackupPath: string): Promise<{ ok: boolean; dest?: string; reason?: string }> {
+  const dir = resolveMirrorDir();
+  if (!dir) return { ok: false, reason: 'mirror not configured/reachable' };
+  const name = path.basename(srcBackupPath);
+  const dest = path.join(dir, name);
+  const tmp = path.join(dir, `.${name}.tmp`);
+  try {
+    await fs.promises.copyFile(srcBackupPath, tmp);
+    try { await fs.promises.rename(tmp, dest); }
+    catch { await fs.promises.copyFile(tmp, dest); await fs.promises.unlink(tmp).catch(() => {}); }
+
+    const srcSize = fs.statSync(srcBackupPath).size;
+    const dstSize = fs.statSync(dest).size;
+    if (srcSize !== dstSize) {
+      console.error(`[backup] off-site mirror size mismatch for ${name} (${srcSize} vs ${dstSize})`);
+      return { ok: false, reason: 'size mismatch' };
+    }
+
+    const snaps = fs.readdirSync(dir)
+      .filter(f => f.startsWith('promix-') && f.endsWith('.db'))
+      .map(f => ({ f, m: fs.statSync(path.join(dir, f)).mtimeMs }))
+      .sort((a, b) => b.m - a.m);
+    for (const old of snaps.slice(KEEP_BACKUPS)) {
+      try { fs.unlinkSync(path.join(dir, old.f)); } catch { /* ignore */ }
+    }
+    console.log(`[backup] off-site mirror updated: ${dest}`);
+    return { ok: true, dest };
+  } catch (e) {
+    try { fs.unlinkSync(tmp); } catch { /* ignore */ }
+    console.error('[backup] off-site mirror failed:', e instanceof Error ? e.message : e);
+    return { ok: false, reason: 'copy failed' };
+  }
+}
+
 
 
 
@@ -105,11 +166,14 @@ export async function runRollingBackupServer(): Promise<{ skipped: boolean; file
     return { skipped: true, reason: 'copy failed' };
   }
 
-  
+
   const updated = listSnapshots();
   for (const old of updated.slice(KEEP_BACKUPS)) {
     try { fs.unlinkSync(path.join(dir, old.name)); } catch {  }
   }
+
+  // Push the fresh (encrypted) snapshot off-site. Never blocks/fails the local backup.
+  await mirrorBackup(dest).catch(() => {});
 
   return { skipped: false, file: dest };
 }
@@ -123,10 +187,23 @@ let timer: NodeJS.Timeout | null = null;
 export function startBackupScheduler(): void {
   if (timer) return;
 
-  
+  if (MIRROR_DIR) {
+    console.log(`[backup] off-site mirror ON → ${MIRROR_DIR} (encrypted .db only, key NOT copied)`);
+  } else {
+    console.warn('[backup] ⚠  off-site mirror OFF — every backup is on the SAME disk as the DB. A disk failure or ransomware loses the database AND all backups. Set PROMIX_BACKUP_MIRROR_DIR to a 2nd drive, a NAS share, or a OneDrive/Google Drive synced folder.');
+  }
+
+
   runRollingBackupServer().then(r => {
-    if (r.skipped) console.log(`[backup] startup: skipped (${r.reason})`);
-    else            console.log(`[backup] startup: created ${r.file}`);
+    if (r.skipped) {
+      console.log(`[backup] startup: skipped (${r.reason})`);
+      // Even when a fresh local backup was skipped, make sure the latest snapshot
+      // is mirrored — so enabling the mirror copies off-site immediately.
+      const latest = listSnapshots()[0];
+      if (latest) mirrorBackup(path.join(backupDir(), latest.name)).catch(() => {});
+    } else {
+      console.log(`[backup] startup: created ${r.file}`);
+    }
   }).catch(e => console.error('[backup] startup failed:', e));
 
   

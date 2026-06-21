@@ -500,18 +500,18 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
                   {images.length > 0 && (
                     <div key={`imgs-${images.length}`} className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 stagger-in">
                       {images.map(a => (
-                        <div key={a.id} className="relative group rounded-xl border border-line/60 bg-surface-primary overflow-hidden">
+                        <div key={a.id} className="relative group rounded-xl border border-line/60 bg-surface-primary overflow-hidden surface-lift transition-smooth duration-150">
                           <button
                             onClick={() => setPreviewImage(a.data)}
                             title={a.filename || 'Vezi mărit'}
-                            className="block w-full aspect-square overflow-hidden hover:opacity-90"
+                            className="block w-full aspect-square overflow-hidden hover:opacity-90 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                           >
                             <img src={a.data} alt={a.filename ?? ''} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                           </button>
                           <button
                             onClick={() => removeAttachment(a)}
                             title="Șterge"
-                            className="absolute top-1.5 right-1.5 h-7 w-7 rounded-full bg-status-red/90 text-white opacity-0 group-hover:opacity-100 hover:bg-status-red flex items-center justify-center transition-opacity"
+                            className="absolute top-1.5 right-1.5 h-7 w-7 rounded-full bg-status-red/90 text-white opacity-0 group-hover:opacity-100 hover:bg-status-red flex items-center justify-center transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:opacity-100 focus-visible:shadow-[var(--ring-soft)]"
                           >
                             <Trash2 className="h-3 w-3" />
                           </button>
@@ -607,7 +607,7 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
                         if (e.key === 'Escape') { setUpdateOpen(false); setUpdateText(''); }
                       }}
                       placeholder="Noutăți pe lead: ce s-a discutat, în ce stadiu e oferta, următorii pași…"
-                      className="w-full rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm text-content-primary placeholder:text-content-muted focus:outline-none focus:border-accent/50 resize-y transition-smooth"
+                      className="w-full rounded-xl border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm text-content-primary placeholder:text-content-muted focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)] resize-y transition-smooth duration-150"
                     />
                     <div className="flex items-center justify-end gap-2 mt-2">
                       <Button
@@ -652,7 +652,7 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
                     onChange={e => setNoteText(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void addNote(); } }}
                     placeholder="Notă rapidă…"
-                    className="flex-1 h-9 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary placeholder:text-content-muted focus:outline-none focus:border-accent/50 transition-smooth"
+                    className="flex-1 min-w-0 h-9 rounded-xl border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary placeholder:text-content-muted focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150"
                   />
                   <Button size="md" onClick={addNote} disabled={!noteText.trim()} aria-label="Trimite nota">
                     <Send className="h-3.5 w-3.5" />
@@ -722,7 +722,7 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
                     <select
                       value={lead.status}
                       onChange={e => changeStatus(e.target.value)}
-                      className="w-full h-9 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary focus:outline-none focus:border-accent/50 transition-smooth"
+                      className="w-full h-9 rounded-xl border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150"
                     >
                       {LEAD_STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
@@ -762,7 +762,7 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
           <img src={previewImage} alt="Preview" className="max-w-[90vw] max-h-[90vh] object-contain shadow-2xl enter-scale" onClick={e => e.stopPropagation()} />
           <button
             onClick={() => setPreviewImage(null)}
-            className="absolute top-4 right-4 h-9 w-9 rounded-full bg-surface-primary/20 text-white hover:bg-surface-primary/30 flex items-center justify-center"
+            className="absolute top-4 right-4 h-9 w-9 rounded-full bg-surface-primary/20 text-white hover:bg-surface-primary/30 flex items-center justify-center transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
             aria-label="Închide"
           >
             <X className="h-5 w-5" />
@@ -827,12 +827,12 @@ function Field({
   return (
     <div>
       <dt className="text-pm-2xs uppercase tracking-wide text-content-muted">{label}</dt>
-      <dd className="text-pm-sm text-content-primary mt-0.5 flex items-center gap-1.5">
+      <dd className="text-pm-sm text-content-primary mt-1 flex items-center gap-1.5 min-w-0">
         {Icon && <Icon className="h-3 w-3 text-content-muted shrink-0" />}
         {value
           ? (href
-              ? <a href={href} className="hover:text-accent">{value}</a>
-              : <span>{value}</span>
+              ? <a href={href} className="truncate hover:text-accent transition-smooth duration-150 rounded-sm focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">{value}</a>
+              : <span className="truncate">{value}</span>
             )
           : <span className="text-content-muted italic">—</span>}
       </dd>

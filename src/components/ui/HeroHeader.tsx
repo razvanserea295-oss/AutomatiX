@@ -25,22 +25,20 @@ export default function HeroHeader({
 }: HeroHeaderProps) {
   return (
     <header
-      className={`surface-card surface-card-elevated rounded-xl px-8 py-7 min-h-[128px] flex flex-col justify-center border-l-2 border-line/70 ${className}`}
-      style={style}
+      className={`surface-card surface-card-elevated rounded-xl px-8 py-7 min-h-[128px] flex flex-col justify-center border-l-2 border-line/70 animate-slide-up ${className}`}
+      style={{ ...style, animationDuration: '300ms', animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
     >
       {breadcrumb && <div className="mb-3 text-pm-xs text-content-muted">{breadcrumb}</div>}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
         <div className="flex items-center gap-4 min-w-0">
           {Icon && (
-            <span className="h-14 w-14 rounded-2xl bg-surface-tertiary flex items-center justify-center shrink-0">
-              <Icon className="h-6 w-6 text-content-primary" />
-            </span>
+            <div className="h-14 w-14 rounded-2xl bg-accent/10 flex items-center justify-center shrink-0 border border-accent/20">
+              <Icon className="h-6 w-6 text-accent" />
+            </div>
           )}
           <div className="min-w-0">
-            {/* Eyebrow not rendered — it repeated the workspace name the breadcrumb
-                already shows. Prop kept in the interface for call-site compat. */}
             <h1 className="text-display-lg font-semibold text-content-primary truncate">{title}</h1>
-            {subtitle && <p className="mt-1.5 text-pm-sm text-content-muted">{subtitle}</p>}
+            {subtitle && <p className="mt-1.5 text-pm-sm text-content-secondary">{subtitle}</p>}
           </div>
         </div>
         {actions && <div className="flex items-center gap-2 shrink-0 self-start">{actions}</div>}

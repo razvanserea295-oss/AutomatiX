@@ -50,9 +50,9 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
     <aside
       className={cn(
         'absolute right-0 top-0 bottom-0 z-30',
-        'bg-surface-elevated border-l border-line',
+        'surface-glass-strong border-l border-line/60',
         'rounded-l-2xl shadow-[var(--elevation-4)]',
-        'flex flex-col anim-slide-up',
+        'flex flex-col anim-slide-in-right',
         sizeClasses[size],
       )}
       role="dialog"
@@ -61,13 +61,13 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
     >
       {}
       <div className="shrink-0 flex items-center justify-between gap-3 px-5 h-14 border-b border-line/70">
-        <h2 id="modal-title" className="text-pm-md font-semibold text-content-primary truncate">
+        <h2 id="modal-title" className="min-w-0 flex-1 text-pm-md font-semibold text-content-primary truncate">
           {title}
         </h2>
         <button
           type="button"
           onClick={onClose}
-          className="p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 cursor-pointer focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] hover:rotate-90"
+          className="inline-flex shrink-0 items-center justify-center p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary active:scale-95 transition-smooth duration-150 cursor-pointer focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] hover:rotate-90"
           aria-label="Închide"
         >
           <X className="w-4 h-4" />

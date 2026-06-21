@@ -43,14 +43,14 @@ export default function ColResizeHandle({ onResize, onResizeEnd }: Props) {
     <span
       onPointerDown={onPointerDown}
       onClick={(e) => e.stopPropagation()}
-      className="group absolute top-0 bottom-0 -right-px flex w-2 cursor-col-resize items-center justify-center bg-transparent transition-colors focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
+      className="group absolute top-0 bottom-0 -right-px flex w-2 cursor-col-resize items-center justify-center bg-transparent transition-colors duration-150 hover:bg-accent-muted active:bg-accent-muted focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
       role="separator"
       aria-orientation="vertical"
       aria-label="Redimensionează coloana"
     >
       <span
         aria-hidden
-        className="h-3.5 w-0.5 rounded-full bg-line transition-colors group-hover:bg-accent/60 group-active:bg-accent"
+        className="h-3.5 w-0.5 rounded-full bg-line transition-colors duration-150 group-hover:bg-accent/60 group-active:bg-accent"
       />
     </span>
   );

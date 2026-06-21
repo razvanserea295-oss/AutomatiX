@@ -51,7 +51,6 @@ import { flushSync } from 'react-dom';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
 import { getServerUrl, setServerUrl, testServerConnection, isServerMode } from '@/config/server';
-import { getAiServiceUrl, setAiServiceUrl, aiHealth } from '@/api/ai';
 import { toast } from '@/store/toastStore';
 import { useLocalStorage } from '@/components/enhancements';
 import AboutPanel from '@/components/settings/AboutPanel';
@@ -60,10 +59,18 @@ import AutoBackupPanel from '@/components/settings/AutoBackupPanel';
 import AvatarUpload from '@/components/settings/AvatarUpload';
 import HelpPanel from '@/components/settings/HelpPanel';
 import { useSetupStore } from '@/store/setupStore';
+import { useAccentStore } from '@/store/accentStore';
+import { useLayoutStore } from '@/store/layoutStore';
+import { useMotionStore } from '@/store/motionStore';
+import { useTextScaleStore } from '@/store/textScaleStore';
+import { useCardTransparencyStore } from '@/store/cardTransparencyStore';
+import { useUiModeStore } from '@/store/uiModeStore';
+import { useNavSyncStore } from '@/store/navSyncStore';
+import { useShellLayoutStore } from '@/store/shellLayoutStore';
 import {
   Settings, AlertCircle, Sun, Moon, Bell, User as UserIcon, Mail, Building2,
-  Server, Bot, ScrollText, Info, Database, Clock, Folder, RefreshCw, Shield, ShieldCheck,
-  Megaphone, Wrench, HelpCircle, ArrowRight,
+  Server, ScrollText, Info, Database, Clock, Folder, RefreshCw, Shield, ShieldCheck,
+  Megaphone, Wrench, HelpCircle, ArrowRight, Palette, RotateCcw,
 } from 'lucide-react';
 import BroadcastsAdminPanel from '@/components/settings/BroadcastsAdminPanel';
 import MaintenanceModePanel from '@/components/settings/MaintenanceModePanel';
@@ -85,12 +92,15 @@ import StatusBadge from '@/redesign/ui/StatusBadge';
 import EmptyState from '@/redesign/ui/EmptyState';
 import type { StatusTone } from '@/lib/statusTokens';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
+import LayoutPresetPicker from './LayoutPresetPicker';
+import Segmented from '@/redesign/ui/Segmented';
+import PageCustomizerWizard from './PageCustomizerWizard';
 
 
 
 
 
-type Section = 'aspect' | 'notificari' | 'cont' | 'email' | 'fiscal' | 'anunturi' | 'mentenanta' | 'server' | 'ai' | 'audit' | 'backup' | 'despre' | 'ajutor';
+type Section = 'aspect' | 'notificari' | 'cont' | 'email' | 'fiscal' | 'anunturi' | 'mentenanta' | 'server' | 'audit' | 'backup' | 'despre' | 'ajutor';
 
 interface CompanySettings {
   company_name: string; cui: string; reg_com: string;
@@ -126,7 +136,6 @@ const NAV_ITEMS: { id: Section; label: string; icon: typeof Settings; descriptio
   { id: 'mentenanta', label: 'Mod mentenanță',     icon: Wrench,     description: 'Blochează accesul non-admin',     group: 'companie'  },
   { id: 'audit',      label: 'Jurnal modificări',  icon: ScrollText, description: 'Audit log',                       group: 'companie'  },
   { id: 'server',     label: 'Server',             icon: Server,     description: 'Conexiune rețea',                 group: 'platforma' },
-  { id: 'ai',         label: 'AI Service',         icon: Bot,        description: 'Motor inteligență',               group: 'platforma' },
   { id: 'backup',     label: 'Backup',             icon: Database,   description: 'Copie de siguranță DB',           group: 'platforma' },
   { id: 'despre',     label: 'Despre',             icon: Info,       description: 'Versiune și licență',             group: 'platforma' },
   { id: 'ajutor',     label: 'Ajutor',             icon: HelpCircle, description: 'Ghid, FAQ și changelog',          group: 'platforma' },
@@ -161,7 +170,6 @@ export default function SettingsPage({ user, onThemeChange, currentTheme }: Sett
     if (item.id === 'anunturi') return r === 'admin';
     if (item.id === 'mentenanta') return r === 'admin';
     if (item.id === 'server')   return r === 'admin';
-    if (item.id === 'ai')       return r === 'admin';
     if (item.id === 'backup')   return r === 'admin';
     if (item.id === 'despre')   return r === 'admin';
     return true;
@@ -231,7 +239,7 @@ export default function SettingsPage({ user, onThemeChange, currentTheme }: Sett
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 enter-up" style={{ animationDelay: '120ms' }}>
           {}
           <nav className="lg:col-span-4 xl:col-span-3 flex min-h-0" aria-label="Secțiuni setări">
-            <Card padding="none" className="flex flex-col min-h-0 flex-1 overflow-hidden">
+            <Card padding="none" tone="flat" className="flex flex-col min-h-0 flex-1 overflow-hidden">
               <CardBody padding="sm" className="space-y-4 min-h-0 overflow-y-auto">
                 {GROUP_ORDER.map((grp) => {
                   const items = visibleNav.filter(n => n.group === grp);
@@ -251,10 +259,10 @@ export default function SettingsPage({ user, onThemeChange, currentTheme }: Sett
                               type="button"
                               onClick={() => selectSection(item.id)}
                               style={on ? ({ viewTransitionName: vtName('settings-rail', item.id) } as React.CSSProperties) : undefined}
-                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors relative ${
+                              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] relative ${
                                 on
                                   ? 'bg-accent-muted text-accent'
-                                  : 'text-content-secondary hover:bg-surface-tertiary/60 hover:text-content-primary'
+                                  : 'text-content-secondary hover:bg-surface-tertiary/60 hover:text-content-primary hover:translate-x-0.5'
                               }`}
                             >
                               {on && <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-accent anim-grow-y" />}
@@ -301,7 +309,6 @@ export default function SettingsPage({ user, onThemeChange, currentTheme }: Sett
                   {activeSection === 'anunturi' && <BroadcastsAdminPanel />}
                   {activeSection === 'mentenanta' && <MaintenanceModePanel />}
                   {activeSection === 'server' && <ServerSection />}
-                  {activeSection === 'ai' && <AiSection />}
                   {activeSection === 'audit' && <AuditLogPanel />}
                   {activeSection === 'backup' && <BackupSection />}
                   {activeSection === 'despre' && <AboutPanel user={user} />}
@@ -340,7 +347,7 @@ function SetupContinueBanner({ isAdmin }: { isAdmin: boolean }) {
     <button
       onClick={openWizard}
       title="Completează datele firmei, logo-ul și setările fiscale pentru documentele oficiale."
-      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-accent/30 bg-accent/8 text-accent text-pm-xs font-semibold hover:bg-accent/12 transition-colors whitespace-nowrap"
+      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full border border-accent/30 bg-accent/8 text-accent text-pm-xs font-semibold hover:bg-accent/12 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150 whitespace-nowrap"
     >
       <Building2 className="h-3.5 w-3.5 shrink-0" />
       Continuă setup inițial <ArrowRight className="h-3.5 w-3.5" />
@@ -374,14 +381,14 @@ function FieldRow({ label, hint, error, children }: {
   );
 }
 
-const inputCls = 'w-full bg-surface-primary border border-line rounded-md px-3 py-2 text-pm-sm text-content-primary placeholder:text-content-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/60 transition-colors';
+const inputCls = 'w-full bg-surface-primary border border-line rounded-xl px-3 py-2 text-pm-sm text-content-primary placeholder:text-content-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/60 transition-colors';
 
 function SaveBtn({ onClick, saving, saved, label = 'Salvează' }: {
   onClick: () => void; saving?: boolean; saved?: boolean; label?: string;
 }) {
   return (
     <button onClick={onClick} disabled={saving}
-      className="h-9 px-5 rounded-md bg-accent text-pm-sm font-semibold text-surface-primary hover:bg-accent/90 active:scale-[0.97] transition-all disabled:opacity-50">
+      className="inline-flex items-center justify-center h-9 px-5 rounded-xl bg-accent text-pm-sm font-semibold text-[var(--color-on-accent)] hover:bg-accent/90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150 disabled:pointer-events-none disabled:opacity-50">
       {saving ? 'Se salvează...' : saved ? 'Salvat ✓' : label}
     </button>
   );
@@ -389,11 +396,11 @@ function SaveBtn({ onClick, saving, saved, label = 'Salvează' }: {
 
 function StatusPill({ ok, message }: { ok: boolean; message: string }) {
   return (
-    <div className={`flex items-center gap-2 px-3.5 py-2 rounded-md text-pm-sm ${
+    <div className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-pm-sm anim-fade-slide-in ${
       ok ? 'bg-status-green/10 text-status-green' : 'bg-status-red/10 text-status-red'
     }`}>
       <span className={`h-2 w-2 rounded-full shrink-0 ${ok ? 'bg-status-green' : 'bg-status-red'}`} />
-      {message}
+      <span className="min-w-0 flex-1 truncate">{message}</span>
     </div>
   );
 }
@@ -402,14 +409,51 @@ function StatusPill({ ok, message }: { ok: boolean; message: string }) {
 
 
 
+// Curated accent presets (all saturated enough to read with white text). The
+// custom picker below covers anything else; `null` restores the theme default.
+const ACCENT_PRESETS = ['#2D5BE3', '#6D28D9', '#0E7490', '#0D9488', '#107E3E', '#E9730C', '#E11D48', '#DB2777'];
+
 function AspectSection({ currentTheme, onThemeChange }: { currentTheme: 'light' | 'dark'; onThemeChange: (t: 'light' | 'dark') => void }) {
   const themes = [
     { id: 'light' as const, label: 'Luminos', hint: 'Canvas alb, contrast aerisit', Icon: Sun },
     { id: 'dark' as const, label: 'Întunecat', hint: 'Industrial, coerent cu shell-ul', Icon: Moon },
   ];
 
+  const accent = useAccentStore(s => s.accent);
+  const setAccent = useAccentStore(s => s.setAccent);
+  const density = useLayoutStore(s => s.density);
+  const setDensity = useLayoutStore(s => s.setDensity);
+  const motion = useMotionStore(s => s.motion);
+  const setMotion = useMotionStore(s => s.setMotion);
+  const scale = useTextScaleStore(s => s.scale);
+  const setScale = useTextScaleStore(s => s.setScale);
+  const cardTransparency = useCardTransparencyStore(s => s.cardTransparency);
+  const setCardTransparency = useCardTransparencyStore(s => s.setCardTransparency);
+  const navSync = useNavSyncStore(s => s.navSync);
+  const setNavSync = useNavSyncStore(s => s.setNavSync);
+  const shellLayout = useShellLayoutStore(s => s.layout);
+  const setShellLayout = useShellLayoutStore(s => s.setLayout);
+  const uiMode = useUiModeStore(s => s.mode);
+  const setUiMode = useUiModeStore(s => s.setMode);
+  const [wizardOpen, setWizardOpen] = useState(false);
+
   return (
     <SectionGroup>
+      {/* Interface switch — Modern (this SaaS UI) vs SAP Fiori (UI5). Applies
+          immediately: Root re-mounts the selected presentation layer. */}
+      <div className="mb-5 border-b border-line/60 pb-5">
+        <p className="text-pm-sm font-semibold text-content-primary">Interfață</p>
+        <p className="mb-3 text-pm-xs text-content-muted">
+          Modern este interfața curentă. Fiori folosește componente SAP UI5 (Horizon) — se aplică imediat.
+        </p>
+        <Segmented
+          ariaLabel="Interfață"
+          value={uiMode}
+          onChange={setUiMode}
+          options={[{ id: 'saas', label: 'Modern' }, { id: 'fiori', label: 'Fiori (SAP)' }]}
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         {themes.map(t => {
           const active = currentTheme === t.id;
@@ -417,10 +461,10 @@ function AspectSection({ currentTheme, onThemeChange }: { currentTheme: 'light' 
             <button
               key={t.id}
               onClick={() => onThemeChange(t.id)}
-              className={`relative text-left rounded-lg border-2 p-4 transition-all ${
+              className={`relative text-left rounded-xl border-2 p-4 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                 active
                   ? 'border-accent bg-accent/5'
-                  : 'border-line bg-surface-primary hover:border-accent/40'
+                  : 'border-line bg-surface-primary hover:border-accent/40 hover:bg-surface-tertiary/40'
               }`}
             >
               <div className="flex items-center gap-3 mb-2">
@@ -429,11 +473,281 @@ function AspectSection({ currentTheme, onThemeChange }: { currentTheme: 'light' 
               </div>
               <p className="text-pm-xs text-content-muted">{t.hint}</p>
               {active && (
-                <span className="absolute top-3 right-3 h-2.5 w-2.5 rounded-full bg-accent" />
+                <span className="absolute top-3 right-3 h-2.5 w-2.5 rounded-full bg-accent anim-scale-in" />
               )}
             </button>
           );
         })}
+      </div>
+
+      {/* Accent colour picker — overrides --color-accent (applies in both themes) */}
+      <div className="mt-5 border-t border-line/60 pt-5">
+        <p className="text-pm-sm font-semibold text-content-primary">Culoare accent</p>
+        <p className="mb-3 text-pm-xs text-content-muted">Culoarea principală a interfeței — butoane, linkuri, stări active.</p>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {ACCENT_PRESETS.map(c => {
+            const active = (accent ?? '').toLowerCase() === c.toLowerCase();
+            return (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setAccent(c)}
+                aria-label={`Accent ${c}`}
+                title={c}
+                style={{ backgroundColor: c }}
+                className={`h-7 w-7 rounded-full ring-2 ring-offset-2 ring-offset-surface-primary transition-smooth duration-150 focus-visible:outline-none ${
+                  active ? 'ring-content-primary scale-110' : 'ring-transparent hover:scale-110'
+                }`}
+              />
+            );
+          })}
+
+          {/* Custom colour */}
+          <label
+            title="Culoare personalizată"
+            className="relative grid h-7 w-7 cursor-pointer place-items-center overflow-hidden rounded-full border border-line bg-surface-secondary transition-smooth duration-150 hover:border-accent/50"
+          >
+            <Palette className="h-3.5 w-3.5 text-content-muted" />
+            <input
+              type="color"
+              value={accent ?? '#2D5BE3'}
+              onChange={(e) => setAccent(e.target.value)}
+              aria-label="Culoare accent personalizată"
+              className="absolute inset-0 cursor-pointer opacity-0"
+            />
+          </label>
+
+          {/* Reset to the theme default accent */}
+          {accent && (
+            <button
+              type="button"
+              onClick={() => setAccent(null)}
+              className="ml-1 inline-flex h-7 items-center gap-1.5 rounded-full border border-line px-3 text-pm-xs font-medium text-content-secondary transition-smooth duration-150 hover:bg-surface-tertiary/50 active:scale-[0.98]"
+            >
+              <RotateCcw className="h-3 w-3" /> Implicit
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Density */}
+      <div className="mt-5 border-t border-line/60 pt-5">
+        <p className="text-pm-sm font-semibold text-content-primary">Densitate</p>
+        <p className="mb-3 text-pm-xs text-content-muted">Cât de compact e afișat conținutul — tabele, navigare.</p>
+        <Segmented
+          ariaLabel="Densitate"
+          value={density}
+          onChange={setDensity}
+          options={[{ id: 'comfortable', label: 'Confortabil' }, { id: 'compact', label: 'Compact' }]}
+        />
+      </div>
+
+      {/* Motion */}
+      <div className="mt-5 border-t border-line/60 pt-5">
+        <p className="text-pm-sm font-semibold text-content-primary">Animații</p>
+        <p className="mb-3 text-pm-xs text-content-muted">Reduce tranzițiile de pagină și animațiile din interfață.</p>
+        <Segmented
+          ariaLabel="Animații"
+          value={motion}
+          onChange={setMotion}
+          options={[{ id: 'full', label: 'Activate' }, { id: 'reduced', label: 'Reduse' }]}
+        />
+      </div>
+
+      {/* Text scale */}
+      <div className="mt-5 border-t border-line/60 pt-5">
+        <p className="text-pm-sm font-semibold text-content-primary">Scală text</p>
+        <p className="mb-3 text-pm-xs text-content-muted">Mărimea textului și a întregii interfețe.</p>
+        <Segmented
+          ariaLabel="Scală text"
+          value={scale}
+          onChange={setScale}
+          options={[{ id: 'small', label: 'Mic' }, { id: 'normal', label: 'Normal' }, { id: 'large', label: 'Mare' }]}
+        />
+      </div>
+
+      {/* Nav sync */}
+      <div className="mt-5 border-t border-line/60 pt-5">
+        <p className="text-pm-sm font-semibold text-content-primary">Culoare bară navigare</p>
+        <p className="mb-3 text-pm-xs text-content-muted">Sincronizează bara de workspace cu culoarea închisă a barei de titlu.</p>
+        <Segmented
+          ariaLabel="Culoare bară navigare"
+          value={navSync}
+          onChange={setNavSync}
+          options={[{ id: 'off', label: 'Luminoasă' }, { id: 'on', label: 'Sincronizată' }]}
+        />
+      </div>
+
+      {/* Card transparency */}
+      <div className="mt-5 border-t border-line/60 pt-5">
+        <p className="text-pm-sm font-semibold text-content-primary">Fundal carduri</p>
+        <p className="mb-3 text-pm-xs text-content-muted">Elimină fundalul cardurilor — utile când ai un wallpaper cu accent vizibil.</p>
+        <Segmented
+          ariaLabel="Fundal carduri"
+          value={cardTransparency}
+          onChange={setCardTransparency}
+          options={[{ id: 'default', label: 'Normal' }, { id: 'transparent', label: 'Transparent' }, { id: 'ghost', label: 'Invizibil' }]}
+        />
+      </div>
+    
+
+      {/* ── Layout & Shell ────────────────────────────────────────────────────── */}
+      <div className="mt-6 border-t-2 border-line pt-5">
+        <p className="mb-1 text-pm-2xs font-bold uppercase tracking-widest text-content-muted">Layout &amp; Shell</p>
+        <p className="mb-4 text-pm-xs text-content-muted">Preset rapid sau ajustare individuală.</p>
+
+        <LayoutPresetPicker />
+
+        {shellLayout.layoutPreset === 'custom' && (
+          <p className="mt-3 text-center text-pm-2xs text-content-muted/60 italic">— preset personalizat —</p>
+        )}
+
+        {/* ── Personalizare pe pagină (wizard) ── */}
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-line bg-surface-secondary/60 p-3">
+          <div className="min-w-0">
+            <p className="text-pm-sm font-semibold text-content-primary">Personalizare pe pagină</p>
+            <p className="text-pm-xs text-content-muted">Reglează separat aspectul cardurilor pentru fiecare pagină.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setWizardOpen(true)}
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-accent px-3.5 py-2 text-pm-sm font-semibold text-on-accent hover:brightness-110 transition-smooth active:scale-[0.98]"
+          >
+            <Palette className="h-4 w-4" /> Deschide
+          </button>
+        </div>
+        {wizardOpen && <PageCustomizerWizard onClose={() => setWizardOpen(false)} />}
+
+        {/* ── Structură shell ── */}
+        <div className="mt-5 border-t border-line/60 pt-4">
+          <p className="mb-4 text-pm-2xs font-semibold uppercase tracking-widest text-content-muted/60">Structură shell</p>
+
+          <div>
+            <p className="text-pm-sm font-semibold text-content-primary">Înălțime bară navigare</p>
+            <p className="mb-3 text-pm-xs text-content-muted">Spațiu vertical al barei orizontale de workspace.</p>
+            <Segmented
+              ariaLabel="Înălțime navbar"
+              value={shellLayout.navbarHeight}
+              onChange={v => setShellLayout({ navbarHeight: v as 'compact' | 'normal' | 'relaxed' })}
+              options={[{ id: 'compact', label: 'Compactă' }, { id: 'normal', label: 'Normală' }, { id: 'relaxed', label: 'Spațioasă' }]}
+            />
+          </div>
+
+          <div className="mt-5 border-t border-line/60 pt-5">
+            <p className="text-pm-sm font-semibold text-content-primary">Bară titlu</p>
+            <p className="mb-3 text-pm-xs text-content-muted">Ascunde bara superioară (logo, căutare, avatar). Poți reveni din Setări → Aspect.</p>
+            <Segmented
+              ariaLabel="Bară titlu"
+              value={shellLayout.titlebar}
+              onChange={v => setShellLayout({ titlebar: v as 'on' | 'off' })}
+              options={[{ id: 'on', label: 'Vizibilă' }, { id: 'off', label: 'Ascunsă' }]}
+            />
+          </div>
+
+          <div className="mt-5 border-t border-line/60 pt-5">
+            <p className="text-pm-sm font-semibold text-content-primary">Bară de stare</p>
+            <p className="mb-3 text-pm-xs text-content-muted">Rândul de jos cu ceas, utilizator şi status conexiune.</p>
+            <Segmented
+              ariaLabel="Bară de stare"
+              value={shellLayout.statusBar}
+              onChange={v => setShellLayout({ statusBar: v as 'on' | 'off' })}
+              options={[{ id: 'on', label: 'Vizibilă' }, { id: 'off', label: 'Ascunsă' }]}
+            />
+          </div>
+
+          <div className="mt-5 border-t border-line/60 pt-5">
+            <p className="text-pm-sm font-semibold text-content-primary">Antet pagină</p>
+            <p className="mb-3 text-pm-xs text-content-muted">Titlul mare şi iconița din capul fiecărei pagini.</p>
+            <Segmented
+              ariaLabel="Antet pagină"
+              value={shellLayout.heroMode}
+              onChange={v => setShellLayout({ heroMode: v as 'full' | 'compact' | 'hidden' })}
+              options={[{ id: 'full', label: 'Complet' }, { id: 'compact', label: 'Compact' }, { id: 'hidden', label: 'Ascuns' }]}
+            />
+          </div>
+
+          <div className="mt-5 border-t border-line/60 pt-5">
+            <p className="text-pm-sm font-semibold text-content-primary">Poziție notificări</p>
+            <p className="mb-3 text-pm-xs text-content-muted">Unde apar mesajele pop-up (toast) pe ecran.</p>
+            <Segmented
+              ariaLabel="Poziție notificări toast"
+              value={shellLayout.toastPos}
+              onChange={v => setShellLayout({ toastPos: v as 'bottom-right' | 'top-right' | 'bottom-center' })}
+              options={[{ id: 'bottom-right', label: 'Jos·dreapta' }, { id: 'top-right', label: 'Sus·dreapta' }, { id: 'bottom-center', label: 'Jos·centru' }]}
+            />
+          </div>
+
+          <div className="mt-5 border-t border-line/60 pt-5">
+            <p className="text-pm-sm font-semibold text-content-primary">Spațiu între secțiuni</p>
+            <p className="mb-3 text-pm-xs text-content-muted">Distanța verticală dintre cardurile dintr-o pagină.</p>
+            <Segmented
+              ariaLabel="Spațiu între secțiuni"
+              value={shellLayout.sectionGap}
+              onChange={v => setShellLayout({ sectionGap: v as 'tight' | 'normal' | 'relaxed' })}
+              options={[{ id: 'tight', label: 'Strâns' }, { id: 'normal', label: 'Normal' }, { id: 'relaxed', label: 'Aerisit' }]}
+            />
+          </div>
+        </div>
+
+        {/* ── Aspect vizual ── */}
+        <div className="mt-5 border-t border-line/60 pt-4">
+          <p className="mb-4 text-pm-2xs font-semibold uppercase tracking-widest text-content-muted/60">Aspect vizual</p>
+
+          <div>
+            <p className="text-pm-sm font-semibold text-content-primary">Umbra carduri</p>
+            <p className="mb-3 text-pm-xs text-content-muted">Intensitatea umbrei sub carduri și panouri.</p>
+            <Segmented
+              ariaLabel="Umbra carduri"
+              value={shellLayout.cardShadow}
+              onChange={v => setShellLayout({ cardShadow: v as 'none' | 'subtle' | 'normal' | 'dramatic' })}
+              options={[{ id: 'none', label: 'Fără' }, { id: 'subtle', label: 'Subtilă' }, { id: 'normal', label: 'Normală' }, { id: 'dramatic', label: 'Pronunțată' }]}
+            />
+          </div>
+
+          <div className="mt-5 border-t border-line/60 pt-5">
+            <p className="text-pm-sm font-semibold text-content-primary">Borduri</p>
+            <p className="mb-3 text-pm-xs text-content-muted">Vizibilitatea liniilor de separare dintre suprafețe.</p>
+            <Segmented
+              ariaLabel="Borduri"
+              value={shellLayout.borderVis}
+              onChange={v => setShellLayout({ borderVis: v as 'hidden' | 'subtle' | 'normal' })}
+              options={[{ id: 'hidden', label: 'Ascunse' }, { id: 'subtle', label: 'Subtile' }, { id: 'normal', label: 'Normale' }]}
+            />
+          </div>
+
+          <div className="mt-5 border-t border-line/60 pt-5">
+            <p className="text-pm-sm font-semibold text-content-primary">Lățime conținut</p>
+            <p className="mb-3 text-pm-xs text-content-muted">Lățimea maximă a coloanei de conținut pe ecrane mari.</p>
+            <Segmented
+              ariaLabel="Lățime conținut"
+              value={shellLayout.contentWidth}
+              onChange={v => setShellLayout({ contentWidth: v as 'narrow' | 'normal' | 'full' })}
+              options={[{ id: 'narrow', label: 'Îngustă' }, { id: 'normal', label: 'Normală' }, { id: 'full', label: 'Toată' }]}
+            />
+          </div>
+
+          <div className="mt-5 border-t border-line/60 pt-5">
+            <p className="text-pm-sm font-semibold text-content-primary">Colțuri carduri</p>
+            <p className="mb-3 text-pm-xs text-content-muted">Rotunjirea colțurilor pentru toate cardurile şi panourile.</p>
+            <Segmented
+              ariaLabel="Colțuri carduri"
+              value={shellLayout.cardRadius}
+              onChange={v => setShellLayout({ cardRadius: v as 'sharp' | 'normal' | 'rounded' })}
+              options={[{ id: 'sharp', label: 'Drepte' }, { id: 'normal', label: 'Normale' }, { id: 'rounded', label: 'Rotunde' }]}
+            />
+          </div>
+
+          <div className="mt-5 border-t border-line/60 pt-5">
+            <p className="text-pm-sm font-semibold text-content-primary">Spațiere carduri</p>
+            <p className="mb-3 text-pm-xs text-content-muted">Spațiul interior (padding) din cardurile cu conținut.</p>
+            <Segmented
+              ariaLabel="Spațiere carduri"
+              value={shellLayout.cardPadding}
+              onChange={v => setShellLayout({ cardPadding: v as 'tight' | 'normal' | 'loose' })}
+              options={[{ id: 'tight', label: 'Strânsă' }, { id: 'normal', label: 'Normală' }, { id: 'loose', label: 'Lejeră' }]}
+            />
+          </div>
+        </div>
       </div>
     </SectionGroup>
   );
@@ -600,7 +914,7 @@ function ContSection({ user }: { user: User | null }) {
           {}
           {fields.map((f) => (
             <FieldRow key={f.label} label={f.label}>
-              <div className="rounded-md border border-line bg-surface-primary px-3 py-2 text-pm-sm text-content-primary">
+              <div className="rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-sm text-content-primary truncate" title={f.value}>
                 {f.value}
               </div>
             </FieldRow>
@@ -681,7 +995,7 @@ function TwoFactorPanel({ user }: { user: User | null }) {
 
   return (
     <SectionGroup title="Verificare în doi pași (2FA)">
-      <div className="border border-line rounded-md bg-surface-primary p-4 space-y-4">
+      <div className="border border-line rounded-xl bg-surface-primary p-4 space-y-4">
         <div className="flex items-start gap-3">
           {enabled
             ? <ShieldCheck className="h-5 w-5 text-status-green shrink-0 mt-0.5" />
@@ -698,28 +1012,28 @@ function TwoFactorPanel({ user }: { user: User | null }) {
 
         {step === 'idle' && !enabled && (
           <button onClick={startEnrollment} disabled={busy}
-            className="h-9 px-5 rounded-md bg-accent text-pm-sm font-semibold text-surface-primary hover:bg-accent/90 disabled:opacity-50">
+            className="inline-flex items-center justify-center h-9 px-5 rounded-xl bg-accent text-pm-sm font-semibold text-[var(--color-on-accent)] hover:bg-accent/90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150 disabled:pointer-events-none disabled:opacity-50">
             {busy ? 'Se inițiază...' : 'Activează 2FA'}
           </button>
         )}
 
         {step === 'idle' && enabled && (
           <button onClick={() => setStep('disable')}
-            className="h-9 px-5 rounded-md border border-status-red/40 bg-status-red/5 text-pm-sm font-semibold text-status-red hover:bg-status-red/10">
+            className="inline-flex items-center justify-center h-9 px-5 rounded-xl border border-status-red/40 bg-status-red/5 text-pm-sm font-semibold text-status-red hover:bg-status-red/10 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150">
             Dezactivează 2FA
           </button>
         )}
 
         {step === 'setup' && secret && otpUrl && (
-          <div className="space-y-3 border-t border-line/60 pt-3">
+          <div className="space-y-3 border-t border-line/60 pt-3 anim-fade-slide-in">
             <p className="text-pm-sm text-content-secondary">
               <strong>Pasul 1.</strong> Adaugă acest cont în aplicația ta de autentificare. Scanează QR-ul (sau introdu manual cheia).
             </p>
-            <div className="bg-white p-3 rounded-md inline-block">
+            <div className="bg-white p-3 rounded-xl inline-block anim-scale-in">
               <img alt="QR 2FA" src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(otpUrl)}`} width={180} height={180} />
             </div>
             <FieldRow label="Cheie (manual)" hint="Dacă nu poți scana QR, introdu cheia direct în aplicație">
-              <code className="block font-mono text-pm-xs bg-surface-tertiary border border-line rounded p-2 select-all break-all">{secret}</code>
+              <code className="block font-mono text-pm-xs bg-surface-tertiary border border-line rounded-lg p-2 select-all break-all">{secret}</code>
             </FieldRow>
             <FieldRow label="Pasul 2. Cod curent (6 cifre)" hint="Introdu codul afișat în aplicație pentru a confirmă">
               <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -728,11 +1042,11 @@ function TwoFactorPanel({ user }: { user: User | null }) {
             </FieldRow>
             <div className="flex gap-2">
               <button onClick={() => { setStep('idle'); setCode(''); setSecret(null); setOtpUrl(null); }}
-                className="h-9 px-4 rounded-md border border-line text-pm-sm text-content-secondary hover:bg-surface-tertiary">
+                className="inline-flex items-center justify-center h-9 px-4 rounded-xl border border-line text-pm-sm text-content-secondary hover:bg-surface-tertiary hover:text-content-primary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150">
                 Anulează
               </button>
               <button onClick={confirmEnrollment} disabled={busy || code.length !== 6}
-                className="h-9 px-5 rounded-md bg-accent text-pm-sm font-semibold text-surface-primary hover:bg-accent/90 disabled:opacity-50">
+                className="inline-flex items-center justify-center h-9 px-5 rounded-xl bg-accent text-pm-sm font-semibold text-[var(--color-on-accent)] hover:bg-accent/90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150 disabled:pointer-events-none disabled:opacity-50">
                 {busy ? 'Se confirmă...' : 'Confirmă activarea'}
               </button>
             </div>
@@ -740,7 +1054,7 @@ function TwoFactorPanel({ user }: { user: User | null }) {
         )}
 
         {step === 'disable' && (
-          <div className="space-y-3 border-t border-line/60 pt-3">
+          <div className="space-y-3 border-t border-line/60 pt-3 anim-fade-slide-in">
             <FieldRow label="Cod curent (6 cifre)" hint="Introdu codul curent ca să confirmi că ești tu">
               <input value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 inputMode="numeric" placeholder="000000" maxLength={6}
@@ -748,11 +1062,11 @@ function TwoFactorPanel({ user }: { user: User | null }) {
             </FieldRow>
             <div className="flex gap-2">
               <button onClick={() => { setStep('idle'); setCode(''); }}
-                className="h-9 px-4 rounded-md border border-line text-pm-sm text-content-secondary hover:bg-surface-tertiary">
+                className="inline-flex items-center justify-center h-9 px-4 rounded-xl border border-line text-pm-sm text-content-secondary hover:bg-surface-tertiary hover:text-content-primary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150">
                 Anulează
               </button>
               <button onClick={disable} disabled={busy || code.length !== 6}
-                className="h-9 px-5 rounded-md bg-status-red text-pm-sm font-semibold text-white hover:bg-status-red/90 disabled:opacity-50">
+                className="inline-flex items-center justify-center h-9 px-5 rounded-xl bg-status-red text-pm-sm font-semibold text-white hover:bg-status-red/90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150 disabled:pointer-events-none disabled:opacity-50">
                 {busy ? 'Se dezactivează...' : 'Confirmă dezactivarea'}
               </button>
             </div>
@@ -843,22 +1157,22 @@ function ServerSection() {
             </div>
             {serverRunning ? (
               <button onClick={handleStopServer} disabled={serverLoading}
-                className="h-8 px-4 rounded-md border border-status-red/30 text-pm-xs font-semibold text-status-red hover:bg-status-red/8 disabled:opacity-50 transition-colors">
+                className="inline-flex items-center justify-center h-8 px-4 rounded-xl border border-status-red/30 text-pm-xs font-semibold text-status-red hover:bg-status-red/8 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50 transition-smooth duration-150">
                 Oprește
               </button>
             ) : (
               <div className="flex items-center gap-2">
                 <input type="number" value={serverPort} onChange={e => setServerPort(e.target.value)}
-                  className="w-20 bg-surface-secondary border border-line rounded-md px-2.5 py-1.5 text-pm-sm text-content-primary tabular-nums" />
+                  className="w-20 bg-surface-secondary border border-line rounded-xl px-2.5 py-1.5 text-pm-sm text-content-primary tabular-nums focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/60 transition-colors" />
                 <button onClick={handleStartServer} disabled={serverLoading}
-                  className="h-8 px-4 rounded-md bg-accent text-pm-xs font-semibold text-surface-primary hover:bg-accent/90 disabled:opacity-50 transition-colors">
+                  className="inline-flex items-center justify-center h-8 px-4 rounded-xl bg-accent text-pm-xs font-semibold text-[var(--color-on-accent)] hover:bg-accent/90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50 transition-smooth duration-150">
                   {serverLoading ? 'Se pornește...' : 'Pornește'}
                 </button>
               </div>
             )}
           </div>
           {serverRunning && localIp && (
-            <div className="p-3 rounded-md bg-surface-secondary border border-line/60">
+            <div className="p-3 rounded-xl bg-surface-secondary border border-line/60 anim-fade-slide-in">
               <p className="text-pm-2xs text-content-muted mb-1">Link pentru utilizatori:</p>
               <code className="text-pm-sm font-mono text-accent select-all cursor-pointer">
                 http://{localIp}:{serverPort}
@@ -876,14 +1190,14 @@ function ServerSection() {
             <input type="text" value={url} onChange={e => { setUrl(e.target.value); setSaved(false); }}
               placeholder="http://192.168.1.100:3500" className={inputCls} />
             <button onClick={handleTest} disabled={testing}
-              className="shrink-0 h-9 px-4 rounded-md bg-accent text-pm-sm font-semibold text-surface-primary hover:bg-accent/90 disabled:opacity-50">
+              className="inline-flex items-center justify-center shrink-0 h-9 px-4 rounded-xl bg-accent text-pm-sm font-semibold text-[var(--color-on-accent)] hover:bg-accent/90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150 disabled:pointer-events-none disabled:opacity-50">
               {testing ? 'Testez...' : 'Testează'}
             </button>
           </div>
         </FieldRow>
 
         {url.startsWith('http://') && !/(localhost|127\.0\.0\.1|192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(url) && (
-          <div className="flex items-start gap-2 p-3 rounded-md bg-status-amber/8 border border-status-amber/20">
+          <div className="flex items-start gap-2 p-3 rounded-xl bg-status-amber/8 border border-status-amber/20 anim-fade-slide-in">
             <AlertCircle className="h-4 w-4 text-status-amber shrink-0 mt-0.5" />
             <p className="text-pm-xs text-content-secondary">URL public fără HTTPS — traficul circulă necriptat.</p>
           </div>
@@ -895,7 +1209,7 @@ function ServerSection() {
           <SaveBtn onClick={handleSave} saved={saved} />
           {isServerMode() && (
             <button onClick={handleDisconnect}
-              className="h-9 px-4 rounded-md border border-status-red/30 text-pm-sm font-medium text-status-red hover:bg-status-red/8 transition-colors">
+              className="inline-flex items-center justify-center h-9 px-4 rounded-xl border border-status-red/30 text-pm-sm font-medium text-status-red hover:bg-status-red/8 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150">
               Deconectează
             </button>
           )}
@@ -913,126 +1227,6 @@ function ServerSection() {
   );
 }
 
-
-
-
-
-function AiSection() {
-  const [url, setUrl] = useState(getAiServiceUrl());
-  const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
-  const [testing, setTesting] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [processState, setProcessState] = useState<{ running: boolean; pid: number | null; exe: string | null }>({ running: false, pid: null, exe: null });
-  const [starting, setStarting] = useState(false);
-  const isElectron = typeof window !== 'undefined' && 'electron' in window;
-
-  useEffect(() => {
-    if (!isElectron) return;
-    const check = () => { window.electron.invoke('ai_service_status').then((raw: unknown) => setProcessState(raw as { running: boolean; pid: number | null; exe: string | null })).catch(() => {}); };
-    check();
-    const id = setInterval(check, 5000);
-    return () => clearInterval(id);
-  }, [isElectron]);
-
-  const handleStart = useCallback(async () => {
-    if (!isElectron) return;
-    setStarting(true);
-    try {
-      const result = await window.electron.invoke('ai_service_start') as { ok?: boolean; message?: string; pid?: number | null };
-      if (result.ok) { setProcessState({ running: true, pid: result.pid ?? null, exe: processState.exe }); toast.success(result.message ?? ''); }
-      else toast.error(result.message ?? 'Eroare');
-    } catch (e) { toast.error(e instanceof Error ? getErrorMessage(e) : 'Eroare'); }
-    setStarting(false);
-  }, [isElectron, processState.exe]);
-
-  const handleStop = useCallback(async () => {
-    if (!isElectron) return;
-    try {
-      const result = await window.electron.invoke('ai_service_stop') as { ok?: boolean; message?: string };
-      setProcessState({ running: false, pid: null, exe: processState.exe }); toast.success(result.message ?? '');
-    } catch (e) { toast.error(e instanceof Error ? getErrorMessage(e) : 'Eroare'); }
-  }, [isElectron, processState.exe]);
-
-  const handleTest = useCallback(async () => {
-    setTesting(true); setStatus(null);
-    try {
-      const ok = await aiHealth();
-      setStatus(ok ? { ok: true, message: 'Conectat la AI Service' } : { ok: false, message: 'AI Service nu răspunde' });
-    } catch { setStatus({ ok: false, message: 'Nu se poate conecta' }); }
-    setTesting(false);
-  }, []);
-
-  const handleSave = useCallback(() => {
-    try {
-      setAiServiceUrl(url);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'URL nepermis pentru AI service'));
-    }
-  }, [url]);
-  const handleReset = useCallback(() => { setAiServiceUrl(''); setUrl(getAiServiceUrl()); setSaved(true); setTimeout(() => setSaved(false), 2000); }, []);
-
-  return (
-    <div className="space-y-6">
-      {}
-      {isElectron && (
-        <div className="rounded-lg border border-line bg-surface-primary p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className={`h-3 w-3 rounded-full ${processState.running ? 'bg-status-green' : 'bg-content-muted/40'}`} />
-              <div>
-                <p className="text-pm-sm font-semibold text-content-primary">
-                  {processState.running ? 'AI Service activ' : 'AI Service oprit'}
-                </p>
-                {processState.running && processState.pid && (
-                  <p className="text-pm-2xs text-content-muted tabular-nums">PID {processState.pid}</p>
-                )}
-              </div>
-            </div>
-            {processState.running ? (
-              <button onClick={handleStop}
-                className="h-8 px-4 rounded-md border border-status-red/30 text-pm-xs font-semibold text-status-red hover:bg-status-red/8 transition-colors">
-                Oprește
-              </button>
-            ) : (
-              <button onClick={handleStart} disabled={starting}
-                className="h-8 px-4 rounded-md bg-status-green text-pm-xs font-semibold text-white hover:opacity-90 disabled:opacity-50 transition-colors">
-                {starting ? 'Se pornește...' : 'Pornește AI'}
-              </button>
-            )}
-          </div>
-          {processState.exe && <p className="text-pm-2xs text-content-muted font-mono mt-3 truncate">{processState.exe}</p>}
-          {!processState.exe && !processState.running && (
-            <p className="text-pm-2xs text-status-amber mt-3">ai-service.exe nu a fost găsit.</p>
-          )}
-        </div>
-      )}
-
-      {}
-      <SectionGroup title="Conexiune">
-        <FieldRow label="URL AI Service">
-          <div className="flex gap-2">
-            <input type="text" value={url} onChange={e => { setUrl(e.target.value); setSaved(false); }}
-              placeholder="http://localhost:8100" className={inputCls} />
-            <button onClick={handleTest} disabled={testing}
-              className="shrink-0 h-9 px-4 rounded-md bg-accent text-pm-sm font-semibold text-surface-primary hover:bg-accent/90 disabled:opacity-50">
-              {testing ? 'Testez...' : 'Testează'}
-            </button>
-          </div>
-        </FieldRow>
-        {status && <StatusPill ok={status.ok} message={status.message} />}
-        <div className="flex gap-2">
-          <SaveBtn onClick={handleSave} saved={saved} />
-          <button onClick={handleReset}
-            className="h-9 px-4 rounded-md border border-line text-pm-sm font-medium text-content-secondary hover:bg-surface-tertiary transition-colors">
-            Resetare
-          </button>
-        </div>
-      </SectionGroup>
-    </div>
-  );
-}
 
 
 
@@ -1133,7 +1327,7 @@ function BackupSection() {
 
   if (err) {
     return (
-      <div className="rounded-md bg-status-red/10 border border-status-red/30 px-4 py-3 text-pm-sm text-status-red">
+      <div className="rounded-xl bg-status-red/10 border border-status-red/30 px-4 py-3 text-pm-sm text-status-red anim-fade-slide-in">
         {err}
       </div>
     );
@@ -1178,16 +1372,16 @@ function BackupSection() {
           <button
             onClick={runNow}
             disabled={running}
-            className="h-9 px-5 rounded-md bg-accent text-pm-sm font-semibold text-surface-primary hover:bg-accent/90 active:scale-[0.97] transition-all disabled:opacity-50 flex items-center gap-2"
+            className="inline-flex items-center justify-center gap-2 h-9 px-5 rounded-xl bg-accent text-pm-sm font-semibold text-[var(--color-on-accent)] hover:bg-accent/90 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150 disabled:pointer-events-none disabled:opacity-50"
           >
-            <Database className="h-4 w-4" />
+            <Database className="h-4 w-4 shrink-0" />
             {running ? 'Se face backup...' : 'Backup acum'}
           </button>
           <button
             onClick={refresh}
-            className="h-9 px-4 rounded-md border border-line text-pm-sm text-content-secondary hover:bg-surface-tertiary/60 hover:text-content-primary transition-colors flex items-center gap-2"
+            className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-xl border border-line text-pm-sm text-content-secondary hover:bg-surface-tertiary/60 hover:text-content-primary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] transition-smooth duration-150"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4 shrink-0" />
             Actualizează
           </button>
         </div>
@@ -1206,7 +1400,7 @@ function BackupSection() {
             description="Apasă „Backup acum” pentru a crea prima copie de siguranță a bazei de date."
           />
         ) : (
-          <div className="border border-line rounded-md overflow-hidden">
+          <div className="border border-line rounded-xl overflow-hidden">
             <table className="w-full text-pm-sm">
               <thead className="bg-surface-tertiary/40 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">
                 <tr>
@@ -1243,11 +1437,11 @@ function StatCard({ icon: Icon, label, value, sub, mono }: {
   icon: typeof Database; label: string; value: string; sub?: string; mono?: boolean;
 }) {
   return (
-    <div className="border border-line rounded-md bg-surface-primary px-4 py-3">
+    <div className="border border-line rounded-xl bg-surface-primary px-4 py-3">
       <div className="flex items-center gap-2 text-pm-2xs uppercase tracking-wider text-content-muted">
-        <Icon className="h-3.5 w-3.5" /> {label}
+        <Icon className="h-3.5 w-3.5 shrink-0" /> {label}
       </div>
-      <div className={`mt-1.5 text-pm-md font-semibold text-content-primary ${mono ? 'font-mono text-pm-sm' : ''}`}>
+      <div className={`mt-1.5 text-pm-md font-semibold text-content-primary truncate ${mono ? 'font-mono text-pm-sm' : ''}`} title={mono ? value : undefined}>
         {value}
       </div>
       {sub && (
@@ -1381,7 +1575,7 @@ function EmailSection() {
 
       <div className="flex gap-2">
         <button onClick={handleTest} disabled={testing}
-          className="h-9 px-4 rounded-md border border-line text-pm-sm font-medium text-content-secondary hover:bg-surface-tertiary disabled:opacity-50 transition-colors">
+          className="inline-flex items-center justify-center h-9 px-4 rounded-xl border border-line text-pm-sm font-medium text-content-secondary hover:bg-surface-tertiary hover:text-content-primary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50 transition-smooth duration-150">
           {testing ? 'Se testează...' : 'Testează conexiunea'}
         </button>
         <SaveBtn onClick={handleSave} saving={saving} />
@@ -1480,7 +1674,7 @@ function FiscalSection() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
         {fields.map(f => {
           const placeholder = f.key === 'cui' ? 'RO12345678' : f.key === 'iban' ? 'RO00 BANK 0000 0000 0000 0000' : undefined;
@@ -1513,8 +1707,8 @@ function FiscalSection() {
       {}
       <div className="flex items-center gap-3 flex-wrap">
         <button type="button" onClick={handleRefreshBnr} disabled={refreshingBnr}
-          className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded border border-line text-pm-xs text-content-secondary hover:bg-surface-tertiary hover:text-content-primary disabled:opacity-50 transition-colors">
-          <RefreshCw className={`h-3.5 w-3.5 ${refreshingBnr ? 'animate-spin' : ''}`} /> Actualizează din BNR
+          className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-xl border border-line text-pm-xs text-content-secondary hover:bg-surface-tertiary hover:text-content-primary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50 transition-smooth duration-150">
+          <RefreshCw className={`h-3.5 w-3.5 shrink-0 ${refreshingBnr ? 'animate-spin' : ''}`} /> Actualizează din BNR
         </button>
         <span className="text-pm-2xs text-content-muted">
           {settings.eur_to_ron_rate_updated_at
@@ -1525,15 +1719,15 @@ function FiscalSection() {
 
       {}
       {bnrHistory.length > 0 && (
-        <div className="rounded border border-line overflow-hidden">
+        <div className="rounded-xl border border-line overflow-hidden anim-fade-slide-in">
           <div className="px-3 py-1.5 bg-surface-secondary border-b border-line text-pm-2xs font-semibold uppercase tracking-wide text-content-muted">
             Istoric curs EUR/RON
           </div>
           <div key={bnrHistory.length} className="max-h-44 overflow-y-auto divide-y divide-line stagger-in">
             {bnrHistory.map(h => (
-              <div key={h.id} className="flex items-center justify-between px-3 py-1.5 text-pm-xs">
-                <span className="tabular-nums font-medium text-content-primary">{h.rate.toFixed(4)} <span className="text-content-muted font-normal">RON/EUR</span></span>
-                <span className="text-pm-2xs text-content-muted">
+              <div key={h.id} className="flex items-center justify-between gap-3 px-3 py-1.5 text-pm-xs">
+                <span className="tabular-nums font-medium text-content-primary whitespace-nowrap">{h.rate.toFixed(4)} <span className="text-content-muted font-normal">RON/EUR</span></span>
+                <span className="text-pm-2xs text-content-muted text-right">
                   {h.published_date || formatDateTimeRo(h.fetched_at)}
                   <span className="ml-1.5 text-content-muted/70">· {h.source === 'bnr' ? 'BNR' : h.source === 'seed' ? 'inițial' : 'manual'}</span>
                 </span>

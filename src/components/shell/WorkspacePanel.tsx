@@ -53,7 +53,7 @@ function WorkspacePanel({
 
   return (
     <nav
-      className="relative flex flex-col shrink-0 bg-surface-nav border-r border-line transition-[width] duration-200 ease-out select-none overflow-hidden"
+      className="relative flex flex-col shrink-0 bg-surface-nav border-r border-line select-none overflow-hidden"
       style={{ width: collapsed ? 56 : 220 }}
     >
       {
@@ -61,7 +61,7 @@ function WorkspacePanel({
       <div className={`flex items-center shrink-0 border-b border-line ${collapsed ? 'justify-center h-11' : 'h-11 px-3 justify-between gap-2'}`}>
         {}
         {!collapsed && heading && (
-          <span className="text-[11px] font-bold uppercase tracking-[0.08em] text-content-secondary truncate" title={heading}>
+          <span className="min-w-0 text-pm-xs font-bold uppercase tracking-[0.08em] text-content-secondary truncate" title={heading}>
             {heading}
           </span>
         )}
@@ -69,7 +69,7 @@ function WorkspacePanel({
         <button
           type="button"
           onClick={toggleSidebar}
-          className={`h-6 w-6 rounded flex items-center justify-center text-content-muted hover:text-accent hover:bg-surface-nav-hover transition-all duration-150 ${collapsed ? 'absolute -right-3 top-3 z-20 rounded-full border border-line bg-surface-secondary shadow-sm' : ''}`}
+          className={`h-6 w-6 rounded-lg inline-flex items-center justify-center text-content-muted hover:text-accent hover:bg-surface-nav-hover transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:opacity-40 ${collapsed ? 'absolute -right-3 top-3 z-20 rounded-full border border-line bg-surface-secondary shadow-[var(--elevation-1)]' : ''}`}
           aria-label={collapsed ? 'Expand panel' : 'Collapse panel'}
         >
           {collapsed
@@ -97,10 +97,10 @@ function WorkspacePanel({
                   <button
                     type="button"
                     onClick={() => toggleGroup(group.name)}
-                    className="flex items-center w-full px-3 py-1.5 gap-1.5 group/hdr hover:bg-surface-nav-hover transition-colors rounded-sm mx-0.5"
+                    className="flex items-center w-full px-3 py-1.5 gap-1.5 group/hdr hover:bg-surface-nav-hover transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] rounded-lg mx-0.5"
                   >
-                    <ChevronRight className={`h-2.5 w-2.5 text-content-muted transition-transform duration-150 ${isGroupCollapsed ? '' : 'rotate-90'}`} />
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-content-muted flex-1 text-left truncate">
+                    <ChevronRight className={`h-2.5 w-2.5 shrink-0 text-content-muted transition-transform duration-150 ${isGroupCollapsed ? '' : 'rotate-90'}`} />
+                    <span className="text-pm-2xs font-semibold uppercase tracking-[0.06em] text-content-muted min-w-0 flex-1 text-left truncate">
                       {group.name}
                     </span>
                   </button>
@@ -119,7 +119,7 @@ function WorkspacePanel({
                     aria-label={item.label}
                     onClick={item.onClick}
                     title={collapsed ? item.label : undefined}
-                    className={`group relative flex items-center w-full transition-colors duration-100 ${
+                    className={`group relative flex items-center w-full transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] rounded-lg ${
                       collapsed ? 'justify-center h-9 mx-auto' : 'h-8 mx-0'
                     }`}
                   >
@@ -134,26 +134,26 @@ function WorkspacePanel({
 
                     {}
                     <div
-                      className={`flex items-center transition-colors duration-100 ${
+                      className={`flex items-center transition-smooth duration-150 min-w-0 ${
                         collapsed
-                          ? `h-8 w-8 justify-center rounded ${
+                          ? `h-8 w-8 justify-center rounded-lg ${
                               item.isActive
                                 ? 'text-accent bg-surface-nav-active'
                                 : 'text-content-secondary hover:bg-surface-nav-hover hover:text-content-primary'
                             }`
-                          : `flex-1 gap-2.5 mx-1 px-2.5 h-full rounded ${
+                          : `flex-1 gap-2.5 mx-1 px-2.5 h-full rounded-lg ${
                               item.isActive
                                 ? 'text-accent bg-surface-nav-active font-semibold'
                                 : 'text-content-secondary hover:bg-surface-nav-hover hover:text-content-primary'
                             }`
                       }`}
                     >
-                      <Icon className={`h-[16px] w-[16px] shrink-0 ${
+                      <Icon className={`h-4 w-4 shrink-0 ${
                         item.isActive ? 'text-accent' : ''
                       }`} />
 
                       {!collapsed && (
-                        <span className={`text-[12px] whitespace-nowrap overflow-hidden text-ellipsis flex-1 text-left ${
+                        <span className={`text-pm-sm whitespace-nowrap overflow-hidden text-ellipsis min-w-0 flex-1 text-left ${
                           item.isActive ? 'font-semibold' : 'font-normal'
                         }`}>
                           {item.label}
@@ -163,9 +163,9 @@ function WorkspacePanel({
                       {}
                       {hasBadge && (
                         collapsed ? (
-                          <span className="absolute top-0.5 right-1 h-2 w-2 rounded-full bg-status-red" />
+                          <span className="absolute top-0.5 right-1 h-2 w-2 rounded-full bg-status-red anim-scale-in" />
                         ) : (
-                          <span className="flex items-center justify-center rounded-full bg-status-red text-white text-[9px] font-bold px-1 h-4 min-w-[16px] tabular-nums">
+                          <span className="inline-flex items-center justify-center rounded-full bg-status-red text-white text-pm-2xs font-bold px-1 h-4 min-w-[16px] tabular-nums anim-scale-in">
                             {item.badge! > 99 ? '99' : item.badge}
                           </span>
                         )
@@ -187,14 +187,14 @@ function WorkspacePanel({
           type="button"
           aria-label="Logout"
           onClick={onLogout}
-          className={`flex items-center w-full transition-colors duration-100 text-content-muted hover:text-status-red ${
+          className={`flex items-center w-full transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] rounded-lg text-content-muted hover:text-status-red ${
             collapsed
               ? 'justify-center h-8 mb-1'
-              : 'gap-2.5 h-8 mx-1 mb-1 px-2 rounded hover:bg-status-red/8'
+              : 'gap-2.5 h-8 mx-1 mb-1 px-2 hover:bg-status-red/12'
           }`}
         >
-          <LogOut className="h-[14px] w-[14px] shrink-0" />
-          {!collapsed && <span className="text-[11px]">Deconectare</span>}
+          <LogOut className="h-3.5 w-3.5 shrink-0" />
+          {!collapsed && <span className="min-w-0 truncate text-pm-xs">Deconectare</span>}
         </button>
       </div>
     </nav>

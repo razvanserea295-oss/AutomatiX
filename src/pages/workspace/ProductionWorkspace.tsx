@@ -1,19 +1,18 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
-import { Factory, Wrench, AlertTriangle, Loader2 } from 'lucide-react';
+import { Factory, Wrench, AlertTriangle } from 'lucide-react';
 import type { User } from '@/core/types';
 import Page from '@/components/ui/Page';
 import WorkspaceTabs, { type WorkspaceTab } from '@/components/ui/WorkspaceTabs';
-
-
+import WorkspaceSkeleton from '@/redesign/ui/WorkspaceSkeleton';
 
 const KanbanPage = lazy(() => import('@/redesign/pages/KanbanPage'));
 const MaintenancePage = lazy(() => import('@/redesign/pages/maintenance/MaintenancePage'));
 const ServiceTicketsPage = lazy(() => import('@/redesign/pages/service/ServiceTicketsPage'));
 
 const TABS: WorkspaceTab[] = [
-  { id: 'production', label: 'Producție', icon: Factory },
-  { id: 'maintenance', label: 'Service', icon: Wrench },
-  { id: 'service-tickets', label: 'Tichete', icon: AlertTriangle },
+  { id: 'production',      label: 'Producție', icon: Factory,       prefetch: () => import('@/redesign/pages/KanbanPage') },
+  { id: 'maintenance',     label: 'Service',   icon: Wrench,        prefetch: () => import('@/redesign/pages/maintenance/MaintenancePage') },
+  { id: 'service-tickets', label: 'Tichete',   icon: AlertTriangle, prefetch: () => import('@/redesign/pages/service/ServiceTicketsPage') },
 ];
 
 interface Props {
@@ -23,42 +22,44 @@ interface Props {
 }
 
 export default function ProductionWorkspace({ user, onNavigate, initialTab }: Props) {
-  
-  
   const safeInitial = !initialTab || initialTab === 'time-tracking' || initialTab === 'stations'
     ? 'production' : initialTab;
   const [tab, setTab] = useState(safeInitial);
+  const [visited, setVisited] = useState(() => new Set([safeInitial]));
+
   useEffect(() => {
-    if (initialTab && initialTab !== 'time-tracking' && initialTab !== 'stations') setTab(initialTab);
+    if (initialTab && initialTab !== 'time-tracking' && initialTab !== 'stations') {
+      setTab(initialTab);
+      setVisited(p => { const s = new Set(p); s.add(initialTab); return s; });
+    }
   }, [initialTab]);
 
   const handleTabChange = (t: string) => {
+    setVisited(prev => { const s = new Set(prev); s.add(t); return s; });
     setTab(t);
     onNavigate(t);
   };
 
   return (
-    <Page fit>
-      <WorkspaceTabs
-        tabs={TABS}
-        active={tab}
-        onChange={handleTabChange}
-      />
-      <Suspense fallback={<Loading />}>
-        <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
-          {tab === 'production' && <KanbanPage user={user} onNavigate={onNavigate} />}
-          {tab === 'maintenance' && <MaintenancePage user={user} />}
-          {tab === 'service-tickets' && <ServiceTicketsPage user={user} />}
+    <Page fit layout="row">
+      <WorkspaceTabs tabs={TABS} active={tab} onChange={handleTabChange} />
+      <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+        <div className={tab === 'production' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
+          <Suspense fallback={<WorkspaceSkeleton />}>
+            {visited.has('production') && <KanbanPage user={user} onNavigate={onNavigate} />}
+          </Suspense>
         </div>
-      </Suspense>
+        <div className={tab === 'maintenance' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
+          <Suspense fallback={<WorkspaceSkeleton />}>
+            {visited.has('maintenance') && <MaintenancePage user={user} />}
+          </Suspense>
+        </div>
+        <div className={tab === 'service-tickets' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
+          <Suspense fallback={<WorkspaceSkeleton />}>
+            {visited.has('service-tickets') && <ServiceTicketsPage user={user} />}
+          </Suspense>
+        </div>
+      </div>
     </Page>
-  );
-}
-
-function Loading() {
-  return (
-    <div className="flex flex-1 items-center justify-center py-12">
-      <Loader2 className="h-5 w-5 animate-spin text-content-muted" />
-    </div>
   );
 }

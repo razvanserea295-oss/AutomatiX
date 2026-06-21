@@ -49,10 +49,9 @@
 .dash-bg__grid {
   position: absolute;
   inset: -2px;
-  opacity: 0.4;
+  opacity: 0.18;
   background-image: radial-gradient(var(--color-border-subtle) 1px, transparent 1.4px);
   background-size: 26px 26px;
-  animation: dashGridDrift 140s linear infinite;
 }
 
 /* A few floating light particles — capped, transform/opacity only. */
@@ -62,7 +61,7 @@
   width: 2px; height: 2px;
   border-radius: 999px;
   background: var(--color-accent);
-  box-shadow: 0 0 6px 1px rgba(45, 212, 191, 0.35);
+  box-shadow: 0 0 6px 1px rgba(77, 134, 255, 0.35);
   opacity: 0.3;
   will-change: transform, opacity;
   animation-name: dashFloat;
@@ -75,7 +74,7 @@
 .dash-bg__vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(120% 80% at 50% 35%, transparent 55%, var(--color-bg-page) 100%);
+  background: radial-gradient(120% 80% at 50% 35%, transparent 62%, var(--color-bg-page) 100%);
 }
 
 /* Pause everything when the tab is hidden (set by the component). */
@@ -117,8 +116,8 @@
   border-color: var(--color-accent-muted);
   box-shadow:
     var(--elevation-3),
-    0 0 0 1px rgba(45, 212, 191, 0.18),
-    0 8px 32px rgba(45, 212, 191, 0.10);
+    0 0 0 1px rgba(77, 134, 255, 0.18),
+    0 8px 32px rgba(77, 134, 255, 0.10);
 }
 
 /* ---- KPI card: rotating conic accent ring revealed on hover ------------- */
@@ -128,8 +127,8 @@
   border-color: var(--color-accent-muted);
   box-shadow:
     var(--elevation-3),
-    0 0 0 1px rgba(45, 212, 191, 0.18),
-    0 8px 32px rgba(45, 212, 191, 0.10);
+    0 0 0 1px rgba(77, 134, 255, 0.18),
+    0 8px 32px rgba(77, 134, 255, 0.10);
 }
 .dash-kpi::before {
   content: '';
@@ -218,7 +217,7 @@
 .dash-airy--hover:hover {
   transform: translateY(-1px);                 /* gentle, not a big jump */
   border-color: var(--color-accent-muted);
-  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(45, 212, 191, 0.14);
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.24), 0 0 0 1px rgba(77, 134, 255, 0.14);
 }
 
 /* Hero — tall, calm, lots of vertical room. */
@@ -289,7 +288,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(135deg, rgba(45, 212, 191, 0.10), transparent 58%);
+  background: linear-gradient(135deg, rgba(77, 134, 255, 0.10), transparent 58%);
   pointer-events: none;
 }
 .dash-kpi-feat__wm {                    /* oversized watermark glyph, very faint */
@@ -337,10 +336,10 @@
 /* ---- Entry orchestration (staggered via inline animation-delay) --------- */
 .dash-enter {
   opacity: 0;
-  animation: dashEnter var(--dur-cinematic, 500ms) var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1)) both;
+  animation: dashEnter 180ms ease-out both;
 }
 @keyframes dashEnter {
-  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: none; }
 }
 
@@ -348,13 +347,11 @@
 /* Subtle continuous wobble (~±0.6deg) signalling widgets are now movable. The
    tiny translate keeps the rotation pivot lively, like the iOS home screen. */
 @keyframes iosJiggle {
-  0%   { transform: rotate(-0.6deg) translate(-0.5px, 0); }
-  50%  { transform: rotate(0.6deg)  translate(0.5px, 0); }
-  100% { transform: rotate(-0.6deg) translate(-0.5px, 0); }
+  0%   { transform: rotate(-0.3deg); }
+  50%  { transform: rotate(0.3deg); }
+  100% { transform: rotate(-0.3deg); }
 }
-.widget-jiggle { animation: iosJiggle 0.26s ease-in-out infinite; transform-origin: 50% 50%; }
-/* Desync neighbours so the field doesn't wobble in lockstep. */
-.widget-jiggle:nth-child(2n)   { animation-duration: 0.31s; animation-delay: -0.13s; }
-.widget-jiggle:nth-child(3n)   { animation-duration: 0.29s; animation-delay: -0.07s; }
-.widget-jiggle:nth-child(4n+1) { animation-duration: 0.33s; }
+/* Gentle, uniform jiggle on the widget CONTENT only (the edit buttons live on
+   the static outer tile, so they stay put and easy to click). */
+.widget-jiggle { animation: none; transform-origin: 50% 50%; }
 @media (prefers-reduced-motion: reduce) { .widget-jiggle { animation: none; } }

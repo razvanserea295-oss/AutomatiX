@@ -33,7 +33,7 @@ interface SplitViewToggleProps {
 export default function SplitViewToggle({ enabled, onToggle, className = '' }: SplitViewToggleProps) {
   const segBase =
     'inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-pm-2xs font-semibold uppercase tracking-wide ' +
-    'transition-smooth duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] ' +
+    'transition-smooth duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] ' +
     'focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]';
   const segActive = 'bg-accent text-[var(--color-on-accent)] shadow-[var(--elevation-1)]';
   const segIdle = 'text-content-muted hover:text-content-primary hover:bg-surface-tertiary';

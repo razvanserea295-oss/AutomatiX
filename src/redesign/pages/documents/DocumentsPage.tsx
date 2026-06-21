@@ -32,7 +32,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   FileText, Download, Trash2, Upload, GripVertical, Plus, Pencil, FolderOpen,
-  FolderKanban, Filter, X, Check, AlertTriangle,
+  Filter, X, Check, AlertTriangle,
 } from 'lucide-react';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
@@ -48,7 +48,6 @@ import { confirmDialog } from '@/components/ConfirmDialog';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import Page from '@/redesign/ui/Page';
-import KpiCard from '@/redesign/ui/KpiCard';
 import FilterBar from '@/redesign/ui/FilterBar';
 import TableFiller from '@/redesign/ui/TableFiller';
 import SortableTh from '@/redesign/ui/SortableTh';
@@ -279,16 +278,8 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
     }
   }
 
-  
-  const docStats = useMemo(() => {
-    const byType: Record<string, number> = {};
-    documents.forEach(d => { byType[d.file_type || 'altele'] = (byType[d.file_type || 'altele'] || 0) + 1; });
-    const topType = Object.entries(byType).sort((a, b) => b[1] - a[1])[0];
-    return { total: documents.length, catCount: categories.length, topType: topType ? `${topType[0]} (${topType[1]})` : '—' };
-  }, [documents, categories]);
 
-  
-  
+
   
   
   
@@ -490,7 +481,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
       <Page fit>
         <Page.Body fit>
           {}
-          <div className="enter-fade shrink-0 pb-3.5 border-b border-line/60">
+          <div className="enter-fade shrink-0 pb-4 border-b border-line/60">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <Skeleton width={44} height={44} rounded="lg" />
@@ -563,9 +554,9 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
 
 
 }
-        <div className="enter-up shrink-0 pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
+        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
               <span className="h-11 w-11 rounded-2xl bg-accent-muted flex items-center justify-center shrink-0">
                 <FileText className="h-5 w-5 text-accent" aria-hidden />
               </span>
@@ -592,18 +583,6 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
 
         {
 
-}
-        <div className="enter-up shrink-0" style={{ animationDelay: '70ms' }}>
-          <Page.Kpis cols={4}>
-            <KpiCard label="Total documente" value={docStats.total}                                       icon={FileText}     iconColor="text-accent" />
-            <KpiCard label="Categorii"        value={docStats.catCount}                                    icon={FolderOpen}   iconColor="text-status-blue" />
-            <KpiCard label="Cu proiect"       value={documents.filter(d => d.project_id != null).length}   icon={FolderKanban} iconColor="text-status-teal" />
-            <KpiCard label="Afișate"          value={filteredDocuments.length}                             icon={Filter}       iconColor="text-status-green" hint={selectedCategory !== null || searchQuery ? 'din filtrul curent' : 'toate documentele'} />
-          </Page.Kpis>
-        </div>
-
-        {
-
 
 }
         <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-5 -mx-1 px-1">
@@ -623,7 +602,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                 <button
                   type="button"
                   onClick={() => setShowCatManager(!showCatManager)}
-                  className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-pm-2xs font-semibold transition-colors ${
+                  className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-pm-2xs font-semibold transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                     showCatManager ? 'bg-accent-muted text-accent' : 'text-content-muted hover:bg-surface-tertiary hover:text-accent'
                   }`}
                   title="Gestioneaza categorii"
@@ -633,7 +612,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
               </div>
 
               {}
-              <div className="flex-1 min-h-0 p-3 space-y-1.5 overflow-y-auto">
+              <div className="flex-1 min-h-0 p-3 space-y-2 overflow-y-auto">
                 <button
                   type="button"
                   aria-label="Toate categoriile"
@@ -647,7 +626,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                 {categories.map((cat) => {
                   const count = documents.filter(d => d.category_id === cat.id).length;
                   return (
-                    <div key={cat.id} className="flex items-center gap-1.5">
+                    <div key={cat.id} className="flex items-center gap-2">
                       <button
                         type="button"
                         draggable
@@ -666,7 +645,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                         type="button"
                         title={`Adaugă document in ${cat.name}`}
                         onClick={() => { setSelectedCategory(cat.id); openModal(); }}
-                        className={`group h-10 w-9 shrink-0 inline-flex items-center justify-center rounded-lg border transition-colors ${
+                        className={`group h-10 w-9 shrink-0 inline-flex items-center justify-center rounded-lg border transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                           selectedCategory === cat.id
                             ? 'bg-accent-muted text-accent border-accent/40 hover:bg-accent hover:text-[var(--color-on-accent)]'
                             : 'bg-surface-primary text-content-muted border-line hover:bg-surface-tertiary hover:text-accent'
@@ -696,7 +675,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                       onChange={(e) => setNewCatName(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') handleAddCategory(); }}
                       placeholder="Categorie noua..."
-                      className="flex-1 min-w-0 h-9 border border-line bg-surface-primary rounded-lg px-2.5 text-pm-sm text-content-primary placeholder:text-content-muted focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]"
+                      className="flex-1 min-w-0 h-9 border border-line bg-surface-primary rounded-lg px-2.5 text-pm-sm text-content-primary placeholder:text-content-muted transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]"
                     />
                     <Button size="sm" onClick={handleAddCategory}>
                       <Plus className="h-3 w-3" /> Adaugă
@@ -704,7 +683,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                   </div>
                   <div className="space-y-0">
                     {categories.map((cat) => (
-                      <div key={cat.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface-tertiary">
+                      <div key={cat.id} className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-smooth duration-150 hover:bg-surface-tertiary">
                         <GripVertical className="h-3 w-3 text-content-muted cursor-grab shrink-0" aria-hidden />
                         {editingCatId === cat.id ? (
                           <>
@@ -713,7 +692,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                               value={editingCatName}
                               onChange={(e) => setEditingCatName(e.target.value)}
                               onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateCategory(cat.id); }}
-                              className="flex-1 min-w-0 h-8 border border-line bg-surface-primary rounded-lg px-2 text-pm-sm text-content-primary focus:outline-none focus:border-accent"
+                              className="flex-1 min-w-0 h-8 border border-line bg-surface-primary rounded-lg px-2 text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]"
                               autoFocus
                             />
                             <IconButton intent="success" size="sm" onClick={() => handleUpdateCategory(cat.id)} title="Salvează" aria-label="Salvează">
@@ -753,7 +732,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                 style={{ ['--table-row-height' as never]: '40px' }}
                 className="flex-1 min-h-0 overflow-y-auto overflow-x-auto table-fill px-2 density-compact"
               >
-                <table className="w-full text-left text-xs min-w-[760px]">
+                <table className="w-full text-left text-pm-sm min-w-[760px]">
                   <thead className="sticky top-0 z-10 bg-surface-secondary shadow-[inset_0_-1px_0_var(--color-border)]">
                     <tr>
                       <th className="px-4 py-3 w-10">
@@ -822,16 +801,16 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2 min-w-0">
                               <FileText className="h-4 w-4 shrink-0 text-content-muted" aria-hidden />
-                              <span className="text-sm font-medium text-content-primary truncate" title={doc.title}>{doc.title}</span>
+                              <span className="text-pm-base font-medium text-content-primary truncate" title={doc.title}>{doc.title}</span>
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-xs text-content-secondary truncate" title={doc.category_name}>{doc.category_name}</td>
-                          <td className="px-4 py-3 text-xs text-content-secondary truncate" title={doc.project_name ?? undefined}>
+                          <td className="px-4 py-3 text-pm-sm text-content-secondary truncate" title={doc.category_name}>{doc.category_name}</td>
+                          <td className="px-4 py-3 text-pm-sm text-content-secondary truncate" title={doc.project_name ?? undefined}>
                             {doc.project_name ?? <span className="text-content-muted">—</span>}
                           </td>
                           <td className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">{doc.file_type}</td>
-                          <td className="px-4 py-3 text-xs text-content-secondary tabular-nums text-right">{formatFileSize(doc.file_size)}</td>
-                          <td className="px-4 py-3 text-xs text-content-secondary tabular-nums text-right">{formatDate(doc.created_at)}</td>
+                          <td className="px-4 py-3 text-pm-sm text-content-secondary tabular-nums text-right">{formatFileSize(doc.file_size)}</td>
+                          <td className="px-4 py-3 text-pm-sm text-content-secondary tabular-nums text-right">{formatDate(doc.created_at)}</td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1 justify-end opacity-70 group-hover:opacity-100 transition-opacity motion-reduce:transition-none">
                               <IconButton
@@ -884,12 +863,12 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
 
       {}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-12 left-1/2 -translate-x-1/2 bg-surface-elevated border border-line rounded-xl shadow-[var(--elevation-3)] px-4 py-2.5 flex items-center gap-3 z-30">
-          <span className="text-xs text-content-primary font-medium">{selectedIds.size} selectate</span>
+        <div className="anim-scale-in fixed bottom-12 left-1/2 -translate-x-1/2 bg-surface-elevated border border-line rounded-xl shadow-[var(--elevation-3)] px-4 py-2.5 flex items-center gap-3 z-30">
+          <span className="text-pm-sm text-content-primary font-medium">{selectedIds.size} selectate</span>
           <Button variant="danger" size="sm" onClick={handleBulkDelete}>
             <Trash2 className="h-3.5 w-3.5" /> Șterge selectia
           </Button>
-          <button onClick={() => setSelectedIds(new Set())} className="text-pm-2xs text-content-muted hover:text-content-primary">Anulează</button>
+          <button onClick={() => setSelectedIds(new Set())} className="rounded-lg px-1.5 py-1 text-pm-2xs text-content-muted transition-smooth duration-150 hover:text-content-primary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">Anulează</button>
         </div>
       )}
 

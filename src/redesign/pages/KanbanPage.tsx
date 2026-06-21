@@ -35,7 +35,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
-  CalendarClock, Loader2, BarChart3, AlertTriangle, CheckCircle2, Clock, Layers,
+  CalendarClock, Loader2,
   MessageSquare, Timer, Package, Hash, Factory, CircleCheckBig, Pencil,
 } from 'lucide-react';
 import { apiCommand } from '@/api/commands';
@@ -56,7 +56,6 @@ import KanbanEnhancements from '@/pages/kanban/KanbanEnhancements';
 
 import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import IconButton from '@/redesign/ui/IconButton';
 import HeroHeader from '@/redesign/ui/HeroHeader';
@@ -151,18 +150,15 @@ interface KanbanPageProps {
 }
 
 export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps) {
-  
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
   
   const projectsList = useProjectStore(s => s.projects);
   const columns = useProjectStore(s => s.productionBoard);
-  const stats = useProjectStore(s => s.productionStats);
   const loadingBoard = useProjectStore(s => s.loadingBoard);
   const moveProjectToStage = useProjectStore(s => s.moveProjectToStage);
   const fetchProjects = useProjectStore(s => s.fetchProjects);
   const fetchProductionBoard = useProjectStore(s => s.fetchProductionBoard);
-  const fetchProductionStats = useProjectStore(s => s.fetchProductionStats);
 
   const [filterClient, setFilterClient] = useState('');
 
@@ -182,8 +178,7 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
   useEffect(() => {
     void fetchProjects();
     void fetchProductionBoard();
-    void fetchProductionStats();
-  }, [fetchProjects, fetchProductionBoard, fetchProductionStats]);
+  }, [fetchProjects, fetchProductionBoard]);
 
   
   const loading = loadingBoard && columns.length === 0;
@@ -306,10 +301,10 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
   const isPiecesMode = selectedProjectId !== null;
   const showLoading = isPiecesMode ? loadingPieces : loading;
 
-  
-  
+
+
   const toolbar = (
-    <div className="flex flex-wrap items-center gap-2.5">
+    <div className="flex flex-wrap items-center gap-2">
       <span className="text-pm-2xs font-semibold uppercase tracking-wide text-content-muted">Vizualizare</span>
       <select
         value={selectedProjectId ?? ''}
@@ -375,22 +370,6 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
             {toolbar}
           </HeroHeader>
         </div>
-
-        {}
-        {!isPiecesMode && stats && (
-          <div className="px-6 pb-5 shrink-0">
-            <div
-              className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 enter-up stagger-in"
-              style={{ animationDelay: '80ms' }}
-            >
-              <KpiCard compact label="Total proiecte" value={stats.total ?? 0}        icon={Layers}        iconColor="text-status-blue" />
-              <KpiCard compact label="În producție"   value={stats.in_production ?? 0} icon={Clock}         iconColor="text-status-teal" />
-              <KpiCard compact label="Aprobate"       value={stats.approved ?? 0}      icon={CheckCircle2}  iconColor="text-status-green" />
-              <KpiCard compact label="Blocate"        value={stats.blocked ?? 0}       icon={AlertTriangle} iconColor="text-status-red" />
-              <KpiCard compact label="Finalizate"     value={stats.completed ?? 0}     icon={BarChart3}     iconColor="text-accent" />
-            </div>
-          </div>
-        )}
 
         {}
         {showLoading ? (
@@ -497,7 +476,7 @@ function StageColumn({
     <Card
       tone="subtle"
       className={cn(
-        'flex flex-col min-h-0 overflow-hidden transition-colors',
+        'flex flex-col min-h-0 overflow-hidden transition-smooth duration-150',
         narrow ? 'w-full' : 'min-w-[280px] flex-1',
         isOver && 'ring-2 ring-accent/40 bg-accent/5',
       )}
@@ -506,15 +485,15 @@ function StageColumn({
       onDrop={onDrop}
     >
       <div
-        className="flex items-center justify-between gap-2 px-3.5 py-3 border-b border-line/70"
+        className="flex items-center justify-between gap-2 px-3 py-3 border-b border-line/70"
         style={{ borderTop: `3px solid ${color}` }}
       >
-        <h3 className="text-pm-sm font-semibold text-content-primary truncate">{sentenceCase(name)}</h3>
-        <span className="inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-lg bg-surface-tertiary text-pm-2xs font-semibold text-content-muted tabular-nums">
+        <h3 className="min-w-0 flex-1 text-pm-sm font-semibold text-content-primary truncate">{sentenceCase(name)}</h3>
+        <span className="inline-flex shrink-0 items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-lg bg-surface-tertiary text-pm-2xs font-semibold text-content-muted tabular-nums">
           {animCount}
         </span>
       </div>
-      <div key={count} className="flex-1 overflow-y-auto p-2.5 space-y-2 stagger-in">
+      <div key={count} className="flex-1 overflow-y-auto p-3 space-y-2 stagger-in">
         {children}
       </div>
     </Card>
@@ -619,7 +598,7 @@ function ProjectCard({ project, onDragStart, onClick, onEdit }: { project: Board
       draggable
       onDragStart={onDragStart}
       onClick={onClick}
-      className="vt-morph group cursor-pointer rounded-xl border border-line bg-surface-primary p-3 transition-all hover:shadow-md hover:border-accent/40 hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none active:cursor-grabbing active:translate-y-0"
+      className="vt-morph group cursor-pointer rounded-xl border border-line bg-surface-primary p-3 transition-smooth duration-150 hover:shadow-[var(--elevation-2)] hover:border-accent/40 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] motion-reduce:transform-none motion-reduce:transition-none active:cursor-grabbing active:translate-y-0"
       style={{ viewTransitionName: vtName('project', project.id) }}
     >
       {}
@@ -807,14 +786,14 @@ function PieceCard({ piece, onDragStart, onClick }: { piece: ProjectPiece; onDra
       draggable
       onDragStart={onDragStart}
       onClick={onClick}
-      className="vt-morph cursor-pointer rounded-xl border border-line bg-surface-primary p-2.5 transition-all hover:shadow-md hover:border-accent/40 hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none active:cursor-grabbing active:translate-y-0"
+      className="vt-morph cursor-pointer rounded-xl border border-line bg-surface-primary p-3 transition-smooth duration-150 hover:shadow-[var(--elevation-2)] hover:border-accent/40 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] motion-reduce:transform-none motion-reduce:transition-none active:cursor-grabbing active:translate-y-0"
       style={{ viewTransitionName: vtName('piece', piece.id) }}
     >
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           <p className="text-pm-xs font-semibold text-content-primary truncate leading-snug">{piece.name}</p>
           <div className="mt-1 flex items-center gap-1 flex-wrap">
-            <span className="inline-flex items-center px-1.5 py-px rounded-md text-pm-2xs font-semibold uppercase tracking-wide bg-accent/10 text-accent">
+            <span className="inline-flex min-w-0 max-w-full items-center truncate px-1.5 py-0.5 rounded-lg text-pm-2xs font-semibold uppercase tracking-wide bg-accent/10 text-accent">
               {piece.category}
             </span>
             <span className="inline-flex items-center gap-0.5 text-pm-2xs text-content-muted tabular-nums">
@@ -829,10 +808,10 @@ function PieceCard({ piece, onDragStart, onClick }: { piece: ProjectPiece; onDra
       </div>
 
       {}
-      <div className="mt-2 flex items-center gap-1.5">
+      <div className="mt-2 flex items-center gap-2">
         <div className="flex-1 h-1.5 rounded-full bg-line overflow-hidden">
           <div
-            className="h-full rounded-full transition-all duration-300 anim-bar-grow"
+            className="h-full rounded-full transition-colors duration-300 anim-bar-grow"
             style={{
               width: `${progress.pct}%`,
               background: progress.pct === 100 ? 'var(--status-green)' : progress.pct > 0 ? 'var(--status-amber)' : 'transparent',

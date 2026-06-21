@@ -232,7 +232,7 @@ export default function SupplierCodesModal({ open, onClose, isAdmin, onChanged }
                   Anulează
                 </button>
                 <button onClick={save} disabled={saving}
-                  className="h-8 px-4 rounded bg-accent text-pm-xs font-semibold text-surface-primary hover:bg-accent/90 flex items-center gap-1.5 disabled:opacity-50">
+                  className="h-8 px-4 rounded bg-accent text-pm-xs font-semibold text-[var(--color-on-accent)] hover:bg-accent/90 flex items-center gap-1.5 disabled:opacity-50">
                   <Save className="h-3.5 w-3.5" />
                   {saving ? 'Se salvează...' : draft.id ? 'Salvează' : 'Adaugă'}
                 </button>
@@ -245,7 +245,7 @@ export default function SupplierCodesModal({ open, onClose, isAdmin, onChanged }
         {isAdmin && !draft && (
           <div className="px-5 py-3 border-t border-line bg-surface-tertiary/30">
             <button onClick={startCreate}
-              className="h-8 px-4 rounded bg-accent text-pm-xs font-semibold text-surface-primary hover:bg-accent/90 flex items-center gap-1.5">
+              className="h-8 px-4 rounded bg-accent text-pm-xs font-semibold text-[var(--color-on-accent)] hover:bg-accent/90 flex items-center gap-1.5">
               <Plus className="h-3.5 w-3.5" />
               Adaugă cod
             </button>

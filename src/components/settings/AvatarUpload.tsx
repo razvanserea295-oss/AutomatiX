@@ -71,7 +71,7 @@ export default function AvatarUpload({ user }: { user: User | null }) {
 
       <div className="flex-1 min-w-0">
         <p className="text-pm-sm font-semibold text-content-primary">Poza de profil</p>
-        <p className="text-pm-2xs text-content-muted mb-2.5">JPG, PNG sau WEBP · max 2 MB · afișată rotund</p>
+        <p className="text-pm-2xs text-content-muted mb-2.5">JPG, PNG sau WEBP · max 2 MB · </p>
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
           onChange={(e) => { const f = e.target.files?.[0] || null; e.currentTarget.value = ''; pick(f); }} />
         <div className="flex flex-wrap items-center gap-2">

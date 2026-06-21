@@ -1,84 +1,50 @@
-/* Promix Automatix — service worker (PWA shell).
+/* Promix Automatix — service worker KILL-SWITCH.
  *
- * Makes the web app installable (Chrome / Android "Add to home screen") and
- * lets PWABuilder/Bubblewrap wrap https://automatix.online into a signed APK
- * (Trusted Web Activity). The APK is a thin client: all data + auth stay on the
- * Automatix server, exactly like the LAN tablets today.
+ * The previous PWA service worker (promix-pwa-v3-responsive) cached the app
+ * shell and assets, AND — because its "never cache /api" guard only matched the
+ * bare "/api" prefix, NOT the multi-tenant "/t/<slug>/api/..." paths the app
+ * actually calls — it also cached tenant API responses (e.g.
+ * /t/promix/api/shared-files). That stranded clients on STALE DATA: uploaded
+ * files didn't appear, edits seemed to revert, lists flapped — the data looked
+ * "split-brain" while the server was perfectly consistent.
  *
- * Caching strategy (safe for an actively-deployed, server-driven ERP):
- *   - /api, /ai, SSE, any non-GET   → ALWAYS network, never cached (no stale
- *     data, no stale auth — the SW never touches the API).
- *   - navigations (HTML)            → network-first; offline → cached shell.
- *     Network-first guarantees the latest hashed-bundle references after a deploy.
- *   - /assets/* (Vite content-hashed) → cache-first (immutable).
- *   - other same-origin GETs (fonts/icons) → stale-while-revalidate.
+ * This self-destructing worker neutralises all of it: it caches NOTHING (no
+ * fetch handler, so every request goes straight to the network), purges every
+ * existing cache, unregisters itself, and reloads any controlled tab so it
+ * picks up the fresh, SW-free app. index.html is served no-store, so once the
+ * caches are gone the app always loads fresh.
+ *
+ * To re-enable a real PWA service worker later, replace this file — and make the
+ * "never cache" guard also exclude "/t/<slug>/api" and "/t/<slug>/ai" — then
+ * bump VERSION so clients pick it up on their next navigation.
  */
-const VERSION = 'promix-pwa-v2-ui-audit';
-const SHELL = VERSION + '-shell';
-const ASSETS = VERSION + '-assets';
+const VERSION = 'promix-pwa-killswitch-v2';
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(SHELL).then((c) => c.add('/')).catch(() => {}));
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim()),
-  );
+  event.waitUntil((async () => {
+    // 1. Purge every cache the old worker created.
+    try {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    } catch (e) { /* ignore */ }
+    // 2. Take control of open tabs so we can reload them.
+    try { await self.clients.claim(); } catch (e) { /* ignore */ }
+    // 3. Reload controlled tabs — they re-fetch index.html (no-store) and the
+    //    current main bundle, which no longer registers any service worker.
+    try {
+      const wins = await self.clients.matchAll({ type: 'window' });
+      for (const win of wins) {
+        try { await win.navigate(win.url); } catch (e) { /* ignore */ }
+      }
+    } catch (e) { /* ignore */ }
+    // 4. Remove ourselves entirely.
+    try { await self.registration.unregister(); } catch (e) { /* ignore */ }
+  })());
 });
 
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-
-  let url;
-  try { url = new URL(req.url); } catch { return; }
-  if (url.origin !== self.location.origin) return;                 // cross-origin → browser default
-  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/ai')) return; // never cache API/SSE
-
-  // App navigations → network-first (always fresh after deploy), offline → cached shell.
-  if (req.mode === 'navigate') {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(SHELL).then((c) => c.put('/', copy)).catch(() => {});
-          return res;
-        })
-        .catch(() => caches.match('/', { ignoreSearch: true }).then((r) => r || caches.match('/'))),
-    );
-    return;
-  }
-
-  // Vite content-hashed assets → network-first with cache fallback.
-  // This is safer for stale SW/partial deploy scenarios on dynamic imports.
-  if (url.pathname.startsWith('/assets/')) {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(ASSETS).then((c) => c.put(req, copy)).catch(() => {});
-          return res;
-        })
-        .catch(() => caches.match(req)),
-    );
-    return;
-  }
-
-  // Other same-origin GETs (fonts, icons, manifest) → stale-while-revalidate.
-  event.respondWith(
-    caches.match(req).then((hit) => {
-      const net = fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(ASSETS).then((c) => c.put(req, copy)).catch(() => {});
-          return res;
-        })
-        .catch(() => hit);
-      return hit || net;
-    }),
-  );
-});
+// NO fetch handler — nothing is intercepted, nothing is cached; every request
+// goes straight to the network.

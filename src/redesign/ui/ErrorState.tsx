@@ -24,8 +24,8 @@ export default function ErrorState({
       <span className="mb-4 h-14 w-14 rounded-2xl bg-status-red/10 text-status-red flex items-center justify-center">
         <AlertTriangle className="h-7 w-7" />
       </span>
-      <p className="text-pm-md font-semibold text-content-primary">{title}</p>
-      {description && <p className="mt-1 text-pm-sm text-content-muted max-w-sm">{description}</p>}
+      <p className="text-pm-md font-semibold text-content-primary max-w-sm break-words">{title}</p>
+      {description && <p className="mt-1 text-pm-sm text-content-muted max-w-sm break-words">{description}</p>}
       {(onRetry || action) && (
         <div className="mt-4">
           {action ?? (

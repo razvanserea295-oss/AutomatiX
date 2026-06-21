@@ -135,7 +135,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={this.handleReset}
-                className="flex items-center gap-2 px-3 py-2 bg-accent text-surface-primary rounded hover:bg-accent/90 transition-colors justify-center text-sm font-medium"
+                className="flex items-center gap-2 px-3 py-2 bg-accent text-[var(--color-on-accent)] rounded hover:bg-accent/90 transition-colors justify-center text-sm font-medium"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Reîncearcă</span>

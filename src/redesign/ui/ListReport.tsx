@@ -163,14 +163,18 @@ export default function ListReport<T>({
                 {loading ? (
                   <tr>
                     <td colSpan={columns.length + (selection ? 1 : 0)} className="px-4 py-14 text-center text-content-muted">
-                      <Loader2 className="h-5 w-5 animate-spin mx-auto text-accent" />
+                      <span className="anim-fade-in inline-flex">
+                        <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                      </span>
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
                     <td colSpan={columns.length + (selection ? 1 : 0)} className="px-4 py-14 text-center text-content-muted">
-                      <Inbox className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                      <p className="text-pm-sm">{emptyMessage}</p>
+                      <span className="anim-fade-in inline-flex flex-col items-center">
+                        <Inbox className="h-8 w-8 mb-2 opacity-40" />
+                        <p className="text-pm-sm">{emptyMessage}</p>
+                      </span>
                     </td>
                   </tr>
                 ) : (
@@ -181,8 +185,8 @@ export default function ListReport<T>({
                       <tr
                         key={id}
                         onClick={onRowClick ? () => onRowClick(row) : undefined}
-                        className={`group border-b border-line/70 last:border-0 transition-colors ${
-                          onRowClick ? 'cursor-pointer hover:bg-surface-tertiary' : ''
+                        className={`group border-b border-line/70 last:border-0 transition-smooth duration-150 ${
+                          onRowClick ? 'cursor-pointer hover:bg-surface-tertiary active:bg-surface-tertiary' : ''
                         } ${selected ? 'bg-accent-muted' : ''} ${rowClassName?.(row) ?? ''}`}
                       >
                         {selection && (

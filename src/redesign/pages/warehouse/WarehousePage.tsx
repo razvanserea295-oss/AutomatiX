@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
-  Warehouse, Plus, AlertTriangle, X as XIcon, Package, MapPin, Bookmark, Loader2,
+  Warehouse, Plus, AlertTriangle, X as XIcon, Loader2,
 } from 'lucide-react';
 
 import type { User } from '@/core/types';
@@ -14,7 +14,6 @@ import { toast } from '@/store/toastStore';
 
 import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import type { StatusTone } from '@/lib/statusTokens';
@@ -54,7 +53,7 @@ const TABS: Array<{ id: TabKey; label: string }> = [
   { id: 'locations', label: 'Locații' },
 ];
 
-const inputCls = 'w-full h-9 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary focus:outline-none focus:border-accent/50';
+const inputCls = 'w-full h-9 rounded-xl border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]';
 const labelCls = 'text-pm-2xs font-bold uppercase tracking-wide text-content-muted';
 
 interface Col<T> { key: string; header: string; align?: 'end'; render?: (row: T) => React.ReactNode }
@@ -63,6 +62,7 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
   const isViewer = useViewerMode('warehouse');
 
   const materials = useMaterialStore(s => s.materials);
+  const materialsLoading = useMaterialStore(s => s.loading);
   const fetchMaterialsStore = useMaterialStore(s => s.fetchMaterials);
   const fullProjects = useProjectStore(s => s.projects);
   const fetchProjects = useProjectStore(s => s.fetchProjects);
@@ -120,8 +120,6 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
     () => materials.filter(m => availableStock(m) <= m.min_stock && m.min_stock > 0),
     [materials, availableStock],
   );
-  const activeReservations = reservations.filter(r => r.status === 'reserved' || r.status === 'partially_issued').length;
-
   const SEVEN_DAYS = 7 * 24 * 3600 * 1000;
   const isPending = (r: Reservation) => r.status === 'reserved' || r.status === 'partially_issued';
   const ageDays = (r: Reservation): number | null => {
@@ -254,7 +252,7 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
     { key: 'status', header: 'Status', render: r => <StatusBadge tone={resStatusTone(r.status)} label={RES_STATUS_LABEL[r.status] ?? r.status} size="xs" /> },
     { key: 'actions', header: '', align: 'end', render: r => (
       (!isViewer && (r.status === 'reserved' || r.status === 'partially_issued'))
-        ? <button onClick={() => openIssue(r)} className="text-pm-xs font-semibold text-accent hover:underline">Eliberează</button>
+        ? <button onClick={() => openIssue(r)} className="rounded-lg px-1.5 py-0.5 text-pm-xs font-semibold text-accent transition-smooth duration-150 hover:underline hover:bg-accent-muted active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">Eliberează</button>
         : null
     ) },
   ];
@@ -293,19 +291,11 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
                 <p className="mt-0.5 text-pm-sm text-content-muted">{viewLabel}</p>
               </div>
             </div>
-            {!isViewer && primaryAction && (
-              <Button size="md" onClick={primaryAction.onClick}><Plus className="h-4 w-4" /> {primaryAction.text}</Button>
-            )}
-          </div>
-        </div>
-
-        {/* KPIs */}
-        <div className="px-6 pt-4 shrink-0">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <KpiCard label="Total materiale" icon={Package} value={materials.length} />
-            <KpiCard label="Rezervări active" icon={Bookmark} value={activeReservations} iconColor="text-status-blue" />
-            <KpiCard label="Locații" icon={MapPin} value={locations.length} />
-            <KpiCard label="Stoc critic" icon={AlertTriangle} value={lowStock.length} iconColor={lowStock.length > 0 ? 'text-status-red' : undefined} />
+            <div className="flex items-center gap-2 shrink-0">
+              {!isViewer && primaryAction && (
+                <Button size="md" onClick={primaryAction.onClick}><Plus className="h-4 w-4" /> {primaryAction.text}</Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -319,7 +309,7 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
                 onClick={() => setTab(t.id)}
                 aria-pressed={tab === t.id}
                 className={cn(
-                  'h-8 px-3.5 rounded-lg text-pm-xs font-semibold transition-smooth',
+                  'h-8 px-3 rounded-lg text-pm-xs font-semibold transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]',
                   tab === t.id ? 'bg-accent text-[var(--color-on-accent)] shadow-[var(--elevation-1)]' : 'text-content-muted hover:text-content-primary hover:bg-surface-tertiary',
                 )}
               >
@@ -342,7 +332,11 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
         {/* Table */}
         <div className="flex-1 min-h-0 overflow-auto px-6 py-4">
           <Card padding="none" className="min-w-0 overflow-hidden">
-            {loading ? (
+            {/* The Stoc tab reads `materials` from the store, which has its own
+                loading flag. Gate on BOTH so a forced refetch (store loading=true
+                while the page's local flag has already settled) can never render
+                the empty-state and the spinner at the same time. */}
+            {(loading || (tab === 'stock' && materialsLoading)) ? (
               <div className="flex items-center justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-content-muted" /></div>
             ) : tab === 'stock' ? (
               <DataTable columns={stockColumns} rows={materials} empty="Niciun material în stoc" />
@@ -491,7 +485,7 @@ function DataTable<T>({ columns, rows, empty }: { columns: Col<T>[]; rows: T[]; 
 
 function AlertBanner({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-2 rounded-xl border border-status-red/30 bg-status-red/5 px-3.5 py-2.5 text-pm-xs text-status-red">
+    <div className="anim-fade-slide-in flex items-start gap-2 rounded-xl border border-status-red/30 bg-status-red/5 px-4 py-3 text-pm-xs text-status-red">
       <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
       <span>{children}</span>
     </div>
@@ -509,11 +503,11 @@ function Field({ label, required, children }: { label: string; required?: boolea
 
 function Modal({ title, onClose, children, footer }: { title: string; onClose: () => void; children: React.ReactNode; footer: React.ReactNode }) {
   return (
-    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)]" onClick={e => e.stopPropagation()}>
+    <div className="anim-fade-in fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="anim-scale-in w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)]" onClick={e => e.stopPropagation()}>
         <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line/70 bg-surface-primary px-4 py-3">
           <h3 className="text-pm-sm font-semibold text-content-primary truncate">{title}</h3>
-          <button onClick={onClose} className="p-1 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary" aria-label="Închide"><XIcon className="h-4 w-4" /></button>
+          <button onClick={onClose} className="inline-flex items-center justify-center p-1 rounded-lg text-content-muted transition-smooth duration-150 hover:bg-surface-tertiary hover:text-content-primary active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]" aria-label="Închide"><XIcon className="h-4 w-4" /></button>
         </header>
         <div className="p-4 space-y-3">{children}</div>
         <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-line/70 bg-surface-primary px-4 py-3">{footer}</div>

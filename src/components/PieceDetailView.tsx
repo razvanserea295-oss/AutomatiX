@@ -324,7 +324,7 @@ export default function PieceDetailView({ piece, breadcrumb, onBack, onUpdate }:
           onClick={save}
           disabled={saving}
           className={`shrink-0 h-7 px-3 rounded text-pm-xs font-semibold flex items-center gap-1.5 transition-all disabled:opacity-50
-            ${saved ? 'bg-status-green text-white' : 'bg-accent text-surface-primary hover:opacity-90'}`}
+            ${saved ? 'bg-status-green text-white' : 'bg-accent text-[var(--color-on-accent)] hover:opacity-90'}`}
         >
           {saving
             ? <Loader2 className="h-3 w-3 animate-spin" />
@@ -510,7 +510,7 @@ export default function PieceDetailView({ piece, breadcrumb, onBack, onUpdate }:
                         }`}
                       >
                         <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-pm-2xs font-bold ${
-                          isCurrent ? 'bg-accent text-surface-primary'
+                          isCurrent ? 'bg-accent text-[var(--color-on-accent)]'
                           : isDone    ? 'bg-status-green text-surface-primary'
                           :             'bg-surface-tertiary text-content-muted'
                         }`}>

@@ -1,53 +1,67 @@
 import { useState, useEffect } from 'react';
-import GearLogo from '@/components/ui/GearLogo';
 
 interface SplashScreenProps {
   onFinished: () => void;
 }
 
+/* Apple-style splashscreen with smooth entrance/exit animation */
 export default function SplashScreen({ onFinished }: SplashScreenProps) {
-  const [fadeOut, setFadeOut] = useState(false);
+  const [phase, setPhase] = useState<'visible' | 'exiting'>('visible');
 
   useEffect(() => {
-    
-    const seen = sessionStorage.getItem('splash_seen') === '1';
-    const holdMs = seen ? 200 : 600;
-    const fadeMs = seen ? 200 : 250;
-    const timer = setTimeout(() => {
-      setFadeOut(true);
-      sessionStorage.setItem('splash_seen', '1');
-      setTimeout(onFinished, fadeMs);
-    }, holdMs);
-    return () => clearTimeout(timer);
+    const exitTimer = setTimeout(() => {
+      setPhase('exiting');
+    }, 1500);
+    const finishTimer = setTimeout(() => {
+      onFinished();
+    }, 1800);
+    return () => {
+      clearTimeout(exitTimer);
+      clearTimeout(finishTimer);
+    };
   }, [onFinished]);
 
+  if (phase === 'exiting') {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white animate-fade-out pointer-events-none">
+        <div className="animate-scale-out">
+          <svg 
+            viewBox="0 0 104 120" 
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-28 h-auto"
+            aria-label="Automatix"
+            role="img"
+          >
+            <g stroke="#0f172a" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" fill="none">
+              <path d="M20 102 L50 18" />
+              <path d="M50 18 L84 102" />
+              <path d="M31 74 L69 74" />
+            </g>
+            <path d="M84 18 L50 102" stroke="#2563eb" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-surface-primary transition-opacity duration-500 ${
-        fadeOut ? 'opacity-0' : 'opacity-100'
-      }`}
-    >
-      <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-xl bg-accent shadow-card-hover">
-        <GearLogo size={44} className="text-surface-primary" />
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
+      <div className="animate-scale-in">
+        <svg 
+          viewBox="0 0 104 120" 
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-28 h-auto"
+          aria-label="Automatix"
+          role="img"
+        >
+          <g stroke="#0f172a" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" fill="none">
+            <path d="M20 102 L50 18" />
+            <path d="M50 18 L84 102" />
+            <path d="M31 74 L69 74" />
+          </g>
+          <path d="M84 18 L50 102" stroke="#2563eb" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </div>
-
-      <h1 className="text-2xl font-bold text-content-primary tracking-wide">
-        Automatix
-      </h1>
-      <p className="mt-2 text-sm text-content-muted">
-        Sistem integrat de management operational
-      </p>
-
-      <div className="mt-8 h-0.5 w-48 overflow-hidden rounded-full bg-line-subtle">
-        <div className="h-full rounded-full bg-accent" style={{ animation: 'splash-load 1.5s ease-in-out' }} />
-      </div>
-
-      <style>{`
-        @keyframes splash-load {
-          0% { width: 0%; }
-          100% { width: 100%; }
-        }
-      `}</style>
     </div>
   );
 }

@@ -43,7 +43,7 @@ import Page from '@/redesign/ui/Page';
 import KpiCard from '@/redesign/ui/KpiCard';
 import FilterBar from '@/redesign/ui/FilterBar';
 import StatusBadge from '@/redesign/ui/StatusBadge';
-import { GlassCard, MetricValue, EmptyState } from '@/redesign/ui';
+import { GlassCard, MetricValue, EmptyState, Skeleton } from '@/redesign/ui';
 import { filterToggleCls } from '@/redesign/ui/filterControls';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
 
@@ -175,9 +175,9 @@ export default function ServiceTicketsPage({ user: _user }: { user: User | null 
       <Page.Body fit>
 
         {/* Header */}
-        <div className="enter-up shrink-0 pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
+        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
               <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                 <Wrench className="h-5 w-5" aria-hidden />
               </span>
@@ -192,7 +192,7 @@ export default function ServiceTicketsPage({ user: _user }: { user: User | null 
               <div className="w-full sm:w-auto">
                 <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="Caută tichet, stație, client..." />
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 {(['open', 'overdue', 'all'] as const).map(f => (
                   <button key={f} onClick={() => setFilter(f)} className={filterToggleCls(filter === f)}>
                     {f === 'open' ? 'Deschise' : f === 'overdue' ? 'Overdue' : 'Toate'}
@@ -219,7 +219,7 @@ export default function ServiceTicketsPage({ user: _user }: { user: User | null 
         )}
 
         {/* Master-detail */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 flex-1 min-h-0">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0">
 
           {/* Detail pane */}
           <aside className="xl:col-span-5 enter-up min-h-0 flex" style={{ animationDelay: '140ms' }}>
@@ -245,7 +245,7 @@ export default function ServiceTicketsPage({ user: _user }: { user: User | null 
           {/* List pane */}
           <section className="xl:col-span-7 enter-up min-w-0 min-h-0 flex" style={{ animationDelay: '200ms' }}>
             <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 w-full">
-              <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-line/40">
+              <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-4 border-b border-line/40">
                 <h2 className="text-pm-md font-semibold text-content-primary">Tichete service</h2>
                 <p className="text-pm-xs text-content-muted shrink-0">
                   {visibleTickets.length} {visibleTickets.length === 1 ? 'tichet' : 'tichete'}{search ? ` găsite pentru „${search}"` : ''}
@@ -253,7 +253,20 @@ export default function ServiceTicketsPage({ user: _user }: { user: User | null 
               </div>
               <div className="flex-1 min-h-0 overflow-y-auto">
                 {loading ? (
-                  <div className="flex items-center justify-center py-12"><Loader2 className="h-5 w-5 animate-spin text-content-muted" /></div>
+                  <div className="anim-fade-in">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="border-b border-line p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Skeleton width={56} height={12} rounded="sm" />
+                          <Skeleton width={48} height={14} rounded="sm" />
+                          <Skeleton width={64} height={14} rounded="sm" />
+                        </div>
+                        <Skeleton width="60%" height={14} rounded="sm" className="mt-1" />
+                        <Skeleton width="40%" height={11} rounded="sm" className="mt-2" />
+                        <Skeleton width="100%" height={4} rounded="full" className="mt-2" />
+                      </div>
+                    ))}
+                  </div>
                 ) : visibleTickets.length === 0 ? (
                   <EmptyState icon={Wrench} title="Niciun tichet" description="Toate sub control sau nu există tichete în filtrul curent." />
                 ) : (
@@ -263,7 +276,7 @@ export default function ServiceTicketsPage({ user: _user }: { user: User | null 
                         key={t.id}
                         onClick={() => selectTicket(t)}
                         style={{ viewTransitionName: selected?.id === t.id ? vtName('ticket', t.id) : undefined }}
-                        className={`w-full text-left border-b border-line p-4 hover:bg-surface-tertiary/40 transition-colors ${
+                        className={`w-full text-left border-b border-line p-4 hover:bg-surface-tertiary/40 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                           selected?.id === t.id ? 'border-l-2 border-l-accent bg-accent/5 vt-morph' : ''
                         }`}
                       >
@@ -319,8 +332,8 @@ function KpiMini({ icon: Icon, label, value, warn }: {
   label: string; value: number; warn?: boolean;
 }) {
   return (
-    <GlassCard size="compact" className="flex items-center gap-3.5 !p-5">
-      <span className="h-11 w-11 rounded-xl bg-accent/12 text-accent flex items-center justify-center shrink-0">
+    <GlassCard size="compact" className="flex items-center gap-3 !p-5">
+      <span className="h-11 w-11 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
         <Icon className="h-5 w-5" />
       </span>
       <div className="min-w-0">
@@ -426,12 +439,12 @@ function TicketDetail({ ticket, users, onUpdate }: {
     <div className="flex flex-col">
       {/* Detail header */}
       <div className="px-4 py-3 border-b border-line bg-surface-secondary">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
           <span className="text-pm-2xs font-mono text-accent">{ticket.ticket_number}</span>
           {slaBadge}
         </div>
-        <h3 className="text-pm-sm font-semibold text-content-primary">{ticket.title}</h3>
-        <p className="text-pm-xs text-content-muted">{ticket.station_name || '—'} • {ticket.client_name || '—'}</p>
+        <h3 className="text-pm-sm font-semibold text-content-primary break-words">{ticket.title}</h3>
+        <p className="text-pm-xs text-content-muted truncate">{ticket.station_name || '—'} • {ticket.client_name || '—'}</p>
         {ticket.description && (
           <p className="text-pm-xs text-content-secondary mt-2 whitespace-pre-wrap bg-surface-primary border border-line rounded-lg p-2">{ticket.description}</p>
         )}
@@ -440,12 +453,12 @@ function TicketDetail({ ticket, users, onUpdate }: {
       {}
       <div className="grid grid-cols-2 border-b border-line">
         <Field label="Status" className="border-r border-b border-line p-3">
-          <select value={ticket.status} onChange={e => setStatus(e.target.value as TicketStatus)} disabled={busy} className="input">
+          <select value={ticket.status} onChange={e => setStatus(e.target.value as TicketStatus)} disabled={busy} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
             {(Object.keys(STATUS_LABEL) as TicketStatus[]).map(s => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
           </select>
         </Field>
         <Field label="Severitate" className="border-b border-line p-3">
-          <select value={ticket.severity} onChange={e => setSeverity(e.target.value as Severity)} disabled={busy} className="input">
+          <select value={ticket.severity} onChange={e => setSeverity(e.target.value as Severity)} disabled={busy} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
             <option value="critical">Critical (4h)</option>
             <option value="high">High (24h)</option>
             <option value="medium">Medium (72h)</option>
@@ -453,23 +466,23 @@ function TicketDetail({ ticket, users, onUpdate }: {
           </select>
         </Field>
         <Field label="Asignat" className="border-r border-line p-3">
-          <select value={ticket.assigned_user_id || ''} onChange={e => assign(e.target.value ? Number(e.target.value) : null)} disabled={busy} className="input">
+          <select value={ticket.assigned_user_id || ''} onChange={e => assign(e.target.value ? Number(e.target.value) : null)} disabled={busy} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
             <option value="">— neasignat —</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.full_name}</option>)}
           </select>
         </Field>
         <Field label={`Cost manoperă (${ticket.currency || 'RON'})`} className="p-3">
           <input type="number" min={0} step="0.01" defaultValue={ticket.cost_labor}
-            onBlur={e => setLabor(Number(e.target.value))} className="input" />
+            onBlur={e => setLabor(Number(e.target.value))} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" />
         </Field>
       </div>
 
       {}
       <div className="bg-surface-secondary border-b border-line px-4 py-2 text-pm-xs">
-        <div className="flex items-center justify-between mb-1.5">
+        <div className="flex items-center justify-between mb-2">
           <span className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">Costuri</span>
           <select value={ticket.currency || 'RON'} onChange={e => setTicketCurrency(e.target.value)} disabled={busy}
-            className="border border-line/70 bg-surface-secondary/40 px-1.5 py-0.5 text-pm-2xs rounded-lg transition-smooth focus:outline-none focus:border-accent/50">
+            className="border border-line/70 bg-surface-secondary/40 px-2 py-1 text-pm-2xs rounded-lg transition-smooth duration-150 cursor-pointer hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50">
             <option value="RON">RON</option>
             <option value="EUR">EUR</option>
           </select>
@@ -487,17 +500,17 @@ function TicketDetail({ ticket, users, onUpdate }: {
         <div className="mb-2">
           {(ticket.parts || []).map(p => (
             <div key={p.id} className="group flex items-center gap-2 bg-surface-secondary border-b border-line p-1.5 text-pm-xs last:border-b-0">
-              <span className="flex-1 truncate" title={p.description}>{p.description}</span>
-              <span className="tabular-nums text-content-muted">{p.quantity} x {p.unit_cost.toFixed(2)} = {p.total_cost.toFixed(2)}</span>
-              <button onClick={() => removePart(p.id)} aria-label="Șterge piesă" title="Șterge piesă" className="text-content-muted hover:text-status-red opacity-70 group-hover:opacity-100 transition-smooth active:scale-[0.98]"><X className="h-3 w-3" /></button>
+              <span className="min-w-0 flex-1 truncate" title={p.description}>{p.description}</span>
+              <span className="shrink-0 tabular-nums text-content-muted">{p.quantity} x {p.unit_cost.toFixed(2)} = {p.total_cost.toFixed(2)}</span>
+              <button onClick={() => removePart(p.id)} aria-label="Șterge piesă" title="Șterge piesă" className="inline-flex items-center justify-center rounded-lg text-content-muted hover:text-status-red opacity-70 group-hover:opacity-100 transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><X className="h-3 w-3" /></button>
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-12 gap-1.5">
-          <input className="input col-span-6" placeholder="Descriere piesă" value={partDesc} onChange={e => setPartDesc(e.target.value)} />
-          <input className="input col-span-2" type="number" min={0} step="0.01" placeholder="Cant." value={partQty} onChange={e => setPartQty(Number(e.target.value))} />
-          <input className="input col-span-3" type="number" min={0} step="0.01" placeholder="Preț unit." value={partCost} onChange={e => setPartCost(Number(e.target.value))} />
-          <button onClick={addPart} aria-label="Adaugă piesă" title="Adaugă piesă" className="col-span-1 rounded-lg bg-accent text-surface-primary p-1 text-pm-xs transition-smooth hover:bg-accent/90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"><Plus className="h-3 w-3 mx-auto" /></button>
+        <div className="grid grid-cols-12 gap-2">
+          <input className="col-span-6 w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" placeholder="Descriere piesă" value={partDesc} onChange={e => setPartDesc(e.target.value)} />
+          <input className="col-span-2 w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" type="number" min={0} step="0.01" placeholder="Cant." value={partQty} onChange={e => setPartQty(Number(e.target.value))} />
+          <input className="col-span-3 w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" type="number" min={0} step="0.01" placeholder="Preț unit." value={partCost} onChange={e => setPartCost(Number(e.target.value))} />
+          <button onClick={addPart} aria-label="Adaugă piesă" title="Adaugă piesă" className="col-span-1 inline-flex items-center justify-center rounded-lg bg-accent text-[var(--color-on-accent)] p-1 text-pm-xs transition-smooth duration-150 hover:bg-accent/90 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Plus className="h-3 w-3" /></button>
         </div>
       </div>
 
@@ -509,31 +522,23 @@ function TicketDetail({ ticket, users, onUpdate }: {
         <div className="mb-2 max-h-60 overflow-y-auto">
           {(ticket.comments || []).map(c => (
             <div key={c.id} className="bg-surface-secondary border-b border-line p-2 text-pm-xs last:border-b-0">
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-semibold text-content-primary">{c.user_name || '—'}</span>
-                <span className="text-pm-2xs text-content-muted">{new Date(c.created_at).toLocaleString('ro-RO')}</span>
+              <div className="flex items-center justify-between gap-2 mb-1">
+                <span className="min-w-0 truncate font-semibold text-content-primary">{c.user_name || '—'}</span>
+                <span className="shrink-0 text-pm-2xs text-content-muted">{new Date(c.created_at).toLocaleString('ro-RO')}</span>
               </div>
               <p className="text-content-secondary whitespace-pre-wrap">{c.body}</p>
             </div>
           ))}
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           <textarea value={commentBody} onChange={e => setCommentBody(e.target.value)} placeholder="Adaugă comentariu..."
-            rows={2} className="input flex-1 text-pm-xs resize-none" />
-          <button onClick={addComment} aria-label="Trimite comentariu" title="Trimite comentariu" className="rounded-lg bg-accent text-surface-primary px-3 py-1 text-pm-xs flex items-center justify-center transition-smooth hover:bg-accent/90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40">
+            rows={2} className="flex-1 w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors resize-none" />
+          <button onClick={addComment} aria-label="Trimite comentariu" title="Trimite comentariu" className="rounded-lg bg-accent text-[var(--color-on-accent)] px-3 py-1 text-pm-xs inline-flex items-center justify-center transition-smooth duration-150 hover:bg-accent/90 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
             <Send className="h-3 w-3" />
           </button>
         </div>
       </div>
 
-      <style>{`
-        .input { width: 100%; border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
-                 background-color: color-mix(in srgb, var(--color-bg-secondary) 40%, transparent);
-                 padding: 0.375rem 0.625rem; border-radius: 0.5rem;
-                 font-size: 0.75rem; color: var(--color-text-primary);
-                 transition: border-color 0.15s ease; }
-        .input:focus { outline: none; border-color: color-mix(in srgb, var(--color-accent) 50%, transparent); }
-      `}</style>
     </div>
   );
 }
@@ -585,14 +590,14 @@ function CreateTicketModal({ stations, clients, users, onClose, onCreated }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-content-primary/40 z-50 flex items-center justify-center p-4 anim-fade-in">
+      <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-2xl max-h-[90vh] overflow-y-auto anim-scale-in">
         <div className="sticky top-0 bg-surface-elevated border-b border-line/70 p-4 flex items-center justify-between">
           <h3 className="text-pm-sm font-semibold text-content-primary">Tichet service nou</h3>
           <button
             onClick={onClose}
             aria-label="Închide"
-            className="p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-all duration-150 hover:rotate-90"
+            className="inline-flex items-center justify-center p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary active:scale-95 transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] hover:rotate-90"
           >
             <X className="h-4 w-4" />
           </button>
@@ -601,7 +606,7 @@ function CreateTicketModal({ stations, clients, users, onClose, onCreated }: {
           <div className="grid grid-cols-2 gap-0">
             <div className="border-r border-b border-line p-3">
               <Field label="Stație">
-                <select value={stationId} onChange={e => setStationId(e.target.value ? Number(e.target.value) : '')} className="input">
+                <select value={stationId} onChange={e => setStationId(e.target.value ? Number(e.target.value) : '')} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
                   <option value="">— niciuna —</option>
                   {stations.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
@@ -609,7 +614,7 @@ function CreateTicketModal({ stations, clients, users, onClose, onCreated }: {
             </div>
             <div className="border-b border-line p-3">
               <Field label="Client">
-                <select value={clientId} onChange={e => setClientId(e.target.value ? Number(e.target.value) : '')} className="input">
+                <select value={clientId} onChange={e => setClientId(e.target.value ? Number(e.target.value) : '')} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
                   <option value="">— din stație —</option>
                   {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -617,7 +622,7 @@ function CreateTicketModal({ stations, clients, users, onClose, onCreated }: {
             </div>
             <div className="border-r border-b border-line p-3">
               <Field label="Severitate">
-                <select value={severity} onChange={e => setSeverity(e.target.value as Severity)} className="input">
+                <select value={severity} onChange={e => setSeverity(e.target.value as Severity)} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
                   <option value="critical">Critical (SLA 4h)</option>
                   <option value="high">High (SLA 24h)</option>
                   <option value="medium">Medium (SLA 72h)</option>
@@ -627,7 +632,7 @@ function CreateTicketModal({ stations, clients, users, onClose, onCreated }: {
             </div>
             <div className="border-b border-line p-3">
               <Field label="Raportat prin">
-                <select value={reportedVia} onChange={e => setReportedVia(e.target.value)} className="input">
+                <select value={reportedVia} onChange={e => setReportedVia(e.target.value)} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
                   <option value="phone">Telefon</option>
                   <option value="email">Email</option>
                   <option value="portal">Portal client</option>
@@ -637,17 +642,17 @@ function CreateTicketModal({ stations, clients, users, onClose, onCreated }: {
             </div>
             <div className="border-r border-b border-line p-3">
               <Field label="Raportat de">
-                <input value={reportedByName} onChange={e => setReportedByName(e.target.value)} className="input" placeholder="Nume persoană" />
+                <input value={reportedByName} onChange={e => setReportedByName(e.target.value)} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" placeholder="Nume persoană" />
               </Field>
             </div>
             <div className="border-b border-line p-3">
               <Field label="Contact">
-                <input value={reportedByContact} onChange={e => setReportedByContact(e.target.value)} className="input" placeholder="Tel / email" />
+                <input value={reportedByContact} onChange={e => setReportedByContact(e.target.value)} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" placeholder="Tel / email" />
               </Field>
             </div>
             <div className="col-span-2 p-3">
               <Field label="Asignează tehnician">
-                <select value={assignedUserId} onChange={e => setAssignedUserId(e.target.value ? Number(e.target.value) : '')} className="input">
+                <select value={assignedUserId} onChange={e => setAssignedUserId(e.target.value ? Number(e.target.value) : '')} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
                   <option value="">— neasignat —</option>
                   {users.map(u => <option key={u.id} value={u.id}>{u.full_name}</option>)}
                 </select>
@@ -656,7 +661,7 @@ function CreateTicketModal({ stations, clients, users, onClose, onCreated }: {
           </div>
           <div className="px-3">
             <Field label="Titlu *">
-              <input value={title} onChange={e => setTitle(e.target.value)} className="input" placeholder="ex: Motor malaxor face zgomot" />
+              <input value={title} onChange={e => setTitle(e.target.value)} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" placeholder="ex: Motor malaxor face zgomot" />
             </Field>
           </div>
           <div className="px-3">
@@ -672,14 +677,6 @@ function CreateTicketModal({ stations, clients, users, onClose, onCreated }: {
           </Button>
         </div>
       </div>
-      <style>{`
-        .input { width: 100%; border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
-                 background-color: color-mix(in srgb, var(--color-bg-secondary) 40%, transparent);
-                 padding: 0.375rem 0.625rem; border-radius: 0.5rem;
-                 font-size: 0.75rem; color: var(--color-text-primary);
-                 transition: border-color 0.15s ease; }
-        .input:focus { outline: none; border-color: color-mix(in srgb, var(--color-accent) 50%, transparent); }
-      `}</style>
     </div>
   );
 }

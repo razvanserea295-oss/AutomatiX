@@ -35,7 +35,7 @@ const dotClass: Record<StatusTone, string> = {
 };
 
 const sizeClass = {
-  xs: 'px-1.5 py-px text-pm-2xs',
+  xs: 'px-1.5 py-0.5 text-pm-2xs',
   sm: 'px-2 py-0.5 text-pm-xs',
   md: 'px-2.5 py-1 text-pm-sm',
 } as const;
@@ -61,7 +61,8 @@ function StatusBadge({
   return (
     <span
       className={[
-        'inline-flex items-center gap-1.5 rounded-lg font-semibold whitespace-nowrap',
+        'inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold whitespace-nowrap',
+        'anim-scale-in transition-smooth duration-150',
         sizeClass[size],
         toneClass[tone],
         uppercase ? 'uppercase tracking-wide' : '',
@@ -70,7 +71,7 @@ function StatusBadge({
     >
       {dot && (
         <span
-          className={`h-1.5 w-1.5 rounded-full shadow-[0_0_3px_currentColor] ${dotClass[tone]}`}
+          className={`h-1.5 w-1.5 shrink-0 rounded-full shadow-[0_0_3px_currentColor] transition-smooth duration-150 ${dotClass[tone]}`}
           aria-hidden
         />
       )}

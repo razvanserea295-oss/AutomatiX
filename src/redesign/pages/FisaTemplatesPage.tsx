@@ -22,9 +22,7 @@
  *   1. COMMAND BAR — one horizontal band: identity (left) + inline search
  *      (center, a NEW layout win the manifest flagged as missing) + primary
  *      action "Template nou" (right). Replaces the tall full-width hero panel.
- *   2. KPI LEDGER  — a horizontal strip of redesign <KpiCard> ledger tiles
- *      (accent rail + corner mark), instead of the old icon-chip GlassCard row.
- *   3. WORKBENCH   — a 12-col bento with a NEW 8/12 + 4/12 split. The template
+ *   2. WORKBENCH   — a 12-col bento with a NEW 8/12 + 4/12 split. The template
  *      GALLERY fills the wide LEFT panel (8/12, a 2-col card grid); a narrow
  *      INSIGHTS / DETAIL rail sits on the RIGHT (4/12). Clicking a card opens
  *      an in-page detail in that rail with a shared-element morph — a fresh
@@ -43,8 +41,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
 import {
-  ClipboardCheck, Plus, Pencil, Trash2, Copy, Star, Loader2,
-  CheckCircle2, User as UserIcon, Search as SearchIcon, X, LayoutGrid,
+  ClipboardCheck, Plus, Pencil, Trash2, Copy,
+  Search as SearchIcon, X, LayoutGrid,
 } from 'lucide-react';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
@@ -56,10 +54,9 @@ import { confirmDialog } from '@/components/ConfirmDialog';
 import Page from '@/redesign/ui/Page';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
-import KpiCard from '@/redesign/ui/KpiCard';
 import FilterBar from '@/redesign/ui/FilterBar';
 import StatusBadge from '@/redesign/ui/StatusBadge';
-import { GlassCard, MetricValue, EmptyState } from '@/redesign/ui';
+import { GlassCard, MetricValue, EmptyState, Skeleton } from '@/redesign/ui';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
 import { FISA_COLUMNS, parseColumnWeights } from '@/lib/fisaProgress';
 
@@ -109,14 +106,6 @@ export default function FisaTemplatesPage() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  
-  const stats = useMemo(() => ({
-    total: templates.length,
-    active: templates.filter(t => t.active).length,
-    implicit: templates.filter(t => t.is_default).length,
-    mine: templates.filter(t => t.created_by_user_id === me?.id).length,
-  }), [templates, me?.id]);
-
   const canEdit = (t: Template) => isAdmin || t.created_by_user_id === me?.id;
 
   
@@ -136,6 +125,10 @@ export default function FisaTemplatesPage() {
       (t.created_by_name || '').toLowerCase().includes(q)
     );
   }, [templates, search]);
+
+  useEffect(() => {
+    if (selectedId === null && filtered.length > 0) setSelectedId(filtered[0].id);
+  }, [filtered, selectedId]);
 
   const selected = useMemo(
     () => (selectedId === null ? null : templates.find(t => t.id === selectedId) || null),
@@ -187,9 +180,9 @@ export default function FisaTemplatesPage() {
 
 
 }
-        <div className="enter-up shrink-0 pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
+        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
               <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                 <ClipboardCheck className="h-5 w-5 text-accent" aria-hidden />
               </span>
@@ -221,18 +214,6 @@ export default function FisaTemplatesPage() {
 
         {
 
-}
-        <div className="enter-up shrink-0" style={{ animationDelay: '70ms' }}>
-          <Page.Kpis cols={4}>
-            <KpiCard label="Total template-uri" value={stats.total}    icon={ClipboardCheck} iconColor="text-accent" />
-            <KpiCard label="Active"             value={stats.active}   icon={CheckCircle2}   iconColor="text-status-green" />
-            <KpiCard label="Implicite"          value={stats.implicit} icon={Star}           iconColor="text-status-amber" />
-            <KpiCard label="Ale mele"           value={stats.mine}     icon={UserIcon}       iconColor="text-status-blue" />
-          </Page.Kpis>
-        </div>
-
-        {
-
 
 }
         <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
@@ -240,8 +221,8 @@ export default function FisaTemplatesPage() {
           {}
           <section className="xl:col-span-8 enter-up min-w-0 min-h-0 flex flex-col" style={{ animationDelay: '140ms' }}>
             <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 flex-1">
-              <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-line/40 shrink-0">
-                <h2 className="text-pm-md font-semibold text-content-primary">Catalog template-uri</h2>
+              <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line/40 shrink-0">
+                <h2 className="text-pm-md font-semibold text-content-primary truncate min-w-0">Catalog template-uri</h2>
                 <p className="text-pm-xs text-content-muted shrink-0">
                   {filtered.length} {filtered.length === 1 ? 'template' : 'template-uri'}{search ? ` găsite pentru „${search}"` : ''}
                 </p>
@@ -249,8 +230,23 @@ export default function FisaTemplatesPage() {
 
               <div className="p-4 flex-1 min-h-0 overflow-y-auto">
                 {loading ? (
-                  <div className="flex justify-center py-16">
-                    <Loader2 className="h-6 w-6 animate-spin text-content-muted" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3" aria-hidden>
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="rounded-2xl border border-line bg-surface-elevated p-4 flex flex-col gap-3">
+                        <div className="flex items-start gap-2">
+                          <Skeleton width={16} height={16} rounded="md" className="mt-0.5 shrink-0" />
+                          <Skeleton width="60%" height={14} rounded="md" />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Skeleton width="100%" height={11} rounded="md" />
+                          <Skeleton width="80%" height={11} rounded="md" />
+                        </div>
+                        <div className="mt-auto pt-2 border-t border-line/40 flex gap-1">
+                          <Skeleton width={32} height={32} rounded="lg" />
+                          <Skeleton width={32} height={32} rounded="lg" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : filtered.length === 0 ? (
                   search ? (
@@ -287,7 +283,7 @@ export default function FisaTemplatesPage() {
                           <div className="flex items-start gap-2 mb-2">
                             <ClipboardCheck className="h-4 w-4 text-content-muted mt-0.5 shrink-0" aria-hidden />
                             <div className="flex-1 min-w-0">
-                              <p className="text-pm-sm font-semibold text-content-primary">{t.name}</p>
+                              <p className="text-pm-sm font-semibold text-content-primary truncate">{t.name}</p>
                               {t.is_default && (
                                 <span className="mt-1 inline-block">
                                   <StatusBadge tone="accent" label="Implicit" size="xs" />
@@ -299,10 +295,10 @@ export default function FisaTemplatesPage() {
                             <p className="text-pm-xs text-content-muted flex-1 mb-3 line-clamp-3">{t.description}</p>
                           )}
                           {t.created_by_name && (
-                            <p className="text-pm-2xs text-content-muted/70 mb-3">creat de {t.created_by_name}</p>
+                            <p className="text-pm-2xs text-content-muted/70 mb-3 truncate">creat de {t.created_by_name}</p>
                           )}
 
-                          <div className="flex items-center gap-1 mt-auto pt-2 border-t border-line/40 opacity-70 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center gap-1 mt-auto pt-2 border-t border-line/40 opacity-70 group-hover:opacity-100 transition-opacity duration-150">
                             <IconButton size="sm" onClick={(e) => { e.stopPropagation(); clone(t); }} title="Clonează" aria-label="Clonează template">
                               <Copy />
                             </IconButton>
@@ -361,7 +357,7 @@ export default function FisaTemplatesPage() {
                   </IconButton>
                 </div>
 
-                <div className="px-4 py-3 border-b border-line space-y-2.5 flex-1 min-h-0 overflow-y-auto">
+                <div className="px-4 py-3 border-b border-line space-y-3 flex-1 min-h-0 overflow-y-auto">
                   {selected.is_default && (
                     <StatusBadge tone="accent" label="Template implicit" size="sm" />
                   )}

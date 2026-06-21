@@ -73,16 +73,16 @@ export default function RfqResponsePage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-50"><Loader2 className="h-8 w-8 animate-spin text-slate-500" /></div>;
+    return <div className="min-h-screen flex items-center justify-center bg-surface-page"><Loader2 className="h-8 w-8 animate-spin text-content-muted" /></div>;
   }
 
   if (error || !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-        <div className="max-w-md w-full bg-white rounded-lg shadow border p-8 text-center">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-xl font-bold mb-2">Acces invalid</h1>
-          <p className="text-sm text-slate-600">{error || 'Link invalid'}</p>
+      <div className="min-h-screen flex items-center justify-center bg-surface-page p-6">
+        <div className="max-w-md w-full bg-surface-primary rounded-2xl shadow-[var(--elevation-2)] border border-line p-8 text-center anim-scale-in">
+          <AlertTriangle className="h-12 w-12 text-status-red mx-auto mb-4" />
+          <h1 className="text-pm-xl font-bold text-content-primary mb-2">Acces invalid</h1>
+          <p className="text-pm-base text-content-secondary">{error || 'Link invalid'}</p>
         </div>
       </div>
     );
@@ -90,11 +90,11 @@ export default function RfqResponsePage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-        <div className="max-w-md w-full bg-white rounded-lg shadow border p-8 text-center">
-          <CheckCircle className="h-12 w-12 text-emerald-500 mx-auto mb-4" />
-          <h1 className="text-xl font-bold mb-2">Mulțumim!</h1>
-          <p className="text-sm text-slate-600">Răspunsul a fost trimis cu succes. Vă vom contacta în scurt timp.</p>
+      <div className="min-h-screen flex items-center justify-center bg-surface-page p-6">
+        <div className="max-w-md w-full bg-surface-primary rounded-2xl shadow-[var(--elevation-2)] border border-line p-8 text-center anim-scale-in">
+          <CheckCircle className="h-12 w-12 text-status-green mx-auto mb-4" />
+          <h1 className="text-pm-xl font-bold text-content-primary mb-2">Mulțumim!</h1>
+          <p className="text-pm-base text-content-secondary">Răspunsul a fost trimis cu succes. Vă vom contacta în scurt timp.</p>
         </div>
       </div>
     );
@@ -103,119 +103,119 @@ export default function RfqResponsePage() {
   const total = Object.values(responses).reduce((s, v) => s + (v.unit_price * v.available_quantity), 0);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b">
+    <div className="min-h-screen bg-surface-page">
+      <header className="bg-surface-primary border-b border-line">
         <div className="max-w-4xl mx-auto px-6 py-4">
-          <h1 className="text-lg font-bold text-slate-900">{data.rfq.title}</h1>
-          <p className="text-xs text-slate-500">Cerere ofertă {data.rfq.rfq_number}{data.invitation.supplier_name ? ` — ${data.invitation.supplier_name}` : ''}</p>
+          <h1 className="text-pm-lg font-bold text-content-primary truncate">{data.rfq.title}</h1>
+          <p className="text-pm-xs text-content-muted truncate">Cerere ofertă {data.rfq.rfq_number}{data.invitation.supplier_name ? ` — ${data.invitation.supplier_name}` : ''}</p>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-4">
         {data.rfq.description && (
-          <div className="bg-white rounded-lg shadow border p-4">
-            <p className="text-sm text-slate-700">{data.rfq.description}</p>
+          <div className="bg-surface-primary rounded-2xl shadow-[var(--elevation-1)] border border-line p-4 anim-slide-up">
+            <p className="text-pm-base text-content-secondary">{data.rfq.description}</p>
           </div>
         )}
 
         {data.rfq.deadline && (
-          <div className="bg-amber-50 border border-amber-200 rounded p-3 text-sm text-amber-900">
+          <div className="bg-status-amber/12 border border-status-amber/20 rounded-xl p-3 text-pm-base text-status-amber anim-fade-slide-in">
             <strong>Termen răspuns:</strong> {data.rfq.deadline}
           </div>
         )}
 
         {!showDecline ? (
           <>
-            <div className="bg-white rounded-lg shadow border overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-100">
+            <div className="bg-surface-primary rounded-2xl shadow-[var(--elevation-1)] border border-line overflow-hidden anim-slide-up">
+              <table className="w-full text-pm-base">
+                <thead className="bg-surface-secondary">
                   <tr>
-                    <th className="text-left px-4 py-2 text-xs uppercase text-slate-600">Articol</th>
-                    <th className="text-right px-4 py-2 text-xs uppercase text-slate-600">Cant. solicitată</th>
-                    <th className="text-right px-4 py-2 text-xs uppercase text-slate-600">Cant. disponibilă</th>
-                    <th className="text-right px-4 py-2 text-xs uppercase text-slate-600">Preț unitar</th>
-                    <th className="text-right px-4 py-2 text-xs uppercase text-slate-600">Total</th>
+                    <th className="text-left px-4 py-2 text-pm-eyebrow uppercase text-content-muted">Articol</th>
+                    <th className="text-right px-4 py-2 text-pm-eyebrow uppercase text-content-muted">Cant. solicitată</th>
+                    <th className="text-right px-4 py-2 text-pm-eyebrow uppercase text-content-muted">Cant. disponibilă</th>
+                    <th className="text-right px-4 py-2 text-pm-eyebrow uppercase text-content-muted">Preț unitar</th>
+                    <th className="text-right px-4 py-2 text-pm-eyebrow uppercase text-content-muted">Total</th>
                   </tr>
                 </thead>
                 <tbody>
                   {data.rfq.items.map(item => {
                     const r = responses[item.id] || { unit_price: 0, available_quantity: item.quantity, notes: '' };
                     return (
-                      <tr key={item.id} className="border-t">
-                        <td className="px-4 py-2">{item.description}{item.notes && <div className="text-xs text-slate-500">{item.notes}</div>}</td>
-                        <td className="px-4 py-2 text-right tabular-nums text-slate-600">{item.quantity} {item.unit}</td>
+                      <tr key={item.id} className="border-t border-line/70 transition-smooth duration-150 hover:bg-surface-tertiary">
+                        <td className="px-4 py-2 text-content-primary"><span className="block min-w-0 truncate">{item.description}</span>{item.notes && <div className="text-pm-xs text-content-muted truncate">{item.notes}</div>}</td>
+                        <td className="px-4 py-2 text-right tabular-nums text-content-secondary">{item.quantity} {item.unit}</td>
                         <td className="px-4 py-2 text-right">
                           <input type="number" min={0} step="0.01" value={r.available_quantity}
                             onChange={e => setResponses(prev => ({ ...prev, [item.id]: { ...r, available_quantity: Number(e.target.value) } }))}
-                            className="w-24 text-right px-2 py-1 border rounded" />
+                            className="w-24 h-8 text-right px-2 border border-line rounded-lg bg-surface-primary text-content-primary transition-smooth duration-150 hover:border-content-muted focus-visible:outline-none focus-visible:border-accent focus-visible:shadow-[var(--ring-soft)]" />
                         </td>
                         <td className="px-4 py-2 text-right">
                           <input type="number" min={0} step="0.01" value={r.unit_price}
                             onChange={e => setResponses(prev => ({ ...prev, [item.id]: { ...r, unit_price: Number(e.target.value) } }))}
-                            className="w-28 text-right px-2 py-1 border rounded" />
+                            className="w-28 h-8 text-right px-2 border border-line rounded-lg bg-surface-primary text-content-primary transition-smooth duration-150 hover:border-content-muted focus-visible:outline-none focus-visible:border-accent focus-visible:shadow-[var(--ring-soft)]" />
                         </td>
-                        <td className="px-4 py-2 text-right tabular-nums font-semibold">{(r.unit_price * r.available_quantity).toFixed(2)}</td>
+                        <td className="px-4 py-2 text-right tabular-nums font-semibold text-content-primary">{(r.unit_price * r.available_quantity).toFixed(2)}</td>
                       </tr>
                     );
                   })}
                 </tbody>
-                <tfoot className="bg-slate-100">
+                <tfoot className="bg-surface-secondary">
                   <tr>
-                    <td colSpan={4} className="px-4 py-2 text-right font-semibold">TOTAL OFERTĂ</td>
-                    <td className="px-4 py-2 text-right tabular-nums font-bold text-base">{total.toFixed(2)} {currency}</td>
+                    <td colSpan={4} className="px-4 py-2 text-right font-semibold text-content-primary">TOTAL OFERTĂ</td>
+                    <td className="px-4 py-2 text-right tabular-nums font-bold text-pm-md text-content-primary">{total.toFixed(2)} {currency}</td>
                   </tr>
                 </tfoot>
               </table>
             </div>
 
-            <div className="bg-white rounded-lg shadow border p-4 grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs uppercase text-slate-600 mb-1">Termen livrare (zile)</label>
+            <div className="bg-surface-primary rounded-2xl shadow-[var(--elevation-1)] border border-line p-6 grid grid-cols-3 gap-4 anim-slide-up">
+              <div className="min-w-0">
+                <label className="block text-pm-eyebrow uppercase text-content-muted mb-1">Termen livrare (zile)</label>
                 <input type="number" min={0} value={leadTime} onChange={e => setLeadTime(e.target.value)}
-                  className="w-full px-2 py-1 border rounded text-sm" />
+                  className="w-full h-10 px-3 border border-line rounded-xl bg-surface-primary text-pm-base text-content-primary transition-smooth duration-150 hover:border-content-muted focus-visible:outline-none focus-visible:border-accent focus-visible:shadow-[var(--ring-soft)]" />
               </div>
-              <div>
-                <label className="block text-xs uppercase text-slate-600 mb-1">Valabilitate ofertă (zile)</label>
+              <div className="min-w-0">
+                <label className="block text-pm-eyebrow uppercase text-content-muted mb-1">Valabilitate ofertă (zile)</label>
                 <input type="number" min={0} value={validity} onChange={e => setValidity(e.target.value)}
-                  className="w-full px-2 py-1 border rounded text-sm" />
+                  className="w-full h-10 px-3 border border-line rounded-xl bg-surface-primary text-pm-base text-content-primary transition-smooth duration-150 hover:border-content-muted focus-visible:outline-none focus-visible:border-accent focus-visible:shadow-[var(--ring-soft)]" />
               </div>
-              <div>
-                <label className="block text-xs uppercase text-slate-600 mb-1">Monedă</label>
-                <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full px-2 py-1 border rounded text-sm">
+              <div className="min-w-0">
+                <label className="block text-pm-eyebrow uppercase text-content-muted mb-1">Monedă</label>
+                <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full h-10 px-3 border border-line rounded-xl bg-surface-primary text-pm-base text-content-primary transition-smooth duration-150 hover:border-content-muted focus-visible:outline-none focus-visible:border-accent focus-visible:shadow-[var(--ring-soft)]">
                   <option value="RON">RON</option>
                   <option value="EUR">EUR</option>
                   <option value="USD">USD</option>
                 </select>
               </div>
-              <div className="col-span-3">
-                <label className="block text-xs uppercase text-slate-600 mb-1">Observații</label>
+              <div className="col-span-3 min-w-0">
+                <label className="block text-pm-eyebrow uppercase text-content-muted mb-1">Observații</label>
                 <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2}
-                  className="w-full px-2 py-1 border rounded text-sm" placeholder="Detalii suplimentare, condiții de plată, etc." />
+                  className="w-full px-3 py-2 border border-line rounded-xl bg-surface-primary text-pm-base text-content-primary transition-smooth duration-150 hover:border-content-muted focus-visible:outline-none focus-visible:border-accent focus-visible:shadow-[var(--ring-soft)]" placeholder="Detalii suplimentare, condiții de plată, etc." />
               </div>
             </div>
 
             <div className="flex justify-between gap-2">
-              <button onClick={() => setShowDecline(true)} className="px-4 py-2 rounded border border-slate-300 text-sm text-slate-700 hover:bg-slate-100">
+              <button onClick={() => setShowDecline(true)} className="inline-flex items-center justify-center h-10 px-4 rounded-xl border border-line text-pm-base text-content-secondary transition-smooth duration-150 hover:bg-surface-tertiary hover:text-content-primary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                 Refuz cererea
               </button>
               <button onClick={() => submit(false)} disabled={submitting || total <= 0}
-                className="px-6 py-2 rounded bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 disabled:opacity-50 flex items-center gap-2">
+                className="inline-flex items-center justify-center gap-2 h-10 px-6 rounded-xl bg-accent text-white text-pm-base font-semibold transition-smooth duration-150 hover:shadow-[var(--elevation-2)] active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50">
                 {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 Trimite ofertă
               </button>
             </div>
           </>
         ) : (
-          <div className="bg-white rounded-lg shadow border p-6">
-            <h3 className="text-base font-semibold mb-2">Confirmăți refuzul</h3>
+          <div className="bg-surface-primary rounded-2xl shadow-[var(--elevation-1)] border border-line p-6 anim-scale-in">
+            <h3 className="text-pm-md font-semibold text-content-primary mb-2">Confirmăți refuzul</h3>
             <textarea value={declineReason} onChange={e => setDeclineReason(e.target.value)} rows={3}
-              placeholder="Motiv refuz (opțional)" className="w-full px-2 py-1 border rounded text-sm mb-3" />
+              placeholder="Motiv refuz (opțional)" className="w-full px-3 py-2 border border-line rounded-xl bg-surface-primary text-pm-base text-content-primary transition-smooth duration-150 hover:border-content-muted focus-visible:outline-none focus-visible:border-accent focus-visible:shadow-[var(--ring-soft)] mb-4" />
             <div className="flex justify-end gap-2">
-              <button onClick={() => setShowDecline(false)} className="px-4 py-2 rounded border text-sm">
-                <X className="h-4 w-4 inline mr-1" /> Anulează
+              <button onClick={() => setShowDecline(false)} className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl border border-line text-pm-base text-content-secondary transition-smooth duration-150 hover:bg-surface-tertiary hover:text-content-primary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+                <X className="h-4 w-4" /> Anulează
               </button>
               <button onClick={() => submit(true)} disabled={submitting}
-                className="px-4 py-2 rounded bg-red-600 text-white text-sm">Confirmă refuz</button>
+                className="inline-flex items-center justify-center h-10 px-4 rounded-xl bg-status-red text-white text-pm-base font-semibold transition-smooth duration-150 hover:shadow-[var(--elevation-2)] active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50">Confirmă refuz</button>
             </div>
           </div>
         )}

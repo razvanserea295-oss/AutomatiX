@@ -63,17 +63,17 @@ export default function ForcePasswordChangePage({ username, onLogout }: Props) {
     <div className="relative flex min-h-screen items-center justify-center bg-surface-primary p-6">
       <div className="w-full max-w-md rounded-2xl border border-line bg-surface-secondary p-8 shadow-soft-lg">
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded bg-accent">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
             <GearLogo size={22} className="text-surface-primary" />
           </div>
           <span className="text-lg font-semibold tracking-tight text-content-primary">Automatix</span>
         </div>
 
-        <div className="mb-6 flex items-start gap-3 rounded-lg border border-status-amber/30 bg-status-amber/5 p-3.5">
+        <div className="mb-6 flex items-start gap-3 rounded-lg border border-status-amber/30 bg-status-amber/5 p-4">
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-status-amber" />
-          <div className="text-sm">
+          <div className="min-w-0 text-sm">
             <p className="font-medium text-content-primary">Schimbă parola pentru a continua</p>
-            <p className="mt-1 text-content-muted">
+            <p className="mt-1 break-words text-content-muted">
               Aceasta e prima conectare pe contul <span className="font-mono">{username}</span> —
               parola implicită nu e sigură. Setează una nouă, doar a ta, înainte de a accesa aplicația.
             </p>
@@ -118,7 +118,7 @@ export default function ForcePasswordChangePage({ username, onLogout }: Props) {
           />
 
           {error && (
-            <div className="rounded border border-status-red/20 bg-status-red/5 px-3.5 py-2.5">
+            <div className="anim-fade-slide-in rounded-lg border border-status-red/20 bg-status-red/5 px-3 py-2">
               <p className="text-xs text-status-red">{error}</p>
             </div>
           )}
@@ -126,7 +126,7 @@ export default function ForcePasswordChangePage({ username, onLogout }: Props) {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-11 w-full items-center justify-center rounded bg-accent text-sm font-medium text-surface-primary transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-sm font-medium text-[var(--color-on-accent)] transition-smooth duration-150 hover:opacity-90 hover:shadow-[var(--elevation-2)] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Actualizează parola'}
           </button>
@@ -135,7 +135,7 @@ export default function ForcePasswordChangePage({ username, onLogout }: Props) {
             type="button"
             onClick={onLogout}
             disabled={loading}
-            className="block w-full text-center text-xs text-content-muted underline-offset-4 hover:text-content-secondary hover:underline"
+            className="block w-full rounded-lg py-1 text-center text-xs text-content-muted underline-offset-4 transition-smooth duration-150 hover:text-content-secondary hover:underline focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
           >
             Deconectează-te
           </button>
@@ -171,14 +171,14 @@ function PasswordField({ id, label, value, onChange, disabled, visible, onToggle
           onChange={(e) => onChange(e.target.value)}
           disabled={disabled}
           autoComplete={autoComplete}
-          className="h-11 w-full rounded border border-line bg-surface-primary px-3.5 pr-10 text-sm text-content-primary placeholder:text-content-muted/50 transition-shadow focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50"
+          className="h-11 w-full rounded-xl border border-line bg-surface-primary px-3 pr-10 text-sm text-content-primary placeholder:text-content-muted/50 transition-smooth duration-150 focus:border-accent focus:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:opacity-50"
         />
         {onToggle && (
           <button
             type="button"
             onClick={onToggle}
             tabIndex={-1}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-content-muted hover:text-content-primary"
+            className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-content-muted transition-smooth duration-150 hover:bg-surface-tertiary hover:text-content-primary active:scale-90"
           >
             {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>

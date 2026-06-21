@@ -43,8 +43,6 @@ interface SystemInfo {
 interface AppInfo {
   sys: SystemInfo | null;
   logPath: string;
-  aiUrl: string;
-  aiHealth: { status?: string; version?: string; model_path?: string; auth_required?: boolean } | null;
   serverUrl: string;
   serverHealth: { status?: string; version?: string; mode?: string } | null;
 }
@@ -291,17 +289,12 @@ export default function AboutPanel({ user }: AboutPanelProps = {}) {
         const sys = await window.electron.invoke('system_info').catch(() => null) as SystemInfo | null;
         const logPath = await window.electron.invoke('log_get_path').catch(() => '') as string;
 
-        const aiUrl = (localStorage.getItem('promix_ai_url') || 'http://127.0.0.1:8100').replace(/\/+$/, '');
-        const aiHealth = await fetch(`${aiUrl}/health`, { signal: AbortSignal.timeout(2500) })
-          .then(r => r.json())
-          .catch(() => null);
-
         const serverUrl = (localStorage.getItem('promix_server_url') || '').replace(/\/+$/, '');
         const serverHealth = serverUrl
           ? await fetch(`${serverUrl}/api/health`, { signal: AbortSignal.timeout(2500) }).then(r => r.json()).catch(() => null)
           : null;
 
-        setInfo({ sys, logPath, aiUrl, aiHealth, serverUrl, serverHealth });
+        setInfo({ sys, logPath, serverUrl, serverHealth });
       } catch {  }
     })();
   }, []);
@@ -499,36 +492,6 @@ export default function AboutPanel({ user }: AboutPanelProps = {}) {
 
           <dt className="text-content-muted">Folder backup-uri</dt>
           <dd className="text-content-primary font-mono text-pm-xs break-all">{info?.sys?.paths.backups ?? '—'}</dd>
-        </dl>
-      </section>
-
-      {}
-      <section className="bg-surface-secondary rounded-lg border border-line p-5">
-        <h2 className="text-base font-semibold text-content-primary mb-3">Serviciu AI</h2>
-        <dl className="grid grid-cols-[160px_1fr] gap-y-2 text-sm">
-          <dt className="text-content-muted">URL</dt>
-          <dd className="text-content-primary font-mono text-pm-xs break-all">{info?.aiUrl ?? '—'}</dd>
-
-          <dt className="text-content-muted">Status</dt>
-          <dd className="text-content-primary">
-            {info?.aiHealth?.status === 'ok'
-              ? <span className="text-status-green">● Online · v{info.aiHealth.version || '?'}</span>
-              : <span className="text-status-red">● Indisponibil</span>}
-          </dd>
-
-          {info?.aiHealth?.model_path && (
-            <>
-              <dt className="text-content-muted">Model</dt>
-              <dd className="text-content-primary font-mono text-pm-xs break-all">{info.aiHealth.model_path}</dd>
-            </>
-          )}
-
-          <dt className="text-content-muted">Autentificare</dt>
-          <dd className="text-content-primary">
-            {info?.aiHealth?.auth_required
-              ? <span className="text-status-green">Activă (bearer token)</span>
-              : <span className="text-status-amber">Dezactivată</span>}
-          </dd>
         </dl>
       </section>
 

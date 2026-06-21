@@ -344,7 +344,7 @@ export default function FormModal({
                         reader.readAsDataURL(f);
                       }
                     }}
-                    className="w-full text-xs text-content-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-accent file:text-surface-primary file:cursor-pointer hover:file:opacity-90"
+                    className="w-full text-xs text-content-secondary file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-accent file:text-[var(--color-on-accent)] file:cursor-pointer hover:file:opacity-90"
                   />
                 </div>
               ) : (

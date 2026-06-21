@@ -58,10 +58,11 @@
 /* ============================================================================
  * Hover affordances — gentle (no glow halos in the airy direction).
  * ==========================================================================*/
-.hover-lift { transition: box-shadow var(--dur-base) ease, border-color var(--dur-fast) ease; }
-.hover-lift:hover { border-color: var(--color-border); box-shadow: var(--elevation-2); }
-.hover-glow { transition: box-shadow var(--dur-base) ease, border-color var(--dur-fast) ease; }
-.hover-glow:hover { border-color: var(--color-accent-muted); box-shadow: var(--ring-soft); }
+.hover-lift { transition: box-shadow var(--dur-base) var(--ease-spring), border-color var(--dur-fast) ease, transform var(--dur-base) var(--ease-spring); }
+.hover-lift:hover { border-color: var(--color-border); box-shadow: var(--elevation-2); transform: translateY(-1px); }
+.hover-lift:active { transform: scale(0.98); transition-duration: 80ms; }
+.hover-glow { transition: box-shadow var(--dur-base) var(--ease-spring), border-color var(--dur-fast) ease, transform var(--dur-base) var(--ease-spring); }
+.hover-glow:hover { border-color: var(--color-accent-muted); box-shadow: var(--ring-soft); transform: translateY(-1px); }
 
 /* ============================================================================
  * Entry animations (opt-in via .enter-* + optional inline delay)
@@ -69,9 +70,9 @@
 .enter-up,
 .enter-fade,
 .enter-scale { opacity: 0; will-change: transform, opacity; }
-.enter-up    { animation: dsEnterUp    420ms var(--ease-out-expo) both; }
-.enter-fade  { animation: dsEnterFade  var(--dur-slow) var(--ease-standard) both; }
-.enter-scale { animation: dsEnterScale var(--dur-slow) var(--ease-out-expo) both; }
+.enter-up    { animation: dsEnterUp    200ms var(--ease-out-expo) both; }
+.enter-fade  { animation: dsEnterFade  180ms var(--ease-standard) both; }
+.enter-scale { animation: dsEnterScale 200ms var(--ease-out-expo) both; }
 @keyframes dsEnterUp    { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
 @keyframes dsEnterFade  { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dsEnterScale { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: none; } }
@@ -80,7 +81,16 @@
  * Form controls — indigo accent focus ring. Scoped to page content so it also
  * covers in-page modals.
  * ==========================================================================*/
-.app-surface input:not([type='checkbox']):not([type='radio']):focus,
+/* Input fields — frosted glass base + accent focus ring */
+.app-surface input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+.app-surface select,
+.app-surface textarea {
+  background-color: var(--color-bg-primary);
+  -webkit-backdrop-filter: saturate(130%) blur(8px);
+          backdrop-filter: saturate(130%) blur(8px);
+  transition: border-color var(--dur-fast) ease, box-shadow var(--dur-fast) ease, background-color var(--dur-fast) ease;
+}
+.app-surface input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):focus,
 .app-surface select:focus,
 .app-surface textarea:focus {
   border-color: var(--color-accent) !important;
@@ -152,7 +162,8 @@
     radial-gradient(circle at 80% 18%, rgba(255,255,255,0.02), transparent 20%);
 }
 .dark .app-bg {
-  background-color: #050607;
+  /* VS Code editor canvas (var --color-bg-page = #1F1F1F), flat — was near-black. */
+  background-color: var(--color-bg-page);
   background-image:
     radial-gradient(circle at 18% 10%, rgba(255,255,255,0.02), transparent 20%),
     radial-gradient(circle at 82% 20%, rgba(255,255,255,0.01), transparent 18%);
@@ -170,10 +181,10 @@
   will-change: transform, opacity;
 }
 .mesh-blob-1 { width: 50vw; height: 50vw; left: -12%; top: -18%;   background: radial-gradient(circle, rgba(16,185,129,0.55), transparent 68%); animation: meshDrift1 30s ease-in-out infinite alternate; }
-.mesh-blob-2 { width: 46vw; height: 46vw; right: -14%; top: -6%;    background: radial-gradient(circle, rgba(45,212,191,0.50), transparent 68%); animation: meshDrift2 38s ease-in-out infinite alternate; animation-delay: -7s; }
+.mesh-blob-2 { width: 46vw; height: 46vw; right: -14%; top: -6%;    background: radial-gradient(circle, rgba(77,134,255,0.50), transparent 68%); animation: meshDrift2 38s ease-in-out infinite alternate; animation-delay: -7s; }
 .mesh-blob-3 { width: 52vw; height: 52vw; left: 28%;  bottom: -24%; background: radial-gradient(circle, rgba(99,102,241,0.40), transparent 70%); animation: meshDrift3 46s ease-in-out infinite alternate; animation-delay: -18s; }
 .dark .mesh-blob-1 { background: radial-gradient(circle, rgba(16,185,129,0.34), transparent 70%); }
-.dark .mesh-blob-2 { background: radial-gradient(circle, rgba(45,212,191,0.30), transparent 70%); }
+.dark .mesh-blob-2 { background: radial-gradient(circle, rgba(77,134,255,0.30), transparent 70%); }
 .dark .mesh-blob-3 { background: radial-gradient(circle, rgba(129,140,248,0.26), transparent 72%); }
 @keyframes meshDrift1 { from { transform: translate3d(0,0,0) scale(1);    } to { transform: translate3d(8vw, 7vh, 0)  scale(1.25); } }
 @keyframes meshDrift2 { from { transform: translate3d(0,0,0) scale(1.15); } to { transform: translate3d(-7vw, 8vh, 0) scale(0.95); } }
@@ -190,11 +201,45 @@ html[data-perf-tier='low'] .mesh-blob { animation: none !important; filter: blur
   /* Eases the subtle mesh back in AFTER a transition settles (opaque → wash). */
   transition: background-color 280ms var(--ease-standard, ease);
 }
+/* Brand watermark removed per request — the centered gear mark
+   (.app-surface::before) and its radial backing glow (.app-surface::after)
+   were taken out so every page has a clean background. `position: relative`
+   is kept for positioned descendants that rely on it. */
+.app-surface { position: relative; }
 /* During a view transition the surface is FULLY OPAQUE and snaps instantly, so
    the captured old/new snapshots never show the mesh through (no doubling, no
    see-through "glass glitch"). When `vt-active` clears on `.finished`, the base
    rule's 280ms transition gently fades the mesh wash back in. */
 html.vt-active .app-surface { background-color: var(--color-bg-page); transition: none; }
+
+/* ----------------------------------------------------------------------------
+ * Flash-free capture. The View Transition snapshots the INCOMING page the instant
+ * its DOM mounts — which is exactly when freshly-mounted content is at the START
+ * of its entrance animation (opacity:0 / pre-transform). Captured that way, every
+ * `anim-*` card reads as a SEE-THROUGH RECTANGLE for the ~460ms morph, then pops in.
+ * Collapse the entrance animations to a single instant frame WHILE a transition is
+ * active so the captured page is fully painted. This is a duration-ONLY override
+ * (same idiom as the low-perf tier below): the animation simply elapses past its
+ * end, so there is NO post-transition replay, and normal (non-VT) mounts are
+ * untouched. The VT page-morph itself supplies the entrance motion. */
+html.vt-active .anim-scale-in,
+html.vt-active .anim-fade-in,
+html.vt-active .anim-slide-up,
+html.vt-active .anim-fade-slide-in,
+html.vt-active .anim-slide-in-right,
+html.vt-active .anim-rise,
+html.vt-active .anim-pop { animation-duration: 1ms !important; }
+
+/* Translucent glass surfaces (`backdrop-filter`) snapshot as transparent in the
+ * captured frame; force them opaque-backed for the capture so no see-through
+ * rectangles bleed through during the morph. Cleared automatically with vt-active. */
+html.vt-active .surface-glass,
+html.vt-active .surface-glass-strong,
+html.vt-active .surface-frost {
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+  background-color: var(--color-bg-elevated) !important;
+}
 
 /* ============================================================================
  * Page transitions (View Transitions API) — LOAD-BEARING, preserved verbatim.
@@ -282,6 +327,50 @@ html.vt-supported .animate-page-in { animation: none !important; }
 /* Marker class for morphing elements (the `view-transition-name` does the work).
    No paint containment — it would clip the card's soft drop shadow. */
 .vt-morph { isolation: isolate; }
+
+/* ============================================================================
+ * PAGE-TRANSITION VEIL. An opaque cover that lives INSIDE the page wrapper
+ * (`.page-vt-root`, captured as the `page` snapshot). Because `vt-active` is
+ * toggled ON *before* the View Transition captures the OLD snapshot (see
+ * pageTransitions.ts `begin()`), the veil is already opaque at capture time —
+ * so BOTH the old and the new `page` snapshots are fully covered. The morph is
+ * therefore an opaque→opaque crossfade: the translucent Suspense skeleton /
+ * glass / alpha cards can never snapshot through as see-through rectangles
+ * ("cadrane transparente"). When the transition finishes and `vt-active`
+ * clears, the veil fades out over 200ms to reveal the settled page.
+ * One veil in the page wrapper covers every routed page (App.tsx).
+ * ==========================================================================*/
+.vt-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg-page);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms var(--ease-standard, cubic-bezier(0.22, 1, 0.36, 1));
+}
+/* During the transition: snap fully opaque with NO transition so it is already
+   covering at the instant the old snapshot is captured (no flash of the bug). */
+html.vt-active .vt-veil { opacity: 1; transition: none; }
+/* Non-VT browsers never set `vt-active`, so the veil stays hidden and the
+   existing PageTransitionOverlay loader handles them instead. */
+@media (prefers-reduced-motion: reduce) { .vt-veil { transition: none; } }
+
+/* ============================================================================
+ * NAV DRAWER (below-lg hamburger sidebar). Controlled transform instead of
+ * Tailwind's `translate-x-0`/`-translate-x-full` toggle, which didn't apply
+ * reliably here. Off-canvas by default; `.is-open` slides it in.
+ * ==========================================================================*/
+/* Pure transform toggle — NO transition/animation. Any CSS transition on this
+   portal element gets stuck at the start value (the panel never slides past
+   translateX(-100%)), confirmed empirically; forcing `transition:none` snaps it
+   to the open position correctly. So `.is-open` just sets the resting transform
+   directly — instant, bulletproof open/close. */
+.nav-drawer { transform: translateX(-100%); }
+.nav-drawer.is-open { transform: translateX(0); }
 
 /* ============================================================================
  * Optional module layout — centered canvas + KPI row + bento. Available for
@@ -379,13 +468,18 @@ html[data-perf-tier='low'] .ds-sparkline.is-animated .ds-spark-line { animation-
  * GPU-friendly (transform/opacity) and fully neutralised under reduced-motion.
  * ==========================================================================*/
 
-/* Every glass card gets a gentle springy hover lift + deeper shadow. */
+/* Every glass card gets a springy hover lift + deeper shadow + border highlight. */
 :where(.app-surface) .surface-card {
   transition: transform var(--dur-base) var(--ease-spring), box-shadow var(--dur-base) ease, border-color var(--dur-fast) ease;
 }
 @media (hover: hover) {
-  :where(.app-surface) .surface-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-soft-lg); }
+  :where(.app-surface) .surface-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-soft-lg);
+    border-color: color-mix(in srgb, var(--color-border) 100%, var(--color-accent) 0%);
+  }
 }
+:where(.app-surface) .surface-card:active { transform: scale(0.99); transition-duration: 80ms; }
 /* Never fight the page View Transition (the new page's cards are mid-capture). */
 html.vt-active :where(.app-surface) .surface-card { transition: none; transform: none; }
 
@@ -396,6 +490,9 @@ button:not(:disabled):active { transform: scale(0.97); }
 
 /* List / table rows: quick highlight on hover. */
 tbody tr { transition: background-color var(--dur-fast) ease, transform var(--dur-fast) ease; }
+@media (hover: hover) {
+  tbody tr:hover { background-color: color-mix(in srgb, var(--color-bg-tertiary) 50%, transparent); }
+}
 
 /* Reusable entrance / attention keyframes + opt-in utility classes. */
 @keyframes popIn    { 0% { opacity: 0; transform: scale(0.82); } 60% { transform: scale(1.05); } 100% { opacity: 1; transform: scale(1); } }
@@ -404,20 +501,20 @@ tbody tr { transition: background-color var(--dur-fast) ease, transform var(--du
 @keyframes glowPulse{ 0%, 50%, 100% { box-shadow: none; } }
 @keyframes spinSlow { to { transform: rotate(360deg); } }
 @keyframes wiggle   { 0%,100% { transform: rotate(0); } 25% { transform: rotate(0); } 75% { transform: rotate(0); } }
-.anim-pop       { animation: popIn 360ms var(--ease-spring) both; }
-.anim-rise      { animation: riseIn 460ms var(--ease-apple) both; }
+.anim-pop       { animation: popIn 220ms var(--ease-spring) both; }
+.anim-rise      { animation: riseIn 200ms var(--ease-apple) both; }
 .anim-float     { animation: none !important; }
 .anim-glow      { animation: none !important; }
 .anim-spin-slow { animation: none !important; }
 .hover-wiggle:hover { animation: none !important; }
 
 /* Staggered children — opt-in: add `stagger-in` to a list/grid container. */
-.stagger-in > * { animation: riseIn 480ms var(--ease-apple) both; }
-.stagger-in > *:nth-child(1) { animation-delay: 0ms; }    .stagger-in > *:nth-child(2) { animation-delay: 45ms; }
-.stagger-in > *:nth-child(3) { animation-delay: 90ms; }   .stagger-in > *:nth-child(4) { animation-delay: 135ms; }
-.stagger-in > *:nth-child(5) { animation-delay: 180ms; }  .stagger-in > *:nth-child(6) { animation-delay: 225ms; }
-.stagger-in > *:nth-child(7) { animation-delay: 270ms; }  .stagger-in > *:nth-child(8) { animation-delay: 315ms; }
-.stagger-in > *:nth-child(n+9) { animation-delay: 360ms; }
+.stagger-in > * { animation: riseIn 200ms var(--ease-apple) both; }
+.stagger-in > *:nth-child(1) { animation-delay: 0ms; }    .stagger-in > *:nth-child(2) { animation-delay: 20ms; }
+.stagger-in > *:nth-child(3) { animation-delay: 40ms; }   .stagger-in > *:nth-child(4) { animation-delay: 60ms; }
+.stagger-in > *:nth-child(5) { animation-delay: 75ms; }   .stagger-in > *:nth-child(6) { animation-delay: 90ms; }
+.stagger-in > *:nth-child(7) { animation-delay: 105ms; }  .stagger-in > *:nth-child(8) { animation-delay: 115ms; }
+.stagger-in > *:nth-child(n+9) { animation-delay: 120ms; }
 
 /* Bar / connector grow-in — width/height-AGNOSTIC (scale + fixed origin), so it
    works on any progress/capacity/aging bar without knowing its target width.
@@ -431,10 +528,69 @@ tbody tr { transition: background-color var(--dur-fast) ease, transform var(--du
   :where(.app-surface) .surface-card:hover { transform: none; }
   button:not(:disabled):active { transform: none; }
   .anim-pop, .anim-rise, .anim-float, .anim-glow, .anim-spin-slow, .hover-wiggle:hover,
-  .anim-bar-grow, .anim-grow-y, .stagger-in > * { animation: none !important; }
+  .anim-bar-grow, .anim-grow-y, .stagger-in > *, .anim-slide-in-right { animation: none !important; }
 }
 html[data-perf-tier='low'] .anim-bar-grow,
 html[data-perf-tier='low'] .anim-grow-y { animation-duration: 200ms; }
+html[data-perf-tier='low'] .anim-slide-in-right { animation-duration: 180ms; }
+
+/* ============================================================================
+ * MICRO-POLISH — depth, presence, and tactility for every interactive surface.
+ * ==========================================================================*/
+
+/* Select elements — match input styling, add a subtle chevron focus ring */
+.app-surface select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8A8A' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px !important;
+}
+
+/* Card header dividers — slightly thinner + softer */
+.surface-card > .border-b { border-color: color-mix(in srgb, var(--color-border) 70%, transparent); }
+
+/* Disabled inputs — muted but still readable */
+.app-surface input:disabled,
+.app-surface select:disabled,
+.app-surface textarea:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Smooth icon transitions inside interactive containers */
+.group:hover .group-hover\:rotate-90 { transform: rotate(90deg); }
+
+/* Numeric data — tighter tracking for tabular readability */
+[data-metric], .tabular { font-variant-numeric: tabular-nums; font-feature-settings: 'tnum'; }
+
+/* Empty state icons — gentle pulse on first appearance */
+.empty-state-icon { animation: riseIn 200ms var(--ease-apple) both; }
+
+/* Page content area — soft entrance on navigation */
+.page-vt-root { will-change: transform, opacity; }
+
+/* KPI grid — cascade entrance (each child rises in sequence on load) */
+.mod-kpis > * { animation: riseIn 200ms var(--ease-apple) both; }
+.mod-kpis > *:nth-child(1) { animation-delay: 0ms; }
+.mod-kpis > *:nth-child(2) { animation-delay: 35ms; }
+.mod-kpis > *:nth-child(3) { animation-delay: 70ms; }
+.mod-kpis > *:nth-child(4) { animation-delay: 100ms; }
+.mod-kpis > *:nth-child(5) { animation-delay: 115ms; }
+.mod-kpis > *:nth-child(n+6) { animation-delay: 120ms; }
+
+/* Bento grid — slightly staggered (less pronounced than KPI row) */
+.mod-bento > * { animation: riseIn 200ms var(--ease-apple) both; }
+.mod-bento > *:nth-child(1) { animation-delay: 40ms; }
+.mod-bento > *:nth-child(2) { animation-delay: 80ms; }
+.mod-bento > *:nth-child(n+3) { animation-delay: 120ms; }
+
+/* Frosted toolbar surfaces — inset top sheen for glass edge */
+.surface-frost {
+  box-shadow: inset 0 1px 0 var(--sheen-top);
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .mod-kpis > *, .mod-bento > * { animation: none !important; }
+}
 
 /* ============================================================================
  * COMPAT — styles that the EXISTING (not-yet-rebuilt) components reference, so
@@ -442,15 +598,15 @@ html[data-perf-tier='low'] .anim-grow-y { animation-duration: 200ms; }
  * main.tsx loads this stylesheet. These shrink as components get rebuilt.
  * ==========================================================================*/
 
-/* Legacy GlassCard + glassy panels → calm, highly legible card surfaces. */
+/* Legacy GlassCard + glassy panels → frosted glass surfaces. */
 .glass-surface,
 .glass-elevated,
 .glass-floating {
-  background-color: var(--color-bg-elevated);
+  background-color: color-mix(in srgb, var(--color-bg-elevated) 82%, transparent);
   border: 1px solid var(--color-border);
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  box-shadow: var(--elevation-2), inset 0 1px 0 var(--sheen-top);
+  -webkit-backdrop-filter: saturate(150%) blur(16px);
+          backdrop-filter: saturate(150%) blur(16px);
 }
 
 /* Legacy ambient background (AppBackground) → no colored orbs; solid canvas. */
@@ -460,7 +616,6 @@ html[data-perf-tier='low'] .anim-grow-y { animation-duration: 200ms; }
 
 /* Legacy aurora backdrops (boot loader, first-run wizard, login orbs) → calm
    monochrome surfaces (no colored aurora). The gear/logo itself still shows. */
-.boot-loader { background: var(--color-bg-page); color: var(--color-text-primary); }
-.boot-loader-orb, .boot-ring, .boot-gear-halo { display: none !important; }
+.boot-loader { background: linear-gradient(155deg, #080c1a 0%, #0c1228 45%, #0f162e 100%); color: #eaf0f8; }
 .aurora-backdrop { background: var(--color-bg-page); }
 .aurora-backdrop-orb, .login-aurora-orb { display: none !important; }

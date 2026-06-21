@@ -228,7 +228,7 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
 
 
 }
-        <div className="shrink-0 enter-up pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
+        <div className="shrink-0 enter-up pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-wrap items-center gap-4">
             <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
               <Activity className="h-5 w-5" />
@@ -244,7 +244,7 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
             </div>
 
             <div className="ml-auto flex items-center gap-3">
-              <span className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-1.5">
+              <span className="hidden sm:inline-flex h-8 items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3">
                 <span className="relative inline-flex h-2.5 w-2.5">
                   <span className="absolute inline-flex h-2.5 w-2.5 rounded-full bg-status-green opacity-75 animate-ping" />
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-status-green" />
@@ -254,7 +254,7 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
                 </span>
               </span>
               <Button size="sm" variant="outline" onClick={fetchAll} disabled={refreshing}>
-                {refreshing ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                {refreshing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
                 Reîmprospătează
               </Button>
             </div>
@@ -279,7 +279,7 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
                 {(summary?.active_users ?? 0) === 1 ? 'utilizator' : 'utilizatori'}
               </span>
             </div>
-            <p className="mt-1.5 text-pm-2xs text-content-muted min-h-[1rem]">
+            <p className="mt-2 text-pm-2xs text-content-muted min-h-[1rem]">
               {multiDevice
                 ? `${summary!.active_sessions} sesiuni — unii pe mai multe device-uri`
                 : 'O sesiune per utilizator'}
@@ -324,21 +324,21 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
                   <table className="w-full text-left text-pm-xs">
                     <thead className="sticky top-0 z-10 bg-surface-secondary shadow-[inset_0_-1px_0_var(--color-border)]">
                       <tr>
-                        <th className="px-3 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Utilizator</th>
-                        <th className="px-3 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Rol</th>
-                        <th className="px-3 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">IP</th>
-                        <th className="px-3 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Sesiuni</th>
-                        <th className="px-3 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Ultima conectare</th>
-                        <th className="px-3 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted text-right">Acțiuni</th>
+                        <th className="px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Utilizator</th>
+                        <th className="px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Rol</th>
+                        <th className="px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">IP</th>
+                        <th className="px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Sesiuni</th>
+                        <th className="px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Ultima conectare</th>
+                        <th className="px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted text-right">Acțiuni</th>
                       </tr>
                     </thead>
                     <tbody className="stagger-in" key={usersConnected.map(u => u.user_id).join(',')}>
                       {usersConnected.map(s => (
                         <tr key={s.user_id}
                           style={{ viewTransitionName: selectedUserId === s.user_id ? vtName('session-user', s.user_id) : undefined }}
-                          className={`group border-b border-line/40 hover:bg-surface-tertiary/30 transition-colors ${
+                          className={`group border-b border-line/40 hover:bg-surface-tertiary/30 transition-smooth duration-150 ${
                             selectedUserId === s.user_id ? 'bg-accent/5 shadow-[inset_3px_0_0_var(--color-accent)]' : ''}`}>
-                          <td className="px-3 py-2.5">
+                          <td className="px-3 py-2">
                             <div className="flex items-center gap-2">
                               {}
                               <span className="relative inline-flex h-2 w-2 shrink-0" aria-hidden>
@@ -346,21 +346,21 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
                                 <span className="relative inline-flex h-2 w-2 rounded-full bg-status-green" />
                               </span>
                               <div className="min-w-0">
-                                <div className="text-content-primary font-medium">{s.full_name || s.username}</div>
-                                <div className="text-pm-2xs text-content-muted">@{s.username}</div>
+                                <div className="text-content-primary font-medium truncate">{s.full_name || s.username}</div>
+                                <div className="text-pm-2xs text-content-muted truncate">@{s.username}</div>
                               </div>
                             </div>
                           </td>
-                          <td className="px-3 py-2.5">
+                          <td className="px-3 py-2">
                             <StatusBadge size="xs" uppercase tone="neutral" label={s.role_name || '—'} />
                           </td>
-                          <td className="px-3 py-2.5 font-mono text-content-secondary tabular-nums" title={s.all_ips.join('\n')}>
+                          <td className="px-3 py-2 font-mono text-content-secondary tabular-nums" title={s.all_ips.join('\n')}>
                             {s.ip_address || '—'}
                             {s.all_ips.length > 1 && (
                               <span className="ml-1 text-pm-2xs text-content-muted">+{s.all_ips.length - 1}</span>
                             )}
                           </td>
-                          <td className="px-3 py-2.5 tabular-nums">
+                          <td className="px-3 py-2 tabular-nums">
                             {s.extra_sessions === 0 ? (
                               <span className="text-content-muted">1</span>
                             ) : (
@@ -369,8 +369,8 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
                               </span>
                             )}
                           </td>
-                          <td className="px-3 py-2.5 text-content-muted tabular-nums">{formatDateTime(s.created_at)}</td>
-                          <td className="px-3 py-2.5 text-right">
+                          <td className="px-3 py-2 text-content-muted tabular-nums">{formatDateTime(s.created_at)}</td>
+                          <td className="px-3 py-2 text-right">
                             <div className="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
                               <IconButton
                                 size="sm"
@@ -409,7 +409,7 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
               className="flex flex-col min-w-0 w-full min-h-0"
               vtName={selectedUserId != null ? vtName('session-user', selectedUserId) : undefined}
             >
-              <div className="shrink-0 px-5 pt-5">
+              <div className="shrink-0 px-6 pt-5">
                 <SectionHeader
                   icon={History}
                   title="Istoric login"
@@ -511,20 +511,20 @@ function TwoFAEnforcementCard() {
       </div>
       <CardBody>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-pm-base">
-          <label className="flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-2.5 cursor-pointer">
-            <input type="checkbox" className="accent-accent" checked={policy.admin}
+          <label className="flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-2 cursor-pointer transition-smooth duration-150 hover:bg-surface-tertiary hover:border-line/80 focus-within:outline-none focus-within:shadow-[var(--ring-soft)] active:scale-[0.99]">
+            <input type="checkbox" className="accent-accent focus-visible:outline-none" checked={policy.admin}
               onChange={(e) => setPolicy({ ...policy, admin: e.target.checked })} />
-            <Shield className="h-3.5 w-3.5 text-status-red" /> Admin
+            <Shield className="h-3.5 w-3.5 shrink-0 text-status-red" /> <span className="truncate">Admin</span>
           </label>
-          <label className="flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-2.5 cursor-pointer">
-            <input type="checkbox" className="accent-accent" checked={policy.manager}
+          <label className="flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-2 cursor-pointer transition-smooth duration-150 hover:bg-surface-tertiary hover:border-line/80 focus-within:outline-none focus-within:shadow-[var(--ring-soft)] active:scale-[0.99]">
+            <input type="checkbox" className="accent-accent focus-visible:outline-none" checked={policy.manager}
               onChange={(e) => setPolicy({ ...policy, manager: e.target.checked })} />
-            <Shield className="h-3.5 w-3.5 text-status-amber" /> Manager
+            <Shield className="h-3.5 w-3.5 shrink-0 text-status-amber" /> <span className="truncate">Manager</span>
           </label>
-          <label className="flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-2.5 cursor-pointer">
-            <input type="checkbox" className="accent-accent" checked={policy.all}
+          <label className="flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-2 cursor-pointer transition-smooth duration-150 hover:bg-surface-tertiary hover:border-line/80 focus-within:outline-none focus-within:shadow-[var(--ring-soft)] active:scale-[0.99]">
+            <input type="checkbox" className="accent-accent focus-visible:outline-none" checked={policy.all}
               onChange={(e) => setPolicy({ ...policy, all: e.target.checked })} />
-            <Shield className="h-3.5 w-3.5 text-content-muted" /> Toți
+            <Shield className="h-3.5 w-3.5 shrink-0 text-content-muted" /> <span className="truncate">Toți</span>
           </label>
         </div>
       </CardBody>

@@ -1,6 +1,5 @@
 {
   "tenants": [
-    { "slug": "promix", "name": "Promix Industries", "port": 3500, "domain": "automatix.online", "business_type": "manufacturing" },
-    { "slug": "zet-burgers", "name": "ZET Burgers", "port": 3501, "domain": "zet-burgers.automatix.online", "business_type": "restaurant" }
+    { "slug": "promix", "name": "Promix Industries", "port": 3500, "domain": "automatix.online", "business_type": "manufacturing" }
   ]
 }

@@ -43,8 +43,8 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       ref={ref}
       type={type}
       className={[
-        'inline-flex items-center justify-center rounded-xl transition-smooth duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]',
-        'text-content-muted active:scale-95',
+        'inline-flex shrink-0 items-center justify-center rounded-xl transition-smooth duration-150 ease-[cubic-bezier(0.22,1,0.36,1)]',
+        'text-content-muted active:scale-95 [&>svg]:pointer-events-none [&>svg]:shrink-0',
         'focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]',
         'disabled:pointer-events-none disabled:opacity-40',
         size[s],

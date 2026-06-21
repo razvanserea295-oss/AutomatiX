@@ -54,7 +54,6 @@ import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
 import EmailEnhancements from '@/pages/email/EmailEnhancements';
 
@@ -183,9 +182,9 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
           </p>
           <Link
             href="/settings"
-            className="inline-flex items-center gap-1.5 h-9 rounded-xl bg-accent px-4 text-pm-sm font-semibold text-surface-primary hover:opacity-90 transition-smooth active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-1.5 h-9 rounded-xl bg-accent px-4 text-pm-sm font-semibold text-[var(--color-on-accent)] hover:opacity-90 transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
           >
-            <SettingsIcon className="h-3.5 w-3.5" /> Mergi la Setari
+            <SettingsIcon className="h-3.5 w-3.5" /> Mergi la Setări
           </Link>
         </div>
       </div>
@@ -193,8 +192,6 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
   }
 
   
-  const totalMessages = folders.reduce((s, f) => s + (f.message_count || 0), 0);
-  const totalUnread = folders.reduce((s, f) => s + (f.unread_count || 0), 0);
   const activeLabel = folderLabels[currentFolder] || currentFolder;
 
   
@@ -223,7 +220,7 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
 
 
 }
-        <div className="enter-up shrink-0 pb-3.5 border-b border-line/60">
+        <div className="enter-up shrink-0 pb-4 border-b border-line/60">
           <div className="flex flex-col lg:flex-row lg:items-center gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
@@ -243,7 +240,7 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Caută în mesaje (expeditor, subiect, conținut)…"
-                className="w-full h-9 border border-line bg-surface-primary rounded-xl pl-9 pr-3 text-sm text-content-primary placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors"
+                className="w-full h-9 border border-line bg-surface-primary rounded-xl pl-9 pr-3 text-pm-sm text-content-primary placeholder:text-content-muted focus:outline-none focus-visible:outline-none focus:border-accent focus:shadow-[var(--ring-soft)] transition-smooth duration-150"
               />
             </div>
 
@@ -280,21 +277,9 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
 
         {
 
-}
-        <div className="enter-up shrink-0" style={{ animationDelay: '70ms' }}>
-          <Page.Kpis cols={4} className="stagger-in">
-            <KpiCard label="Mesaje total"   value={totalMessages} icon={Mail}     iconColor="text-accent" />
-            <KpiCard label="Necitite"       value={totalUnread}   icon={Inbox}    iconColor="text-status-amber" hint={totalUnread > 0 ? 'în toate folderele' : 'inbox curat'} />
-            <KpiCard label="Foldere"        value={folders.length} icon={FileText} iconColor="text-status-blue" />
-            <KpiCard label="Folder activ"   value={activeLabel}   icon={folderIcons[currentFolder] || FileText} iconColor="text-status-teal" hint={`${total} mesaje`} />
-          </Page.Kpis>
-        </div>
-
-        {
-
 
 }
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 enter-up flex-1 min-h-0" style={{ animationDelay: '140ms' }}>
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 enter-up flex-1 min-h-0" style={{ animationDelay: '70ms' }}>
 
           {}
           <aside className="xl:col-span-2 min-h-0 xl:h-full">
@@ -309,10 +294,10 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
                   const active = currentFolder === f.name;
                   return (
                     <button key={f.name} onClick={() => { setCurrentFolder(f.name); setPage(1); setSelected(null); setShowTools(false); }}
-                      className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors ${active ? 'bg-accent/5 border-l-2 border-l-accent text-accent font-semibold' : 'border-l-2 border-l-transparent text-content-primary hover:bg-surface-tertiary'}`}>
+                      className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-pm-sm transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${active ? 'bg-accent/5 border-l-2 border-l-accent text-accent font-semibold' : 'border-l-2 border-l-transparent text-content-primary hover:bg-surface-tertiary'}`}>
                       <Icon className="h-4 w-4 shrink-0" />
                       <span className="flex-1 text-left truncate">{label}</span>
-                      {f.unread_count > 0 && <span className="anim-pop text-pm-2xs px-1.5 py-0.5 rounded-full bg-accent text-surface-primary font-bold tabular-nums shrink-0">{f.unread_count}</span>}
+                      {f.unread_count > 0 && <span className="anim-pop text-pm-2xs px-1.5 py-0.5 rounded-full bg-accent text-[var(--color-on-accent)] font-bold tabular-nums shrink-0">{f.unread_count}</span>}
                     </button>
                   );
                 })}
@@ -349,9 +334,9 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
                     <div key={m.id} onClick={() => handleSelectMsg(m.id)} role="button" tabIndex={0}
                       onKeyDown={e => e.key === 'Enter' && handleSelectMsg(m.id)}
                       style={{ viewTransitionName: selected?.id === m.id ? vtName('email', m.id) : undefined }}
-                      className={`w-full text-left px-3 py-2.5 border-b border-line/40 hover:bg-surface-tertiary transition-colors cursor-pointer ${selected?.id === m.id ? 'bg-accent/5 border-l-2 border-l-accent vt-morph' : ''} ${!m.is_read ? 'bg-surface-secondary' : ''}`}>
+                      className={`w-full text-left px-3 py-2.5 border-b border-line/40 hover:bg-surface-tertiary transition-smooth duration-150 cursor-pointer focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${selected?.id === m.id ? 'bg-accent/5 border-l-2 border-l-accent vt-morph' : ''} ${!m.is_read ? 'bg-surface-secondary' : ''}`}>
                       <div className="flex items-start gap-2">
-                        <button onClick={e => { e.stopPropagation(); handleStar(m.id); }} className="mt-0.5 shrink-0">
+                        <button onClick={e => { e.stopPropagation(); handleStar(m.id); }} className="mt-0.5 shrink-0 rounded-full inline-flex items-center justify-center transition-smooth duration-150 hover:text-status-amber active:scale-90 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                           <Star className={`h-3.5 w-3.5 ${m.is_starred ? 'fill-status-amber text-status-amber' : 'text-content-muted'}`} />
                         </button>
                         <div className="flex-1 min-w-0">
@@ -375,10 +360,10 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
               {total > 50 && (
                 <div className="shrink-0 p-2 border-t border-line flex items-center justify-center gap-2">
                   <button onClick={() => { setPage(p => Math.max(1, p - 1)); loadMessages(currentFolder, Math.max(1, page - 1)); }} disabled={page <= 1}
-                    className="text-xs text-content-muted hover:text-content-primary disabled:opacity-30">Înapoi</button>
+                    className="rounded-lg px-2 py-1 text-pm-xs text-content-muted transition-smooth duration-150 hover:text-content-primary hover:bg-surface-tertiary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-40">Înapoi</button>
                   <span className="text-pm-2xs text-content-muted tabular-nums">Pag {page}</span>
                   <button onClick={() => { setPage(p => p + 1); loadMessages(currentFolder, page + 1); }} disabled={page * 50 >= total}
-                    className="text-xs text-content-muted hover:text-content-primary disabled:opacity-30">Înainte</button>
+                    className="rounded-lg px-2 py-1 text-pm-xs text-content-muted transition-smooth duration-150 hover:text-content-primary hover:bg-surface-tertiary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-40">Înainte</button>
                 </div>
               )}
             </Card>
@@ -396,7 +381,7 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
                   <div className="shrink-0 px-4 py-3 border-b border-line bg-surface-secondary flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Wrench className="h-4 w-4 text-accent" />
-                      <h2 className="text-sm font-semibold text-content-primary">Email tools</h2>
+                      <h2 className="text-pm-md font-semibold text-content-primary">Email tools</h2>
                       <span className="text-pm-2xs text-content-muted">— template-uri, programare, mail merge</span>
                     </div>
                     <IconButton
@@ -425,7 +410,7 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
               ) : (
                 <div key="empty" className="enter-fade flex-1 flex flex-col items-center justify-center text-content-muted px-6 py-16">
                   <Mail className="h-12 w-12 mb-3 opacity-25" />
-                  <p className="text-sm text-content-secondary">Selectează un email</p>
+                  <p className="text-pm-md text-content-secondary">Selectează un email</p>
                   <p className="text-pm-xs mt-1 text-content-muted text-center max-w-xs">
                     Apasă <span className="font-semibold text-content-secondary">Compune</span> pentru un mesaj nou
                     sau <span className="font-semibold text-content-secondary">Email tools</span> pentru template-uri și mail merge.
@@ -477,15 +462,15 @@ function EmailView({ email, onTrash, onReply, onBack }: { email: EmailFull; onTr
       <div className="p-4 border-b border-line shrink-0 bg-surface-secondary">
         <div className="flex items-center gap-2 mb-2">
           <IconButton size="sm" intent="primary" onClick={onBack} className="lg:hidden" aria-label="Înapoi la listă" title="Înapoi la listă"><ChevronLeft /></IconButton>
-          <h2 className="text-base font-semibold text-content-primary flex-1 truncate" title={email.subject || '(fără subiect)'}>{email.subject || '(fără subiect)'}</h2>
+          <h2 className="text-pm-lg font-semibold text-content-primary flex-1 min-w-0 truncate" title={email.subject || '(fără subiect)'}>{email.subject || '(fără subiect)'}</h2>
           <Button size="sm" onClick={onReply}>Raspunde</Button>
           <IconButton size="sm" intent="danger" onClick={onTrash} aria-label="Mută la coș" title="Mută la coș"><Trash2 /></IconButton>
         </div>
-        <div className="text-xs text-content-muted">
-          <span className="font-medium text-content-primary">{email.from_name || email.from_address}</span>
-          <span className="mx-1">{'→'}</span>
-          <span>{email.to_addresses}</span>
-          <span className="ml-2 tabular-nums">{email.date?.slice(0, 16)}</span>
+        <div className="flex items-center gap-1 text-pm-xs text-content-muted min-w-0">
+          <span className="font-medium text-content-primary shrink-0 max-w-[40%] truncate">{email.from_name || email.from_address}</span>
+          <span className="shrink-0">{'→'}</span>
+          <span className="min-w-0 truncate">{email.to_addresses}</span>
+          <span className="ml-2 tabular-nums shrink-0">{email.date?.slice(0, 16)}</span>
         </div>
       </div>
 
@@ -494,19 +479,19 @@ function EmailView({ email, onTrash, onReply, onBack }: { email: EmailFull; onTr
         {email.body_html ? (
           <iframe ref={iframeRef} className="w-full h-full border-0" sandbox="allow-same-origin" title="Email body" />
         ) : (
-          <div className="p-4 overflow-y-auto h-full"><pre className="text-sm text-content-primary whitespace-pre-wrap font-sans">{email.body_text || '(continut gol)'}</pre></div>
+          <div className="p-4 overflow-y-auto h-full"><pre className="text-pm-md text-content-primary whitespace-pre-wrap font-sans">{email.body_text || '(continut gol)'}</pre></div>
         )}
       </div>
 
       {}
       {email.attachments.length > 0 && (
         <div className="p-3 border-t border-line shrink-0 bg-surface-secondary">
-          <p className="text-xs font-semibold uppercase tracking-wide text-content-muted mb-2">Atasamente ({email.attachments.length})</p>
+          <p className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-2">Atasamente ({email.attachments.length})</p>
           <div className="flex flex-wrap gap-2">
             {email.attachments.map(att => (
               <button key={att.id} onClick={() => handleDownloadAtt(att.id, att.filename)}
                 title={`Descarcă ${att.filename}`}
-                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-surface-primary border border-line/70 text-xs text-content-primary hover:bg-surface-tertiary transition-smooth active:scale-[0.98]">
+                className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-surface-primary border border-line/70 text-pm-xs text-content-primary hover:bg-surface-tertiary transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                 <Paperclip className="h-3 w-3 text-content-muted" />
                 <span className="truncate max-w-[150px]">{att.filename}</span>
                 <span className="text-pm-2xs text-content-muted tabular-nums">({Math.round(att.size_bytes / 1024)}KB)</span>
@@ -565,7 +550,7 @@ function ComposeView({ onClose, onSent, replyTo, seed }: { onClose: () => void; 
     e.target.value = '';
   };
 
-  const inputClass = 'w-full h-9 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors';
+  const inputClass = 'w-full h-9 rounded-xl border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary placeholder:text-content-muted focus:outline-none focus-visible:outline-none focus:border-accent focus:shadow-[var(--ring-soft)] transition-smooth duration-150';
   const labelClass = 'block text-pm-2xs font-bold uppercase tracking-wide text-content-muted mb-1';
 
   return (
@@ -574,7 +559,7 @@ function ComposeView({ onClose, onSent, replyTo, seed }: { onClose: () => void; 
       <div className="shrink-0 px-4 py-3 border-b border-line flex items-center justify-between bg-surface-secondary">
         <div className="flex items-center gap-2">
           <PenSquare className="h-4 w-4 text-accent" />
-          <h3 className="text-sm font-semibold text-content-primary">{replyTo ? 'Răspunde' : 'Email nou'}</h3>
+          <h3 className="text-pm-md font-semibold text-content-primary">{replyTo ? 'Răspunde' : 'Email nou'}</h3>
         </div>
         <IconButton intent="primary" size="sm" onClick={onClose} aria-label="Închide" title="Închide"><X /></IconButton>
       </div>
@@ -604,7 +589,7 @@ function ComposeView({ onClose, onSent, replyTo, seed }: { onClose: () => void; 
               onChange={e => setBody(e.target.value)}
               placeholder="Scrie mesajul..."
               rows={12}
-              className="w-full rounded-lg bg-surface-secondary/40 border border-line/70 text-pm-sm text-content-primary placeholder:text-content-muted resize-none px-3 py-2 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-colors"
+              className="w-full rounded-xl bg-surface-secondary/40 border border-line/70 text-pm-sm text-content-primary placeholder:text-content-muted resize-none px-3 py-2 focus:outline-none focus-visible:outline-none focus:border-accent focus:shadow-[var(--ring-soft)] transition-smooth duration-150"
             />
           </div>
 
@@ -613,10 +598,10 @@ function ComposeView({ onClose, onSent, replyTo, seed }: { onClose: () => void; 
               <label className={labelClass}>Atașamente ({files.length})</label>
               <div className="flex flex-wrap gap-2">
                 {files.map((f, i) => (
-                  <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-secondary border border-line/70 text-xs text-content-primary">
+                  <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface-secondary border border-line/70 text-pm-xs text-content-primary">
                     <Paperclip className="h-3 w-3 text-content-muted" />
                     <span className="truncate max-w-[160px]" title={f.filename}>{f.filename}</span>
-                    <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))} className="text-content-muted hover:text-status-red" aria-label="Elimină atașament"><X className="h-3 w-3" /></button>
+                    <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))} className="rounded-full inline-flex items-center justify-center text-content-muted transition-smooth duration-150 hover:text-status-red active:scale-90 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]" aria-label="Elimină atașament"><X className="h-3 w-3" /></button>
                   </div>
                 ))}
               </div>
@@ -634,7 +619,7 @@ function ComposeView({ onClose, onSent, replyTo, seed }: { onClose: () => void; 
           type="button"
           onClick={() => fileInput.current?.click()}
           aria-label="Adaugă atașament"
-          className="p-2 text-content-muted hover:bg-surface-tertiary hover:text-accent transition-colors flex items-center gap-1"
+          className="p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-accent transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] inline-flex items-center justify-center gap-1"
           title="Adaugă atașament"
         >
           <Paperclip className="h-4 w-4" />
@@ -643,7 +628,7 @@ function ComposeView({ onClose, onSent, replyTo, seed }: { onClose: () => void; 
         <button
           type="button"
           onClick={onClose}
-          className="ml-auto px-3 py-1.5 text-xs text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-colors"
+          className="ml-auto rounded-xl px-3 py-1.5 text-pm-xs text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
         >
           Anulează
         </button>

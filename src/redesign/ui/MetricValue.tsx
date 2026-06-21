@@ -11,7 +11,7 @@ import { useCountUp } from '@/hooks/useCountUp';
 export type MetricSize = 'regular' | 'display' | 'display-lg';
 
 const SIZE: Record<MetricSize, string> = {
-  regular: 'text-[26px] leading-none',
+  regular: 'text-pm-2xl leading-none',
   display: 'text-display',
   'display-lg': 'text-display-lg',
 };
@@ -36,7 +36,7 @@ export default function MetricValue({
   const shown = format(countUp ? animated : value);
   return (
     <span
-      className={`${SIZE[size]} font-semibold tracking-tight tabular-nums ${warn ? 'text-status-red' : 'text-content-primary'} ${className}`}
+      className={`${SIZE[size]} inline-block font-semibold tracking-tight tabular-nums ${warn ? 'text-status-red' : 'text-content-primary'} ${className}`}
       style={{ fontFeatureSettings: "'tnum'" }}
     >
       {shown}

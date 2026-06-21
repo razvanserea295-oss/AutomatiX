@@ -842,13 +842,14 @@ export class FinanceService {
     
     
     const stmt = db.prepare(
-      `SELECT strftime('%Y-%m', pr.date) as month, COALESCE(SUM(pr.amount), 0)
+      `SELECT date(pr.date, '-' || CAST((strftime('%w', pr.date) + 6) % 7 AS INTEGER) || ' days') as week_start,
+              COALESCE(SUM(pr.amount), 0)
        FROM project_revenues pr
        JOIN projects p ON p.id = pr.project_id
        WHERE p.status NOT IN ('anulat')
-       GROUP BY strftime('%Y-%m', pr.date)
-       ORDER BY month DESC
-       LIMIT 24`
+       GROUP BY week_start
+       ORDER BY week_start DESC
+       LIMIT 26`
     );
     const results: FinanceCashFlowPoint[] = [];
     while (stmt.step()) {

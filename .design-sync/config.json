@@ -1,0 +1,16 @@
+{
+  "pkg": "promix-automatix",
+  "globalName": "PromixDS",
+  "shape": "package",
+  "srcDir": "src/redesign/ui",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": "ds-css-build.css",
+  "extraFonts": ["ds-fonts.css"],
+  "runtimeFontPrefixes": ["SF Pro", "-apple-system", "BlinkMacSystemFont", "Segoe UI"],
+  "componentSrcMap": {
+    "filterControls": null,
+    "FormModal": null,
+    "ToastContainer": null,
+    "ListReport": null
+  }
+}

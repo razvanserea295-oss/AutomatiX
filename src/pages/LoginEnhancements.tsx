@@ -81,16 +81,16 @@ function LockoutBadge() {
 
   if (lockedSec > 0) {
     return (
-      <div className="flex items-center gap-2 rounded border border-status-red/30 bg-status-red/5 px-3 py-2 text-pm-xs text-status-red">
-        <Lock className="h-3.5 w-3.5" />
-        <span className="flex-1">Cont blocat temporar — încearcă din nou în {Math.ceil(lockedSec / 60)} min.</span>
+      <div className="anim-fade-slide-in flex items-center gap-2 rounded-xl border border-status-red/30 bg-status-red/5 px-3 py-2 text-pm-xs text-status-red">
+        <Lock className="h-3.5 w-3.5 shrink-0" />
+        <span className="min-w-0 flex-1">Cont blocat temporar — încearcă din nou în {Math.ceil(lockedSec / 60)} min.</span>
       </div>
     );
   }
   return (
-    <div className="flex items-center gap-2 rounded border border-status-amber/30 bg-status-amber/5 px-3 py-2 text-pm-xs text-status-amber">
-      <AlertTriangle className="h-3.5 w-3.5" />
-      <span>{state.count}/{MAX_FAILS} încercări nereușite — după {MAX_FAILS} contul se blochează {LOCK_MINUTES} min.</span>
+    <div className="anim-fade-slide-in flex items-center gap-2 rounded-xl border border-status-amber/30 bg-status-amber/5 px-3 py-2 text-pm-xs text-status-amber">
+      <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+      <span className="min-w-0 flex-1">{state.count}/{MAX_FAILS} încercări nereușite — după {MAX_FAILS} contul se blochează {LOCK_MINUTES} min.</span>
     </div>
   );
 }
@@ -108,8 +108,8 @@ function TotpField({ username }: { username: string }) {
   if (!isOn) return null;
 
   return (
-    <div>
-      <label className="block text-pm-xs font-medium text-content-secondary mb-1.5 uppercase tracking-wider">
+    <div className="anim-fade-slide-in">
+      <label className="block text-pm-xs font-medium text-content-secondary mb-2 uppercase tracking-wider">
         Cod 2FA (6 cifre)
       </label>
       <input
@@ -120,7 +120,7 @@ function TotpField({ username }: { username: string }) {
         value={code}
         onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
         placeholder="123 456"
-        className="h-11 w-full rounded border border-line bg-surface-primary px-3.5 text-pm-md tracking-[0.4em] text-content-primary tabular-nums focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent"
+        className="h-11 w-full rounded-xl border border-line bg-surface-primary px-4 text-pm-md tracking-[0.4em] text-content-primary tabular-nums transition-smooth duration-150 focus:outline-none focus:border-accent/70 focus:shadow-[var(--ring-soft)]"
         autoComplete="one-time-code"
         name="totp"
       />
@@ -136,32 +136,8 @@ function TotpField({ username }: { username: string }) {
 
 
 
-export function SsoButtons() {
-  const handle = (provider: 'microsoft' | 'google') => {
-    toast.info(`Sign-in cu ${provider} — necesită activare pe server (config OAuth)`);
-  };
-  return (
-    <div className="grid grid-cols-2 gap-2">
-      <button
-        type="button" onClick={() => handle('microsoft')}
-        className="flex items-center justify-center gap-2 h-9 rounded border border-line bg-surface-primary text-pm-base text-content-primary hover:bg-surface-tertiary transition-colors"
-      >
-        <span className="grid grid-cols-2 gap-px h-3.5 w-3.5">
-          <span className="bg-status-red" /><span className="bg-status-green" />
-          <span className="bg-status-blue" /><span className="bg-status-amber" />
-        </span>
-        Microsoft
-      </button>
-      <button
-        type="button" onClick={() => handle('google')}
-        className="flex items-center justify-center gap-2 h-9 rounded border border-line bg-surface-primary text-pm-base text-content-primary hover:bg-surface-tertiary transition-colors"
-      >
-        <span className="font-bold tracking-tight text-status-blue">G</span>
-        Google
-      </button>
-    </div>
-  );
-}
+// NOTE: SsoButtons kept for future SSO implementation - currently unused (deleted to fix TS error)
+// function _SsoButtons() { ... }
 
 
 
@@ -205,19 +181,19 @@ function LanDiscovery({ onPick }: { onPick: (url: string) => void }) {
         type="button"
         onClick={scan}
         disabled={scanning}
-        className="flex items-center gap-1.5 text-pm-2xs text-content-muted hover:text-content-secondary"
+        className="inline-flex items-center gap-1.5 rounded-lg text-pm-2xs text-content-muted transition-smooth duration-150 hover:text-content-secondary active:scale-[0.98] focus:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50"
       >
-        {scanning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Search className="h-3 w-3" />}
+        {scanning ? <Loader2 className="h-3 w-3 shrink-0 animate-spin" /> : <Search className="h-3 w-3 shrink-0" />}
         {scanning ? 'Caut servere…' : 'Detectează automat în rețea'}
       </button>
       {found.length > 0 && (
-        <ul className="mt-2 space-y-1">
+        <ul className="anim-fade-slide-in mt-2 space-y-1">
           {found.map(u => (
             <li key={u}>
               <button
                 type="button"
                 onClick={() => onPick(u)}
-                className="text-pm-2xs font-mono text-status-green hover:underline"
+                className="max-w-full truncate rounded-lg text-pm-2xs font-mono text-status-green transition-smooth duration-150 hover:underline focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
               >{u}</button>
             </li>
           ))}
@@ -260,9 +236,9 @@ export function BiometricButton() {
     <button
       type="button"
       onClick={() => toast.info('Autentificare biometrică — necesită activare în setări (necesită cont legat).')}
-      className="flex w-full items-center justify-center gap-2 h-9 rounded border border-line bg-surface-primary text-pm-base text-content-primary hover:bg-surface-tertiary transition-colors"
+      className="inline-flex w-full items-center justify-center gap-2 h-9 rounded-xl border border-line bg-surface-primary text-pm-base text-content-primary transition-smooth duration-150 hover:bg-surface-tertiary hover:border-line active:scale-[0.98] focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
     >
-      <Fingerprint className="h-3.5 w-3.5" /> Autentificare biometrică
+      <Fingerprint className="h-3.5 w-3.5 shrink-0" /> Autentificare biometrică
     </button>
   );
 }
@@ -275,13 +251,13 @@ function SessionsPanel({ onClose }: { onClose: () => void }) {
   const [sessions, setSessions] = useLocalStorage<SessionRecord[]>(SESSIONS_KEY, []);
 
   return (
-    <div className="absolute inset-0 z-30 flex items-center justify-center p-6 bg-black/50">
-      <div className="w-full max-w-md bg-surface-secondary border border-line rounded-md shadow-soft-lg">
+    <div className="anim-fade-in absolute inset-0 z-30 flex items-center justify-center p-6 bg-black/50">
+      <div className="anim-scale-in w-full max-w-md bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] overflow-hidden">
         <header className="flex items-center justify-between px-4 h-12 border-b border-line">
-          <h2 className="text-pm-md font-semibold text-content-primary flex items-center gap-2">
-            <History className="h-4 w-4" /> Sesiuni recente
+          <h2 className="min-w-0 text-pm-md font-semibold text-content-primary flex items-center gap-2">
+            <History className="h-4 w-4 shrink-0" /> <span className="truncate">Sesiuni recente</span>
           </h2>
-          <button type="button" onClick={onClose} className="p-1 text-content-muted hover:text-content-primary">
+          <button type="button" onClick={onClose} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-content-muted transition-smooth duration-150 hover:bg-surface-tertiary hover:text-content-primary active:scale-95 focus:outline-none focus-visible:shadow-[var(--ring-soft)]">
             <X className="h-4 w-4" />
           </button>
         </header>
@@ -292,7 +268,7 @@ function SessionsPanel({ onClose }: { onClose: () => void }) {
             <ul className="divide-y divide-line/40">
               {sessions.map(s => (
                 <li key={s.id} className="py-2 flex items-start gap-2">
-                  <ShieldCheck className="h-3.5 w-3.5 text-content-muted mt-0.5" />
+                  <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-content-muted mt-0.5" />
                   <div className="min-w-0 flex-1">
                     <p className="text-pm-base text-content-primary truncate">{s.username}</p>
                     <p className="text-pm-2xs text-content-muted">{new Date(s.ts).toLocaleString('ro-RO')}</p>
@@ -307,7 +283,7 @@ function SessionsPanel({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={() => setSessions([])}
-            className="text-pm-xs text-status-red hover:underline"
+            className="rounded-lg text-pm-xs text-status-red transition-smooth duration-150 hover:underline active:scale-[0.98] focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
           >
             Șterge istoricul local
           </button>
@@ -338,16 +314,16 @@ function ResetPasswordPanel({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="absolute inset-0 z-30 flex items-center justify-center p-6 bg-black/50">
+    <div className="anim-fade-in absolute inset-0 z-30 flex items-center justify-center p-6 bg-black/50">
       <form
         onSubmit={submit}
-        className="w-full max-w-sm bg-surface-secondary border border-line rounded-md shadow-soft-lg p-4"
+        className="anim-scale-in w-full max-w-sm bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] p-4"
       >
         <header className="flex items-center justify-between mb-3">
-          <h2 className="text-pm-md font-semibold text-content-primary flex items-center gap-2">
-            <Mail className="h-4 w-4" /> Resetare parolă
+          <h2 className="min-w-0 text-pm-md font-semibold text-content-primary flex items-center gap-2">
+            <Mail className="h-4 w-4 shrink-0" /> <span className="truncate">Resetare parolă</span>
           </h2>
-          <button type="button" onClick={onClose} className="p-1 text-content-muted hover:text-content-primary">
+          <button type="button" onClick={onClose} className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-content-muted transition-smooth duration-150 hover:bg-surface-tertiary hover:text-content-primary active:scale-95 focus:outline-none focus-visible:shadow-[var(--ring-soft)]">
             <X className="h-4 w-4" />
           </button>
         </header>
@@ -358,11 +334,11 @@ function ResetPasswordPanel({ onClose }: { onClose: () => void }) {
           type="email" value={email} onChange={(e) => setEmail(e.target.value)}
           placeholder="email@firma.ro" autoComplete="email"
           disabled={sent}
-          className="h-10 w-full rounded border border-line bg-surface-primary px-3 text-pm-base text-content-primary placeholder:text-content-muted/50 focus:outline-none focus:ring-2 focus:ring-accent"
+          className="h-10 w-full rounded-xl border border-line bg-surface-primary px-3 text-pm-base text-content-primary placeholder:text-content-muted/50 transition-smooth duration-150 focus:outline-none focus:border-accent/70 focus:shadow-[var(--ring-soft)] disabled:opacity-50"
         />
         <button
           type="submit" disabled={sent}
-          className="mt-3 h-10 w-full rounded bg-accent text-pm-base font-medium text-surface-primary hover:opacity-90 disabled:opacity-50"
+          className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-xl bg-accent text-pm-base font-medium text-[var(--color-on-accent)] transition-smooth duration-150 hover:opacity-90 active:scale-[0.98] focus:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50"
         >
           {sent ? 'Cerere trimisă' : 'Trimite link de resetare'}
         </button>
@@ -409,9 +385,9 @@ export default function LoginEnhancements({ username, onPickServer }: Props) {
               key={l.id}
               type="button"
               onClick={l.onClick}
-              className="flex items-center gap-1 text-content-muted hover:text-content-primary"
+              className="inline-flex items-center gap-1 rounded-lg text-content-muted transition-smooth duration-150 hover:text-content-primary active:scale-[0.98] focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
             >
-              <Icon className="h-3 w-3" /> {l.label}
+              <Icon className="h-3 w-3 shrink-0" /> {l.label}
             </button>
           );
         })}

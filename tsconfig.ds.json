@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist/types",
+    "noEmit": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
+  },
+  "include": [
+    "ds-entry.ts",
+    "src/redesign/ui/**/*.tsx",
+    "src/redesign/ui/**/*.ts",
+    "src/lib/statusTokens.ts",
+    "src/lib/cn.ts",
+    "src/lib/inputMasks.ts",
+    "src/hooks/useCountUp.ts",
+    "src/hooks/useSort.ts"
+  ]
+}

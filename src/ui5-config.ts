@@ -24,8 +24,8 @@ void setLanguage('ro');
 
 // Keep the UI5 (Horizon) theme in lockstep with the app's light/dark choice.
 // themeStore toggles the Tailwind `.dark` class; without this bridge the UI5
-// web components (already used app-wide, e.g. the restaurant shell + pages)
-// would stay light in dark mode. Single source of truth = themeStore.
+// web components (used app-wide, e.g. the Fiori shell) would stay light in
+// dark mode. Single source of truth = themeStore.
 function syncUi5Theme(theme: string): void {
   void setTheme(theme === 'dark' ? 'sap_horizon_dark' : 'sap_horizon');
 }

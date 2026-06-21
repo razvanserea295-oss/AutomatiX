@@ -47,7 +47,7 @@ export default function WindowControls() {
   if (!isTauri() || !win) return null;
 
   const btn =
-    'inline-flex h-11 w-[46px] items-center justify-center text-white/70 transition-colors hover:bg-white/10 hover:text-white focus:outline-none';
+    'inline-flex h-11 w-12 items-center justify-center text-white/70 transition-smooth duration-150 hover:bg-white/10 hover:text-white active:scale-95 focus:outline-none focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]';
 
   return (
     <div className="ml-1 flex items-stretch self-stretch" style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}>
@@ -67,7 +67,7 @@ export default function WindowControls() {
         type="button"
         aria-label="Închide"
         title="Închide"
-        className="inline-flex h-11 w-[46px] items-center justify-center text-white/70 transition-colors hover:bg-[#e81123] hover:text-white focus:outline-none"
+        className="inline-flex h-11 w-12 items-center justify-center text-white/70 transition-smooth duration-150 hover:bg-status-red hover:text-white active:scale-95 focus:outline-none focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
         onClick={() => win.close()}
       >
         <X className="h-4 w-4" />

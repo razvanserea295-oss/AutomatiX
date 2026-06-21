@@ -12,6 +12,15 @@ export const STORAGE_KEYS = {
   
   
   THEME: 'promix_theme',
+
+
+  ACCENT: 'promix_accent',
+
+
+  MOTION: 'promix_motion',
+
+
+  TEXT_SCALE: 'promix_text_scale',
   
   
   LAST_PAGE: 'promix_last_page',
@@ -22,16 +31,10 @@ export const STORAGE_KEYS = {
   
   NOTIFICATION_SETTINGS: 'promix_notification_settings',
 
-  
+
   SERVER_URL: 'promix_server_url',
 
-  
-  AI_SERVICE_URL: 'promix_ai_url',
 
-  
-  AI_SERVICE_TOKEN: 'promix_ai_token',
-
-  
   REMEMBER_USERNAME: 'promix_remember_user',
 
   
@@ -39,6 +42,11 @@ export const STORAGE_KEYS = {
 
   // Multi-tenant: which firm (path prefix /t/<slug>) the browser talks to.
   TENANT_SLUG: 'promix_tenant_slug',
+
+  CARD_TRANSPARENT: 'promix_card_transparent',
+  NAV_SYNC: 'promix_nav_sync',
+  SHELL_LAYOUT: 'promix_shell_layout',
+  PAGE_CUSTOM: 'promix_page_custom',
 } as const;
 
 

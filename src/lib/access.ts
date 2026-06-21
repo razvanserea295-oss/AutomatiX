@@ -13,7 +13,6 @@ export type AppPage =
   | 'goods-receipts'
   | 'finance'
   | 'alerts'
-  | 'ai'
   | 'users'
   | 'settings'
   | 'monitor'
@@ -38,11 +37,6 @@ export type AppPage =
   | 'calendar'
   | 'tasks'
   | 'maintenance'
-  | 'menu'
-  | 'orders'
-  | 'recipes'
-  | 'reservations'
-  | 'tables'
   | 'tutorial'
   | 'manager-control';
 
@@ -76,18 +70,12 @@ const pageAccess: Record<Exclude<AppPage, 'project-detail' | 'station-detail'>, 
   email:                    { roles: ['admin', 'manager', 'user'] },
   dashboard:                { roles: ['admin', 'manager', 'user'] },
   settings:                 { roles: ['admin', 'manager', 'user'] },
-  ai:                       { roles: ['admin', 'manager', 'user'] },
   alerts:                   { roles: ['admin', 'manager', 'user'] },
   procurement:              { roles: ['admin', 'manager', 'user'] },
   reports:                  { roles: ['admin', 'manager', 'user'] },
   calendar:                 { roles: ['admin', 'manager', 'user'] },
   tasks:                    { roles: ['admin', 'manager', 'user'] },
   maintenance:              { roles: ['admin', 'manager', 'user'] },
-  menu:                     { roles: ['admin', 'manager', 'user'] },
-  orders:                   { roles: ['admin', 'manager', 'user'] },
-  recipes:                  { roles: ['admin', 'manager', 'user'] },
-  reservations:             { roles: ['admin', 'manager', 'user'] },
-  tables:                   { roles: ['admin', 'manager', 'user'] },
   tutorial:                 { roles: ['admin', 'manager', 'user'] },
 
   

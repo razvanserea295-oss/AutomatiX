@@ -34,7 +34,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   TrendingUp, TrendingDown, DollarSign, Percent, Loader2, Plus,
-  FileText, Receipt, BarChart3, ChevronDown, CreditCard, Check, X,
+  FileText, Receipt, BarChart3, CreditCard, Check, X,
   AlertTriangle, Download,
 } from 'lucide-react';
 import { downloadInvoicePdf } from '@/lib/downloadPdf';
@@ -49,7 +49,7 @@ import { toast } from '@/store/toastStore';
 import { nativeNotify } from '@/lib/nativeNotify';
 import { invoiceStatus } from '@/lib/statusTokens';
 import { useSort } from '@/hooks/useSort';
-
+import CenteredDialog from '@/components/ui/CenteredDialog';
 
 import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
@@ -61,7 +61,9 @@ import SectionHeader from '@/redesign/ui/SectionHeader';
 import EmptyState from '@/redesign/ui/EmptyState';
 import SortableTh, { THEAD_STICKY } from '@/redesign/ui/SortableTh';
 import AnimatedTabs from '@/redesign/ui/AnimatedTabs';
-import { filterSelectCls } from '@/redesign/ui/filterControls';
+import CardGrid, { type CardGridItem } from '@/redesign/ui/CardGrid';
+import EditLayoutButton from '@/redesign/ui/EditLayoutButton';
+import { useAuthStore } from '@/store/authStore';
 import { vtName } from '@/redesign/lib/viewTransition';
 
 
@@ -120,17 +122,6 @@ interface ProjectExpense {
   date: string;
 }
 
-interface ProfitLossReport {
-  period: string;
-  total_revenue: number;
-  total_invoiced: number;
-  total_expenses: number;
-  gross_profit: number;
-  margin_percent: number;
-}
-
-
-
 
 
 const categoryLabels: Record<string, string> = {
@@ -147,7 +138,7 @@ const categoryLabels: Record<string, string> = {
   altele: 'Altele',
 };
 
-type Tab = 'overview' | 'invoices' | 'expenses' | 'reports';
+type Tab = 'overview' | 'invoices' | 'expenses';
 
 
 
@@ -164,7 +155,6 @@ export default function FinancePage({ user: _user }: { user: User | null }) {
     { id: 'overview', label: 'Prezentare', icon: DollarSign },
     { id: 'invoices', label: 'Facturi', icon: FileText },
     { id: 'expenses', label: 'Cheltuieli', icon: Receipt },
-    { id: 'reports', label: 'Rapoarte', icon: BarChart3 },
   ];
 
   return (
@@ -172,10 +162,10 @@ export default function FinancePage({ user: _user }: { user: User | null }) {
       <Page.Body fit maxWidth="wide" padding="comfortable" className="relative">
         {}
         <div
-          className="enter-up shrink-0 pb-3.5 border-b border-line/60 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between"
+          className="enter-up shrink-0 pb-4 border-b border-line/60 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between"
           style={{ animationDelay: '0ms' }}
         >
-          <div className="flex items-center gap-3.5 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
             <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
               <DollarSign className="h-5 w-5" />
             </span>
@@ -187,12 +177,15 @@ export default function FinancePage({ user: _user }: { user: User | null }) {
               </p>
             </div>
           </div>
-          <div className="shrink-0 overflow-x-auto">
-            <AnimatedTabs
-              active={tab}
-              onChange={(id) => setTab(id as Tab)}
-              tabs={tabs.map(t => ({ id: t.id, label: t.label, icon: t.icon }))}
-            />
+          <div className="shrink-0 flex items-center gap-3">
+            <div className="overflow-x-auto">
+              <AnimatedTabs
+                active={tab}
+                onChange={(id) => setTab(id as Tab)}
+                tabs={tabs.map(t => ({ id: t.id, label: t.label, icon: t.icon }))}
+              />
+            </div>
+            <EditLayoutButton />
           </div>
         </div>
 
@@ -202,7 +195,6 @@ export default function FinancePage({ user: _user }: { user: User | null }) {
           {tab === 'overview' && <OverviewTab key={refreshKey} />}
           {tab === 'invoices' && <InvoicesTab onDataChange={() => setRefreshKey(k => k + 1)} />}
           {tab === 'expenses' && <ExpensesTab onDataChange={() => setRefreshKey(k => k + 1)} />}
-          {tab === 'reports' && <ReportsTab key={refreshKey} />}
         </div>
       </Page.Body>
     </Page>
@@ -215,6 +207,8 @@ export default function FinancePage({ user: _user }: { user: User | null }) {
 
 function OverviewTab() {
   const money = useMoney();
+  const user = useAuthStore(s => s.user);
+  const userKey = String(user?.id ?? user?.username ?? 'anon');
   const [overview, setOverview] = useState<FinanceOverview | null>(null);
   const [projects, setProjects] = useState<ProjectFinanceRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -268,38 +262,82 @@ function OverviewTab() {
   const hasFlagged = insights?.flagged_projects?.length > 0;
   const hasRail = hasReceivables || hasFlagged || !!compliance;
 
+  // Realized costs land only at project finalization. Until then total_actual_cost
+  // is 0, which makes profit collapse to "= revenue" and margin read a misleading
+  // 100%. Suppress both figures until real costs exist (HIG: show "—", never a lie).
+  const costsKnown = (overview?.total_actual_cost ?? 0) > 0;
+  const lockedHint = 'Disponibil la finalizare';
+
+  const kpiItems: CardGridItem[] = overview ? [
+    {
+      id: 'revenue',
+      label: 'Venituri',
+      node: (
+        <KpiCard
+          vtName={vtName('fin-kpi', 'revenue')}
+          label="Venituri" icon={TrendingUp}
+          value={money(overview.total_actual_revenue, 'RON')}
+        />
+      ),
+    },
+    {
+      id: 'cost',
+      label: 'Costuri',
+      node: (
+        <KpiCard
+          vtName={vtName('fin-kpi', 'cost')}
+          label="Costuri" icon={TrendingDown} iconColor="text-status-red"
+          value={money(overview.total_actual_cost, 'RON')}
+        />
+      ),
+    },
+    {
+      id: 'profit',
+      label: 'Profit',
+      node: (
+        <KpiCard
+          vtName={vtName('fin-kpi', 'profit')}
+          label="Profit" icon={DollarSign}
+          iconColor={costsKnown ? (overview.total_actual_profit >= 0 ? 'text-status-green' : 'text-status-red') : undefined}
+          value={costsKnown ? money(overview.total_actual_profit, 'RON') : '—'}
+          muted={!costsKnown}
+          hint={costsKnown ? undefined : lockedHint}
+        />
+      ),
+    },
+    {
+      id: 'margin',
+      label: 'Marja',
+      node: (
+        <KpiCard
+          vtName={vtName('fin-kpi', 'margin')}
+          label="Marja" icon={Percent} iconColor={costsKnown ? 'text-status-blue' : undefined}
+          value={costsKnown ? `${(overview.avg_margin_percent || 0).toFixed(1)}%` : '—'}
+          muted={!costsKnown}
+          hint={costsKnown ? undefined : lockedHint}
+        />
+      ),
+    },
+  ] : [];
+
   return (
     <div className="flex flex-1 flex-col min-h-0 gap-4">
       {}
-      <div className="stagger-in shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {overview ? (
-          <>
-            <KpiCard
-              vtName={vtName('fin-kpi', 'revenue')}
-              label="Venituri" icon={TrendingUp}
-              value={money(overview.total_actual_revenue, 'RON')}
-            />
-            <KpiCard
-              vtName={vtName('fin-kpi', 'cost')}
-              label="Costuri" icon={TrendingDown} iconColor="text-status-red"
-              value={money(overview.total_actual_cost, 'RON')}
-            />
-            <KpiCard
-              vtName={vtName('fin-kpi', 'profit')}
-              label="Profit" icon={DollarSign}
-              iconColor={overview.total_actual_profit >= 0 ? 'text-status-green' : 'text-status-red'}
-              value={money(overview.total_actual_profit, 'RON')}
-            />
-            <KpiCard
-              vtName={vtName('fin-kpi', 'margin')}
-              label="Marja" icon={Percent} iconColor="text-status-blue"
-              value={`${(overview.avg_margin_percent || 0).toFixed(1)}%`}
-            />
-          </>
-        ) : Array.from({ length: 4 }).map((_, i) => (
-          <KpiCard key={i} label="" value="" loading />
-        ))}
-      </div>
+      {overview ? (
+        <CardGrid
+          region="finance:kpis"
+          userKey={userKey}
+          cols={4}
+          items={kpiItems}
+          className="stagger-in shrink-0"
+        />
+      ) : (
+        <div className="stagger-in shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <KpiCard key={i} label="" value="" loading />
+          ))}
+        </div>
+      )}
 
       {}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0">
@@ -319,7 +357,7 @@ function OverviewTab() {
               <thead className={THEAD_STICKY}>
                 <tr>
                   {['Proiect', 'Status', 'Venituri', 'Costuri', 'Profit', 'Marja', 'Risc', ''].map((h, i) => (
-                    <th key={h || `act-${i}`} className="px-3 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">{h}</th>
+                    <th key={h || `act-${i}`} className={`px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted ${['Venituri', 'Costuri', 'Profit', 'Marja'].includes(h) ? 'text-right' : ''}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -335,7 +373,7 @@ function OverviewTab() {
                   
                   const locked = !p.is_finalized;
                   const lockCell = (
-                    <td className="px-3 py-2 text-xs text-content-muted/60 border-b border-line/60 text-right italic" title="Disponibil la finalizare">—</td>
+                    <td className="px-3 py-2 text-xs tabular-nums text-content-muted/60 border-b border-line/60 text-right italic" title="Disponibil la finalizare">—</td>
                   );
                   return (
                   <tr key={p.project_id} className="hover:bg-surface-tertiary/30 transition-colors">
@@ -369,7 +407,7 @@ function OverviewTab() {
                         <button
                           type="button"
                           onClick={() => setCostEdit({ id: p.project_id, name: p.project_name, value: String(p.total_cost || '') })}
-                          className="text-pm-2xs text-accent hover:bg-accent/10 px-2 py-0.5 rounded-md"
+                          className="text-pm-2xs text-accent hover:bg-accent/10 px-2 py-0.5 rounded-md transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                           title="Completează costul final de producție"
                         >Cost final</button>
                       ) : (
@@ -421,8 +459,8 @@ function OverviewTab() {
                 </h3>
                 <div className="space-y-1.5">
                   {insights.flagged_projects.slice(0, 5).map((p: { name?: string; project_name?: string; reason?: string }, i: number) => (
-                    <div key={i} className="flex items-center justify-between gap-2 text-pm-xs">
-                      <span className="text-content-primary font-medium truncate">{p.name || p.project_name}</span>
+                    <div key={i} className="flex items-center justify-between gap-2 text-pm-xs min-w-0">
+                      <span className="text-content-primary font-medium truncate min-w-0">{p.name || p.project_name}</span>
                       <span className="text-status-red tabular-nums shrink-0">{p.reason || 'Marja scazuta'}</span>
                     </div>
                   ))}
@@ -460,31 +498,33 @@ function OverviewTab() {
 
       {}
       {costEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => !savingCost && setCostEdit(null)}>
-          <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-            <div className="px-5 py-3.5 border-b border-line/70">
-              <h3 className="text-pm-sm font-semibold text-content-primary">Cost final de producție</h3>
-              <p className="text-pm-2xs text-content-muted mt-0.5 truncate">{costEdit.name}</p>
-            </div>
-            <div className="p-5 space-y-3">
-              <label className="block text-pm-xs text-content-muted">Cost final (RON)</label>
-              <input
-                type="number" min={0} autoFocus
-                value={costEdit.value}
-                onChange={(e) => setCostEdit(c => c ? { ...c, value: e.target.value } : c)}
-                onKeyDown={(e) => { if (e.key === 'Enter') void saveFinalCost(); }}
-                className="w-full h-9 rounded-lg border border-line/70 bg-surface-secondary/40 px-2.5 text-pm-sm text-content-primary focus:outline-none focus:border-accent/50"
-              />
-              <p className="text-pm-2xs text-content-muted">Marja, profitul și riscul se recalculează automat.</p>
-            </div>
-            <div className="px-5 py-3.5 border-t border-line/70 bg-surface-secondary rounded-b-2xl flex items-center gap-2">
+        <CenteredDialog
+          isOpen={true}
+          onClose={() => !savingCost && setCostEdit(null)}
+          title="Cost final de producție"
+          size="sm"
+          footer={
+            <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => setCostEdit(null)} disabled={savingCost}>Anulează</Button>
               <Button size="sm" className="ml-auto" onClick={() => void saveFinalCost()} disabled={savingCost}>
                 {savingCost ? 'Se salvează…' : 'Salvează'}
               </Button>
             </div>
+          }
+        >
+          <div className="space-y-3">
+            <p className="text-pm-2xs text-content-muted truncate">{costEdit.name}</p>
+            <label className="block text-pm-xs text-content-muted">Cost final (RON)</label>
+            <input
+              type="number" min={0} autoFocus
+              value={costEdit.value}
+              onChange={(e) => setCostEdit(c => c ? { ...c, value: e.target.value } : c)}
+              onKeyDown={(e) => { if (e.key === 'Enter') void saveFinalCost(); }}
+              className="w-full h-9 rounded-xl border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]"
+            />
+            <p className="text-pm-2xs text-content-muted">Marja, profitul și riscul se recalculează automat.</p>
           </div>
-        </div>
+        </CenteredDialog>
       )}
     </div>
   );
@@ -616,18 +656,7 @@ function InvoicesTab({ onDataChange }: { onDataChange?: () => void }) {
 
         {}
         <div className="overflow-auto min-h-0 flex-1">
-          <table className="table-density w-full text-left border-collapse table-fixed min-w-[1100px]">
-            <colgroup>
-              <col className="w-[12%]" />
-              <col className="w-[18%]" />
-              <col className="w-[16%]" />
-              <col className="w-[10%]" />
-              <col className="w-[9%]" />
-              <col className="w-[9%]" />
-              <col className="w-[9%]" />
-              <col className="w-[9%]" />
-              <col className="w-[8%]" />
-            </colgroup>
+          <table className="table-density w-full text-left border-collapse min-w-[960px]">
             <thead className={THEAD_STICKY}>
               <tr>
                 <SortableTh sortKey="invoice_number" sort={sort} onSort={toggle}>Nr. factura</SortableTh>
@@ -830,7 +859,7 @@ function ExpensesTab({ onDataChange }: { onDataChange?: () => void }) {
               <thead className={THEAD_STICKY}>
                 <tr>
                   {['Data', 'Proiect', 'Categorie', 'Descriere', 'Suma'].map((h) => (
-                    <th key={h} className="px-3 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">{h}</th>
+                    <th key={h} className={`px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted ${h === 'Suma' ? 'text-right' : ''}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -863,177 +892,3 @@ function ExpensesTab({ onDataChange }: { onDataChange?: () => void }) {
   );
 }
 
-
-
-
-
-function ReportsTab() {
-  const money = useMoney();
-  const [reportType, setReportType] = useState<'monthly' | 'project'>('monthly');
-  const [data, setData] = useState<ProfitLossReport[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [year, setYear] = useState(new Date().getFullYear());
-
-  useEffect(() => {
-    setLoading(true);
-    apiCommand<ProfitLossReport[]>('get_profit_loss_report', { report_type: reportType, year })
-      .then((d) => setData(d || []))
-      .catch(() => setData([]))
-      .finally(() => setLoading(false));
-  }, [reportType, year]);
-
-  const totals = data.reduce(
-    (acc, r) => ({
-      revenue: acc.revenue + r.total_revenue,
-      expenses: acc.expenses + r.total_expenses,
-      profit: acc.profit + r.gross_profit,
-    }),
-    { revenue: 0, expenses: 0, profit: 0 }
-  );
-
-  const exportCSV = () => {
-    const headers = reportType === 'monthly'
-      ? 'Luna,Venituri,Cheltuieli,Profit,Marja %'
-      : 'Proiect,Venituri,Cheltuieli,Profit,Marja %';
-    const rows = data.map((r) =>
-      `${r.period},${r.total_revenue.toFixed(2)},${r.total_expenses.toFixed(2)},${r.gross_profit.toFixed(2)},${r.margin_percent.toFixed(1)}`
-    );
-    const csv = [headers, ...rows].join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `raport_${reportType}_${year}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const generateReport = () => {
-    setLoading(true);
-    apiCommand<ProfitLossReport[]>('get_profit_loss_report', { report_type: reportType, year })
-      .then((d) => setData(d || []))
-      .catch(() => setData([]))
-      .finally(() => setLoading(false));
-  };
-
-  return (
-    <div className="flex flex-1 flex-col min-h-0 gap-4">
-      {}
-      <Card padding="lg" className="min-w-0 shrink-0">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          {}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
-            <button onClick={() => { setReportType('monthly'); }}
-              className={`text-left rounded-xl border p-3.5 transition-colors ${reportType === 'monthly' ? 'border-accent/40 bg-accent-muted' : 'border-line bg-surface-primary hover:bg-surface-tertiary/40'}`}>
-              <div className="flex items-center gap-2 mb-1">
-                <BarChart3 className="h-4 w-4 text-accent" />
-                <span className="text-pm-xs font-semibold text-content-primary">Raport Lunar</span>
-              </div>
-              <p className="text-pm-2xs text-content-muted">Profit/pierdere pe luni</p>
-            </button>
-            <button onClick={() => { setReportType('project'); }}
-              className={`text-left rounded-xl border p-3.5 transition-colors ${reportType === 'project' ? 'border-accent/40 bg-accent-muted' : 'border-line bg-surface-primary hover:bg-surface-tertiary/40'}`}>
-              <div className="flex items-center gap-2 mb-1">
-                <FileText className="h-4 w-4 text-accent" />
-                <span className="text-pm-xs font-semibold text-content-primary">Raport Proiecte</span>
-              </div>
-              <p className="text-pm-2xs text-content-muted">Profit/pierdere pe proiect</p>
-            </button>
-            <button onClick={generateReport}
-              className="text-left rounded-xl border border-line bg-surface-primary p-3.5 transition-colors hover:bg-surface-tertiary/40">
-              <div className="flex items-center gap-2 mb-1">
-                <Plus className="h-4 w-4 text-accent" />
-                <span className="text-pm-xs font-semibold text-content-primary">Generează raport</span>
-              </div>
-              <p className="text-pm-2xs text-content-muted">Reîncarcă datele curente</p>
-            </button>
-          </div>
-
-          {}
-          <div className="flex items-center gap-2 shrink-0">
-            <select value={reportType} onChange={(e) => setReportType(e.target.value as 'monthly' | 'project')}
-              className={filterSelectCls(false)}>
-              <option value="monthly">Lunar</option>
-              <option value="project">Pe proiect</option>
-            </select>
-            {reportType === 'monthly' && (
-              <select value={year} onChange={(e) => setYear(Number(e.target.value))}
-                className={filterSelectCls(year !== new Date().getFullYear())}>
-                {[2024, 2025, 2026, 2027].map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-            )}
-            <Button size="sm" onClick={exportCSV}>
-              <ChevronDown className="h-3.5 w-3.5" /> Export CSV
-            </Button>
-          </div>
-        </div>
-      </Card>
-
-      {}
-      <div key={`rep-kpis-${reportType}`} className="stagger-in grid grid-cols-1 sm:grid-cols-3 gap-4 shrink-0">
-        <KpiCard label="Total Venituri" value={money(totals.revenue, 'RON')} iconColor="text-status-green" icon={TrendingUp} />
-        <KpiCard label="Total Cheltuieli" value={money(totals.expenses, 'RON')} iconColor="text-status-red" icon={TrendingDown} />
-        <KpiCard label="Profit Brut" value={money(totals.profit, 'RON')} iconColor={totals.profit >= 0 ? 'text-status-green' : 'text-status-red'} icon={DollarSign} />
-      </div>
-
-      {}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0">
-        {}
-        {data.length > 0 && (
-          <Card padding="lg" className="xl:col-span-5 min-w-0 min-h-0 overflow-y-auto">
-            <h3 className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted mb-3">Profit / Pierdere</h3>
-            <div key={`chart-${reportType}-${year}-${data.length}`} className="flex items-end gap-1 h-40">
-              {data.map((r, i) => {
-                const maxVal = Math.max(...data.map((d) => Math.max(Math.abs(d.gross_profit), 1)));
-                const h = Math.abs(r.gross_profit) / maxVal * 100;
-                return (
-                  <div key={r.period} className="flex-1 flex flex-col items-center gap-1" title={`${r.period}: ${money(r.gross_profit, 'RON')}`}>
-                    <div className={`anim-grow-y w-full rounded-t-sm ${r.gross_profit >= 0 ? 'bg-status-green' : 'bg-status-red'}`}
-                      style={{ height: `${Math.max(h, 4)}%`, opacity: 0.7, animationDelay: `${Math.min(i * 35, 315)}ms` }} />
-                    <span className="text-pm-2xs text-content-muted truncate w-full text-center">
-                      {reportType === 'monthly' ? r.period.slice(5) : r.period.slice(0, 12)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-        )}
-
-        {}
-        <Card padding="none" className={`flex flex-col min-h-0 ${data.length > 0 ? 'xl:col-span-7 min-w-0' : 'xl:col-span-12 min-w-0'}`}>
-          <div className="overflow-auto min-h-0 flex-1">
-            <table className="w-full text-left border-collapse">
-              <thead className={THEAD_STICKY}>
-                <tr>
-                  {[reportType === 'monthly' ? 'Luna' : 'Proiect', 'Venituri', 'Cheltuieli', 'Profit', 'Marja %'].map((h) => (
-                    <th key={h} className="px-3 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody key={loading ? 'loading' : `rows-${reportType}-${year}-${data.length}`} className="stagger-in">
-                {loading ? (
-                  <tr><td colSpan={5} className="px-3 py-10 text-center"><Loader2 className="h-6 w-6 animate-spin text-content-muted mx-auto" /></td></tr>
-                ) : data.length === 0 ? (
-                  <tr><td colSpan={5} className="px-3 py-2">
-                    <EmptyState icon={BarChart3} title="Niciun rezultat" description="Nu există date pentru perioada selectată." />
-                  </td></tr>
-                ) : data.map((r) => (
-                  <tr key={r.period} className="hover:bg-surface-tertiary/30 transition-colors">
-                    <td className="px-3 py-2 text-xs text-content-primary border-b border-line/60 font-medium">{r.period}</td>
-                    <td className="px-3 py-2 text-xs tabular-nums text-content-primary border-b border-line/60 text-right">{money(r.total_revenue, 'RON')}</td>
-                    <td className="px-3 py-2 text-xs tabular-nums text-content-primary border-b border-line/60 text-right">{money(r.total_expenses, 'RON')}</td>
-                    <td className={`px-3 py-2 text-xs tabular-nums border-b border-line/60 text-right font-medium ${r.gross_profit >= 0 ? 'text-status-green' : 'text-status-red'}`}>
-                      {money(r.gross_profit, 'RON')}
-                    </td>
-                    <td className="px-3 py-2 text-xs tabular-nums text-content-muted border-b border-line/60 text-right">{r.margin_percent.toFixed(1)}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-}

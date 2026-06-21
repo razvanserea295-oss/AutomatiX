@@ -289,14 +289,14 @@ export default function CommandPalette({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-[14vh]">
       {}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm anim-fade-in" onClick={onClose} />
 
       {}
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Paletă de comenzi"
-        className="surface-glass-strong relative w-full max-w-[640px] mx-4 rounded-xl overflow-hidden animate-scale-in motion-reduce:animate-none"
+        className="surface-glass-strong relative w-full max-w-[640px] mx-4 rounded-2xl overflow-hidden shadow-[var(--elevation-4)] anim-scale-in"
       >
         {}
         <div className="flex items-center gap-3 px-4 h-14 border-b border-line">
@@ -308,7 +308,7 @@ export default function CommandPalette({
             onChange={(e) => { setQuery(e.target.value); setActiveIdx(0); }}
             onKeyDown={onKeyDown}
             placeholder="Caută aplicații, acțiuni, pagini, parteneri, articole..."
-            className="flex-1 bg-transparent text-[15px] text-content-primary placeholder:text-content-muted outline-none"
+            className="flex-1 min-w-0 bg-transparent text-pm-md text-content-primary placeholder:text-content-muted outline-none"
           />
           {loading && <Loader2 className="h-4 w-4 animate-spin text-content-muted" />}
           {query && !loading && (
@@ -316,12 +316,12 @@ export default function CommandPalette({
               type="button"
               onClick={() => { setQuery(''); setResult(null); inputRef.current?.focus(); }}
               aria-label="Șterge căutarea"
-              className="h-5 w-5 flex items-center justify-center rounded text-content-muted hover:text-content-primary transition-colors"
+              className="h-5 w-5 inline-flex items-center justify-center rounded-lg text-content-muted hover:text-content-primary hover:bg-surface-tertiary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] anim-scale-in"
             >
               <X className="h-3.5 w-3.5" />
             </button>
           )}
-          <kbd className="px-1.5 py-0.5 rounded border border-line bg-surface-secondary text-[10px] font-medium text-content-muted">
+          <kbd className="shrink-0 px-1.5 py-0.5 rounded-lg border border-line bg-surface-secondary text-pm-2xs font-medium text-content-muted">
             Esc
           </kbd>
         </div>
@@ -329,15 +329,15 @@ export default function CommandPalette({
         {}
         <div ref={listRef} className="max-h-[52vh] overflow-y-auto py-1.5">
           {showEmpty && (
-            <div className="px-4 py-10 text-center">
-              <p className="text-sm text-content-secondary">Nimic găsit — încearcă alt termen.</p>
-              <p className="text-xs text-content-muted mt-1">Caută pagini, acțiuni, parteneri sau articole.</p>
+            <div className="px-4 py-10 text-center anim-fade-in">
+              <p className="text-pm-base text-content-secondary">Nimic găsit — încearcă alt termen.</p>
+              <p className="text-pm-sm text-content-muted mt-1">Caută pagini, acțiuni, parteneri sau articole.</p>
             </div>
           )}
 
           {searching && loading && rows.length === 0 && (
-            <div className="flex items-center gap-2 px-4 py-6 text-xs text-content-muted">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Se caută...
+            <div className="flex items-center gap-2 px-4 py-6 text-pm-sm text-content-muted anim-fade-in">
+              <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" /> Se caută...
             </div>
           )}
 
@@ -347,11 +347,11 @@ export default function CommandPalette({
             return (
               <div key={section.group} className="mb-1">
                 <div className="flex items-center gap-2 px-4 pt-2 pb-1">
-                  {GroupIcon && <GroupIcon className={`h-3 w-3 ${gm.color}`} />}
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-content-muted">
+                  {GroupIcon && <GroupIcon className={`h-3 w-3 shrink-0 ${gm.color}`} />}
+                  <span className="text-pm-eyebrow uppercase text-content-muted truncate">
                     {section.group}
                   </span>
-                  <span className="ml-auto text-[10px] text-content-muted tabular-nums">{section.rows.length}</span>
+                  <span className="ml-auto shrink-0 text-pm-2xs text-content-muted tabular-nums">{section.rows.length}</span>
                 </div>
                 <ul className="px-1.5">
                   {section.rows.map((row) => {
@@ -365,21 +365,21 @@ export default function CommandPalette({
                           data-row-idx={flatIdx}
                           onClick={() => run(row)}
                           onMouseEnter={() => setActiveIdx(flatIdx)}
-                          className={`w-full text-left px-2.5 rounded-lg py-2 flex items-center gap-3 transition-colors ${
+                          className={`w-full text-left px-2.5 rounded-lg py-2 flex items-center gap-3 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                             isActive ? 'bg-accent/10' : 'hover:bg-surface-tertiary/50'
                           }`}
                         >
                           <RowIcon className={`h-4 w-4 shrink-0 ${isActive ? row.iconColor : 'text-content-muted'}`} />
                           <span className="min-w-0 flex-1">
-                            <span className={`block text-sm truncate ${isActive ? 'text-content-primary font-medium' : 'text-content-secondary'}`}>
+                            <span className={`block text-pm-base truncate ${isActive ? 'text-content-primary font-medium' : 'text-content-secondary'}`}>
                               {row.title}
                             </span>
                             {row.subtitle && (
-                              <span className="block text-[11px] text-content-muted truncate">{row.subtitle}</span>
+                              <span className="block text-pm-xs text-content-muted truncate">{row.subtitle}</span>
                             )}
                           </span>
                           {row.shortcut && (
-                            <kbd className="shrink-0 font-mono text-[10px] px-1.5 py-0.5 rounded border border-line bg-surface-secondary text-content-muted">
+                            <kbd className="shrink-0 font-mono text-pm-2xs px-1.5 py-0.5 rounded-lg border border-line bg-surface-secondary text-content-muted">
                               {formatKeys(row.shortcut)}
                             </kbd>
                           )}
@@ -394,16 +394,17 @@ export default function CommandPalette({
 
           {!searching && recents.length > 0 && (
             <button
+              type="button"
               onClick={clearRecents}
-              className="mt-1 mx-1.5 px-3 py-1.5 flex items-center gap-1.5 text-[10px] text-content-muted hover:text-content-secondary transition-colors"
+              className="mt-1 mx-1.5 px-3 py-1.5 inline-flex items-center gap-1.5 rounded-lg text-pm-2xs text-content-muted hover:text-content-secondary hover:bg-surface-tertiary/50 transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
             >
-              <Trash2 className="h-3 w-3" /> Curăță istoricul
+              <Trash2 className="h-3 w-3 shrink-0" /> Curăță istoricul
             </button>
           )}
         </div>
 
         {}
-        <div className="flex items-center gap-4 px-4 py-2 border-t border-line text-[10px] text-content-muted">
+        <div className="flex items-center gap-4 px-4 py-2 border-t border-line text-pm-2xs text-content-muted">
           <span><kbd className="font-mono">↑↓</kbd> navighează</span>
           <span><kbd className="font-mono">↵</kbd> deschide</span>
           <span><kbd className="font-mono">Esc</kbd> închide</span>

@@ -1,0 +1,58 @@
+/* Design-sync font manifest — processed by the converter to copy woff2s into fonts/ */
+
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./public/fonts/Geist-Variable.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Geist Mono';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./public/fonts/GeistMono-Variable.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('./public/fonts/Inter-Variable.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('./public/fonts/JetBrainsMono-Variable.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: '72';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('./public/fonts/72/72-Light-full.woff2') format('woff2');
+}
+@font-face {
+  font-family: '72';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./public/fonts/72/72-Regular-full.woff2') format('woff2');
+}
+@font-face {
+  font-family: '72';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('./public/fonts/72/72-Semibold-full.woff2') format('woff2');
+}
+@font-face {
+  font-family: '72';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./public/fonts/72/72-Bold-full.woff2') format('woff2');
+}

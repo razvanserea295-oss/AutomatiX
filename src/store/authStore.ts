@@ -154,7 +154,7 @@ export const useAuthStore = create<AuthState>()(
         logger.info('User logged in', { userId: user.id, username: user.username });
         // When the firm was just resolved, reload so the whole app re-boots
         // through /t/<slug>: business_type, navigation and workspaces all
-        // reflect the right firm (Promix vs ZetBurgers).
+        // reflect the resolved firm.
         if (isBrowserWeb() && resolvedSlug) { window.location.reload(); }
         return { requires2FA: false };
       } catch (error) {

@@ -28,11 +28,11 @@ export default function ConnectionBanner({ state, serverUrl, retryInSec, onRetry
       className={`anim-slide-up relative flex items-center justify-between gap-3 border-b px-4 py-1.5 text-pm-xs font-medium ${bg} ${border} ${text}`}
     >
       {}
-      <div className="flex items-center gap-2">
+      <div className="flex min-w-0 items-center gap-2">
         {isReconnecting
-          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          : <WifiOff className="h-3.5 w-3.5" />}
-        <span>
+          ? <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+          : <WifiOff className="h-3.5 w-3.5 shrink-0" />}
+        <span className="truncate">
           {isReconnecting ? 'Reconectare la server' : 'Server inaccesibil'}
           <span className="ml-1 font-mono opacity-70">— {serverUrl}</span>
           {retryInSec != null && retryInSec > 0 && (
@@ -44,7 +44,7 @@ export default function ConnectionBanner({ state, serverUrl, retryInSec, onRetry
         <button
           type="button"
           onClick={onRetryNow}
-          className="rounded-md px-2.5 py-1 text-pm-2xs font-semibold uppercase tracking-wider transition-all duration-150 hover:bg-black/5 dark:hover:bg-white/8 active:scale-95"
+          className="shrink-0 rounded-lg px-3 py-1 text-pm-2xs font-semibold uppercase tracking-wider transition-smooth duration-150 hover:bg-surface-tertiary focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-95"
         >
           Reîncearcă
         </button>

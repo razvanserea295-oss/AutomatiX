@@ -103,21 +103,34 @@ interface PersonalEventDraft {
   title: string;
   date: string;
   end_date: string;
+  start_time: string;
+  end_time: string;
+  recurrence: RecurrenceOption;
   notes: string;
   color: string;
 }
 
 const EMPTY_DRAFT: PersonalEventDraft = {
-  title: '', date: '', end_date: '', notes: '', color: '',
+  title: '', date: '', end_date: '', start_time: '', end_time: '', recurrence: 'none', notes: '', color: '',
 };
 
 type ViewMode = 'month' | 'week' | 'day' | 'agenda';
+type RecurrenceOption = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'workdays';
 
 const VIEW_TABS: { id: ViewMode; label: string }[] = [
   { id: 'month', label: 'Lună' },
   { id: 'week', label: 'Săptămână' },
   { id: 'day', label: 'Zi' },
   { id: 'agenda', label: 'Agendă' },
+];
+
+const RECURRENCE_OPTIONS: Array<{ id: RecurrenceOption; label: string }> = [
+  { id: 'none', label: 'Nu se repetă' },
+  { id: 'daily', label: 'Zilnic' },
+  { id: 'weekly', label: 'Săptămânal' },
+  { id: 'monthly', label: 'Lunar' },
+  { id: 'yearly', label: 'Anual' },
+  { id: 'workdays', label: 'În fiecare zi lucrătoare' },
 ];
 
 function startOfMonth(d: Date) { return new Date(d.getFullYear(), d.getMonth(), 1); }
@@ -138,6 +151,35 @@ function fmtIso(d: Date) {
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const SLOT_H = 48;          
 const GRID_H = 24 * SLOT_H; 
+
+function timeToMinutes(time: string | null | undefined): number | null {
+  if (!time || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return null;
+  const [h, m] = time.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function minutesToTime(total: number): string {
+  const h = Math.max(0, Math.min(23, Math.floor(total / 60)));
+  const m = Math.max(0, Math.min(59, total % 60));
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function isTimedEvent(ev: CalendarEvent): boolean {
+  return ev.type === 'personal' && timeToMinutes(ev.meta?.start_time as string | null) !== null;
+}
+
+function eventTimeLabel(ev: CalendarEvent): string {
+  const start = ev.meta?.start_time as string | null | undefined;
+  const end = ev.meta?.end_time as string | null | undefined;
+  if (!start) return '';
+  return end ? `${start}-${end}` : start;
+}
+
+function recurrenceFromMeta(value: unknown): RecurrenceOption {
+  return value === 'daily' || value === 'weekly' || value === 'monthly' || value === 'yearly' || value === 'workdays'
+    ? value
+    : 'none';
+}
 
 export default function CalendarPage({ user: _user }: { user: User | null }) {
   const [, setLocation] = useLocation();
@@ -260,8 +302,11 @@ export default function CalendarPage({ user: _user }: { user: User | null }) {
         setDraft({
           id: ev.source_id,
           title: ev.title,
-          date: ev.date,
-          end_date: ev.end_date || '',
+          date: (ev.meta?.base_date as string | null) || ev.date,
+          end_date: (ev.meta?.repeat_until as string | null) || ev.end_date || '',
+          start_time: (ev.meta?.start_time as string | null) || '',
+          end_time: (ev.meta?.end_time as string | null) || '',
+          recurrence: recurrenceFromMeta(ev.meta?.recurrence),
           notes: (ev.meta?.notes as string) || '',
           color: (ev.meta?.color as string) || '',
         });
@@ -272,8 +317,8 @@ export default function CalendarPage({ user: _user }: { user: User | null }) {
     if (ev.url) setLocation(ev.url);
   };
 
-  const openCreateEditor = (presetDate?: string) => {
-    setDraft({ ...EMPTY_DRAFT, date: presetDate || fmtIso(new Date()) });
+  const openCreateEditor = (presetDate?: string, presetStartTime?: string) => {
+    setDraft({ ...EMPTY_DRAFT, date: presetDate || fmtIso(new Date()), start_time: presetStartTime || '' });
     setEditorOpen(true);
   };
 
@@ -288,6 +333,9 @@ export default function CalendarPage({ user: _user }: { user: User | null }) {
           title: draft.title.trim(),
           date: draft.date,
           end_date: draft.end_date || '',
+          start_time: draft.start_time || '',
+          end_time: draft.end_time || '',
+          recurrence: draft.recurrence || 'none',
           notes: draft.notes || '',
           color: draft.color || '',
         });
@@ -297,6 +345,9 @@ export default function CalendarPage({ user: _user }: { user: User | null }) {
           title: draft.title.trim(),
           date: draft.date,
           end_date: draft.end_date || null,
+          start_time: draft.start_time || null,
+          end_time: draft.end_time || null,
+          recurrence: draft.recurrence || 'none',
           notes: draft.notes || null,
           color: draft.color || null,
         });
@@ -384,7 +435,7 @@ export default function CalendarPage({ user: _user }: { user: User | null }) {
           <button
             onClick={() => setSidebarOpen(o => !o)}
             title={sidebarOpen ? 'Ascunde panoul' : 'Arată panoul'}
-            className="h-9 w-9 grid place-items-center rounded-full text-content-secondary hover:bg-surface-tertiary transition-colors"
+            className="h-9 w-9 grid place-items-center rounded-full text-content-secondary hover:bg-surface-tertiary transition-smooth duration-150 active:scale-90 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
           >
             <PanelLeft className="h-4 w-4" />
           </button>
@@ -395,14 +446,14 @@ export default function CalendarPage({ user: _user }: { user: User | null }) {
 
           <Button size="sm" variant="outline" onClick={goToday}>Astăzi</Button>
           <div className="flex items-center">
-            <button onClick={goPrev} title="Anterior" className="h-9 w-9 grid place-items-center rounded-full text-content-secondary hover:bg-surface-tertiary transition-colors">
+            <button onClick={goPrev} title="Anterior" className="h-9 w-9 grid place-items-center rounded-full text-content-secondary hover:bg-surface-tertiary transition-smooth duration-150 active:scale-90 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <button onClick={goNext} title="Următor" className="h-9 w-9 grid place-items-center rounded-full text-content-secondary hover:bg-surface-tertiary transition-colors">
+            <button onClick={goNext} title="Următor" className="h-9 w-9 grid place-items-center rounded-full text-content-secondary hover:bg-surface-tertiary transition-smooth duration-150 active:scale-90 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-          <span className="text-pm-lg font-medium text-content-primary capitalize ml-1 truncate">{headerLabel}</span>
+          <span className="text-pm-lg font-medium text-content-primary capitalize ml-1 min-w-0 truncate">{headerLabel}</span>
 
           <div className="ml-auto flex items-center gap-2">
             {}
@@ -412,7 +463,7 @@ export default function CalendarPage({ user: _user }: { user: User | null }) {
                   key={t.id}
                   onClick={() => setView(t.id)}
                   aria-pressed={view === t.id}
-                  className={`h-7 px-3 rounded-full text-pm-xs font-semibold transition-all ${
+                  className={`h-7 px-3 rounded-full text-pm-xs font-semibold transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                     view === t.id ? 'bg-surface-primary text-accent shadow-[var(--elevation-1)]' : 'text-content-muted hover:text-content-primary'
                   }`}
                 >
@@ -424,7 +475,7 @@ export default function CalendarPage({ user: _user }: { user: User | null }) {
             <select
               value={view}
               onChange={(e) => setView(e.target.value as ViewMode)}
-              className="md:hidden h-9 rounded-lg border border-line bg-surface-primary px-2 text-pm-sm text-content-primary focus:outline-none focus:border-accent"
+              className="md:hidden h-9 rounded-xl border border-line bg-surface-primary px-2 text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
             >
               {VIEW_TABS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
             </select>
@@ -438,7 +489,7 @@ export default function CalendarPage({ user: _user }: { user: User | null }) {
 
           {}
           {sidebarOpen && (
-            <aside className="hidden md:flex w-60 lg:w-64 shrink-0 flex-col border-r border-line/70 overflow-y-auto px-3 py-4 gap-4">
+            <aside className="hidden md:flex w-72 shrink-0 flex-col border-r border-line/70 min-h-0 overflow-y-auto px-4 py-4 gap-4">
               <Button onClick={() => openCreateEditor()} className="w-full justify-center">
                 <Plus className="h-4 w-4" /> Eveniment personal
               </Button>
@@ -456,10 +507,10 @@ export default function CalendarPage({ user: _user }: { user: User | null }) {
                       <li key={t}>
                         <button
                           onClick={() => toggleFilter(t)}
-                          className="w-full flex items-center gap-2.5 px-1.5 py-1.5 rounded-lg text-left hover:bg-surface-tertiary transition-colors group"
+                          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left hover:bg-surface-tertiary transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] group"
                         >
                           <span
-                            className="h-4 w-4 rounded-[5px] border-2 grid place-items-center shrink-0 transition-all group-hover:scale-110 motion-reduce:transform-none"
+                            className="h-4 w-4 rounded-[5px] border-2 grid place-items-center shrink-0"
                             style={{ borderColor: color, backgroundColor: checked ? color : 'transparent' }}
                           >
                             {checked && (
@@ -468,21 +519,21 @@ export default function CalendarPage({ user: _user }: { user: User | null }) {
                               </svg>
                             )}
                           </span>
-                          <span className={`text-pm-sm truncate ${checked ? 'text-content-primary' : 'text-content-muted'}`}>{TYPE_LABEL[t]}</span>
+                          <span className={`text-pm-sm min-w-0 truncate ${checked ? 'text-content-primary' : 'text-content-muted'}`}>{TYPE_LABEL[t]}</span>
                         </button>
                       </li>
                     );
                   })}
                 </ul>
                 {filters.size > 0 && (
-                  <button onClick={() => setFilters(new Set())} className="mt-1 px-1.5 text-pm-xs text-accent hover:underline">
+                  <button onClick={() => setFilters(new Set())} className="mt-1 px-1.5 py-0.5 rounded-md text-pm-xs text-accent hover:underline transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                     Arată toate
                   </button>
                 )}
               </div>
 
               {}
-              <div className="mt-auto pt-3 border-t border-line/60 grid grid-cols-2 gap-2">
+              <div className="pt-3 border-t border-line/60 grid grid-cols-2 gap-2">
                 <MiniStat label="În interval" value={kpiTotal} />
                 <MiniStat label="Astăzi" value={kpiToday} accent={kpiToday > 0} />
                 <MiniStat label="Deadline-uri" value={kpiDeadlines} />
@@ -571,17 +622,17 @@ function MiniCalendar({ cursor, onPick, now }: { cursor: Date; onPick: (d: Date)
           {month.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' })}
         </span>
         <div className="flex items-center">
-          <button onClick={() => setMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))} className="h-6 w-6 grid place-items-center rounded-full text-content-muted hover:bg-surface-tertiary">
+          <button onClick={() => setMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))} className="h-6 w-6 grid place-items-center rounded-full text-content-muted hover:bg-surface-tertiary transition-smooth duration-150 active:scale-90 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
             <ChevronLeft className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => setMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))} className="h-6 w-6 grid place-items-center rounded-full text-content-muted hover:bg-surface-tertiary">
+          <button onClick={() => setMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))} className="h-6 w-6 grid place-items-center rounded-full text-content-muted hover:bg-surface-tertiary transition-smooth duration-150 active:scale-90 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
             <ChevronRight className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>
       <div className="grid grid-cols-7 gap-0.5">
         {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
-          <span key={i} className="h-6 grid place-items-center text-[10px] font-semibold text-content-muted">{d}</span>
+          <span key={i} className="h-6 grid place-items-center text-pm-2xs font-semibold text-content-muted">{d}</span>
         ))}
         {days.map(d => {
           const iso = fmtIso(d);
@@ -592,8 +643,8 @@ function MiniCalendar({ cursor, onPick, now }: { cursor: Date; onPick: (d: Date)
             <button
               key={iso}
               onClick={() => onPick(d)}
-              className={`h-7 w-7 mx-auto grid place-items-center rounded-full text-[11px] tabular-nums transition-colors ${
-                isSel ? 'bg-accent text-surface-primary font-semibold'
+              className={`h-7 w-7 mx-auto grid place-items-center rounded-full text-pm-xs tabular-nums transition-smooth duration-150 active:scale-90 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
+                isSel ? 'bg-accent text-[var(--color-on-accent)] font-semibold'
                 : isToday ? 'text-accent font-bold ring-1 ring-accent/50'
                 : inMonth ? 'text-content-primary hover:bg-surface-tertiary'
                 : 'text-content-muted/60 hover:bg-surface-tertiary'
@@ -636,7 +687,7 @@ function PersonalEventEditor({
           {isEdit ? 'Editează eveniment' : 'Eveniment nou'}
         </h2>
         <p className="text-pm-xs text-content-muted mb-4">
-          Doar tu vezi acest eveniment. Restul utilizatorilor nu îl pot vedea.
+          Doar tu vezi acest eveniment. Data finală este opțională și limitează evenimentele pe mai multe zile sau seriile recurente.
         </p>
 
         <div className="space-y-3">
@@ -647,7 +698,7 @@ function PersonalEventEditor({
               onChange={(e) => onChange({ ...draft, title: e.target.value })}
               placeholder="Ex: Întâlnire client, Concediu, Vizită medicală..."
               autoFocus
-              className="w-full h-10 px-3 rounded-lg border border-line/70 bg-surface-secondary/40 text-pm-sm text-content-primary focus:outline-none focus:border-accent/50"
+              className="w-full h-10 px-3 rounded-xl border border-line/70 bg-surface-secondary/40 text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]"
             />
           </div>
 
@@ -658,19 +709,52 @@ function PersonalEventEditor({
                 type="date"
                 value={draft.date}
                 onChange={(e) => onChange({ ...draft, date: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-line/70 bg-surface-secondary/40 text-pm-sm text-content-primary focus:outline-none focus:border-accent/50"
+                className="w-full h-10 px-3 rounded-xl border border-line/70 bg-surface-secondary/40 text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]"
               />
             </div>
             <div>
-              <label className="block text-pm-xs font-semibold text-content-secondary mb-1">Data final (opțional)</label>
+              <label className="block text-pm-xs font-semibold text-content-secondary mb-1">Data final / până la</label>
               <input
                 type="date"
                 value={draft.end_date}
                 min={draft.date}
                 onChange={(e) => onChange({ ...draft, end_date: e.target.value })}
-                className="w-full h-10 px-3 rounded-lg border border-line/70 bg-surface-secondary/40 text-pm-sm text-content-primary focus:outline-none focus:border-accent/50"
+                className="w-full h-10 px-3 rounded-xl border border-line/70 bg-surface-secondary/40 text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-pm-xs font-semibold text-content-secondary mb-1">Ora început (opțional)</label>
+              <input
+                type="time"
+                value={draft.start_time}
+                onChange={(e) => onChange({ ...draft, start_time: e.target.value, end_time: draft.end_time && e.target.value && draft.end_time <= e.target.value ? '' : draft.end_time })}
+                className="w-full h-10 px-3 rounded-xl border border-line/70 bg-surface-secondary/40 text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]"
+              />
+            </div>
+            <div>
+              <label className="block text-pm-xs font-semibold text-content-secondary mb-1">Ora final (opțional)</label>
+              <input
+                type="time"
+                value={draft.end_time}
+                min={draft.start_time || undefined}
+                onChange={(e) => onChange({ ...draft, end_time: e.target.value })}
+                className="w-full h-10 px-3 rounded-xl border border-line/70 bg-surface-secondary/40 text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-pm-xs font-semibold text-content-secondary mb-1">Repetare</label>
+            <select
+              value={draft.recurrence}
+              onChange={(e) => onChange({ ...draft, recurrence: e.target.value as RecurrenceOption })}
+              className="w-full h-10 px-3 rounded-xl border border-line/70 bg-surface-secondary/40 text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]"
+            >
+              {RECURRENCE_OPTIONS.map(opt => <option key={opt.id} value={opt.id}>{opt.label}</option>)}
+            </select>
           </div>
 
           <div>
@@ -680,7 +764,7 @@ function PersonalEventEditor({
               onChange={(e) => onChange({ ...draft, notes: e.target.value })}
               rows={3}
               placeholder="Detalii suplimentare..."
-              className="w-full px-3 py-2 rounded-lg border border-line/70 bg-surface-secondary/40 text-pm-sm text-content-primary focus:outline-none focus:border-accent/50 resize-none"
+              className="w-full px-3 py-2 rounded-xl border border-line/70 bg-surface-secondary/40 text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)] resize-none"
             />
           </div>
 
@@ -703,7 +787,7 @@ function PersonalEventEditor({
                   type="button"
                   onClick={() => onChange({ ...draft, color: c.value })}
                   title={c.name}
-                  className={`h-7 w-7 rounded-full border-2 transition-all ${
+                  className={`h-7 w-7 grid place-items-center rounded-full border-2 transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                     draft.color === c.value ? 'border-content-primary ring-2 ring-accent/40' : 'border-line'
                   }`}
                   style={{ background: c.value || 'transparent' }}
@@ -787,13 +871,13 @@ function MonthView({ range, cursor, eventsByDay, now, onEventClick, onDrop, onOp
               }}
               onDoubleClick={() => onCreate(iso)}
               style={{ animationDelay: `${Math.min(i, 24) * 12}ms` }}
-              className={`group relative flex flex-col min-h-0 px-1 pt-1 overflow-hidden transition-colors hover:bg-surface-secondary/60 enter-scale ${
+              className={`group relative flex flex-col min-h-0 px-1 pt-1 overflow-hidden transition-colors hover:bg-surface-secondary/60 ${
                 col < 6 ? 'border-r' : ''} ${row < 5 ? 'border-b' : ''} border-line/60 ${
                 inMonth ? '' : 'bg-surface-secondary/40'}`}
             >
               <div className="flex items-center justify-center shrink-0">
                 <span className={`text-pm-xs tabular-nums h-6 min-w-6 px-1 grid place-items-center rounded-full transition-colors ${
-                  isToday ? 'bg-accent text-surface-primary font-bold'
+                  isToday ? 'bg-accent text-[var(--color-on-accent)] font-bold'
                   : inMonth ? 'text-content-secondary group-hover:text-content-primary' : 'text-content-muted/60'
                 }`}>
                   {d.getDate()}
@@ -806,19 +890,20 @@ function MonthView({ range, cursor, eventsByDay, now, onEventClick, onDrop, onOp
                     draggable
                     onDragStart={(e) => e.dataTransfer.setData('application/json', JSON.stringify(ev))}
                     onClick={(e) => { e.stopPropagation(); onEventClick(ev); }}
-                    className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-md cursor-pointer hover:brightness-95 hover:-translate-y-px hover:shadow-[var(--elevation-1)] transition-all motion-reduce:transform-none"
+                    className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-md cursor-pointer hover:brightness-95 transition-colors duration-150"
                     style={{ backgroundColor: `${eventColor(ev)}1f` }}
                     title={`${TYPE_LABEL[ev.type]}: ${ev.title}`}
                   >
                     <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: eventColor(ev) }} />
-                    <span className="text-pm-2xs font-medium truncate text-content-primary">{ev.title}</span>
+                    {eventTimeLabel(ev) && <span className="text-pm-2xs font-semibold shrink-0" style={{ color: eventColor(ev) }}>{eventTimeLabel(ev)}</span>}
+                    <span className="text-pm-2xs font-medium min-w-0 truncate text-content-primary">{ev.title}</span>
                   </div>
                 ))}
                 {evs.length > 3 && (
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onOpenDay(iso); }}
-                    className="w-full text-left text-pm-2xs font-medium text-content-muted hover:text-accent px-1.5"
+                    className="w-full text-left text-pm-2xs font-medium text-content-muted hover:text-accent px-1.5 rounded-md transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                     title={`Vezi toate cele ${evs.length} evenimente`}
                   >
                     +{evs.length - 3} mai multe
@@ -845,7 +930,7 @@ function HourlyGrid({ days, eventsByDay, now, onEventClick, onDrop, onCreate }: 
   now: Date;
   onEventClick: (ev: CalendarEvent) => void;
   onDrop: (ev: CalendarEvent, newDate: string) => void;
-  onCreate: (presetDate?: string) => void;
+  onCreate: (presetDate?: string, presetStartTime?: string) => void;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const todayIso = fmtIso(now);
@@ -859,7 +944,7 @@ function HourlyGrid({ days, eventsByDay, now, onEventClick, onDrop, onCreate }: 
   }, [days[0]?.toDateString()]);
 
   return (
-    <div key={`hourly-${days.length}-${fmtIso(days[0])}`} className="flex flex-col flex-1 min-h-0 enter-up">
+    <div key={`hourly-${days.length}-${fmtIso(days[0])}`} className="flex flex-col flex-1 min-h-0">
       {}
       <div className="flex shrink-0 border-b border-line/70 pr-[var(--sb,0)]">
         <div className="w-14 shrink-0" />
@@ -870,24 +955,24 @@ function HourlyGrid({ days, eventsByDay, now, onEventClick, onDrop, onCreate }: 
             <div key={iso} className="flex-1 text-center py-1.5 border-l border-line/60">
               <p className="text-pm-2xs uppercase tracking-wide text-content-muted capitalize">{d.toLocaleDateString('ro-RO', { weekday: 'short' })}</p>
               <p className={`mx-auto mt-0.5 h-8 w-8 grid place-items-center rounded-full text-pm-lg font-medium tabular-nums ${
-                isToday ? 'bg-accent text-surface-primary' : 'text-content-primary'}`}>{d.getDate()}</p>
+                isToday ? 'bg-accent text-[var(--color-on-accent)]' : 'text-content-primary'}`}>{d.getDate()}</p>
             </div>
           );
         })}
       </div>
 
       {}
-      <div className="flex shrink-0 border-b border-line/70 min-h-[2.5rem] max-h-32 overflow-y-auto">
-        <div className="w-14 shrink-0 text-right pr-2 pt-1.5 text-[10px] uppercase tracking-wide text-content-muted">Toată ziua</div>
+      <div className="flex shrink-0 border-b border-line/70 min-h-[2.75rem] max-h-36 overflow-y-auto">
+        <div className="w-14 shrink-0 text-right pr-2 pt-2 text-pm-2xs uppercase tracking-wide text-content-muted">Toată ziua</div>
         {days.map(d => {
           const iso = fmtIso(d);
-          const evs = eventsByDay.get(iso) || [];
+          const evs = (eventsByDay.get(iso) || []).filter(ev => !isTimedEvent(ev));
           return (
             <div
               key={iso}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => { const j = e.dataTransfer.getData('application/json'); if (j) try { onDrop(JSON.parse(j), iso); } catch {  } }}
-              className="flex-1 border-l border-line/60 p-1 space-y-1 stagger-in"
+              className="flex-1 border-l border-line/60 p-1 space-y-1"
             >
               {evs.map(ev => (
                 <div
@@ -895,12 +980,12 @@ function HourlyGrid({ days, eventsByDay, now, onEventClick, onDrop, onCreate }: 
                   draggable
                   onDragStart={(e) => e.dataTransfer.setData('application/json', JSON.stringify(ev))}
                   onClick={() => onEventClick(ev)}
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer hover:brightness-95 hover:-translate-y-px hover:shadow-[var(--elevation-1)] transition-all motion-reduce:transform-none"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-md cursor-pointer hover:brightness-95 transition-colors duration-150"
                   style={{ backgroundColor: `${eventColor(ev)}26` }}
                   title={`${TYPE_LABEL[ev.type]}: ${ev.title}`}
                 >
                   <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: eventColor(ev) }} />
-                  <span className="text-pm-2xs font-medium truncate" style={{ color: eventColor(ev) }}>{ev.title}</span>
+                  <span className="text-pm-2xs font-medium min-w-0 truncate" style={{ color: eventColor(ev) }}>{ev.title}</span>
                 </div>
               ))}
             </div>
@@ -914,7 +999,7 @@ function HourlyGrid({ days, eventsByDay, now, onEventClick, onDrop, onCreate }: 
           {}
           <div className="w-14 shrink-0 relative">
             {HOURS.map(h => (
-              <div key={h} className="absolute right-2 -translate-y-1/2 text-[10px] tabular-nums text-content-muted" style={{ top: h * SLOT_H }}>
+              <div key={h} className="absolute right-2 -translate-y-1/2 text-pm-2xs tabular-nums text-content-muted" style={{ top: h * SLOT_H }}>
                 {h === 0 ? '' : `${String(h).padStart(2, '0')}:00`}
               </div>
             ))}
@@ -923,6 +1008,7 @@ function HourlyGrid({ days, eventsByDay, now, onEventClick, onDrop, onCreate }: 
           {days.map(d => {
             const iso = fmtIso(d);
             const isToday = iso === todayIso;
+            const timed = (eventsByDay.get(iso) || []).filter(isTimedEvent);
             return (
               <div
                 key={iso}
@@ -934,12 +1020,40 @@ function HourlyGrid({ days, eventsByDay, now, onEventClick, onDrop, onCreate }: 
                   <button
                     key={h}
                     type="button"
-                    onClick={() => onCreate(iso)}
+                    onClick={() => onCreate(iso, minutesToTime(h * 60))}
                     title="Adaugă eveniment personal"
-                    className="absolute left-0 right-0 border-b border-line/40 hover:bg-accent-muted/40 transition-colors"
+                    className="absolute left-0 right-0 border-b border-line/40 hover:bg-accent-muted/40 transition-colors duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                     style={{ top: h * SLOT_H, height: SLOT_H }}
                   />
                 ))}
+                {timed.map((ev, idx) => {
+                  const start = timeToMinutes(ev.meta?.start_time as string | null) ?? 0;
+                  const end = timeToMinutes(ev.meta?.end_time as string | null) ?? Math.min(start + 60, 24 * 60);
+                  const top = (start / 60) * SLOT_H;
+                  const height = Math.max(28, ((Math.max(end, start + 30) - start) / 60) * SLOT_H);
+                  return (
+                    <button
+                      key={`${ev.id}-${idx}`}
+                      type="button"
+                      draggable
+                      onDragStart={(e) => e.dataTransfer.setData('application/json', JSON.stringify(ev))}
+                      onClick={() => onEventClick(ev)}
+                      className="absolute z-20 rounded-lg border px-2 py-1 text-left overflow-hidden shadow-[var(--elevation-1)] hover:brightness-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
+                      style={{
+                        top,
+                        height,
+                        left: `${4 + (idx % 2) * 4}px`,
+                        right: `${4 + (idx % 2) * 4}px`,
+                        backgroundColor: `${eventColor(ev)}24`,
+                        borderColor: `${eventColor(ev)}66`,
+                      }}
+                      title={`${eventTimeLabel(ev)} ${ev.title}`}
+                    >
+                      <span className="block text-pm-2xs font-semibold leading-tight" style={{ color: eventColor(ev) }}>{eventTimeLabel(ev)}</span>
+                      <span className="block text-pm-xs font-medium text-content-primary leading-tight truncate">{ev.title}</span>
+                    </button>
+                  );
+                })}
                 {}
                 {isToday && (
                   <div className="absolute left-0 right-0 z-10 pointer-events-none" style={{ top: nowTop }}>
@@ -998,10 +1112,10 @@ function AgendaView({ upcoming, onEventClick }: {
                   <button
                     key={ev.id}
                     onClick={() => onEventClick(ev)}
-                    className="group w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-surface-secondary hover:translate-x-0.5 transition-all motion-reduce:transform-none text-left"
+                    className="group w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-surface-secondary hover:translate-x-0.5 active:scale-[0.99] transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] motion-reduce:transform-none text-left"
                   >
-                    <span className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform group-hover:scale-125 motion-reduce:transform-none" style={{ background: eventColor(ev) }} />
-                    <span className="text-pm-sm font-medium text-content-primary truncate flex-1">{ev.title}</span>
+                    <span className="h-2.5 w-2.5 rounded-full shrink-0 transition-transform duration-150 group-hover:scale-125 motion-reduce:transform-none" style={{ background: eventColor(ev) }} />
+                    <span className="text-pm-sm font-medium text-content-primary min-w-0 truncate flex-1">{ev.title}</span>
                     <span className="text-pm-2xs text-content-muted shrink-0">{TYPE_LABEL[ev.type]}</span>
                   </button>
                 ))}

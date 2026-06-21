@@ -15,8 +15,9 @@ import {
   Target, FileText, Users, FolderKanban, ScrollText, MessageCircle,
   ClipboardList, FileCog, Network, Truck, BookOpen, Factory, Wrench,
   AlertTriangle, Package, Boxes, ShoppingCart, DollarSign, BarChart3,
-  GraduationCap, Mail, Bot, Bell, Activity, Settings,
-  CheckSquare, Calendar, MapPin, UtensilsCrossed, CalendarCheck, LayoutGrid,
+  GraduationCap, Mail, Bell, Activity, Settings,
+  CheckSquare, Calendar, MapPin,
+  LayoutDashboard, MonitorDown,
 } from 'lucide-react';
 import { PAGE_IDS } from './constants';
 
@@ -28,13 +29,6 @@ export interface WorkspaceSubpage {
 }
 
 export const WORKSPACE_SUBPAGES: Record<string, WorkspaceSubpage[]> = {
-  [PAGE_IDS.RESTAURANT_WORKSPACE]: [
-    { id: 'orders', label: 'Comenzi', icon: ClipboardList },
-    { id: 'menu', label: 'Meniu', icon: UtensilsCrossed },
-    { id: 'recipes', label: 'Rețete', icon: BookOpen },
-    { id: 'reservations', label: 'Rezervări', icon: CalendarCheck },
-    { id: 'tables', label: 'Mese', icon: LayoutGrid },
-  ],
   [PAGE_IDS.SALES_WORKSPACE]: [
     { id: 'sales-hub', label: 'Pipeline', icon: Target },
     { id: 'quotations', label: 'Oferte', icon: FileText },
@@ -68,11 +62,12 @@ export const WORKSPACE_SUBPAGES: Record<string, WorkspaceSubpage[]> = {
     { id: 'reports', label: 'Rapoarte', icon: BarChart3 },
   ],
   [PAGE_IDS.INSTRUMENTE_WORKSPACE]: [
+    { id: 'birou-control', label: 'Birou de control', icon: LayoutDashboard },
     { id: 'tutorial', label: 'Tutorial', icon: GraduationCap },
     { id: 'email', label: 'Email', icon: Mail },
     { id: 'chat', label: 'Mesaje', icon: MessageCircle },
-    { id: 'ai', label: 'AI', icon: Bot },
     { id: 'alerts', label: 'Alerte', icon: Bell },
+    { id: 'download-app', label: 'Aplicație desktop', icon: MonitorDown },
   ],
   [PAGE_IDS.PERSONAL_WORKSPACE]: [
     { id: 'tasks', label: 'Task-uri', icon: CheckSquare },

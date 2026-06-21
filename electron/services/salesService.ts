@@ -198,14 +198,12 @@ export class SalesService {
     }
     stmt.free();
 
-    
-    
-    
     const showCreatorMeta = this.canSeeAllLeads(user);
 
-    
+    // Batch load notes for all leads - O(1) queries instead of O(N)
+    const notesMap = this.getNotesBatch(db, leads.map(l => l.id));
     for (const lead of leads) {
-      lead.recent_notes = this.getNotes(db, lead.id);
+      lead.recent_notes = notesMap.get(lead.id) || [];
       if (!showCreatorMeta) lead.created_by_name = null;
     }
 
@@ -248,6 +246,35 @@ export class SalesService {
     }
     stmt.free();
     return notes;
+  }
+
+  // Batch load notes for multiple leads - avoids N+1 query problem
+  static getNotesBatch(db: Database, leadIds: number[]): Map<number, LeadNote[]> {
+    if (leadIds.length === 0) return new Map();
+    const stmt = db.prepare(
+      `SELECT n.lead_id, n.id, n.content, u.full_name, n.created_at
+       FROM sales_lead_notes n LEFT JOIN users u ON u.id = n.created_by
+       WHERE n.lead_id IN (${leadIds.map(() => '?').join(',')})
+       ORDER BY n.created_at DESC`
+    );
+    stmt.bind(leadIds);
+    const notesMap = new Map<number, LeadNote[]>();
+    leadIds.forEach(id => notesMap.set(id, []));
+    while (stmt.step()) {
+      const row = stmt.get();
+      const leadId = row[0] as number;
+      const notes = notesMap.get(leadId)!;
+      if (notes.length < 10) { // Limit to 10 per lead
+        notes.push({
+          id: row[1] as number,
+          content: row[2] as string,
+          created_by_name: row[3] as string | null,
+          created_at: row[4] as string,
+        });
+      }
+    }
+    stmt.free();
+    return notesMap;
   }
 
   static create(db: Database, user: UserWithRole, req: CreateLeadRequest): SalesLead {

@@ -36,7 +36,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
-import { Plus, ArrowUpCircle, Library, Pencil, Trash2, Boxes, Layers, Tags } from 'lucide-react';
+import { Plus, ArrowUpCircle, Library, Pencil, Trash2, Boxes, Layers } from 'lucide-react';
 import LibrariesEnhancements from '@/pages/libraries/LibrariesEnhancements';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
@@ -49,7 +49,6 @@ import { useMoney } from '@/store/settingsStore';
 
 import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import StatusBadge from '@/redesign/ui/StatusBadge';
@@ -279,14 +278,6 @@ export default function LibrariesPage({ user: _user }: { user: User | null }) {
             </Button>
           </div>
         </header>
-
-        {}
-        <div className="enter-up shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-4" style={{ animationDelay: '80ms' }}>
-          <KpiCard vtName={vtName('lib-kpi', 'standard')} label="Piese standard" icon={Boxes} value={stats.standard} />
-          <KpiCard vtName={vtName('lib-kpi', 'custom')} label="Piese custom" icon={Layers} value={stats.custom} />
-          <KpiCard vtName={vtName('lib-kpi', 'promoted')} label="Promovate" icon={ArrowUpCircle} value={stats.promoted} iconColor="text-status-green" />
-          <KpiCard vtName={vtName('lib-kpi', 'categories')} label="Categorii" icon={Tags} value={stats.categories} />
-        </div>
 
         {
 

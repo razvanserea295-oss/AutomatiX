@@ -8,20 +8,19 @@ import { CommandError, AppError } from '@/core/types';
 import { STORAGE_KEYS, getStorage } from '@/config/localStorage';
 import { getServerUrl } from '@/config/server';
 import { notifySessionExpired } from '@/store/sessionEvents';
+import { isElectronRuntime, isTauriRuntime } from '@/lib/runtime';
 
 
 
 
 
 export const ElectronEnvironment = {
-  isElectron: (): boolean => {
-    return typeof window !== 'undefined' && 'electron' in window;
-  },
+  isElectron: isElectronRuntime,
 };
 
 
 export const TauriEnvironment = {
-  isTauri: (): boolean => ElectronEnvironment.isElectron(),
+  isTauri: isTauriRuntime,
 };
 
 
@@ -75,11 +74,6 @@ const REQUEST_WRAPPED_COMMANDS = new Set([
   'create_project', 'update_project',
   'create_client', 'update_client',
   'create_material', 'update_material',
-  'create_menu_item', 'update_menu_item',
-  'create_restaurant_order',
-  'add_recipe_item', 'update_recipe_item',
-  'create_reservation', 'update_reservation',
-  'create_restaurant_table', 'update_restaurant_table',
   'create_document', 'update_document',
   'create_document_category', 'update_document_category',
   'create_alert',

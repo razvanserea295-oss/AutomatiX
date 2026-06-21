@@ -53,7 +53,7 @@ export default function Breadcrumb({
           if ('ellipsis' in seg) {
             return (
               <Fragment key={`ellipsis-${i}`}>
-                <li className="text-content-muted px-1.5 select-none" aria-hidden>…</li>
+                <li className="text-content-muted px-2 select-none" aria-hidden>…</li>
                 <li aria-hidden><ChevronRight className="h-3.5 w-3.5 text-content-muted/60" /></li>
               </Fragment>
             );
@@ -66,7 +66,7 @@ export default function Breadcrumb({
                   <button
                     type="button"
                     onClick={seg.onClick}
-                    className="rounded-lg px-2 py-1 text-content-secondary hover:text-content-primary hover:bg-surface-tertiary transition-colors duration-150 truncate max-w-[160px] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
+                    className="rounded-lg px-2 py-1 text-content-secondary hover:text-content-primary hover:bg-surface-tertiary transition-smooth duration-150 active:scale-[0.98] truncate max-w-[160px] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                   >
                     {seg.label}
                   </button>

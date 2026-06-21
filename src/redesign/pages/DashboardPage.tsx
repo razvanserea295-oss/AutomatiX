@@ -16,14 +16,12 @@
 
 
 
-import { lazy, Suspense, useState, useEffect, useMemo, useCallback } from 'react';
-import { FolderKanban, Factory, Warehouse, Loader2, Sparkles, TrendingUp, Bell, Activity, RefreshCw, Wallet, Receipt, Pencil, Check, Minus, Plus, RotateCcw, MoveHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/cn';
+import { lazy, Suspense, useState, useEffect, useMemo } from 'react';
+import { FolderKanban, Factory, Warehouse, Loader2, TrendingUp, Bell, Activity, RefreshCw, Wallet, Receipt } from 'lucide-react';
 import type { User } from '@/core/types';
 import { parseDashboardConfig } from '@/core/types';
 import { normalizeRole, canAccessPage } from '@/lib/access';
 import type { AppPage } from '@/lib/access';
-import { aiChat, aiHealth } from '@/api/ai';
 import { formatNumber, formatDateRo } from '@/lib/format';
 import { useProjectStore } from '@/store/projectStore';
 import { useMaterialStore } from '@/store/materialStore';
@@ -47,6 +45,9 @@ import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
 import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
+import CardGrid, { type CardGridItem } from '@/redesign/ui/CardGrid';
+import EditLayoutButton from '@/redesign/ui/EditLayoutButton';
+import { useLayoutEditStore } from '@/store/layoutEditStore';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import SectionHeader from '@/redesign/ui/SectionHeader';
 import EmptyState from '@/redesign/ui/EmptyState';
@@ -100,113 +101,20 @@ function presetRange(preset: RangePreset): { from: string | null; to: string | n
 
 // ── iOS-style editable widget grid: model + persistence ─────────────────────
 type WId = 'revenue_chart' | 'production_stages' | 'activity' | 'active_projects'
-  | 'alerts_panel' | 'ai_summary' | 'briefing' | 'inbox' | 'critical_stock';
+  | 'alerts_panel' | 'briefing' | 'inbox' | 'critical_stock';
 
 const DEFAULT_WIDGET_ORDER: WId[] = [
   'revenue_chart', 'production_stages', 'activity', 'active_projects',
-  'alerts_panel', 'ai_summary', 'briefing', 'inbox', 'critical_stock',
+  'alerts_panel', 'briefing', 'inbox', 'critical_stock',
 ];
 // 2 = full-width tile, 1 = half (the iOS "large/small widget" idea, kept simple
 // so a 2-column grid tiles without masonry gaps).
 const WIDGET_SPAN: Record<WId, 1 | 2> = {
   revenue_chart: 2, production_stages: 1, activity: 1, active_projects: 2,
-  alerts_panel: 1, ai_summary: 1, briefing: 1, inbox: 1, critical_stock: 1,
+  alerts_panel: 1, briefing: 1, inbox: 1, critical_stock: 1,
 };
 
-interface DashLayout { order: WId[]; hidden: WId[]; sizes: Record<WId, 1 | 2> }
-
-const defaultSizes = (): Record<WId, 1 | 2> => ({ ...WIDGET_SPAN });
-
-function loadLayout(key: string): DashLayout {
-  try {
-    const raw = localStorage.getItem(`promix_dash_layout_v1_${key}`);
-    if (raw) {
-      const p = JSON.parse(raw) as Partial<DashLayout>;
-      const order = (Array.isArray(p.order) ? p.order : []).filter((x): x is WId => DEFAULT_WIDGET_ORDER.includes(x as WId));
-      for (const id of DEFAULT_WIDGET_ORDER) if (!order.includes(id)) order.push(id); // append new widgets
-      const hidden = (Array.isArray(p.hidden) ? p.hidden : []).filter((x): x is WId => DEFAULT_WIDGET_ORDER.includes(x as WId));
-      const sizes = defaultSizes();
-      if (p.sizes && typeof p.sizes === 'object') {
-        for (const id of DEFAULT_WIDGET_ORDER) {
-          const s = (p.sizes as Record<string, unknown>)[id];
-          if (s === 1 || s === 2) sizes[id] = s;
-        }
-      }
-      return { order, hidden, sizes };
-    }
-  } catch { /* ignore corrupt layout */ }
-  return { order: [...DEFAULT_WIDGET_ORDER], hidden: [], sizes: defaultSizes() };
-}
-
-// A personal home-screen arrangement → localStorage per user, not the DB. The
-// admin `dashboard_config` flags still decide what is AVAILABLE to arrange.
-function useWidgetLayout(key: string) {
-  const [layout, setLayout] = useState<DashLayout>(() => loadLayout(key));
-  useEffect(() => { try { localStorage.setItem(`promix_dash_layout_v1_${key}`, JSON.stringify(layout)); } catch { /* ignore */ } }, [key, layout]);
-  const setOrder = useCallback((order: WId[]) => setLayout(l => ({ ...l, order })), []);
-  const setSize = useCallback((id: WId, size: 1 | 2) => setLayout(l => (l.sizes[id] === size ? l : { ...l, sizes: { ...l.sizes, [id]: size } })), []);
-  const hide = useCallback((id: WId) => setLayout(l => (l.hidden.includes(id) ? l : { ...l, hidden: [...l.hidden, id] })), []);
-  const show = useCallback((id: WId) => setLayout(l => ({ ...l, hidden: l.hidden.filter(x => x !== id) })), []);
-  const reset = useCallback(() => setLayout({ order: [...DEFAULT_WIDGET_ORDER], hidden: [], sizes: defaultSizes() }), []);
-  return { layout, setOrder, setSize, hide, show, reset };
-}
-
-// Edit-mode widget shell. Explicit, discoverable controls (move ◄ ►, resize ⤢,
-// remove −) so it's obvious widgets are editable — PLUS drag-to-reorder for the
-// iOS feel. The buttons guarantee it works even where native drag is finicky.
-function WidgetTile({ span, editMode, dragging, canLeft, canRight, onRemove, onResize, onMoveLeft, onMoveRight, onDragStart, onDragEnter, onDragEnd, children }: {
-  span: 1 | 2; editMode: boolean; dragging: boolean; canLeft: boolean; canRight: boolean;
-  onRemove: () => void; onResize: (size: 1 | 2) => void; onMoveLeft: () => void; onMoveRight: () => void;
-  onDragStart: () => void; onDragEnter: () => void; onDragEnd: () => void;
-  children: React.ReactNode;
-}) {
-  const ctrlBtn = 'h-6 w-6 rounded-full flex items-center justify-center text-content-secondary hover:text-accent disabled:opacity-30 disabled:hover:text-content-secondary transition-colors';
-  return (
-    <div
-      className={cn('relative min-w-0 flex', span === 2 && 'lg:col-span-2', editMode && 'widget-jiggle', dragging && 'opacity-40 z-30')}
-      draggable={editMode}
-      onDragStart={editMode ? onDragStart : undefined}
-      onDragEnter={editMode ? onDragEnter : undefined}
-      onDragEnd={editMode ? onDragEnd : undefined}
-      onDragOver={editMode ? (e) => e.preventDefault() : undefined}
-    >
-      {editMode && (
-        <>
-          {/* remove */}
-          <button type="button" onClick={onRemove} onDragStart={(e) => e.preventDefault()} aria-label="Elimină widget"
-            className="absolute -left-2 -top-2 z-20 h-6 w-6 rounded-full bg-status-red text-white shadow-md flex items-center justify-center hover:scale-110 transition-transform">
-            <Minus className="h-4 w-4" strokeWidth={3} />
-          </button>
-          {/* move + resize toolbar */}
-          <div className="absolute -top-3 right-3 z-20 flex items-center gap-0.5 rounded-full bg-surface-elevated border border-line px-1 py-0.5 shadow-md" onDragStart={(e) => e.preventDefault()}>
-            <button type="button" className={ctrlBtn} onClick={onMoveLeft} disabled={!canLeft} aria-label="Mută înainte" title="Mută înainte"><ChevronLeft className="h-4 w-4" /></button>
-            <button type="button" className={ctrlBtn} onClick={() => onResize(span === 2 ? 1 : 2)} aria-label="Schimbă dimensiunea" title={span === 2 ? 'Fă-l jumătate' : 'Fă-l lat'}><MoveHorizontal className="h-4 w-4" /></button>
-            <button type="button" className={ctrlBtn} onClick={onMoveRight} disabled={!canRight} aria-label="Mută după" title="Mută după"><ChevronRight className="h-4 w-4" /></button>
-          </div>
-        </>
-      )}
-      <div className={cn('w-full', editMode && 'pointer-events-none select-none cursor-grab')}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function GhostTile({ span, label, onAdd }: { span: 1 | 2; label: string; onAdd: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onAdd}
-      className={cn(
-        'group relative min-h-[112px] rounded-2xl border-2 border-dashed border-line flex flex-col items-center justify-center gap-2 text-content-muted hover:border-accent/50 hover:text-accent transition-colors',
-        span === 2 && 'lg:col-span-2',
-      )}
-    >
-      <Plus className="h-5 w-5" />
-      <span className="text-pm-xs font-medium">{label}</span>
-    </button>
-  );
-}
+// Widget model (WId/order/span above) feeds CardGrid; layout engine lives in @/redesign/lib/useCardLayout.
 
 export default function DashboardPage({ user, onNavigate }: DashboardPageProps) {
   const projects = useProjectStore(s => s.projects);
@@ -240,9 +148,6 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
-  const [aiConnected, setAiConnected] = useState(false);
 
   
   const [timeRange, setTimeRange] = useState<TimeRange>(() => ({ ...presetRange('all'), preset: 'all' }));
@@ -288,7 +193,6 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
     await Promise.all([
       refreshDashboard(), fetchMaterials(), fetchProjects(), fetchAlerts(), fetchHandoffs(true),
     ]);
-    aiHealth().then(setAiConnected);
   };
 
   
@@ -317,34 +221,6 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
     void setRange({ from: timeRange.from, to: timeRange.to });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange.from, timeRange.to]);
-
-  
-  useEffect(() => {
-    if (loading || !aiConnected) return;
-    const handle = setTimeout(() => {
-      setAiSummaryLoading(true);
-      const profitNow = d.profit || (d.revenue - d.costs);
-      const marginNow = d.revenue > 0 ? (profitNow / d.revenue) * 100 : 0;
-      const facts = [
-        `proiecte_total=${d.total_projects}`, `proiecte_active=${d.active_projects}`,
-        `proiecte_in_productie=${d.in_production}`, `materiale_sub_stoc_minim=${d.low_stock_count}`,
-        `alerte_active=${d.pending_alerts}`, `venituri=${Math.round(d.revenue)}`,
-        `costuri=${Math.round(d.costs)}`, `profit=${Math.round(profitNow)}`,
-        `marja_procent=${marginNow.toFixed(1)}`,
-      ].join(', ');
-      aiChat(
-        [{ role: 'user', content:
-          `Date reale (folosește exact aceste cifre, nu inventa): ${facts}.\n\n` +
-          `Generează o sinteză scurtă (max 3 propoziții) a situației curente menționând: proiecte active, situația financiară (profit/marjă), stoc critic, alerte. ` +
-          `Concis, în română, fără introduceri și fără să schimbi cifrele.` }],
-        `dash-summary-${Date.now()}`
-      ).then(res => setAiSummary(res.reply))
-        .catch(() => setAiSummary(null))
-        .finally(() => setAiSummaryLoading(false));
-    }, 1500);
-    return () => clearTimeout(handle);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, aiConnected, d.total_projects, d.active_projects, d.in_production, d.low_stock_count, d.pending_alerts, d.revenue, d.costs, d.profit]);
 
   const profit = d.profit || (d.revenue - d.costs);
   const margin = d.revenue > 0 ? (profit / d.revenue) * 100 : 0;
@@ -375,11 +251,9 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
 
   const userFirst = (user?.full_name || user?.username || '').split(' ')[0] || 'utilizator';
 
-  // iOS-style edit mode + per-user widget arrangement.
+  // Per-user widget arrangement is now handled by the shared CardGrid engine.
   const layoutKey = String(user?.id ?? user?.username ?? 'anon');
-  const { layout, setOrder, setSize, hide, show, reset } = useWidgetLayout(layoutKey);
-  const [editMode, setEditMode] = useState(false);
-  const [dragId, setDragId] = useState<WId | null>(null);
+  const editMode = useLayoutEditStore(s => s.editMode);
 
   if (loading) {
     return (
@@ -414,12 +288,12 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
                 const pct = (count / max) * 100;
                 return (
                   <div key={stage}>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-pm-xs text-content-secondary truncate">{sentenceCase(stage)}</span>
-                      <span className="text-pm-sm font-semibold tabular-nums text-content-primary ml-2">{count}</span>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="min-w-0 text-pm-xs text-content-secondary truncate">{sentenceCase(stage)}</span>
+                      <span className="text-pm-sm font-semibold tabular-nums text-content-primary shrink-0">{count}</span>
                     </div>
                     <div className="h-2 rounded-full bg-surface-tertiary overflow-hidden">
-                      <div className="anim-bar-grow h-full bg-content-primary/80 rounded-full transition-all duration-500" style={{ width: `${pct}%` }} />
+                      <div className="anim-bar-grow h-full bg-content-primary/80 rounded-full transition-[background-color] duration-150" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );
@@ -442,14 +316,14 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
     active_projects: (
       <Card padding="md" className="h-full min-w-0">
         <SectionHeader title="Proiecte active" icon={FolderKanban} className="mb-3"
-          actions={canProjects ? (<button onClick={() => onNavigate('projects')} className="text-pm-xs text-accent hover:underline">Deschide</button>) : undefined} />
+          actions={canProjects ? (<button onClick={() => onNavigate('projects')} className="inline-flex items-center rounded-lg px-1.5 py-0.5 text-pm-xs text-accent hover:underline transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">Deschide</button>) : undefined} />
         {!canProjects ? <EmptyState icon={FolderKanban} title="Fără acces" />
           : activeProjects.length === 0 ? <EmptyState icon={FolderKanban} title="Niciun proiect activ" />
           : (
             <ul key={activeProjects.length} className="stagger-in space-y-1">
               {activeProjects.slice(0, 6).map(p => (
                 <li key={p.id}>
-                  <button onClick={() => onNavigate('projects')} className="w-full text-left flex items-center gap-3 px-2.5 py-2.5 rounded-lg hover:bg-surface-tertiary/40 transition-colors">
+                  <button onClick={() => onNavigate('projects')} className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-tertiary/40 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                     <div className="min-w-0 flex-1">
                       <p className="text-pm-sm font-medium text-content-primary truncate">{p.name}</p>
                       <p className="text-pm-2xs text-content-muted truncate">{p.client_name || '—'}</p>
@@ -467,14 +341,14 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
       <Card padding="md" className="h-full min-w-0">
         <SectionHeader title="Alerte" icon={Bell} className="mb-3"
           meta={d.pending_alerts > 0 ? `${d.pending_alerts} active` : undefined}
-          actions={can('alerts') ? (<button onClick={() => onNavigate('alerts')} className="text-pm-xs text-accent hover:underline">Toate</button>) : undefined} />
+          actions={can('alerts') ? (<button onClick={() => onNavigate('alerts')} className="inline-flex items-center rounded-lg px-1.5 py-0.5 text-pm-xs text-accent hover:underline transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">Toate</button>) : undefined} />
         {!can('alerts') ? <EmptyState icon={Bell} title="Fără acces" />
           : recentAlerts.length === 0 ? <EmptyState icon={Bell} title="Nicio alertă activă" />
           : (
             <ul key={recentAlerts.length} className="stagger-in space-y-1">
               {recentAlerts.map(a => (
                 <li key={a.id}>
-                  <button onClick={() => onNavigate('alerts')} className="w-full text-left flex items-start gap-3 px-2.5 py-2.5 rounded-lg hover:bg-surface-tertiary/40 transition-colors">
+                  <button onClick={() => onNavigate('alerts')} className="w-full text-left flex items-start gap-3 px-3 py-2 rounded-lg hover:bg-surface-tertiary/40 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                     <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${a.severity === 'critical' ? 'bg-status-red' : a.severity === 'high' ? 'bg-status-amber' : 'bg-status-blue'}`} />
                     <div className="min-w-0 flex-1">
                       <p className="text-pm-xs text-content-primary leading-snug">{a.title}</p>
@@ -487,15 +361,6 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
           )}
       </Card>
     ),
-    ai_summary: (
-      <Card padding="md" className="h-full min-w-0">
-        <SectionHeader title="Sinteză AI" icon={Sparkles} className="mb-3" />
-        {aiSummaryLoading
-          ? <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin text-accent" /><span className="text-pm-sm text-content-muted">Se compune sinteza...</span></div>
-          : aiSummary ? <p className="text-pm-sm text-content-secondary leading-relaxed">{aiSummary}</p>
-            : <p className="text-pm-sm text-content-muted">Nu există date suficiente.</p>}
-      </Card>
-    ),
     briefing: (
       <Card padding="md" className="h-full min-w-0 overflow-hidden"><DailyBriefingWidget onNavigate={onNavigate} /></Card>
     ),
@@ -505,13 +370,13 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
     critical_stock: (
       <Card padding="md" className="h-full min-w-0">
         <SectionHeader title="Stoc critic" icon={Warehouse} className="mb-3"
-          actions={(<button onClick={() => onNavigate('materials')} className="text-pm-xs text-accent hover:underline">Deschide</button>)} />
+          actions={(<button onClick={() => onNavigate('materials')} className="inline-flex items-center rounded-lg px-1.5 py-0.5 text-pm-xs text-accent hover:underline transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">Deschide</button>)} />
         {criticalStock.length === 0 ? <EmptyState icon={Warehouse} title="Niciun material sub minim" />
           : (
             <ul key={criticalStock.length} className="stagger-in space-y-0.5">
               {criticalStock.map(m => (
-                <li key={m.id} className="flex items-center justify-between px-2 py-1.5 rounded-md hover:bg-surface-tertiary/30">
-                  <span className="text-pm-sm text-content-primary truncate">{m.name}</span>
+                <li key={m.id} className="flex items-center justify-between gap-3 px-2 py-2 rounded-lg hover:bg-surface-tertiary/30 transition-smooth duration-150">
+                  <span className="min-w-0 text-pm-sm text-content-primary truncate">{m.name}</span>
                   <span className="shrink-0 pl-3"><span className="text-pm-sm font-semibold tabular-nums text-status-red">{m.stock}</span><span className="text-pm-2xs text-content-muted"> / {m.min_stock}</span></span>
                 </li>
               ))}
@@ -526,33 +391,15 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
     activity:          { label: 'Operațional', available: widgets.activity },
     active_projects:   { label: 'Proiecte active', available: widgets.active_projects },
     alerts_panel:      { label: 'Alerte', available: widgets.alerts_panel },
-    ai_summary:        { label: 'Sinteză AI', available: widgets.ai_summary && aiConnected },
     briefing:          { label: 'Briefing', available: widgets.briefing },
     inbox:             { label: 'Inbox predări', available: widgets.inbox },
     critical_stock:    { label: 'Stoc critic', available: widgets.critical_stock && canWarehouse },
   };
-  const visibleWidgets = layout.order.filter(id => widgetMeta[id].available && !layout.hidden.includes(id));
-  const hiddenWidgets = layout.order.filter(id => widgetMeta[id].available && layout.hidden.includes(id));
-
-  // Reorder by swapping with the visible neighbour (drives the ◄ ► buttons).
-  const moveWidget = (id: WId, dir: -1 | 1) => {
-    const vi = visibleWidgets.indexOf(id);
-    const neighbor = visibleWidgets[vi + dir];
-    if (!neighbor) return;
-    const order = [...layout.order];
-    const ia = order.indexOf(id), ib = order.indexOf(neighbor);
-    [order[ia], order[ib]] = [order[ib], order[ia]];
-    setOrder(order);
-  };
-  // Live reorder while dragging a tile over another.
-  const reorderDrag = (from: WId, to: WId) => {
-    if (from === to) return;
-    const order = [...layout.order];
-    const fi = order.indexOf(from), ti = order.indexOf(to);
-    if (fi < 0 || ti < 0) return;
-    order.splice(fi, 1); order.splice(ti, 0, from);
-    setOrder(order);
-  };
+  // Available widgets, in default order → CardGrid items (the engine owns order/
+  // size/hidden + persistence + edit interactions).
+  const widgetItems: CardGridItem[] = DEFAULT_WIDGET_ORDER
+    .filter(id => widgetMeta[id].available)
+    .map(id => ({ id, label: widgetMeta[id].label, defaultSpan: WIDGET_SPAN[id], node: widgetNode[id] }));
 
   return (
     <Page>
@@ -564,14 +411,14 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
 
 
 }
-        <header className="dash-enter shrink-0 pb-3.5 border-b border-line/60 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between" style={{ animationDelay: '0ms' }}>
-          <div className="flex items-center gap-3.5 min-w-0">
+        <header className="dash-enter shrink-0 pb-4 border-b border-line/60 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between" style={{ animationDelay: '0ms' }}>
+          <div className="flex items-center gap-3 min-w-0">
             <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
               <Activity className="h-5 w-5" />
             </span>
             <div className="min-w-0">
               <p className="text-pm-eyebrow text-content-muted mb-0.5 flex items-center gap-2">
-                <span className="inline-block h-px w-3.5 bg-content-muted/40" aria-hidden />
+                <span className="inline-block h-px w-4 bg-content-muted/40" aria-hidden />
                 Tablou de bord
               </p>
               <h1 className="text-pm-xl font-semibold text-content-primary truncate leading-tight">Bună, {userFirst}</h1>
@@ -584,31 +431,18 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            {editMode ? (
-              <>
-                <Button variant="secondary" size="md" onClick={reset} title="Revino la aranjamentul implicit">
-                  <RotateCcw className="h-4 w-4" /> <span className="hidden sm:inline">Resetează</span>
-                </Button>
-                <Button size="md" onClick={() => setEditMode(false)}>
-                  <Check className="h-4 w-4" /> Gata
-                </Button>
-              </>
-            ) : (
-              <>
-                {widgets.time_range && (
-                  <TimeRangeBar embedded
-                    range={timeRange} setRange={setTimeRange}
-                    customFrom={customFrom} setCustomFrom={setCustomFrom}
-                    customTo={customTo} setCustomTo={setCustomTo} />
-                )}
-                <Button variant="secondary" size="md" onClick={() => setEditMode(true)} title="Rearanjează widget-urile">
-                  <Pencil className="h-4 w-4" /> <span className="hidden sm:inline">Editează</span>
-                </Button>
-                <Button variant="secondary" size="md" onClick={handleRefresh} disabled={refreshing}>
-                  <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                  <span className="hidden sm:inline">Reîmprospătează</span>
-                </Button>
-              </>
+            {!editMode && widgets.time_range && (
+              <TimeRangeBar embedded
+                range={timeRange} setRange={setTimeRange}
+                customFrom={customFrom} setCustomFrom={setCustomFrom}
+                customTo={customTo} setCustomTo={setCustomTo} />
+            )}
+            <EditLayoutButton />
+            {!editMode && (
+              <Button variant="secondary" size="md" onClick={handleRefresh} disabled={refreshing}>
+                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Reîmprospătează</span>
+              </Button>
             )}
           </div>
         </header>
@@ -648,39 +482,14 @@ export default function DashboardPage({ user, onNavigate }: DashboardPageProps) 
           </div>
         )}
 
-        {/* iOS-style editable widget grid — ◄ ► move · ⤢ resize · − remove · or drag. */}
-        {editMode && (
-          <p className="dash-enter text-center text-pm-xs text-content-muted">
-            Mod editare: <strong className="text-content-secondary">◄ ►</strong> mută · <strong className="text-content-secondary">⤢</strong> dimensiune · <strong className="text-content-secondary">−</strong> elimină · sau trage widget-ul.
-          </p>
-        )}
-        <div className="dash-enter grid grid-cols-1 lg:grid-cols-2 gap-5" style={{ animationDelay: '160ms' }}>
-          {visibleWidgets.map((id, i) => (
-            <WidgetTile
-              key={id}
-              span={layout.sizes[id]}
-              editMode={editMode}
-              dragging={dragId === id}
-              canLeft={i > 0}
-              canRight={i < visibleWidgets.length - 1}
-              onRemove={() => hide(id)}
-              onResize={(size) => setSize(id, size)}
-              onMoveLeft={() => moveWidget(id, -1)}
-              onMoveRight={() => moveWidget(id, 1)}
-              onDragStart={() => setDragId(id)}
-              onDragEnter={() => { if (dragId && dragId !== id) reorderDrag(dragId, id); }}
-              onDragEnd={() => setDragId(null)}
-            >
-              {widgetNode[id]}
-            </WidgetTile>
-          ))}
-          {editMode && hiddenWidgets.map(id => (
-            <GhostTile key={id} span={layout.sizes[id]} label={widgetMeta[id].label} onAdd={() => show(id)} />
-          ))}
-          {editMode && visibleWidgets.length === 0 && hiddenWidgets.length === 0 && (
-            <p className="lg:col-span-2 text-center text-pm-sm text-content-muted py-8">Niciun widget disponibil.</p>
-          )}
-        </div>
+        {/* Editable widget grid — drag · ◄ ► move · ⤢ resize · − ascunde (via CardGrid). */}
+        <CardGrid
+          region="dashboard:body"
+          userKey={layoutKey}
+          cols={2}
+          items={widgetItems}
+          className="dash-enter"
+        />
 
       </Page.Body>
     </Page>
@@ -729,7 +538,7 @@ function TimeRangeBar({
           ))}
         </div>
         {range.preset === 'custom' && (
-          <div className="flex items-center gap-1.5 ml-2">
+          <div className="flex items-center gap-2 ml-2">
             <input
               type="date"
               value={customFrom}

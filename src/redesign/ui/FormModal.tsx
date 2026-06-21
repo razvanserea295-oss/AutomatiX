@@ -257,9 +257,9 @@ export default function FormModal({
         {fields.map((field, idx) => {
           const fieldError = fieldErrors[field.name];
           const showError = !!fieldError && (touched[field.name] || false);
-          const inputClass = `w-full h-10 px-3.5 bg-surface-primary border ${
+          const inputClass = `w-full h-10 px-3 bg-surface-primary border ${
             showError ? 'border-status-red' : 'border-line hover:border-line/80'
-          } rounded-xl text-pm-sm text-content-primary placeholder:text-content-muted/70 transition-all duration-150 focus-visible:outline-none focus:outline-none ${
+          } rounded-xl text-pm-sm text-content-primary placeholder:text-content-muted/70 transition-smooth duration-150 focus-visible:outline-none focus:outline-none ${
             showError
               ? 'focus-visible:shadow-[0_0_0_3px_color-mix(in_srgb,var(--status-red)_30%,transparent)] focus:border-status-red'
               : 'focus-visible:shadow-[var(--ring-soft)] focus:border-accent'
@@ -279,7 +279,7 @@ export default function FormModal({
                   {field.section}
                 </h3>
               )}
-              <label htmlFor={field.name} className="block text-pm-xs font-semibold uppercase tracking-wider text-content-secondary mb-1.5">
+              <label htmlFor={field.name} className="block text-pm-xs font-semibold uppercase tracking-wider text-content-secondary mb-2">
                 {field.label}
                 {field.required && <span className="text-status-red ml-0.5" aria-label="obligatoriu">*</span>}
               </label>
@@ -295,7 +295,7 @@ export default function FormModal({
                   aria-describedby={showError ? `${field.name}-error` : field.hint ? `${field.name}-hint` : undefined}
                   placeholder={field.placeholder}
                   rows={4}
-                  className={`${inputClass} h-auto py-2.5 leading-relaxed`}
+                  className={`${inputClass} h-auto py-2 leading-relaxed`}
                 />
               ) : field.type === 'select' ? (
                 <select
@@ -356,7 +356,7 @@ export default function FormModal({
                         reader.readAsDataURL(f);
                       }
                     }}
-                    className="w-full text-pm-xs text-content-secondary file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:bg-accent-muted file:text-accent file:font-semibold file:cursor-pointer hover:file:bg-accent hover:file:text-[var(--color-on-accent)] file:transition-colors"
+                    className="w-full text-pm-xs text-content-secondary file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-accent-muted file:text-accent file:font-semibold file:cursor-pointer hover:file:bg-accent hover:file:text-[var(--color-on-accent)] file:transition-colors file:duration-150"
                   />
                 </div>
               ) : (
@@ -391,19 +391,19 @@ export default function FormModal({
               )}
 
               {showError && (
-                <p id={`${field.name}-error`} className="mt-1.5 flex items-center gap-1 text-pm-xs text-status-red">
+                <p id={`${field.name}-error`} className="anim-fade-slide-in mt-2 flex items-center gap-1 text-pm-xs text-status-red">
                   <AlertCircle className="h-3 w-3 shrink-0" aria-hidden /> {fieldError}
                 </p>
               )}
               {!showError && field.hint && (
-                <p id={`${field.name}-hint`} className="mt-1.5 text-pm-2xs text-content-muted">{field.hint}</p>
+                <p id={`${field.name}-hint`} className="mt-2 text-pm-2xs text-content-muted">{field.hint}</p>
               )}
             </div>
           );
         })}
 
         {formError && (
-          <div className="flex items-start gap-2 p-3.5 bg-status-red/10 border border-status-red/30 rounded-xl" role="alert">
+          <div className="anim-fade-slide-in flex items-start gap-2 p-4 bg-status-red/10 border border-status-red/30 rounded-xl" role="alert">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-red" aria-hidden />
             <p className="text-pm-sm text-status-red font-medium leading-relaxed">{formError}</p>
           </div>

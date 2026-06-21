@@ -44,7 +44,6 @@ export const DASHBOARD_WIDGETS = [
   { id: 'kpi_strip',         label: 'KPI strip (Profit / Venituri / Costuri / etc.)' },
   { id: 'time_range',        label: 'Selector interval timp' },
   { id: 'nav_grid',          label: 'Navigare rapidă (kanban-style)' },
-  { id: 'ai_summary',        label: 'Sinteză AI' },
   { id: 'briefing',          label: 'Briefing lunar' },
   { id: 'revenue_chart',     label: 'Grafic venituri' },
   { id: 'inbox',             label: 'Inbox predări' },
@@ -53,6 +52,7 @@ export const DASHBOARD_WIDGETS = [
   { id: 'critical_stock',    label: 'Stoc critic' },
   { id: 'production_stages', label: 'Producție pe etape' },
   { id: 'activity',          label: 'Activitate (totaluri)' },
+  { id: 'ai_summary',        label: 'Sinteză AI' },
 ] as const;
 export type DashboardWidgetId = (typeof DASHBOARD_WIDGETS)[number]['id'];
 

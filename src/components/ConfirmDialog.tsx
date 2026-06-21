@@ -80,7 +80,7 @@ export function ConfirmDialogHost(): JSX.Element | null {
   
   const confirmCls = pending.danger
     ? 'bg-status-red text-surface-primary hover:bg-status-red/90'
-    : 'bg-accent text-surface-primary hover:opacity-90';
+    : 'bg-accent text-[var(--color-on-accent)] hover:opacity-90';
 
   return (
     <div

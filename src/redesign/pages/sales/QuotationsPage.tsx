@@ -274,8 +274,8 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
       <Page.Body maxWidth="wide" padding="comfortable" fit>
 
         {}
-        <div className="shrink-0 flex items-center justify-between gap-4 flex-wrap enter-up pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
-          <div className="flex items-center gap-3.5 min-w-0">
+        <div className="shrink-0 flex items-center justify-between gap-4 flex-wrap enter-up pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
+          <div className="flex items-center gap-3 min-w-0">
             <span className="h-11 w-11 rounded-2xl bg-accent-muted flex items-center justify-center shrink-0">
               <ClipboardList className="h-5 w-5 text-accent" />
             </span>
@@ -394,7 +394,7 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
                       return (
                         <button key={q.id} onClick={() => selectQuotation(q)} type="button"
                           style={{ viewTransitionName: isSel ? vtName('quotation', q.id) : undefined }}
-                          className={`w-full text-left px-4 py-3 transition-colors ${
+                          className={`relative w-full text-left px-4 py-3 transition-smooth duration-150 outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-[0.99] ${
                             idx < visibleQuotations.length - 1 ? 'border-b border-line' : ''
                           } ${
                             isSel ? 'bg-accent/5 border-l-2 border-l-accent vt-morph' : 'hover:bg-surface-tertiary/30'
@@ -490,7 +490,7 @@ function FunnelStat({ icon: Icon, label, value, total, tone, loading }: {
   };
   const pct = total && total > 0 ? Math.min(100, Math.round((value / total) * 100)) : 0;
   return (
-    <div className="rounded-xl border border-line bg-surface-primary px-3.5 py-3">
+    <div className="rounded-xl border border-line bg-surface-primary px-4 py-3 transition-smooth duration-150 hover:border-line hover:shadow-[var(--elevation-2)]">
       <div className="flex items-center gap-2 mb-1.5">
         <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg bg-surface-tertiary ${toneText[tone]}`}>
           <Icon className="h-3.5 w-3.5" />
@@ -499,7 +499,7 @@ function FunnelStat({ icon: Icon, label, value, total, tone, loading }: {
       </div>
       {loading
         ? <Skeleton width={36} height={22} />
-        : <p className="text-[22px] font-semibold tabular-nums text-content-primary leading-none">{value}</p>}
+        : <p className="text-pm-2xl font-semibold tabular-nums text-content-primary leading-none">{value}</p>}
       {}
       {!loading && (
         <div className="mt-2 h-1 rounded-full bg-surface-tertiary overflow-hidden" aria-hidden>
@@ -651,7 +651,7 @@ function QuotationDetail({ q, attachments, uploading, onUploadFiles, onDeleteAtt
             <Paperclip className="h-3.5 w-3.5" />
           </span>
           <h2 className="text-pm-sm font-semibold text-content-primary flex-1">Documente ({attachments.length})</h2>
-          <label className={`inline-flex items-center gap-1 text-pm-2xs font-semibold ${uploading ? 'text-content-muted cursor-not-allowed' : 'text-accent hover:underline cursor-pointer'}`}>
+          <label className={`inline-flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-pm-2xs font-semibold transition-smooth duration-150 outline-none focus-within:shadow-[var(--ring-soft)] ${uploading ? 'text-content-muted cursor-not-allowed' : 'text-accent hover:underline cursor-pointer'}`}>
             {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
             {uploading ? 'Se încarcă...' : 'Încarcă'}
             <input type="file" multiple className="hidden" disabled={uploading}
@@ -794,17 +794,17 @@ function QuotationBuilder({ clients, leads, onClose, onCreated }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 anim-fade-in">
+      <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-4xl max-h-[90vh] overflow-y-auto anim-scale-in">
         <div className="sticky top-0 bg-surface-elevated border-b border-line/70 px-5 h-14 flex items-center justify-between">
           <h3 className="text-pm-md font-semibold text-content-primary">Ofertă nouă</h3>
-          <button type="button" onClick={onClose} aria-label="Închide" className="p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-all duration-150 hover:rotate-90"><X className="h-4 w-4" /></button>
+          <button type="button" onClick={onClose} aria-label="Închide" className="p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 hover:rotate-90 outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-95"><X className="h-4 w-4" /></button>
         </div>
 
         <div className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Lead asociat (opțional)">
-              <select value={leadId} onChange={e => handleLeadChange(e.target.value ? Number(e.target.value) : '')} className="input">
+              <select value={leadId} onChange={e => handleLeadChange(e.target.value ? Number(e.target.value) : '')} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
                 <option value="">— niciunul —</option>
                 {leads.filter(l => l.status !== 'convertit').map(l => (
                   <option key={l.id} value={l.id}>{l.client_name} — {l.product_interest}</option>
@@ -812,28 +812,28 @@ function QuotationBuilder({ clients, leads, onClose, onCreated }: {
               </select>
             </Field>
             <Field label="Client din DB">
-              <select value={clientId} onChange={e => handleClientChange(e.target.value ? Number(e.target.value) : '')} className="input">
+              <select value={clientId} onChange={e => handleClientChange(e.target.value ? Number(e.target.value) : '')} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
                 <option value="">— manual —</option>
                 {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </Field>
             <Field label="Nume client *">
-              <input value={clientName} onChange={e => setClientName(e.target.value)} className="input" />
+              <input value={clientName} onChange={e => setClientName(e.target.value)} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" />
             </Field>
             <Field label="Email contact">
-              <input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="input" placeholder="email@firma.ro" />
+              <input type="email" value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" placeholder="email@firma.ro" />
             </Field>
             <Field label="Titlu ofertă *">
-              <input value={title} onChange={e => setTitle(e.target.value)} className="input" placeholder="ex: Stație betoane M60" />
+              <input value={title} onChange={e => setTitle(e.target.value)} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" placeholder="ex: Stație betoane M60" />
             </Field>
             <Field label="Valabilă până la">
-              <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)} className="input" />
+              <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" />
             </Field>
             <Field label="Discount global (%)">
-              <input type="number" min={0} max={100} value={discountPercent} onChange={e => setDiscountPercent(Number(e.target.value))} className="input" />
+              <input type="number" min={0} max={100} value={discountPercent} onChange={e => setDiscountPercent(Number(e.target.value))} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" />
             </Field>
             <Field label="Cota TVA">
-              <select value={tvaRate} onChange={e => setTvaRate(Number(e.target.value))} className="input">
+              <select value={tvaRate} onChange={e => setTvaRate(Number(e.target.value))} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
                 <option value={0.21}>21%</option>
                 <option value={0.19}>19%</option>
                 <option value={0.09}>9%</option>
@@ -844,7 +844,7 @@ function QuotationBuilder({ clients, leads, onClose, onCreated }: {
           </div>
 
           <Field label="Descriere">
-            <textarea value={description} onChange={e => setDescription(e.target.value)} className="input" rows={2} />
+            <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" rows={2} />
           </Field>
 
           <div>
@@ -879,18 +879,18 @@ function QuotationBuilder({ clients, leads, onClose, onCreated }: {
           </div>
 
           <Field label="Observații">
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} className="input" rows={2} />
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" rows={2} />
           </Field>
 
           <Field label="Monedă">
-            <select value={currency} onChange={e => setCurrency(e.target.value)} className="input">
+            <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
               <option value="RON">RON</option>
               <option value="EUR">EUR</option>
             </select>
           </Field>
 
           <Field label="Documente ofertă (opțional, orice format)">
-            <input type="file" multiple className="input"
+            <input type="file" multiple className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors"
               onChange={e => setFiles(Array.from(e.target.files || []))} />
             {files.length > 0 && (
               <p className="text-pm-2xs text-content-muted mt-1">
@@ -915,19 +915,6 @@ function QuotationBuilder({ clients, leads, onClose, onCreated }: {
           </Button>
         </div>
       </div>
-
-      <style>{`
-        .input {
-          width: 100%;
-          border: 1px solid var(--color-border);
-          border-radius: 0.75rem;
-          background-color: var(--color-bg-primary);
-          padding: 0.375rem 0.625rem;
-          font-size: 0.75rem;
-          color: var(--color-text-primary);
-        }
-        .input:focus { outline: none; box-shadow: 0 0 0 1px var(--color-accent); border-color: var(--color-accent); }
-      `}</style>
     </div>
   );
 }
@@ -971,24 +958,24 @@ function SendQuotationModal({ quotation, onClose, onSent }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-xl">
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 anim-fade-in">
+      <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-xl anim-scale-in">
         <div className="border-b border-line/70 px-5 h-14 flex items-center justify-between">
           <h3 className="text-pm-md font-semibold text-content-primary">Trimite oferta {quotation.quotation_number}</h3>
-          <button type="button" onClick={onClose} aria-label="Închide" className="p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-all duration-150 hover:rotate-90"><X className="h-4 w-4" /></button>
+          <button type="button" onClick={onClose} aria-label="Închide" className="p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 hover:rotate-90 outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-95"><X className="h-4 w-4" /></button>
         </div>
         <div className="p-5 space-y-3">
           <Field label="Către *">
-            <input type="email" value={toEmail} onChange={e => setToEmail(e.target.value)} className="input" />
+            <input type="email" value={toEmail} onChange={e => setToEmail(e.target.value)} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" />
           </Field>
           <Field label="CC (separat prin virgulă)">
-            <input value={ccEmails} onChange={e => setCcEmails(e.target.value)} className="input" placeholder="email1@x.ro, email2@y.ro" />
+            <input value={ccEmails} onChange={e => setCcEmails(e.target.value)} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" placeholder="email1@x.ro, email2@y.ro" />
           </Field>
           <Field label="Subiect">
-            <input value={subject} onChange={e => setSubject(e.target.value)} className="input" />
+            <input value={subject} onChange={e => setSubject(e.target.value)} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" />
           </Field>
           <Field label="Mesaj (HTML, opțional - se generează automat dacă e gol)">
-            <textarea value={body} onChange={e => setBody(e.target.value)} className="input" rows={5} />
+            <textarea value={body} onChange={e => setBody(e.target.value)} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" rows={5} />
           </Field>
           <p className="text-pm-2xs text-content-muted">PDF-ul ofertei se atașează automat.</p>
         </div>
@@ -999,12 +986,6 @@ function SendQuotationModal({ quotation, onClose, onSent }: {
           </Button>
         </div>
       </div>
-      <style>{`
-        .input { width: 100%; border: 1px solid var(--color-border); border-radius: 0.75rem;
-                 background-color: var(--color-bg-primary); padding: 0.375rem 0.625rem;
-                 font-size: 0.75rem; color: var(--color-text-primary); }
-        .input:focus { outline: none; box-shadow: 0 0 0 1px var(--color-accent); border-color: var(--color-accent); }
-      `}</style>
     </div>
   );
 }
@@ -1031,11 +1012,11 @@ function ConvertModal({ quotation, projects, onClose, onConverted }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-      <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-md">
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 anim-fade-in">
+      <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-md anim-scale-in">
         <div className="border-b border-line/70 px-5 h-14 flex items-center justify-between">
           <h3 className="text-pm-md font-semibold text-content-primary">Convertește în contract</h3>
-          <button type="button" onClick={onClose} aria-label="Închide" className="p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-all duration-150 hover:rotate-90"><X className="h-4 w-4" /></button>
+          <button type="button" onClick={onClose} aria-label="Închide" className="p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 hover:rotate-90 outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-95"><X className="h-4 w-4" /></button>
         </div>
         <div className="p-5 space-y-3">
           <p className="text-pm-xs text-content-muted">
@@ -1043,7 +1024,7 @@ function ConvertModal({ quotation, projects, onClose, onConverted }: {
             (preț vânzare {quotation.total.toFixed(2)} {quotation.currency}).
           </p>
           <Field label="Proiect destinație *">
-            <select value={projectId} onChange={e => setProjectId(e.target.value ? Number(e.target.value) : '')} className="input">
+            <select value={projectId} onChange={e => setProjectId(e.target.value ? Number(e.target.value) : '')} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
               <option value="">— alege —</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
@@ -1056,12 +1037,6 @@ function ConvertModal({ quotation, projects, onClose, onConverted }: {
           </Button>
         </div>
       </div>
-      <style>{`
-        .input { width: 100%; border: 1px solid var(--color-border); border-radius: 0.75rem;
-                 background-color: var(--color-bg-primary); padding: 0.375rem 0.625rem;
-                 font-size: 0.75rem; color: var(--color-text-primary); }
-        .input:focus { outline: none; box-shadow: 0 0 0 1px var(--color-accent); border-color: var(--color-accent); }
-      `}</style>
     </div>
   );
 }

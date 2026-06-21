@@ -27,7 +27,7 @@
 
 
 import { useState, useEffect, useCallback } from 'react';
-import { BarChart3, Download, Save, Trash2, Plus, Loader2, X, Database, Columns, Bookmark, Table, SlidersHorizontal } from 'lucide-react';
+import { BarChart3, Download, Save, Trash2, Plus, Loader2, X, Bookmark, Table, SlidersHorizontal } from 'lucide-react';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
 import { toast } from '@/store/toastStore';
@@ -36,7 +36,6 @@ import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import SectionHeader from '@/redesign/ui/SectionHeader';
 import { EmptyState } from '@/redesign/ui';
 
@@ -156,11 +155,11 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
         {
 
 }
-        <div className="enter-up shrink-0 pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
+        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-wrap items-center gap-4">
             <div className="min-w-0">
               {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-3 min-w-0">
                 <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                   <BarChart3 className="h-5 w-5" />
                 </span>
@@ -169,12 +168,12 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
             </div>
 
             {}
-            <label className="flex items-center gap-2 ml-1">
+            <label className="flex items-center gap-2">
               <span className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">Sursă</span>
               <select
                 value={sourceName}
                 onChange={e => switchSource(e.target.value)}
-                className="min-w-44 px-3 py-2 text-pm-sm rounded-lg border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth focus:outline-none focus:border-accent/50"
+                className="min-w-44 h-9 px-3 text-pm-sm rounded-xl border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth duration-150 hover:border-line focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-[var(--ring-soft)]"
               >
                 {sources.map(s => <option key={s.name} value={s.name}>{s.label}</option>)}
               </select>
@@ -193,21 +192,13 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
           </div>
         </div>
 
-        {}
-        <Page.Kpis cols={4} className="shrink-0 enter-up" style={{ animationDelay: '80ms' }}>
-          <KpiCard icon={Database} iconColor="text-accent"        label="Surse disponibile" value={sources.length} />
-          <KpiCard icon={Columns}  iconColor="text-status-blue"   label="Coloane selectate" value={columns.size} />
-          <KpiCard icon={Bookmark} iconColor="text-status-purple" label="Presete salvate"   value={presets.length} />
-          <KpiCard icon={Table}    iconColor="text-status-teal"   label="Rânduri rezultat"  value={report?.total_rows ?? 0} />
-        </Page.Kpis>
-
         {
 
 }
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0 enter-up" style={{ animationDelay: '160ms' }}>
 
           {}
-          <Card padding="none" className="xl:col-span-8 flex flex-col min-h-0 overflow-hidden">
+          <Card padding="none" className="xl:col-span-7 flex flex-col min-h-0 overflow-hidden">
             {!report ? (
               <EmptyState
                 icon={Table}
@@ -271,14 +262,14 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
           </Card>
 
           {}
-          <Card padding="none" className="xl:col-span-4 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center gap-2.5 px-5 py-4 border-b border-line/70">
+          <Card padding="none" className="xl:col-span-5 flex flex-col min-h-0 overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-line/70">
               <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                 <SlidersHorizontal className="h-4 w-4" />
               </span>
               <div className="min-w-0">
-                <p className="text-pm-md font-semibold text-content-primary leading-tight">Configurare raport</p>
-                <p className="text-pm-2xs text-content-muted">{source?.label ?? '—'}</p>
+                <p className="text-pm-md font-semibold text-content-primary leading-tight truncate">Configurare raport</p>
+                <p className="text-pm-2xs text-content-muted truncate">{source?.label ?? '—'}</p>
               </div>
             </div>
 
@@ -289,16 +280,16 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
                   <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted block mb-1">Coloane</label>
                   <div className="space-y-0 border border-line bg-surface-primary rounded-lg max-h-60 overflow-y-auto">
                     {source.columns.map(c => (
-                      <label key={c.field} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-surface-tertiary/40 px-2 py-1.5 border-b border-line last:border-b-0">
-                        <input type="checkbox" checked={columns.has(c.field)} onChange={e => {
+                      <label key={c.field} className="flex items-center gap-2 text-xs cursor-pointer transition-smooth duration-150 hover:bg-surface-tertiary/40 px-2 py-2 border-b border-line last:border-b-0">
+                        <input type="checkbox" checked={columns.has(c.field)} className="h-3.5 w-3.5 shrink-0 accent-[var(--color-accent)] cursor-pointer" onChange={e => {
                           setColumns(prev => {
                             const n = new Set(prev);
                             if (e.target.checked) n.add(c.field); else n.delete(c.field);
                             return n;
                           });
                         }} />
-                        <span className="text-content-primary">{c.label}</span>
-                        <span className="text-pm-2xs text-content-muted ml-auto">{c.type}</span>
+                        <span className="text-content-primary truncate min-w-0">{c.label}</span>
+                        <span className="text-pm-2xs text-content-muted ml-auto shrink-0">{c.type}</span>
                       </label>
                     ))}
                   </div>
@@ -309,22 +300,22 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
               {source && (
                 <div className="p-4 border-b border-line">
                   <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted block mb-1">Filtre</label>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {filters.map((f, idx) => (
-                      <div key={idx} className="grid grid-cols-12 gap-1 items-center">
+                      <div key={idx} className="grid grid-cols-12 gap-2 items-center">
                         <select value={f.field} onChange={e => setFilters(prev => prev.map((x, i) => i === idx ? { ...x, field: e.target.value } : x))}
-                          className="col-span-5 text-xs px-1.5 py-1 rounded-lg border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth focus:outline-none focus:border-accent/50">
+                          className="col-span-5 min-w-0 text-xs px-2 py-1.5 rounded-xl border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth duration-150 hover:border-line focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-[var(--ring-soft)]">
                           {source.filterable_fields.map(field => {
                             const col = source.columns.find(c => c.field === field);
                             return <option key={field} value={field}>{col?.label || field}</option>;
                           })}
                         </select>
                         <select value={f.op} onChange={e => setFilters(prev => prev.map((x, i) => i === idx ? { ...x, op: e.target.value } : x))}
-                          className="col-span-2 text-xs px-1.5 py-1 rounded-lg border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth focus:outline-none focus:border-accent/50">
+                          className="col-span-2 min-w-0 text-xs px-2 py-1.5 rounded-xl border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth duration-150 hover:border-line focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-[var(--ring-soft)]">
                           {Object.entries(OP_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                         </select>
                         <input value={f.value || ''} onChange={e => setFilters(prev => prev.map((x, i) => i === idx ? { ...x, value: e.target.value } : x))}
-                          className="col-span-4 text-xs px-1.5 py-1 rounded-lg border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth focus:outline-none focus:border-accent/50" placeholder="valoare" />
+                          className="col-span-4 min-w-0 text-xs px-2 py-1.5 rounded-xl border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth duration-150 hover:border-line focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" placeholder="valoare" />
                         <IconButton size="sm" intent="danger" aria-label="Elimină filtru" title="Elimină filtru"
                           onClick={() => setFilters(prev => prev.filter((_, i) => i !== idx))} className="col-span-1 justify-self-center">
                           <X />
@@ -342,14 +333,14 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
               {source && (
                 <div className="p-4 border-b border-line">
                   <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted block mb-1">Sortare</label>
-                  <div className="grid grid-cols-3 gap-1">
+                  <div className="grid grid-cols-3 gap-2">
                     <select value={sortField} onChange={e => setSortField(e.target.value)}
-                      className="col-span-2 text-xs px-2 py-1 rounded-lg border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth focus:outline-none focus:border-accent/50">
+                      className="col-span-2 min-w-0 text-xs px-2 py-1.5 rounded-xl border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth duration-150 hover:border-line focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-[var(--ring-soft)]">
                       <option value="">— fără —</option>
                       {source.columns.map(c => <option key={c.field} value={c.field}>{c.label}</option>)}
                     </select>
                     <select value={sortDir} onChange={e => setSortDir(e.target.value as any)}
-                      className="text-xs px-2 py-1 rounded-lg border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth focus:outline-none focus:border-accent/50">
+                      className="min-w-0 text-xs px-2 py-1.5 rounded-xl border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth duration-150 hover:border-line focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-[var(--ring-soft)]">
                       <option value="asc">↑</option>
                       <option value="desc">↓</option>
                     </select>
@@ -376,9 +367,9 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
             icon={Bookmark}
             meta="Salvează combinația curentă de coloane, filtre și sortare pentru reutilizare."
             actions={
-              <div className="flex gap-1.5">
+              <div className="flex items-center gap-2">
                 <input value={presetName} onChange={e => setPresetName(e.target.value)} placeholder="Nume preset"
-                  className="text-pm-sm px-2.5 py-1.5 w-44 rounded-lg border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth focus:outline-none focus:border-accent/50" />
+                  className="text-pm-sm h-8 px-3 w-44 rounded-xl border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth duration-150 hover:border-line focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
                 <Button size="sm" variant="outline" onClick={savePreset}>
                   <Save className="h-3.5 w-3.5" /> Salvează
                 </Button>
@@ -394,8 +385,8 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
           ) : (
             <div key={presets.length} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 stagger-in">
               {presets.map(p => (
-                <div key={p.id} className="group flex items-center gap-2 text-xs bg-surface-primary border border-line rounded-lg px-3 py-2 hover-wiggle">
-                  <button onClick={() => loadPreset(p)} title={p.name} className="flex-1 min-w-0 text-left text-content-primary hover:text-accent truncate font-medium">{p.name}</button>
+                <div key={p.id} className="group flex items-center gap-2 text-xs bg-surface-primary border border-line rounded-lg px-3 py-2 transition-smooth duration-150 hover:border-line/80 hover:shadow-[var(--elevation-1)] hover-wiggle">
+                  <button onClick={() => loadPreset(p)} title={p.name} className="flex-1 min-w-0 rounded-lg text-left text-content-primary truncate font-medium transition-smooth duration-150 hover:text-accent focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">{p.name}</button>
                   <span className="text-pm-2xs text-content-muted shrink-0">{p.source}</span>
                   <IconButton size="sm" intent="danger" aria-label="Șterge preset" title="Șterge preset"
                     onClick={() => deletePreset(p.id)}

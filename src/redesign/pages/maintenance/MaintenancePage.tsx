@@ -226,10 +226,10 @@ export default function MaintenancePage(_props: { user: User | null }) {
 
 
 }
-        <div className="enter-up shrink-0 pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
+        <div className="enter-up shrink-0 pb-4 border-b border-line/70" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
             {}
-            <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
               <span className="h-11 w-11 rounded-2xl bg-accent-muted flex items-center justify-center shrink-0">
                 <Wrench className="h-5 w-5 text-accent" aria-hidden />
               </span>
@@ -241,7 +241,7 @@ export default function MaintenancePage(_props: { user: User | null }) {
             </div>
 
             {}
-            <div className="flex flex-wrap items-center gap-2.5 xl:ml-auto">
+            <div className="flex flex-wrap items-center gap-2 xl:ml-auto">
               <select
                 value={selectedProject ?? ''}
                 onChange={(e) => setSelectedProject(Number(e.target.value) || null)}
@@ -407,7 +407,7 @@ export default function MaintenancePage(_props: { user: User | null }) {
                                     type="button"
                                     onClick={() => setPreviewImage(row.before_photo)}
                                     title="Vezi foto BEFORE"
-                                    className="group relative h-16 w-20 overflow-hidden border border-line/60 hover:border-accent transition-colors"
+                                    className="group relative h-16 w-20 overflow-hidden rounded-lg border border-line/60 hover:border-accent transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                                   >
                                     <img src={row.before_photo} alt="before" loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none" />
                                     <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-pm-2xs font-bold uppercase text-center py-0.5">Before</span>
@@ -418,7 +418,7 @@ export default function MaintenancePage(_props: { user: User | null }) {
                                     type="button"
                                     onClick={() => setPreviewImage(row.after_photo)}
                                     title="Vezi foto AFTER"
-                                    className="group relative h-16 w-20 overflow-hidden border border-line/60 hover:border-accent transition-colors"
+                                    className="group relative h-16 w-20 overflow-hidden rounded-lg border border-line/60 hover:border-accent transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                                   >
                                     <img src={row.after_photo} alt="after" loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none" />
                                     <span className="absolute bottom-0 left-0 right-0 bg-status-green/80 text-white text-pm-2xs font-bold uppercase text-center py-0.5">After</span>
@@ -507,7 +507,7 @@ export default function MaintenancePage(_props: { user: User | null }) {
                         <button
                           key={o.value}
                           onClick={() => setStatusFilter(statusFilter === o.value ? '' : o.value)}
-                          className={`w-full flex items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left transition-colors ${
+                          className={`w-full flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-left transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                             statusFilter === o.value ? 'bg-accent/5 ring-1 ring-accent/20' : 'hover:bg-surface-tertiary/30'
                           }`}
                         >
@@ -545,12 +545,12 @@ export default function MaintenancePage(_props: { user: User | null }) {
           <img
             src={previewImage}
             alt="Preview"
-            className="enter-scale max-w-[90vw] max-h-[90vh] object-contain shadow-2xl"
+            className="enter-scale max-w-[90vw] max-h-[90vh] object-contain rounded-xl shadow-[var(--elevation-4)]"
             onClick={(e) => e.stopPropagation()}
           />
           <button
             onClick={() => setPreviewImage(null)}
-            className="absolute top-4 right-4 h-9 w-9 rounded-full bg-surface-primary/20 text-white hover:bg-surface-primary/30 flex items-center justify-center"
+            className="absolute top-4 right-4 h-9 w-9 rounded-full bg-surface-primary/20 text-white hover:bg-surface-primary/30 inline-flex items-center justify-center transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
             aria-label="Închide"
           >
             <X className="h-5 w-5" />
@@ -705,13 +705,13 @@ function ServiceForm({
     <form
       onSubmit={handleSubmit}
       style={{ viewTransitionName: editing ? vtName('service', editing.id) : undefined }}
-      className="fixed right-0 top-0 bottom-0 z-30 w-full sm:w-[560px] bg-surface-secondary border-l border-line shadow-xl flex flex-col animate-slide-in-right vt-morph"
+      className="fixed right-0 top-0 bottom-0 z-30 w-full sm:w-[560px] bg-surface-secondary border-l border-line shadow-[var(--elevation-4)] flex flex-col anim-slide-in-right vt-morph"
     >
         <div className="shrink-0 flex items-center justify-between border-b border-line px-5 h-14">
           <h2 className="text-pm-sm font-semibold text-content-primary">
             {editing ? 'Editează servisare' : 'Servisare noua'}
           </h2>
-          <button type="button" onClick={onClose} className="p-1.5 text-content-muted hover:bg-surface-tertiary">
+          <button type="button" onClick={onClose} aria-label="Închide" className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-content-muted hover:text-content-primary hover:bg-surface-tertiary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -723,28 +723,28 @@ function ServiceForm({
               Piesa *
             </label>
             <div className="relative">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-content-muted" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-content-muted" />
               <input
                 type="text"
                 value={pieceSearch}
                 onChange={(e) => { setPieceSearch(e.target.value); setPieceDropdownOpen(true); setPieceId(null); }}
                 onFocus={() => setPieceDropdownOpen(true)}
                 placeholder={selectedPiece ? selectedPiece.name : 'Caută piesa după nume sau categorie...'}
-                className="w-full h-9 border border-line bg-surface-secondary pl-8 pr-2 text-sm text-content-primary placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full h-9 rounded-xl border border-line bg-surface-secondary pl-9 pr-2 text-pm-sm text-content-primary placeholder:text-content-muted transition-smooth duration-150 hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)]"
               />
               {pieceId && selectedPiece && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 bg-accent/10 text-accent px-1.5 py-0.5 text-pm-2xs font-semibold">
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1 rounded-md bg-accent/10 text-accent px-1.5 py-0.5 text-pm-2xs font-semibold anim-scale-in">
                   <Check className="h-3 w-3" /> selectat
                 </span>
               )}
               {pieceDropdownOpen && filteredPieces.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-0 z-10 max-h-72 overflow-y-auto border border-line bg-surface-secondary shadow-lg">
+                <div className="anim-fade-slide-in absolute left-0 right-0 top-full mt-1 z-10 max-h-72 overflow-y-auto rounded-xl border border-line bg-surface-elevated shadow-[var(--elevation-3)]">
                   {filteredPieces.map((p) => (
                     <button
                       key={p.id}
                       type="button"
                       onClick={() => { setPieceId(p.id); setPieceSearch(p.name); setPieceDropdownOpen(false); }}
-                      className={`w-full text-left px-3 py-2 text-xs border-b border-line/40 hover:bg-surface-tertiary ${
+                      className={`w-full text-left px-3 py-2 text-pm-xs border-b border-line/40 last:border-b-0 transition-smooth duration-150 hover:bg-surface-tertiary focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                         pieceId === p.id ? 'bg-accent/10 text-accent' : 'text-content-primary'
                       }`}
                     >
@@ -767,7 +767,7 @@ function ServiceForm({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex. Inlocuire rulment malaxor"
-              className="w-full h-9 border border-line bg-surface-secondary px-3 text-sm text-content-primary placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-accent"
+              className="w-full h-9 rounded-xl border border-line bg-surface-secondary px-3 text-pm-sm text-content-primary placeholder:text-content-muted transition-smooth duration-150 hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)]"
             />
           </div>
 
@@ -780,7 +780,7 @@ function ServiceForm({
                 onChange={(e) => setDefect(e.target.value)}
                 rows={4}
                 placeholder="Descrie problema..."
-                className="w-full border border-line bg-surface-secondary px-3 py-2 text-sm text-content-primary placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                className="w-full rounded-xl border border-line bg-surface-secondary px-3 py-2 text-pm-sm text-content-primary placeholder:text-content-muted transition-smooth duration-150 hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)] resize-none"
               />
             </div>
             <div className="px-5 py-4">
@@ -790,7 +790,7 @@ function ServiceForm({
                 onChange={(e) => setServiceDescription(e.target.value)}
                 rows={4}
                 placeholder="Ce s-a facut..."
-                className="w-full border border-line bg-surface-secondary px-3 py-2 text-sm text-content-primary placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                className="w-full rounded-xl border border-line bg-surface-secondary px-3 py-2 text-pm-sm text-content-primary placeholder:text-content-muted transition-smooth duration-150 hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)] resize-none"
               />
             </div>
           </div>
@@ -826,7 +826,7 @@ function ServiceForm({
                 type="date"
                 value={serviceDate}
                 onChange={(e) => setServiceDate(e.target.value)}
-                className="w-full h-9 border border-line bg-surface-secondary px-2 text-sm text-content-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full h-9 rounded-xl border border-line bg-surface-secondary px-2 text-pm-sm text-content-primary transition-smooth duration-150 hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)]"
               />
             </div>
             <div className="border-r border-line px-4 py-4">
@@ -834,7 +834,7 @@ function ServiceForm({
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full h-9 border border-line bg-surface-secondary px-2 text-sm text-content-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full h-9 rounded-xl border border-line bg-surface-secondary px-2 text-pm-sm text-content-primary cursor-pointer transition-smooth duration-150 hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)]"
               >
                 {STATUS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
@@ -845,7 +845,7 @@ function ServiceForm({
                 type="number" min={0} step="0.01"
                 value={laborCost}
                 onChange={(e) => setLaborCost(e.target.value)}
-                className="w-full h-9 border border-line bg-surface-secondary px-2 text-sm text-content-primary tabular-nums focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full h-9 rounded-xl border border-line bg-surface-secondary px-2 text-pm-sm text-content-primary tabular-nums transition-smooth duration-150 hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)]"
               />
             </div>
             <div className="px-4 py-4">
@@ -854,7 +854,7 @@ function ServiceForm({
                 type="number" min={0} step="0.01"
                 value={partsCost}
                 onChange={(e) => setPartsCost(e.target.value)}
-                className="w-full h-9 border border-line bg-surface-secondary px-2 text-sm text-content-primary tabular-nums focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full h-9 rounded-xl border border-line bg-surface-secondary px-2 text-pm-sm text-content-primary tabular-nums transition-smooth duration-150 hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)]"
               />
             </div>
           </div>
@@ -866,7 +866,7 @@ function ServiceForm({
               <select
                 value={technicianId ?? ''}
                 onChange={(e) => setTechnicianId(e.target.value ? Number(e.target.value) : null)}
-                className="w-full h-9 border border-line bg-surface-secondary px-2 text-sm text-content-primary focus:outline-none focus:ring-2 focus:ring-accent"
+                className="w-full h-9 rounded-xl border border-line bg-surface-secondary px-2 text-pm-sm text-content-primary cursor-pointer transition-smooth duration-150 hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)]"
               >
                 <option value="">— Neasignat —</option>
                 {users.map(u => (
@@ -875,7 +875,7 @@ function ServiceForm({
               </select>
             </div>
             <div className="flex items-end px-5 py-4">
-              <div className="w-full border border-accent/20 bg-accent/5 px-3 py-2">
+              <div className="w-full rounded-xl border border-accent/20 bg-accent/5 px-3 py-2">
                 <div className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-accent/70 mb-0.5">Total</div>
                 <div className="text-sm font-semibold text-content-primary tabular-nums">
                   {money((Number(laborCost) || 0) + (Number(partsCost) || 0), 'RON', 2)}
@@ -892,7 +892,7 @@ function ServiceForm({
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
               placeholder="Observatii suplimentare..."
-              className="w-full border border-line bg-surface-secondary px-3 py-2 text-sm text-content-primary placeholder:text-content-muted focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+              className="w-full rounded-xl border border-line bg-surface-secondary px-3 py-2 text-pm-sm text-content-primary placeholder:text-content-muted transition-smooth duration-150 hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)] resize-none"
             />
           </div>
         </div>
@@ -961,7 +961,7 @@ function PhotoSlot({
             type="button"
             onClick={() => onPreview(src)}
             title="Click pentru a vedea poza la dimensiune mare"
-            className="block w-full h-32 overflow-hidden border border-line/60 hover:border-accent transition-colors bg-black/5"
+            className="block w-full h-32 overflow-hidden rounded-lg border border-line/60 bg-black/5 hover:border-accent transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
           >
             <img src={src} alt={kind} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none" />
           </button>
@@ -970,7 +970,7 @@ function PhotoSlot({
               type="button"
               onClick={() => inputRef.current?.click()}
               title="Înlocuiește poza"
-              className="h-7 w-7 rounded-full bg-black/60 text-white hover:bg-black/80 flex items-center justify-center"
+              className="h-7 w-7 rounded-full bg-black/60 text-white hover:bg-black/80 inline-flex items-center justify-center transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
             >
               <Camera className="h-3.5 w-3.5" />
             </button>
@@ -978,7 +978,7 @@ function PhotoSlot({
               type="button"
               onClick={onRemove}
               title="Șterge poza"
-              className="h-7 w-7 rounded-full bg-status-red/80 text-white hover:bg-status-red flex items-center justify-center"
+              className="h-7 w-7 rounded-full bg-status-red/80 text-white hover:bg-status-red inline-flex items-center justify-center transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
             >
               <Trash2 className="h-3.5 w-3.5" />
             </button>
@@ -989,7 +989,7 @@ function PhotoSlot({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="w-full h-32 flex flex-col items-center justify-center gap-1.5 border border-dashed border-line/80 bg-surface-primary/40 text-content-muted hover:border-accent hover:text-accent transition-colors disabled:opacity-50"
+          className="w-full h-32 flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-line/80 bg-surface-primary/40 text-content-muted hover:border-accent hover:text-accent transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50"
         >
           {uploading ? (
             <>

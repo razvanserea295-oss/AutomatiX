@@ -51,6 +51,68 @@ function tableExists(db: Database, name: string): boolean {
   return exists;
 }
 
+type PersonalRecurrence = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'workdays';
+
+function isIsoDate(v: string | null | undefined): v is string {
+  return typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+}
+
+function isTime(v: string | null | undefined): v is string {
+  return typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+}
+
+function addDaysIso(iso: string, days: number): string {
+  const d = new Date(`${iso}T00:00:00`);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function addMonthsIso(iso: string, months: number): string {
+  const d = new Date(`${iso}T00:00:00`);
+  const day = d.getDate();
+  d.setMonth(d.getMonth() + months, 1);
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(day, last));
+  return d.toISOString().slice(0, 10);
+}
+
+function addYearsIso(iso: string, years: number): string {
+  const d = new Date(`${iso}T00:00:00`);
+  const month = d.getMonth();
+  const day = d.getDate();
+  d.setFullYear(d.getFullYear() + years, month, 1);
+  const last = new Date(d.getFullYear(), month + 1, 0).getDate();
+  d.setDate(Math.min(day, last));
+  return d.toISOString().slice(0, 10);
+}
+
+function normalizeRecurrence(v: unknown): PersonalRecurrence {
+  return v === 'daily' || v === 'weekly' || v === 'monthly' || v === 'yearly' || v === 'workdays'
+    ? v
+    : 'none';
+}
+
+function expandPersonalDates(start: string, until: string | null, recurrence: PersonalRecurrence, from: string, to: string): string[] {
+  if (recurrence === 'none') return [start].filter(d => d >= from && d <= to);
+  const hardEnd = until && until >= start ? until : to;
+  const out: string[] = [];
+  let cur = start;
+  let guard = 0;
+  while (cur <= hardEnd && cur <= to && guard < 400) {
+    if (cur >= from) out.push(cur);
+    if (recurrence === 'daily') cur = addDaysIso(cur, 1);
+    else if (recurrence === 'weekly') cur = addDaysIso(cur, 7);
+    else if (recurrence === 'monthly') cur = addMonthsIso(cur, 1);
+    else if (recurrence === 'yearly') cur = addYearsIso(cur, 1);
+    else {
+      do { cur = addDaysIso(cur, 1); }
+      while ([0, 6].includes(new Date(`${cur}T00:00:00`).getDay()) && cur <= hardEnd && cur <= to);
+    }
+    guard += 1;
+  }
+  return out;
+}
+
 export class CalendarService {
   static getEvents(db: Database, user: UserWithRole, range: CalendarRange): CalendarEvent[] {
     const { from, to } = range;
@@ -199,25 +261,39 @@ export class CalendarService {
     
     if ((wantAll || filter.has('personal')) && tableExists(db, 'personal_calendar_events')) {
       const rows = rowsAll(db,
-        `SELECT id, title, date, end_date, notes, color
+        `SELECT id, title, date, end_date, notes, color, start_time, end_time, recurrence
            FROM personal_calendar_events
           WHERE user_id = ?
-            AND (date(date) BETWEEN date(?) AND date(?)
-                 OR (end_date IS NOT NULL AND date(end_date) BETWEEN date(?) AND date(?)))`,
+            AND (
+              date(date) BETWEEN date(?) AND date(?)
+              OR (end_date IS NOT NULL AND date(end_date) BETWEEN date(?) AND date(?))
+              OR recurrence IN ('daily','weekly','monthly','yearly','workdays')
+            )`,
         [user.id, from, to, from, to]);
       for (const r of rows) {
-        events.push({
-          id: `personal:${r.id}`,
-          type: 'personal',
-          title: r.title as string,
-          date: r.date as string,
-          end_date: (r.end_date as string | null) ?? null,
-          source_id: r.id as number,
-          meta: {
-            notes: r.notes as string | null,
-            color: r.color as string | null,
-          },
-        });
+        const recurrence = normalizeRecurrence(r.recurrence);
+        const baseDate = r.date as string;
+        const endDate = (r.end_date as string | null) ?? null;
+        const dates = expandPersonalDates(baseDate, endDate, recurrence, from, to);
+        for (const occ of dates) {
+          events.push({
+            id: recurrence === 'none' ? `personal:${r.id}` : `personal:${r.id}:${occ}`,
+            type: 'personal',
+            title: r.title as string,
+            date: occ,
+            end_date: recurrence === 'none' ? endDate : null,
+            source_id: r.id as number,
+            meta: {
+              notes: r.notes as string | null,
+              color: r.color as string | null,
+              start_time: r.start_time as string | null,
+              end_time: r.end_time as string | null,
+              recurrence,
+              base_date: baseDate,
+              repeat_until: endDate,
+            },
+          });
+        }
       }
     }
 
@@ -232,7 +308,7 @@ export class CalendarService {
   static createPersonal(
     db: Database,
     user: UserWithRole,
-    req: { title: string; date: string; end_date?: string | null; notes?: string | null; color?: string | null },
+    req: { title: string; date: string; end_date?: string | null; notes?: string | null; color?: string | null; start_time?: string | null; end_time?: string | null; recurrence?: string | null },
   ): { id: number } {
     const title = (req.title || '').trim();
     if (!title)        throw CommandError.badRequest('Titlu obligatoriu');
@@ -240,10 +316,14 @@ export class CalendarService {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(req.date)) throw CommandError.badRequest('Format dată invalid (folosește YYYY-MM-DD)');
     if (req.end_date && !/^\d{4}-\d{2}-\d{2}$/.test(req.end_date)) throw CommandError.badRequest('Format dată final invalid');
     if (req.end_date && req.end_date < req.date) throw CommandError.badRequest('Data de final nu poate fi înainte de cea de început');
+    if (req.start_time && !isTime(req.start_time)) throw CommandError.badRequest('Ora de început este invalidă');
+    if (req.end_time && !isTime(req.end_time)) throw CommandError.badRequest('Ora de final este invalidă');
+    if (req.start_time && req.end_time && req.end_time <= req.start_time) throw CommandError.badRequest('Ora de final trebuie să fie după ora de început');
+    const recurrence = normalizeRecurrence(req.recurrence);
     db.run(
-      `INSERT INTO personal_calendar_events (user_id, title, date, end_date, notes, color)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [user.id, title, req.date, req.end_date ?? null, req.notes ?? null, req.color ?? null],
+      `INSERT INTO personal_calendar_events (user_id, title, date, end_date, notes, color, start_time, end_time, recurrence)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [user.id, title, req.date, req.end_date ?? null, req.notes ?? null, req.color ?? null, req.start_time ?? null, req.end_time ?? null, recurrence],
     );
     const idStmt = db.prepare('SELECT last_insert_rowid()');
     idStmt.step();
@@ -260,7 +340,7 @@ export class CalendarService {
   static updatePersonal(
     db: Database,
     user: UserWithRole,
-    req: { id: number; title?: string; date?: string; end_date?: string | null; notes?: string | null; color?: string | null },
+    req: { id: number; title?: string; date?: string; end_date?: string | null; notes?: string | null; color?: string | null; start_time?: string | null; end_time?: string | null; recurrence?: string | null },
   ): { ok: true } {
     const ownerStmt = db.prepare('SELECT user_id FROM personal_calendar_events WHERE id = ?');
     ownerStmt.bind([req.id]);
@@ -271,6 +351,10 @@ export class CalendarService {
 
     if (req.date && !/^\d{4}-\d{2}-\d{2}$/.test(req.date)) throw CommandError.badRequest('Format dată invalid');
     if (req.end_date && !/^\d{4}-\d{2}-\d{2}$/.test(req.end_date)) throw CommandError.badRequest('Format dată final invalid');
+    if (req.start_time && !isTime(req.start_time)) throw CommandError.badRequest('Ora de început este invalidă');
+    if (req.end_time && !isTime(req.end_time)) throw CommandError.badRequest('Ora de final este invalidă');
+    if (req.start_time && req.end_time && req.end_time <= req.start_time) throw CommandError.badRequest('Ora de final trebuie să fie după ora de început');
+    const recurrence = req.recurrence === undefined ? undefined : normalizeRecurrence(req.recurrence);
 
     db.run(
       `UPDATE personal_calendar_events SET
@@ -285,6 +369,13 @@ export class CalendarService {
          color    = CASE WHEN ? IS NULL THEN color
                          WHEN ? = ''    THEN NULL
                          ELSE ? END,
+         start_time = CASE WHEN ? IS NULL THEN start_time
+                           WHEN ? = ''    THEN NULL
+                           ELSE ? END,
+         end_time   = CASE WHEN ? IS NULL THEN end_time
+                           WHEN ? = ''    THEN NULL
+                           ELSE ? END,
+         recurrence = COALESCE(?, recurrence),
          updated_at = datetime('now')
        WHERE id = ? AND user_id = ?`,
       [
@@ -293,6 +384,9 @@ export class CalendarService {
         req.end_date ?? null, req.end_date ?? null, req.end_date ?? null,
         req.notes ?? null,    req.notes ?? null,    req.notes ?? null,
         req.color ?? null,    req.color ?? null,    req.color ?? null,
+        req.start_time ?? null, req.start_time ?? null, req.start_time ?? null,
+        req.end_time ?? null,   req.end_time ?? null,   req.end_time ?? null,
+        recurrence ?? null,
         req.id, user.id,
       ],
     );

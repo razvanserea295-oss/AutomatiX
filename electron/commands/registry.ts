@@ -39,8 +39,7 @@ try {
 type Handler<A = any, R = any> = (args: A) => R | Promise<R>;
 
 
-
-type AnyHandler = Handler<any, any>;
+type AnyHandler = Handler;;
 
 const commands = new Map<string, AnyHandler>();
 
@@ -84,7 +83,7 @@ export function commandCount(): number {
 
 export function wrapCommand(
   name: string,
-  wrapper: (args: any, original: AnyHandler) => any | Promise<any>,
+  wrapper: (args: any, original: AnyHandler) => any,
 ): void {
   const original = commands.get(name);
   if (!original) {

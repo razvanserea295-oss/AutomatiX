@@ -27,13 +27,13 @@ export default function TrendBadge({ value, direction, pill = false, suffix, cla
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-semibold tabular-nums ${color} ${
+      className={`anim-scale-in inline-flex min-w-0 items-center gap-1.5 whitespace-nowrap font-semibold tabular-nums transition-smooth duration-150 ${color} ${
         pill ? `rounded-full px-3 py-1 text-pm-sm ${bg}` : 'text-pm-xs'
       } ${className}`}
     >
-      <Icon className="h-4 w-4 shrink-0" aria-hidden />
+      <Icon className={`${pill ? 'h-4 w-4' : 'h-3.5 w-3.5'} shrink-0`} aria-hidden />
       {label}
-      {suffix && <span className="font-normal text-content-muted">{suffix}</span>}
+      {suffix && <span className="truncate font-normal text-content-muted">{suffix}</span>}
     </span>
   );
 }

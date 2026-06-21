@@ -116,7 +116,7 @@ export default function FisaTemplatePicker({ open, onClose, onPick, title }: Pro
             Anulează
           </button>
           <button onClick={confirm} disabled={!selectedId || loading}
-            className="ml-auto h-9 px-5 rounded bg-accent text-pm-sm font-semibold text-surface-primary hover:bg-accent/90 disabled:opacity-50">
+            className="ml-auto h-9 px-5 rounded bg-accent text-pm-sm font-semibold text-[var(--color-on-accent)] hover:bg-accent/90 disabled:opacity-50">
             Creează fișa
           </button>
         </div>

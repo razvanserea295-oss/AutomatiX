@@ -29,6 +29,8 @@ import IconButton from '@/redesign/ui/IconButton';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import HeroHeader from '@/redesign/ui/HeroHeader';
 import EmptyState from '@/redesign/ui/EmptyState';
+import CardGrid, { type CardGridItem } from '@/redesign/ui/CardGrid';
+import EditLayoutButton from '@/redesign/ui/EditLayoutButton';
 import { filterSelectCls } from '@/redesign/ui/filterControls';
 import { vtName } from '@/redesign/lib/viewTransition';
 
@@ -68,6 +70,7 @@ type Tab = 'pipeline' | 'executie';
 
 export default function SalesHubPage({ user }: { user: User | null }) {
   const isManagerOrAdmin = ['admin', 'manager'].includes((user?.role_name || '').toLowerCase());
+  const userKey = String(user?.id ?? user?.username ?? 'anon');
   const isViewer = useViewerMode('sales-hub');
   const money = useMoney();
   const [, setLocation] = useLocation();
@@ -207,6 +210,37 @@ export default function SalesHubPage({ user }: { user: User | null }) {
 
   const cardProps = { money, isViewer, onOpen: openLead, onEdit: openLeadEdit, onUpdate: (l: SalesLead) => { setUpdateLead(l); setUpdateText(''); } };
 
+  // ── Top KPI strip (user-reorderable via CardGrid) ──
+  const kpiItems: CardGridItem[] = [
+    {
+      id: 'in-discutie',
+      label: 'În discuție',
+      node: <KpiCard compact label="În discuție"  value={metrics.total}       icon={Users}      iconColor="text-status-blue" />,
+    },
+    {
+      id: 'in-negocieri',
+      label: 'În negocieri',
+      node: <KpiCard compact label="În negocieri" value={metrics.inNegocieri} icon={TrendingUp} iconColor="text-status-amber" />,
+    },
+    {
+      id: 'convertite',
+      label: 'Convertite',
+      node: <KpiCard compact label="Convertite"   value={metrics.converted}   icon={Target}     iconColor="text-status-green" />,
+    },
+    {
+      id: 'valoare-pipeline',
+      label: 'Valoare pipeline',
+      defaultSpan: 2,
+      node: (
+        <KpiCard
+          hero
+          label="Valoare pipeline" icon={DollarSign}
+          value={money(metrics.pipelineValue, 'EUR', 0)}
+        />
+      ),
+    },
+  ];
+
   return (
     <Page fit>
       <Page.Body fit maxWidth="full" padding="flush" className="!gap-0 overflow-hidden">
@@ -221,6 +255,7 @@ export default function SalesHubPage({ user }: { user: User | null }) {
             subtitle="Pipeline-ul de discuții cu clienții și proiectele trecute în execuție"
             actions={
               <>
+                <EditLayoutButton />
                 <Button size="md" variant="secondary" onClick={() => setLocation('/quotations')}>
                   <FileText className="h-4 w-4" /> Oferte
                 </Button>
@@ -233,7 +268,7 @@ export default function SalesHubPage({ user }: { user: User | null }) {
             }
           >
             {/* In-page view toggle + manager filters */}
-            <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex flex-wrap items-center gap-2">
               <div className="inline-flex items-center gap-0.5 rounded-xl border border-line bg-surface-secondary p-1" role="group" aria-label="Secțiune">
                 {([['pipeline', 'Pipeline'], ['executie', 'În execuție']] as Array<[Tab, string]>).map(([id, label]) => (
                   <button
@@ -242,7 +277,7 @@ export default function SalesHubPage({ user }: { user: User | null }) {
                     onClick={() => setTab(id)}
                     aria-pressed={tab === id}
                     className={cn(
-                      'h-8 px-3.5 rounded-lg text-pm-xs font-semibold transition-smooth',
+                      'h-8 px-3 rounded-lg text-pm-xs font-semibold transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]',
                       tab === id ? 'bg-accent text-[var(--color-on-accent)] shadow-[var(--elevation-1)]' : 'text-content-muted hover:text-content-primary hover:bg-surface-tertiary',
                     )}
                   >
@@ -271,21 +306,13 @@ export default function SalesHubPage({ user }: { user: User | null }) {
 
         {/* KPI strip — Valoare pipeline is the hero (the one figure not visible on the board) */}
         <div className="px-6 pb-4 shrink-0">
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 enter-up" style={{ animationDelay: '80ms' }}>
-            <KpiCard compact label="În discuție"  value={metrics.total}       icon={Users}      iconColor="text-status-blue" />
-            <KpiCard compact label="În negocieri" value={metrics.inNegocieri} icon={TrendingUp} iconColor="text-status-amber" />
-            <KpiCard compact label="Convertite"   value={metrics.converted}   icon={Target}     iconColor="text-status-green" />
-            <KpiCard
-              hero
-              className="col-span-2 lg:col-span-2"
-              label="Valoare pipeline" icon={DollarSign}
-              value={money(metrics.pipelineValue, 'EUR', 0)}
-            />
+          <div className="enter-up" style={{ animationDelay: '80ms' }}>
+            <CardGrid region="sales:kpis" userKey={userKey} cols={5} items={kpiItems} />
           </div>
           {metrics.stale > 0 && tab === 'pipeline' && (
-            <div className="mt-3 flex items-center gap-2 rounded-xl border border-status-red/30 bg-status-red/5 px-3.5 py-2 text-pm-xs text-status-red">
+            <div className="mt-3 flex items-center gap-2 rounded-xl border border-status-red/30 bg-status-red/5 px-3 py-2 text-pm-xs text-status-red anim-fade-slide-in">
               <AlertTriangle className="h-4 w-4 shrink-0" />
-              <span><strong className="font-semibold">{metrics.stale}</strong> lead-uri fără update de 7+ zile — sunt marcate cu roșu pe carduri.</span>
+              <span className="min-w-0"><strong className="font-semibold">{metrics.stale}</strong> lead-uri fără update de 7+ zile — sunt marcate cu roșu pe carduri.</span>
             </div>
           )}
         </div>
@@ -333,12 +360,12 @@ export default function SalesHubPage({ user }: { user: User | null }) {
             </div>
 
             {/* Converted (terminal) — side panel */}
-            <aside className="flex w-[280px] shrink-0 flex-col min-h-0 gap-3 overflow-y-auto border-l border-line/60 pl-4 ml-1 pb-1">
+            <aside className="flex w-[280px] shrink-0 flex-col min-h-0 gap-3 overflow-y-auto border-l border-line/60 pl-4 pb-1">
               <div className="flex items-center gap-2 px-1 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">
-                <CircleCheckBig className="h-3.5 w-3.5 text-status-green" /> Convertite
+                <CircleCheckBig className="h-3.5 w-3.5 shrink-0 text-status-green" /> Convertite
               </div>
               <Card tone="subtle" className="flex flex-col min-h-0 overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-2.5 space-y-2 stagger-in">
+                <div className="flex-1 overflow-y-auto p-2 space-y-2 stagger-in">
                   {convertedLeads.length === 0
                     ? <p className="py-6 text-center text-pm-xs text-content-muted">Niciun lead convertit</p>
                     : convertedLeads.map(l => (
@@ -358,7 +385,7 @@ export default function SalesHubPage({ user }: { user: User | null }) {
                   description="Convertește o discuție din pipeline în producție pentru a o vedea aici." />
               </Card>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 stagger-in">
                 {activeProjects.map(p => (
                   <Card key={p.id} padding="md" interactive vtName={vtName('project', p.id)} className="min-w-0">
                     <div className="flex items-start justify-between gap-2">
@@ -370,7 +397,7 @@ export default function SalesHubPage({ user }: { user: User | null }) {
                     </div>
                     {p.deadline && (
                       <p className="mt-2 inline-flex items-center gap-1 text-pm-2xs text-content-muted tabular-nums">
-                        <CalendarClock className="h-3 w-3" /> {formatDateRo(p.deadline)}
+                        <CalendarClock className="h-3 w-3 shrink-0" /> {formatDateRo(p.deadline)}
                       </p>
                     )}
                   </Card>
@@ -395,16 +422,16 @@ export default function SalesHubPage({ user }: { user: User | null }) {
       {/* Quick update (add note) */}
       {updateLead && (
         <div
-          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4"
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4 anim-fade-in"
           onClick={() => { if (!savingUpdate) { setUpdateLead(null); setUpdateText(''); } }}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)]"
+            className="w-full max-w-md rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)] anim-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-3 border-b border-line/70 px-4 py-3">
-              <h3 className="text-pm-sm font-semibold text-content-primary truncate">Update — {updateLead.client_name}</h3>
-              <button onClick={() => { setUpdateLead(null); setUpdateText(''); }} className="p-1 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary" aria-label="Închide">
+              <h3 className="min-w-0 flex-1 text-pm-sm font-semibold text-content-primary truncate">Update — {updateLead.client_name}</h3>
+              <button onClick={() => { setUpdateLead(null); setUpdateText(''); }} className="shrink-0 inline-flex items-center justify-center p-1 rounded-lg text-content-muted transition-smooth duration-150 hover:bg-surface-tertiary hover:text-content-primary active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]" aria-label="Închide">
                 <XIcon className="h-4 w-4" />
               </button>
             </div>
@@ -416,7 +443,7 @@ export default function SalesHubPage({ user }: { user: User | null }) {
                 rows={4}
                 autoFocus
                 placeholder="Ce e nou? Stadiul discuției, oferta, următorii pași…"
-                className="w-full rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm text-content-primary placeholder:text-content-muted/70 focus:outline-none focus:border-accent/50 resize-none"
+                className="w-full rounded-xl border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm text-content-primary placeholder:text-content-muted/70 transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)] resize-none"
               />
             </div>
             <div className="flex items-center justify-end gap-2 border-t border-line/70 px-4 py-3">
@@ -454,16 +481,16 @@ function SalesColumn({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      <div className="flex items-center justify-between gap-2 px-3.5 py-3 border-b border-line/70" style={{ borderTop: `3px solid ${color}` }}>
+      <div className="flex items-center justify-between gap-2 px-3 py-3 border-b border-line/70" style={{ borderTop: `3px solid ${color}` }}>
         <div className="min-w-0">
           <h3 className="text-pm-sm font-semibold text-content-primary truncate">{label}</h3>
-          {value > 0 && <p className="mt-0.5 text-pm-2xs text-content-muted tabular-nums">{money(value, 'EUR', 0)}</p>}
+          {value > 0 && <p className="mt-0.5 text-pm-2xs text-content-muted tabular-nums truncate">{money(value, 'EUR', 0)}</p>}
         </div>
         <span className="inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-lg bg-surface-tertiary text-pm-2xs font-semibold text-content-muted tabular-nums shrink-0">
           {count}
         </span>
       </div>
-      <div key={count} className="flex-1 overflow-y-auto p-2.5 space-y-2 stagger-in">{children}</div>
+      <div key={count} className="flex-1 overflow-y-auto p-2 space-y-2 stagger-in">{children}</div>
     </Card>
   );
 }
@@ -489,7 +516,7 @@ function LeadCard({
       onDragStart={onDragStart}
       onClick={() => onOpen(lead.id)}
       className={cn(
-        'vt-morph group cursor-pointer rounded-xl border bg-surface-primary p-3 transition-all hover:shadow-md hover:border-accent/40 hover:-translate-y-0.5 motion-reduce:transform-none motion-reduce:transition-none active:translate-y-0',
+        'vt-morph group cursor-pointer rounded-xl border bg-surface-primary p-3 transition-smooth duration-150 hover:shadow-[var(--elevation-2)] hover:border-accent/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]',
         stale ? 'border-status-red/40' : 'border-line',
       )}
       style={{ viewTransitionName: vtName('lead', lead.id) }}
@@ -518,12 +545,12 @@ function LeadCard({
       )}
 
       <div className="mt-2 flex items-center gap-x-3 gap-y-1 flex-wrap text-pm-2xs text-content-muted">
-        {lead.location && <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{lead.location}</span>}
-        {lead.contact_phone && <span className="inline-flex items-center gap-1"><Phone className="h-3 w-3" />{lead.contact_phone}</span>}
-        {lead.recent_notes.length > 0 && <span className="inline-flex items-center gap-1"><MessageSquare className="h-3 w-3" />{lead.recent_notes.length}</span>}
+        {lead.location && <span className="inline-flex min-w-0 max-w-full items-center gap-1"><MapPin className="h-3 w-3 shrink-0" /><span className="truncate">{lead.location}</span></span>}
+        {lead.contact_phone && <span className="inline-flex min-w-0 max-w-full items-center gap-1"><Phone className="h-3 w-3 shrink-0" /><span className="truncate">{lead.contact_phone}</span></span>}
+        {lead.recent_notes.length > 0 && <span className="inline-flex items-center gap-1"><MessageSquare className="h-3 w-3 shrink-0" />{lead.recent_notes.length}</span>}
         {stale && (
-          <span className="ml-auto inline-flex items-center gap-1 font-medium text-status-red" title={`Fără update de ${days} zile`}>
-            <Clock className="h-3 w-3" />{days}z
+          <span className="ml-auto inline-flex shrink-0 items-center gap-1 font-medium text-status-red" title={`Fără update de ${days} zile`}>
+            <Clock className="h-3 w-3 shrink-0" />{days}z
           </span>
         )}
       </div>

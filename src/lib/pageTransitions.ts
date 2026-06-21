@@ -26,6 +26,8 @@ export function supportsViewTransitions(): boolean {
 }
 
 export function prefersReducedMotion(): boolean {
+  // Honor the in-app "reduce motion" toggle (Settings → Aspect, data-motion) too.
+  if (typeof document !== 'undefined' && document.documentElement.dataset.motion === 'reduced') return true;
   return typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;

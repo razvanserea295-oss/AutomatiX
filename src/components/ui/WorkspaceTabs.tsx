@@ -1,9 +1,11 @@
 import type { ComponentType, ReactNode } from 'react';
+import { useLayoutStore } from '@/store/layoutStore';
 
 export interface WorkspaceTab {
   id: string;
   label: string;
   icon?: ComponentType<{ className?: string }>;
+  prefetch?: () => void;
 }
 
 interface WorkspaceTabsProps {
@@ -15,48 +17,58 @@ interface WorkspaceTabsProps {
   actions?: ReactNode;
 }
 
-
-
-
-
-
-
-
-
-
 export default function WorkspaceTabs({ tabs, active, onChange, title, titleIcon: TitleIcon, actions }: WorkspaceTabsProps) {
-  if (!tabs?.length && !actions) return null;
+  const collapsed = useLayoutStore((s) => s.sidebarCollapsed);
+  const w = collapsed ? 56 : 220;
+
+  if (!tabs?.length && !actions && !title) return null;
 
   return (
-    <div className="vt-ws-selector bg-surface-secondary border-b border-line shrink-0">
-      <div className="mx-auto flex flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-col gap-3">
-          {title && (
-            <div className="flex items-center gap-2">
-              {TitleIcon && <TitleIcon className="h-4 w-4 text-content-secondary" />}
-              <h1 className="text-pm-sm font-semibold text-content-primary">{title}</h1>
-            </div>
-          )}
-
-          {tabs?.length ? (
-            <nav className="flex flex-wrap items-center gap-2">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => onChange(tab.id)}
-                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-pm-xs font-semibold transition-colors ${tab.id === active ? 'bg-surface-primary text-content-primary border-line' : 'bg-transparent text-content-muted border-transparent hover:bg-surface-primary hover:text-content-primary'}`}
-                >
-                  {tab.icon && <tab.icon className="h-3.5 w-3.5 text-current" />}
-                  <span>{tab.label}</span>
-                </button>
-              ))}
-            </nav>
-          ) : null}
+    <div
+      className="vt-ws-selector bg-surface-secondary border-r border-line shrink-0 flex flex-col min-h-0 overflow-y-auto overflow-x-hidden surface-frost"
+      style={{ width: w }}
+    >
+      {/* Title — hidden when collapsed */}
+      {!collapsed && title && (
+        <div className="flex items-center gap-2 px-3 pt-3 pb-2 shrink-0">
+          {TitleIcon && <TitleIcon className="h-4 w-4 text-content-secondary shrink-0" />}
+          <h1 className="text-pm-sm font-semibold text-content-primary truncate">{title}</h1>
         </div>
+      )}
 
-        {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
-      </div>
+      {/* Tab buttons — vertical list */}
+      {tabs?.length ? (
+        <nav className="flex flex-col gap-0.5 px-2 py-2 flex-1">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = tab.id === active;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => onChange(tab.id)}
+                onMouseEnter={() => tab.prefetch?.()}
+                title={collapsed ? tab.label : undefined}
+                className={`relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-pm-xs font-semibold transition-all duration-150 active:scale-[0.98] w-full text-left ${
+                  isActive
+                    ? 'bg-surface-nav-active text-accent shadow-[inset_2px_0_0_var(--color-accent)]'
+                    : 'text-content-muted hover:bg-surface-nav-hover hover:text-content-primary'
+                }`}
+              >
+                {Icon && <Icon className="h-4 w-4 shrink-0 text-current" />}
+                {!collapsed && <span className="truncate">{tab.label}</span>}
+              </button>
+            );
+          })}
+        </nav>
+      ) : null}
+
+      {/* Actions — shown at bottom, only when expanded */}
+      {!collapsed && actions ? (
+        <div className="px-3 pb-3 shrink-0 border-t border-line pt-2">
+          {actions}
+        </div>
+      ) : null}
     </div>
   );
 }

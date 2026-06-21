@@ -66,7 +66,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { List, type RowComponentProps } from 'react-window';
-import { ChevronRight, Search, FolderTree, FileBox, Upload, FolderUp, Sparkles, Loader2, ChevronsUpDown, Plus, Wand2, Tags, Download, Boxes, X, Trash2 } from 'lucide-react';
+import { ChevronRight, Search, FolderTree, FileBox, Upload, FolderUp, Loader2, ChevronsUpDown, Plus, Wand2, Tags, Download, Boxes, X, Trash2 } from 'lucide-react';
 import SupplierCodesModal from '@/pages/parts-tree/SupplierCodesModal';
 import { useAuthStore } from '@/store/authStore';
 import type { User } from '@/core/types';
@@ -75,7 +75,6 @@ import { getServerUrl } from '@/config/server';
 import { STORAGE_KEYS, getStorage } from '@/config/localStorage';
 import { useProjectStore } from '@/store/projectStore';
 import { usePieceStore, usePiecesForProject } from '@/store/pieceStore';
-import { aiChat, aiHealth } from '@/api/ai';
 import type { PartTreeNode } from '@/pages/parts-tree/types';
 import { catColor, formatSize, countTotal } from '@/pages/parts-tree/types';
 import type { ProjectPiece } from '@/types/piece';
@@ -89,7 +88,6 @@ import PartsTreeEnhancements from '@/pages/parts-tree/PartsTreeEnhancements';
 
 import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import HeroHeader from '@/redesign/ui/HeroHeader';
@@ -100,7 +98,6 @@ import {
   filterSelectCls,
   filterToggleCls,
 } from '@/redesign/ui/filterControls';
-import { vtName } from '@/redesign/lib/viewTransition';
 
 interface Stage { id: number; name: string; }
 
@@ -374,7 +371,7 @@ function TreeRowItemBase({
         {row.hasChildren ? (
           <button
             onClick={e => { e.stopPropagation(); onToggleCollapse(row.id); }}
-            className="h-4 w-4 flex items-center justify-center hover:bg-surface-tertiary"
+            className="h-4 w-4 flex items-center justify-center rounded transition-smooth duration-150 hover:bg-surface-tertiary active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
           >
             <ChevronRight
               className={`h-3 w-3 text-content-muted transition-transform duration-200 motion-reduce:transition-none ${isCollapsed ? '' : 'rotate-90'}`}
@@ -390,14 +387,14 @@ function TreeRowItemBase({
         border: isSelected ? '2px solid var(--color-text-primary)' : 'none',
       }} />
 
-      <span className={`text-pm-xs truncate flex-1 ${isSelected ? 'text-content-primary font-semibold' : 'text-content-primary font-medium'}`}>
+      <span className={`text-pm-xs truncate flex-1 min-w-0 ${isSelected ? 'text-content-primary font-semibold' : 'text-content-primary font-medium'}`}>
         {nameEl}
       </span>
 
       {}
       {row.node.supplier_code && (
         <span
-          className="ml-1 text-pm-2xs px-1.5 py-0.5 rounded font-mono font-bold text-white bg-status-amber shrink-0"
+          className="ml-1 text-pm-2xs px-1.5 py-0.5 rounded-md font-mono font-bold text-white bg-status-amber shrink-0"
           title={`Cod furnizor: ${row.node.supplier_code} — vezi pagina "De comandat"`}
         >
           {row.node.supplier_code}
@@ -405,7 +402,7 @@ function TreeRowItemBase({
       )}
 
       {row.hasChildren && isCollapsed && (
-        <span className="ml-1 text-pm-2xs text-content-muted bg-surface-tertiary px-1">+{row.node.children.length}</span>
+        <span className="ml-1 text-pm-2xs text-content-muted bg-surface-tertiary px-1.5 py-0.5 rounded-md">+{row.node.children.length}</span>
       )}
       <span className="ml-2 text-pm-2xs text-content-muted capitalize">{row.node.category}</span>
       {row.node.file_type && <span className="ml-1 text-pm-2xs text-content-muted opacity-60">{row.node.file_type}</span>}
@@ -440,8 +437,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
   
   
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [aiInsight, setAiInsight] = useState<string | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
   const [status, setStatus] = useState<{ type: 'ok' | 'err'; msg: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [viewingPiece, setViewingPiece] = useState<ProjectPiece | null>(null);
@@ -543,7 +538,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
   }, [pieces.length, pieces.map(p => `${p.id}:${p.stage_id}:${p.status}:${p.sort_order}:${p.name}`).join('|')]);
 
   const totalParts = useMemo(() => countTotal(treeData), [treeData]);
-  const assembliesTotal = useMemo(() => countTotal(pruneToAssemblies(treeData)), [treeData]);
 
   
   
@@ -875,20 +869,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     void doImport(tree);
   }, [selectedProject, doImport]);
 
-  const requestAiInsight = useCallback(async () => {
-    if (!selectedProject || totalParts === 0) return;
-    setAiLoading(true);
-    try {
-      const name = projects.find(p => p.id === selectedProject)?.name || '';
-      const res = await aiChat([{ role: 'user', content: `Analizeaza arborele de piese al proiectului "${name}" (ID: ${selectedProject}). Foloseste query_database. Max 4 propozitii.` }], `parts-ai-${Date.now()}`);
-      setAiInsight(res.reply);
-    } catch { setAiInsight(null); }
-    finally { setAiLoading(false); }
-  }, [selectedProject, totalParts, projects]);
-
-  
-  
-  
   const [sorting, setSorting] = useState(false);
 
   
@@ -946,65 +926,21 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     loadTree();
   }, [loadTree, selectedProject, pieces, updatePieceStore]);
 
-  const requestAiSort = useCallback(async () => {
+  const requestSort = useCallback(async () => {
     if (!selectedProject || pieces.length === 0) return;
     setSorting(true); setStatus(null);
     try {
-      
-      const reachable = await aiHealth();
-      if (!reachable) {
-        const ordered = ruleBasedOrder(pieces);
-        const renames: Record<number, string> = {};
-        for (const p of pieces) {
-          const cleaned = cleanupName(p.name);
-          if (cleaned !== p.name) renames[p.id] = cleaned;
-        }
-        await persistOrder(ordered, renames);
-        setStatus({ type: 'ok', msg: `${ordered.length} piese sortate + redenumite (reguli — AI offline)` });
-        setTimeout(() => setStatus(null), 4000);
-        return;
-      }
-
-      const compact = pieces.map(p => ({ id: p.id, name: p.name, category: p.category, stage_id: p.stage_id }));
-      const prompt =
-        `Ai o lista de piese dintr-un proiect industrial (statii betoane / structuri). ` +
-        `Returneaza un JSON array de obiecte { "id": number, "name": string } in ordinea corecta de productie ` +
-        `(ansambluri principale -> subansambluri -> componente; categorii: structura înainte de mixer/siloz/buncar înainte de automatizare). ` +
-        `Pentru fiecare piesa, "name" este o versiune mai scurta si standard (2-4 cuvinte, fără extensii .sldprt/.dxf, fără numere de versiune la inceput), dar recognoscibila. ` +
-        `Raspunde DOAR cu JSON, fără text in jur.\n\n` +
-        `Piese:\n${JSON.stringify(compact)}`;
-      const res = await aiChat([{ role: 'user', content: prompt }], `parts-sort-${Date.now()}`);
-      const match = res.reply.match(/\[[\s\S]*\]/);
-      if (!match) throw new Error('parse-failed');
-      const parsed = JSON.parse(match[0]) as Array<{ id: number; name?: string }>;
-      const validIds: number[] = [];
+      const ordered = ruleBasedOrder(pieces);
       const renames: Record<number, string> = {};
-      for (const item of parsed) {
-        if (!pieces.some(p => p.id === item.id)) continue;
-        validIds.push(item.id);
-        if (item.name && typeof item.name === 'string' && item.name.trim().length > 0) {
-          renames[item.id] = item.name.trim();
-        }
+      for (const p of pieces) {
+        const cleaned = cleanupName(p.name);
+        if (cleaned !== p.name) renames[p.id] = cleaned;
       }
-      if (validIds.length === 0) throw new Error('no-valid-ids');
-
-      await persistOrder(validIds, renames);
-      setStatus({ type: 'ok', msg: `${validIds.length} piese sortate + redenumite de AI` });
+      await persistOrder(ordered, renames);
+      setStatus({ type: 'ok', msg: `${ordered.length} piese sortate + redenumite` });
       setTimeout(() => setStatus(null), 4000);
-    } catch {
-      try {
-        const ordered = ruleBasedOrder(pieces);
-        const renames: Record<number, string> = {};
-        for (const p of pieces) {
-          const cleaned = cleanupName(p.name);
-          if (cleaned !== p.name) renames[p.id] = cleaned;
-        }
-        await persistOrder(ordered, renames);
-        setStatus({ type: 'ok', msg: `${ordered.length} piese sortate + redenumite (reguli — AI indisponibil)` });
-        setTimeout(() => setStatus(null), 4000);
-      } catch (err2) {
-        setStatus({ type: 'err', msg: err2 instanceof Error ? err2.message : 'Eroare la sortare' });
-      }
+    } catch (err2) {
+      setStatus({ type: 'err', msg: err2 instanceof Error ? err2.message : 'Eroare la sortare' });
     } finally {
       setSorting(false);
     }
@@ -1143,18 +1079,10 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
           }
         />
 
-        {}
-        <Page.Kpis cols={4} className="shrink-0 enter-up" style={{ animationDelay: '80ms' }}>
-          <KpiCard vtName={vtName('parts-kpi', 'total')}      label="Total fișiere" icon={FolderTree} value={totalParts} />
-          <KpiCard vtName={vtName('parts-kpi', 'assemblies')} label="Ansambluri"    icon={Boxes}      value={assembliesTotal} />
-          <KpiCard vtName={vtName('parts-kpi', 'pieces')}     label="Piese proiect" icon={FileBox}    value={pieces.length} />
-          <KpiCard vtName={vtName('parts-kpi', 'visible')}    label="Vizibile"      icon={Search}     value={filteredRows.length} />
-        </Page.Kpis>
-
         {
 }
         <Card padding="md" tone="elevated" className="shrink-0 enter-up" style={{ animationDelay: '120ms' }}>
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <div className="relative group">
               <Search className={filterSearchIconCls} />
               <input
@@ -1184,7 +1112,7 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
 
             <div className="flex-1" />
 
-            <div className="flex flex-wrap items-center gap-1.5 justify-end">
+            <div className="flex flex-wrap items-center gap-2 justify-end">
               {selectedProject && (
                 <>
                   <Button variant="outline" size="sm" onClick={handlePickFolder} disabled={importing}>
@@ -1202,23 +1130,13 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={requestAiSort}
+                    onClick={requestSort}
                     disabled={sorting || pieces.length === 0}
-                    title="Sortează cu AI"
+                    title="Sortează și redenumește piesele după reguli"
                   >
                     {sorting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-                    Sort AI
+                    Sortează
                   </Button>
-                  <IconButton
-                    intent="primary"
-                    size="sm"
-                    onClick={requestAiInsight}
-                    disabled={aiLoading || totalParts === 0}
-                    title="Insight AI"
-                    aria-label="Insight AI"
-                  >
-                    {aiLoading ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                  </IconButton>
                   {totalParts > 0 && (
                     <Button
                       variant="outline"
@@ -1284,7 +1202,7 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
                 {}
                 <div className="shrink-0 border-b border-line px-4 py-3 flex items-center gap-2">
                   <span className="h-3.5 w-3.5 shrink-0 rounded-sm" style={{ backgroundColor: catColor(selectedNode.category) }} />
-                  <span className="font-medium text-pm-sm text-content-primary truncate flex-1">{selectedNode.name}</span>
+                  <span className="font-medium text-pm-sm text-content-primary truncate flex-1 min-w-0">{selectedNode.name}</span>
                   <IconButton
                     size="sm"
                     onClick={() => setSelectedId(null)}
@@ -1365,9 +1283,9 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
                         {formatSize(bytesDone)} / {formatSize(bytesTotal)} · {mbps.toFixed(1)} MB/s · ~{etaLabel} rămas
                       </span>
                     </div>
-                    <div className="h-1.5 w-full bg-surface-tertiary rounded overflow-hidden">
+                    <div className="h-1.5 w-full bg-surface-tertiary rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-accent transition-all duration-200 anim-bar-grow"
+                        className="h-full bg-accent anim-bar-grow"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -1380,9 +1298,9 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
 
               {}
               {showFolderInput && (
-                <div className="shrink-0 flex gap-2.5 items-center px-5 py-2 border-b border-line bg-surface-secondary">
+                <div className="shrink-0 flex gap-2 items-center px-5 py-2 border-b border-line bg-surface-secondary">
                   <input value={folderPath} onChange={e => setFolderPath(e.target.value)} placeholder="C:\Proiecte\Piese"
-                    className="flex-1 h-8 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm font-mono text-content-primary placeholder:text-content-muted transition-colors focus:outline-none focus:border-accent/50" />
+                    className="flex-1 min-w-0 h-8 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm font-mono text-content-primary placeholder:text-content-muted transition-smooth duration-150 hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)]" />
                   <Button size="sm" onClick={handleScanFolder} disabled={!folderPath.trim() || importing}>
                     <Upload className="h-3.5 w-3.5" /> Scaneaza
                   </Button>
@@ -1396,12 +1314,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
               {status && (
                 <div className={`shrink-0 border-b border-line px-4 py-2 text-pm-xs enter-up ${status.type === 'ok' ? 'bg-status-green/10 text-status-green' : 'bg-status-red/10 text-status-red'}`}>
                   {status.msg}
-                </div>
-              )}
-              {aiInsight && (
-                <div className="shrink-0 border-b border-line bg-accent/5 px-4 py-2 enter-up">
-                  <span className="text-pm-2xs font-medium uppercase tracking-wider text-accent mr-2">AI</span>
-                  <span className="text-pm-xs text-content-secondary">{aiInsight}</span>
                 </div>
               )}
 

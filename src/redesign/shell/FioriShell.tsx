@@ -5,10 +5,6 @@ import {
 } from '@ui5/webcomponents-react';
 import menuIcon from '@ui5/webcomponents-icons/dist/menu2.js';
 import homeIcon from '@ui5/webcomponents-icons/dist/home.js';
-import cartIcon from '@ui5/webcomponents-icons/dist/cart.js';
-import apptIcon from '@ui5/webcomponents-icons/dist/appointment-2.js';
-import tableIcon from '@ui5/webcomponents-icons/dist/table-view.js';
-import mealIcon from '@ui5/webcomponents-icons/dist/meal.js';
 import listIcon from '@ui5/webcomponents-icons/dist/list.js';
 import supplierIcon from '@ui5/webcomponents-icons/dist/supplier.js';
 import moneyIcon from '@ui5/webcomponents-icons/dist/money-bills.js';
@@ -27,9 +23,9 @@ import { useUiModeStore } from '@/store/uiModeStore';
 
 // Authentic Fiori app shell — ShellBar (header) + 2-tier SideNavigation (left).
 // Replaces the custom Titlebar/WorkspacePanel chrome whenever the Fiori UI mode
-// is active (or for the restaurant context). The page body is given the exact
-// remaining height with overflow hidden, so ONLY the page's inner list/table
-// (a Fiori DynamicPage) scrolls — never the whole page.
+// is active. The page body is given the exact remaining height with overflow
+// hidden, so ONLY the page's inner list/table (a Fiori DynamicPage) scrolls —
+// never the whole page.
 export interface FioriSubItem { id: string; text: string; selected?: boolean }
 export interface FioriNavItem { id: string; text: string; selected?: boolean; subItems?: FioriSubItem[] }
 
@@ -37,8 +33,6 @@ const ICON_BY_ID: Record<string, string> = {
   dashboard: homeIcon,
   'manager-control': employeeIcon,
   'personal-workspace': personIcon,
-  'restaurant-workspace': mealIcon,
-  orders: cartIcon, reservations: apptIcon, tables: tableIcon, menu: mealIcon, recipes: listIcon,
   'sales-workspace': salesIcon,
   'projects-contracts-workspace': projectIcon,
   'engineering-workspace': wrenchIcon,
@@ -48,11 +42,6 @@ const ICON_BY_ID: Record<string, string> = {
   'instrumente-workspace': wrenchIcon,
   'sistem-workspace': settingsIcon, settings: settingsIcon,
 };
-
-const DEFAULT_NAV: FioriNavItem[] = [
-  { id: 'orders', text: 'Comenzi' },
-  { id: 'menu', text: 'Meniu' },
-];
 
 interface Props {
   pageTitle: string;
@@ -68,7 +57,7 @@ interface Props {
 }
 
 export default function FioriShell({
-  pageTitle, selectedId = '', navItems = DEFAULT_NAV, onNavigate, onLogout,
+  pageTitle, selectedId = '', navItems = [], onNavigate, onLogout,
   onNotificationsClick, onSearch, userInitials = 'RS', notificationsCount = 0, children,
 }: Props) {
   const [collapsed, setCollapsed] = useState(false);

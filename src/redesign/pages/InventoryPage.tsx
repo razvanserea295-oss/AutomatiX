@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
-  Package, AlertTriangle, Ban, TrendingDown, Wallet, History, Plus,
+  Package, History, Plus,
   Pencil, Trash2, Search, X as XIcon, Loader2,
 } from 'lucide-react';
 
 import type { User } from '@/core/types';
 import { cn } from '@/lib/cn';
 import { useMaterialStore, type Material } from '@/store/materialStore';
-import { useSettingsStore, useMoney } from '@/store/settingsStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { apiCommand } from '@/api/commands';
 import { useViewerMode } from '@/hooks/useViewerMode';
 import { toast } from '@/store/toastStore';
@@ -15,7 +15,6 @@ import { confirmDialog } from '@/components/ConfirmDialog';
 
 import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import StatusBadge from '@/redesign/ui/StatusBadge';
@@ -52,7 +51,7 @@ const EMPTY_FORM: FormState = {
 interface ConsumptionRow { date?: string; created_at?: string; material_name?: string; material?: string; project_name?: string; project?: string; quantity?: number; user_name?: string; user?: string }
 interface Col<T> { key: string; header: string; align?: 'end'; render?: (row: T) => React.ReactNode }
 
-const inputCls = 'w-full h-9 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary focus:outline-none focus:border-accent/50';
+const inputCls = 'w-full h-9 rounded-xl border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary transition-smooth duration-150 hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)]';
 const labelCls = 'text-pm-2xs font-bold uppercase tracking-wide text-content-muted';
 
 export default function InventoryPage({ user: _user }: { user: User | null }) {
@@ -65,9 +64,7 @@ export default function InventoryPage({ user: _user }: { user: User | null }) {
   const createMaterial = useMaterialStore(s => s.createMaterial);
   const updateMaterial = useMaterialStore(s => s.updateMaterial);
   const deleteMaterial = useMaterialStore(s => s.deleteMaterial);
-  const eurRate = useSettingsStore(s => s.eurToRonRate);
   const loadSettings = useSettingsStore(s => s.load);
-  const money = useMoney();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -91,17 +88,6 @@ export default function InventoryPage({ user: _user }: { user: User | null }) {
     () => [...new Set(materials.map(m => m.category).filter(Boolean))].sort() as string[],
     [materials],
   );
-
-  const metrics = useMemo(() => {
-    const lowStock = materials.filter(isLowStock).length;
-    const outOfStock = materials.filter(isOutOfStock).length;
-    const subPrag = materials.filter(m => minOf(m) > 0 && qtyOf(m) <= minOf(m) * 1.5).length;
-    const totalValue = materials.reduce((acc, m) => {
-      const v = qtyOf(m) * (m.unit_cost ?? 0);
-      return acc + ((m.currency || 'RON').toUpperCase() === 'EUR' ? v * eurRate : v);
-    }, 0);
-    return { total: materials.length, lowStock, outOfStock, subPrag, totalValue };
-  }, [materials, eurRate]);
 
   const data = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -192,27 +178,16 @@ export default function InventoryPage({ user: _user }: { user: User | null }) {
                 <p className="mt-0.5 text-pm-sm text-content-muted">Catalog de materiale, stocuri, valoare și consumuri</p>
               </div>
             </div>
-            <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               <Button variant="secondary" size="md" onClick={() => setHistOpen(true)}><History className="h-4 w-4" /> Istoric consumuri</Button>
               {!isViewer && <Button size="md" onClick={openCreate}><Plus className="h-4 w-4" /> Adaugă material</Button>}
             </div>
           </div>
         </div>
 
-        {/* KPIs — Valoare inventar is the hero */}
-        <div className="px-6 pt-4 shrink-0">
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-            <KpiCard label="Total articole" icon={Package} value={metrics.total} />
-            <KpiCard label="Stoc redus" icon={AlertTriangle} value={metrics.lowStock} iconColor={metrics.lowStock > 0 ? 'text-status-amber' : undefined} />
-            <KpiCard label="Epuizat" icon={Ban} value={metrics.outOfStock} iconColor={metrics.outOfStock > 0 ? 'text-status-red' : undefined} />
-            <KpiCard label="Sub prag" icon={TrendingDown} value={metrics.subPrag} iconColor={metrics.subPrag > 0 ? 'text-status-amber' : undefined} />
-            <KpiCard hero className="col-span-2 lg:col-span-2" label="Valoare inventar" icon={Wallet} value={money(Math.round(metrics.totalValue), 'RON')} />
-          </div>
-        </div>
-
         {/* Filters */}
-        <div className="px-6 pt-4 shrink-0 flex flex-wrap items-center gap-2.5">
-          <div className="relative grow max-w-sm">
+        <div className="px-6 pt-4 shrink-0 flex flex-wrap items-center gap-2">
+          <div className="group relative grow max-w-sm">
             <Search className={filterSearchIconCls} aria-hidden />
             <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Denumire, categorie, furnizor…" aria-label="Caută material" className={`${filterSearchInputCls} !w-full`} />
           </div>
@@ -233,7 +208,7 @@ export default function InventoryPage({ user: _user }: { user: User | null }) {
         <div className="flex-1 min-h-0 overflow-auto px-6 py-4">
           <Card padding="none" className="min-w-0 overflow-hidden">
             {loading ? (
-              <div className="flex items-center justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-content-muted" /></div>
+              <div className="flex min-h-[280px] items-center justify-center py-16 anim-fade-in"><Loader2 className="h-6 w-6 animate-spin text-content-muted" /></div>
             ) : (
               <DataTable columns={columns} rows={data} empty="Niciun material găsit" />
             )}
@@ -332,11 +307,11 @@ function Field({ label, required, children }: { label: string; required?: boolea
 
 function Modal({ title, onClose, children, footer, wide }: { title: string; onClose: () => void; children: React.ReactNode; footer: React.ReactNode; wide?: boolean }) {
   return (
-    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className={cn('w-full max-h-[88vh] overflow-y-auto rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)]', wide ? 'max-w-3xl' : 'max-w-lg')} onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4 anim-fade-in" onClick={onClose}>
+      <div className={cn('w-full max-h-[88vh] overflow-y-auto rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)] anim-scale-in', wide ? 'max-w-3xl' : 'max-w-lg')} onClick={e => e.stopPropagation()}>
         <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line/70 bg-surface-primary px-4 py-3">
           <h3 className="text-pm-sm font-semibold text-content-primary truncate">{title}</h3>
-          <button onClick={onClose} className="p-1 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary" aria-label="Închide"><XIcon className="h-4 w-4" /></button>
+          <button onClick={onClose} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-content-muted transition-smooth duration-150 hover:bg-surface-tertiary hover:text-content-primary active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]" aria-label="Închide"><XIcon className="h-4 w-4" /></button>
         </header>
         <div className="p-4 space-y-3">{children}</div>
         <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-line/70 bg-surface-primary px-4 py-3">{footer}</div>

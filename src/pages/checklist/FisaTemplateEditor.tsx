@@ -409,7 +409,7 @@ export default function FisaTemplateEditor({ template, onClose, onSaved }: Props
           </button>
           <button onClick={save} disabled={saving || !name.trim() || !weightsValid}
             title={!weightsValid ? 'Ponderile coloanelor trebuie să însumeze 100%' : undefined}
-            className="h-9 px-5 rounded bg-accent text-pm-sm font-semibold text-surface-primary hover:bg-accent/90 disabled:opacity-50 flex items-center gap-1.5">
+            className="h-9 px-5 rounded bg-accent text-pm-sm font-semibold text-[var(--color-on-accent)] hover:bg-accent/90 disabled:opacity-50 flex items-center gap-1.5">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {isEdit ? 'Salvează' : 'Creează template'}
           </button>

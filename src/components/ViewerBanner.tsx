@@ -11,9 +11,9 @@ export function ViewerBanner({ page }: { page: AppPage }) {
   if (!isViewer) return null;
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2 bg-status-amber/10 border-b border-status-amber/20 text-status-amber text-xs">
-      <Eye className="h-3.5 w-3.5" />
-      <span>Mod vizualizare — nu poti edita pe aceasta pagina</span>
+    <div className="flex items-center gap-1.5 px-3 py-0.5 border-b border-status-amber/15 text-status-amber/60 text-[11px]">
+      <Eye className="h-3 w-3" />
+      <span>Mod vizualizare</span>
     </div>
   );
 }

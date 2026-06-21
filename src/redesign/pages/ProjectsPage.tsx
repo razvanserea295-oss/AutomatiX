@@ -25,7 +25,7 @@
 
 import React, { lazy, Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
-import { Search, Edit2, Trash2, FolderKanban, MessageSquare, Plus, CheckCircle2, Clock, Circle, Network, ChevronDown, History, Loader2, FileText, X as XIcon, Download as DownloadIcon, Eye, Link2, Copy, Trash, DollarSign, PanelLeft } from 'lucide-react';
+import { Search, Edit2, Trash2, FolderKanban, MessageSquare, Plus, CheckCircle2, Clock, Circle, Network, ChevronDown, History, Loader2, FileText, X as XIcon, Download as DownloadIcon, Eye, Link2, Copy, Trash, PanelLeft } from 'lucide-react';
 import { apiCommand } from '@/api/commands';
 import { ViewerBanner } from '@/components/ViewerBanner';
 import { useViewerMode } from '@/hooks/useViewerMode';
@@ -50,7 +50,6 @@ import ProjectsEnhancements from '@/pages/projects/ProjectsEnhancements';
 
 import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import StatusBadge from '@/redesign/ui/StatusBadge';
@@ -143,20 +142,8 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
 
   const loading = projectsLoading || clientsLoading;
 
-  
-  const projStats = useMemo(() => {
-    const active = projects.filter(p => p.status !== 'finalizat' && p.status !== 'anulat');
-    const value = active.reduce((s, p) => s + ((p as { estimated_value?: number }).estimated_value ?? p.budget ?? 0), 0);
-    return {
-      total: projects.length,
-      active: active.length,
-      done: projects.filter(p => p.status === 'finalizat').length,
-      value,
-    };
-  }, [projects]);
 
-  
-  
+
   useEffect(() => {
     void fetchProjects();
     void fetchClients();
@@ -437,7 +424,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
         <ViewerBanner page="projects" />
 
         {}
-        <header className="enter-up shrink-0 flex flex-col gap-4 pb-3.5 border-b border-line/60 xl:flex-row xl:items-center xl:justify-between" style={{ animationDelay: '0ms' }}>
+        <header className="enter-up shrink-0 flex flex-col gap-4 pb-4 border-b border-line/60 xl:flex-row xl:items-center xl:justify-between" style={{ animationDelay: '0ms' }}>
           <div className="flex items-center gap-4 min-w-0">
             <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
               <FolderKanban className="h-5 w-5" />
@@ -463,38 +450,13 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
         </header>
 
         {}
-        {/* Valoare activă = hero (the one figure not already visible in the list).
-            The three counts stay, but secondary — gives the strip a focal point
-            and stops four equally-loud giant numbers competing. */}
-        <div className="enter-up shrink-0 grid grid-cols-2 lg:grid-cols-5 gap-4" style={{ animationDelay: '80ms' }}>
-          <KpiCard
-            vtName={vtName('proj-kpi', 'total')}
-            label="Total proiecte" icon={FolderKanban} value={projStats.total}
-          />
-          <KpiCard
-            vtName={vtName('proj-kpi', 'active')}
-            label="În execuție" icon={Clock} value={projStats.active} iconColor="text-status-amber"
-          />
-          <KpiCard
-            vtName={vtName('proj-kpi', 'done')}
-            label="Finalizate" icon={CheckCircle2} value={projStats.done} iconColor="text-status-green"
-          />
-          <KpiCard
-            hero
-            className="col-span-2 lg:col-span-2"
-            vtName={vtName('proj-kpi', 'value')}
-            label="Valoare activă" icon={DollarSign} value={money(projStats.value, 'RON')}
-          />
-        </div>
-
-        {}
         <div className="enter-up flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-5" style={{ animationDelay: '160ms' }}>
 
           {}
           {splitView ? (
             <Card padding="none" className="xl:col-span-4 min-w-0 min-h-0 flex flex-col overflow-hidden">
               <div className="shrink-0 px-4 pt-4 pb-3 border-b border-line/70">
-                <div className="flex items-center justify-between gap-2 mb-2.5">
+                <div className="flex items-center justify-between gap-2 mb-3">
                   <h2 className="text-pm-eyebrow font-semibold uppercase tracking-wide text-content-muted">Proiecte</h2>
                   <span className="text-pm-2xs text-content-muted tabular-nums px-1.5 py-0.5 rounded-md bg-surface-tertiary">
                     {filtered.length}
@@ -535,7 +497,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                         aria-label={`Selectează proiectul ${project.name}`}
                         style={{ viewTransitionName: isSelected ? vtName('project', project.id) : undefined }}
                         className={cn(
-                          'group relative w-full cursor-pointer border-b border-line/60 px-4 py-2.5 text-left transition-all duration-150',
+                          'group relative w-full cursor-pointer border-b border-line/60 px-4 py-3 text-left transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]',
                           isSelected
                             ? 'bg-accent/8 vt-morph'
                             : 'hover:bg-surface-tertiary/40',
@@ -545,7 +507,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                         <span
                           aria-hidden
                           className={cn(
-                            'absolute left-0 top-0 bottom-0 w-[3px] transition-all duration-200',
+                            'absolute left-0 top-0 bottom-0 w-[3px] transition-colors duration-200',
                             isSelected
                               ? 'bg-accent'
                               : 'bg-transparent group-hover:bg-content-muted/30',
@@ -594,7 +556,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
               onClick={() => setSplitView(true)}
               aria-label="Arata lista proiecte"
               title="Arata lista proiecte"
-              className="xl:col-span-1 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-surface-primary text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-colors self-start"
+              className="xl:col-span-1 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-surface-primary text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] self-start"
             >
               <PanelLeft className="h-4 w-4" />
             </button>
@@ -640,9 +602,9 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                             toast.success('Proiect marcat blocat');
                           }}
                           title="Marchează proiect blocat"
-                          className="h-8 px-2.5 text-pm-xs font-semibold rounded-lg border border-line text-content-secondary hover:bg-status-red/10 hover:text-status-red hover:border-status-red/40 transition-colors"
+                          className="h-8 px-3 text-pm-xs font-semibold rounded-lg border border-status-red/40 text-status-red hover:bg-status-red/10 transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                         >
-                          Blocheaza
+                          Blochează
                         </button>
                       )}
                       {selected.status !== 'anulat' && (
@@ -654,7 +616,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                             toast.success('Proiect anulat');
                           }}
                           title="Anulează proiect"
-                          className="h-8 px-2.5 text-pm-xs font-semibold rounded-lg border border-line text-content-secondary hover:bg-status-red/10 hover:text-status-red hover:border-status-red/40 transition-colors"
+                          className="h-8 px-3 text-pm-xs font-semibold rounded-lg border border-line text-content-secondary hover:bg-status-red/10 hover:text-status-red hover:border-status-red/40 transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                         >
                           Anulează
                         </button>
@@ -667,7 +629,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                             toast.success('Proiect reactivat');
                           }}
                           title="Reia proiect (revine la status derivat din etapa)"
-                          className="h-8 px-2.5 text-pm-xs font-semibold rounded-lg border border-status-green/40 text-status-green hover:bg-status-green/10 transition-colors"
+                          className="h-8 px-3 text-pm-xs font-semibold rounded-lg border border-status-green/40 text-status-green hover:bg-status-green/10 transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                         >
                           Reia
                         </button>
@@ -725,7 +687,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                       </div>
                       <div>
                         <p className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">Prioritate</p>
-                        <p className="text-pm-sm text-content-primary font-medium mt-0.5">{selected.priority || '—'}</p>
+                        <p className="text-pm-sm text-content-primary font-medium mt-0.5">{({ low: 'Scazuta', medium: 'Medie', high: 'Ridicata' } as Record<string, string>)[selected.priority ?? ''] ?? (selected.priority || '—')}</p>
                       </div>
                       <div className="col-span-2">
                         <p className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">Descriere</p>
@@ -787,7 +749,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                         onChange={(e) => setRevisionNote(e.target.value)}
                         placeholder="Nota revizuire (optional)..."
                         aria-label="Notă revizuire stadiu"
-                        className="flex-1 h-9 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-xs text-content-primary placeholder:text-content-muted focus:outline-none focus:border-accent/50"
+                        className="flex-1 h-9 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-xs text-content-primary placeholder:text-content-muted transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]"
                       />
                       <Button size="sm" onClick={addStageRevision}>
                         <Plus className="h-3.5 w-3.5" /> Adaugă
@@ -846,7 +808,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                               <button
                                 type="button"
                                 onClick={() => void downloadOneContractAttachment(d.id)}
-                                className="shrink-0 px-2 py-1 rounded-lg text-pm-xs text-accent hover:bg-accent-muted inline-flex items-center gap-1"
+                                className="shrink-0 px-2 py-1 rounded-lg text-pm-xs text-accent hover:bg-accent-muted inline-flex items-center gap-1 transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                                 title="Descarcă fișierul contractului"
                               >
                                 <DownloadIcon className="h-3.5 w-3.5" /> Descarcă
@@ -855,7 +817,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                               <button
                                 type="button"
                                 onClick={() => setPreviewDoc(d)}
-                                className="shrink-0 px-2 py-1 rounded-lg text-pm-xs text-accent hover:bg-accent-muted inline-flex items-center gap-1"
+                                className="shrink-0 px-2 py-1 rounded-lg text-pm-xs text-accent hover:bg-accent-muted inline-flex items-center gap-1 transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
                                 title="Vizualizează în aplicație"
                               >
                                 <Eye className="h-3.5 w-3.5" /> Vizualizează
@@ -889,7 +851,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                           placeholder="Scrie un comentariu… (Enter trimite · Shift+Enter linie nouă · @menționează cu numele de utilizator)"
                           rows={2}
                           aria-label="Comentariu nou"
-                          className="flex-1 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-xs text-content-primary placeholder:text-content-muted/70 focus:outline-none focus:border-accent/50 resize-none"
+                          className="flex-1 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-xs text-content-primary placeholder:text-content-muted/70 transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)] resize-none"
                         />
                         <Button size="sm" onClick={() => void postComment()} disabled={postingComment || !newComment.trim()}>
                           {postingComment ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
@@ -907,7 +869,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                     ) : (
                       <div>
                         {comments.map((c) => (
-                          <div key={c.id} className="border-b border-line/40 pb-2.5 last:border-b-0 last:pb-0 py-2.5 first:pt-0">
+                          <div key={c.id} className="border-b border-line/40 py-2 last:border-b-0 last:pb-0 first:pt-0">
                             <div className="flex items-center justify-between">
                               <span className="text-pm-xs font-semibold text-content-primary">{c.user_name}</span>
                               <span className="text-pm-2xs text-content-muted tabular-nums">{formatDateRo(c.created_at)}</span>
@@ -990,11 +952,11 @@ function DocumentPreviewModal({
 
   return (
     <div
-      className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/70 p-4 anim-fade-in"
       onClick={onClose}
     >
       <div
-        className="relative flex h-[85vh] w-[90vw] max-w-5xl flex-col overflow-hidden rounded-2xl border border-line bg-surface-primary shadow-xl"
+        className="relative flex h-[85vh] w-[90vw] max-w-5xl flex-col overflow-hidden rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)] anim-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between gap-3 border-b border-line bg-surface-secondary px-4 py-2.5">
@@ -1006,7 +968,7 @@ function DocumentPreviewModal({
             href={url}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-pm-xs text-content-muted hover:bg-surface-tertiary hover:text-content-primary"
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-pm-xs text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
             title="Descarcă"
           >
             <DownloadIcon className="h-3.5 w-3.5" /> Descarcă
@@ -1015,7 +977,7 @@ function DocumentPreviewModal({
             type="button"
             onClick={onClose}
             aria-label="Închide"
-            className="p-1 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary"
+            className="p-1 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
           >
             <XIcon className="h-4 w-4" />
           </button>
@@ -1043,7 +1005,7 @@ function DocumentPreviewModal({
                 href={url}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 text-pm-xs font-medium text-surface-primary hover:opacity-90"
+                className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-accent px-3 py-1.5 text-pm-xs font-medium text-[var(--color-on-accent)] hover:opacity-90 transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
               >
                 <DownloadIcon className="h-3.5 w-3.5" /> Descarcă fișierul
               </a>
@@ -1135,7 +1097,7 @@ export function PiecesTrackingTable({ pieces }: { pieces: ProjectPiece[] }) {
                   <div className="flex items-center gap-1.5">
                     <div className="w-16 h-1.5 rounded-full bg-line overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-status-green transition-all anim-bar-grow"
+                        className="h-full rounded-full bg-status-green transition-colors anim-bar-grow"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -1217,7 +1179,7 @@ export function PiecesTrackingTable({ pieces }: { pieces: ProjectPiece[] }) {
           <div className="mt-3 flex items-center gap-4 text-pm-xs px-2">
             <div className="flex items-center gap-1.5">
               <div className="w-24 h-2 rounded-full bg-line overflow-hidden">
-                <div className="h-full rounded-full bg-status-green transition-all anim-bar-grow" style={{ width: `${overallPct}%` }} />
+                <div className="h-full rounded-full bg-status-green transition-colors anim-bar-grow" style={{ width: `${overallPct}%` }} />
               </div>
               <span className="font-semibold text-content-primary tabular-nums">{overallPct}%</span>
             </div>
@@ -1291,11 +1253,11 @@ function PortalTokensButton({ projectId }: { projectId: number }) {
       </IconButton>
 
       {open && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-          <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-2xl">
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 anim-fade-in">
+          <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-2xl anim-scale-in">
             <div className="border-b border-line/70 p-4 flex items-center justify-between">
               <h3 className="text-pm-sm font-semibold text-content-primary">Portal client — link-uri proiect</h3>
-              <button onClick={() => setOpen(false)} className="p-1 rounded-lg hover:bg-surface-tertiary"><XIcon className="h-4 w-4" /></button>
+              <button onClick={() => setOpen(false)} aria-label="Închide" className="p-1 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><XIcon className="h-4 w-4" /></button>
             </div>
             <div className="p-4 space-y-3">
               <p className="text-pm-xs text-content-muted">
@@ -1324,24 +1286,24 @@ function PortalTokensButton({ projectId }: { projectId: number }) {
                         </div>
                         <div className="flex gap-1 shrink-0">
                           <button onClick={() => copyLink(t.token)} title="Copiază link"
-                            className="p-1 rounded-lg hover:bg-surface-tertiary text-content-muted hover:text-accent">
+                            className="p-1 rounded-lg hover:bg-surface-tertiary text-content-muted hover:text-accent transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                             <Copy className="h-3.5 w-3.5" />
                           </button>
                           {!t.revoked && (
                             <button onClick={() => revoke(t.id)} title="Revocă"
-                              className="p-1 rounded-lg hover:bg-surface-tertiary text-content-muted hover:text-status-amber">
+                              className="p-1 rounded-lg hover:bg-surface-tertiary text-content-muted hover:text-status-amber transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                               <XIcon className="h-3.5 w-3.5" />
                             </button>
                           )}
                           <button onClick={() => remove(t.id)} title="Șterge"
-                            className="p-1 rounded-lg hover:bg-surface-tertiary text-content-muted hover:text-status-red">
+                            className="p-1 rounded-lg hover:bg-surface-tertiary text-content-muted hover:text-status-red transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                             <Trash className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </div>
                       <input readOnly value={portalUrl(t.token)}
                         onFocus={e => e.currentTarget.select()}
-                        className="w-full text-pm-2xs font-mono px-2 py-1 rounded-lg border border-line bg-surface-primary text-content-secondary" />
+                        className="w-full text-pm-2xs font-mono px-2 py-1 rounded-lg border border-line bg-surface-primary text-content-secondary transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
                     </div>
                   ))}
                 </div>

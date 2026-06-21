@@ -132,7 +132,7 @@ export default function KanbanEnhancements({ stages, cards, scope, currentFilter
                 <button
                   key={opt}
                   onClick={() => setSettings({ ...settings, swimlane: opt })}
-                  className={`px-2.5 py-1 rounded text-pm-2xs ${settings.swimlane === opt ? 'bg-accent text-surface-primary' : 'bg-surface-tertiary text-content-secondary hover:bg-line'}`}
+                  className={`px-2.5 py-1 rounded text-pm-2xs ${settings.swimlane === opt ? 'bg-accent text-[var(--color-on-accent)]' : 'bg-surface-tertiary text-content-secondary hover:bg-line'}`}
                 >
                   {opt === 'none' ? 'Niciuna' : opt === 'priority' ? 'Prioritate' : opt === 'client' ? 'Client' : 'Responsabil'}
                 </button>

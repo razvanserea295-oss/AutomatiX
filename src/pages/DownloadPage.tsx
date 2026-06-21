@@ -58,7 +58,7 @@ export default function DownloadPage() {
 
       <div className="relative z-10 mx-auto flex min-h-screen max-w-3xl flex-col items-center px-5 py-14">
         {}
-        <div className="mb-10 flex flex-col items-center text-center">
+        <div className="mb-10 flex flex-col items-center text-center anim-slide-up">
           <span className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-tertiary text-content-primary ring-1 ring-line/30">
             <GearLogo size={32} />
           </span>
@@ -71,12 +71,12 @@ export default function DownloadPage() {
         </div>
 
         {}
-        <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-line bg-surface-primary p-7 shadow-soft-lg">
+        <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-line bg-surface-primary p-6 shadow-soft-lg anim-slide-up">
 
           {os !== 'windows' && os !== 'other' && (
-            <div className="mb-5 flex items-start gap-2.5 rounded-lg border-l-2 border-status-amber bg-status-amber/8 px-3.5 py-2.5">
-              {os === 'mac' ? <Apple className="mt-0.5 h-4 w-4 text-status-amber" /> : <Terminal className="mt-0.5 h-4 w-4 text-status-amber" />}
-              <p className="text-pm-xs text-content-secondary">
+            <div className="mb-6 flex items-start gap-3 rounded-lg border-l-2 border-status-amber bg-status-amber/8 px-4 py-3 anim-fade-slide-in">
+              {os === 'mac' ? <Apple className="mt-0.5 h-4 w-4 shrink-0 text-status-amber" /> : <Terminal className="mt-0.5 h-4 w-4 shrink-0 text-status-amber" />}
+              <p className="min-w-0 text-pm-xs text-content-secondary">
                 Ai detectat <strong>{os === 'mac' ? 'macOS' : 'Linux'}</strong>. Versiunea pentru sistemul tău este în
                 curs de pregătire — momentan e disponibilă doar versiunea pentru Windows.
               </p>
@@ -87,33 +87,33 @@ export default function DownloadPage() {
           <div className="flex flex-col items-center gap-3">
             {loading ? (
               <div className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-surface-tertiary/60 text-content-muted">
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-5 w-5 shrink-0 animate-spin" />
                 <span className="text-pm-sm">Se verifică versiunea…</span>
               </div>
             ) : downloadUrl ? (
               <a
                 href={downloadUrl}
-                className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-accent text-pm-lg font-semibold text-white shadow-[var(--elevation-2)] transition duration-200 hover:bg-accent/95 active:scale-[0.99]"
+                className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-accent text-pm-lg font-semibold text-[var(--color-on-accent)] shadow-[var(--elevation-2)] transition-smooth duration-150 hover:bg-accent/95 hover:shadow-[var(--elevation-3)] active:scale-[0.99] focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
               >
-                <Download className="h-5 w-5" />
-                <span>Descarcă pentru Windows (.exe)</span>
+                <Download className="h-5 w-5 shrink-0" />
+                <span className="truncate">Descarcă pentru Windows (.exe)</span>
               </a>
             ) : (
               <div className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface-tertiary/40 text-content-muted">
-                <AlertCircle className="h-5 w-5" />
+                <AlertCircle className="h-5 w-5 shrink-0" />
                 <span className="text-pm-sm">Installer indisponibil momentan. Revino curând.</span>
               </div>
             )}
 
             <div className="flex items-center gap-4 text-pm-xs text-content-muted">
-              <span className="inline-flex items-center gap-1.5"><Monitor className="h-3.5 w-3.5" /> Windows 10/11 · 64-bit</span>
+              <span className="inline-flex items-center gap-1.5"><Monitor className="h-3.5 w-3.5 shrink-0" /> Windows 10/11 · 64-bit</span>
               <span className="tabular-nums">v{version}</span>
               <span className="tabular-nums">{formatSize(info?.size ?? null)}</span>
             </div>
           </div>
 
           {}
-          <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Req icon={<Monitor className="h-4 w-4" />} title="Sistem" value="Windows 10 / 11 (64-bit)" />
             <Req icon={<Cpu className="h-4 w-4" />} title="Procesor" value="x64, 2 nuclee+" />
             <Req icon={<HardDrive className="h-4 w-4" />} title="Spațiu" value="~500 MB liber" />
@@ -142,22 +142,22 @@ export default function DownloadPage() {
 
 function Req({ icon, title, value }: { icon: React.ReactNode; title: string; value: string }) {
   return (
-    <div className="rounded-xl border border-line bg-surface-secondary/40 px-3.5 py-3 backdrop-blur-sm">
-      <div className="mb-1 flex items-center gap-1.5 text-content-muted">{icon}<span className="text-pm-2xs font-semibold uppercase tracking-wide">{title}</span></div>
-      <div className="text-pm-sm text-content-primary">{value}</div>
+    <div className="min-w-0 rounded-xl border border-line bg-surface-secondary/40 px-4 py-3 backdrop-blur-sm">
+      <div className="mb-1 flex items-center gap-1.5 text-content-muted"><span className="shrink-0">{icon}</span><span className="truncate text-pm-2xs font-semibold uppercase tracking-wide">{title}</span></div>
+      <div className="truncate text-pm-sm text-content-primary">{value}</div>
     </div>
   );
 }
 
 function Step({ n, title, text }: { n: number; title: string; text: string }) {
   return (
-    <li className="flex gap-3.5 rounded-xl border border-line bg-surface-primary/55 p-4 backdrop-blur-sm">
+    <li className="flex gap-3 rounded-xl border border-line bg-surface-primary/55 p-4 backdrop-blur-sm transition-smooth duration-150 hover:border-line hover:bg-surface-primary/75">
       <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/15 text-pm-sm font-bold text-accent">{n}</span>
-      <div>
+      <div className="min-w-0">
         <div className="text-pm-sm font-semibold text-content-primary">{title}</div>
         <div className="mt-0.5 flex items-start gap-1.5 text-pm-xs text-content-muted">
           <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-status-green/70" />
-          <span>{text}</span>
+          <span className="min-w-0">{text}</span>
         </div>
       </div>
     </li>

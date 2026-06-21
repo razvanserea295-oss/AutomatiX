@@ -20,7 +20,7 @@ const padding: Record<Padding, string> = {
 
 const densityScale: Record<Density, Record<Padding, string>> = {
   comfortable: padding,
-  compact: { none: '', sm: 'p-2', md: 'p-3.5', lg: 'p-5' },
+  compact: { none: '', sm: 'p-2', md: 'p-3', lg: 'p-5' },
 };
 
 const tone: Record<Tone, string> = {
@@ -56,7 +56,7 @@ export function Card({
   const padCls = densityScale[d][p];
   return (
     <div
-      className={`rounded-lg ${tone[t]} ${padCls} ${interactive ? 'card-interactive' : ''} ${vtName ? 'vt-morph' : ''} ${className}`}
+      className={`pm-card ${p !== 'none' ? 'pm-card-pad' : ''} rounded-2xl transition-smooth ${tone[t]} ${padCls} ${interactive ? 'card-interactive active:scale-[0.99]' : ''} ${vtName ? 'vt-morph' : ''} ${className}`}
       style={vtName ? ({ viewTransitionName: vtName, ...style } as CSSProperties) : style}
       {...rest}
     />

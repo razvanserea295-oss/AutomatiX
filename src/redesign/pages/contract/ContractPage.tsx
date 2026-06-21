@@ -22,7 +22,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
-import { FileText, Plus, Save, History, Edit2, Loader2, ScrollText, Download, Upload, Paperclip, Trash2, CheckCircle2, DollarSign } from 'lucide-react';
+import { FileText, Plus, Save, History, Edit2, Loader2, ScrollText, Download, Upload, Paperclip, Trash2 } from 'lucide-react';
 import { downloadContractAttachments, downloadOneContractAttachment } from '@/lib/downloadPdf';
 import { cn } from '@/lib/cn';
 import { apiCommand } from '@/api/commands';
@@ -36,7 +36,6 @@ import { useMoney } from '@/store/settingsStore';
 
 import Page from '@/redesign/ui/Page';
 import Card, { CardBody } from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import FilterBar from '@/redesign/ui/FilterBar';
@@ -246,17 +245,6 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
     void useDashboardStore.getState().invalidate();
   };
 
-  const contractStats = {
-    total: contracts.length,
-    active: contracts.filter(c => c.status === 'active').length,
-    amended: contracts.filter(c => c.status === 'amended').length,
-    value: contracts.reduce((s, c) => s + (c.sale_price || 0), 0),
-  };
-
-  
-  
-  
-  
   const visibleContracts = useMemo(() => {
     const q = search.trim().toLowerCase();
     return contracts.filter(c => {
@@ -312,14 +300,6 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
         </HeroHeader>
 
         {}
-        <div className="shrink-0 grid grid-cols-2 md:grid-cols-4 gap-4 enter-up" style={{ animationDelay: '80ms' }}>
-          <KpiCard label="Total contracte" value={contractStats.total} icon={ScrollText} iconColor="text-accent" />
-          <KpiCard label="Active" value={contractStats.active} icon={CheckCircle2} iconColor="text-status-green" />
-          <KpiCard label="Amendate" value={contractStats.amended} icon={FileText} iconColor="text-status-amber" />
-          <KpiCard label="Valoare totală" value={money(contractStats.value, 'EUR')} icon={DollarSign} iconColor="text-accent" />
-        </div>
-
-        {}
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 enter-up" style={{ animationDelay: '160ms' }}>
 
           {}
@@ -348,7 +328,8 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
                   onClick={() => selectContract(c)}
                   style={{ viewTransitionName: selected?.id === c.id ? undefined : vtName('contract', c.id) }}
                   className={cn(
-                    'w-full text-left px-4 py-3 border-b border-line/60 hover:bg-surface-tertiary/30 transition-colors border-l-2',
+                    'w-full text-left px-4 py-3 border-b border-line/60 hover:bg-surface-tertiary/30 transition-smooth duration-150 border-l-2',
+                    'focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-[0.99]',
                     selected?.id === c.id
                       ? 'border-l-accent bg-accent/5'
                       : statusBorderClass(contractStatus(c.status).tone),
@@ -384,25 +365,25 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
             ) : showCreate ? (
               
               <Card>
-                <div className="flex items-center gap-2.5 px-5 py-4 border-b border-line/70">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-accent-muted text-accent">
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-line/70">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-accent-muted text-accent shrink-0">
                     <Plus className="h-4 w-4" />
                   </span>
-                  <h2 className="text-pm-md font-semibold text-content-primary flex-1">Contract nou</h2>
+                  <h2 className="text-pm-md font-semibold text-content-primary flex-1 min-w-0 truncate">Contract nou</h2>
                 </div>
                 <CardBody>
-                  <form onSubmit={handleCreate} className="space-y-3.5 max-w-2xl">
+                  <form onSubmit={handleCreate} className="space-y-4 max-w-2xl">
                     <div>
                       <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Titlu *</label>
                       <input name="title" required
-                        className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary placeholder:text-content-muted focus:outline-none focus:ring-1 focus:ring-accent/60"
+                        className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary placeholder:text-content-muted transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]"
                         placeholder="Titlu contract" />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Proiect *</label>
                         <select name="project_id" required
-                          className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60">
+                          className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]">
                           <option value="">Selectează...</option>
                           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
@@ -410,7 +391,7 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
                       <div>
                         <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Client *</label>
                         <select name="client_id" required
-                          className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60">
+                          className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]">
                           <option value="">Selectează...</option>
                           {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
@@ -419,19 +400,19 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
                     <div>
                       <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Produs livrat</label>
                       <input name="delivered_product"
-                        className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary placeholder:text-content-muted focus:outline-none focus:ring-1 focus:ring-accent/60"
+                        className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary placeholder:text-content-muted transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]"
                         placeholder="ex: Statie betoane automatiX M60" />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Pret vanzare (EUR)</label>
                         <input name="sale_price" type="number" step="0.01"
-                          className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary tabular-nums focus:outline-none focus:ring-1 focus:ring-accent/60" />
+                          className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary tabular-nums transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]" />
                       </div>
                       <div>
                         <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Termen executie</label>
                         <input name="execution_term"
-                          className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary placeholder:text-content-muted focus:outline-none focus:ring-1 focus:ring-accent/60"
+                          className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary placeholder:text-content-muted transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]"
                           placeholder="ex: 90 zile" />
                       </div>
                     </div>
@@ -439,7 +420,7 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
                     <div>
                       <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Contract (fișier) — orice format</label>
                       <input name="contract_files" type="file" multiple
-                        className="w-full text-pm-xs text-content-secondary file:mr-3 file:py-1.5 file:px-3 file:border-0 file:rounded-lg file:bg-accent file:text-[var(--color-on-accent)] file:font-semibold file:cursor-pointer hover:file:brightness-105 rounded-xl border border-line bg-surface-primary px-3 py-2" />
+                        className="w-full text-pm-xs text-content-secondary file:mr-3 file:py-1.5 file:px-3 file:border-0 file:rounded-lg file:bg-accent file:text-[var(--color-on-accent)] file:font-semibold file:cursor-pointer file:transition file:duration-150 hover:file:brightness-105 rounded-xl border border-line bg-surface-primary px-3 py-2 transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]" />
                       <p className="text-pm-2xs text-content-muted mt-1">Poți încărca unul sau mai multe fișiere (PDF, scan, DOCX etc.), max 35 MB/fișier. Le poți adăuga și după creare.</p>
                     </div>
                     <div className="flex gap-2 pt-2">
@@ -514,7 +495,7 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
 }
                             {editing ? (
                               <input key="edit" value={f.value || ''} onChange={e => setSelected({...selected, [f.key]: f.key === 'sale_price' ? Number(e.target.value) : e.target.value} as Contract)}
-                                className="enter-fade w-full rounded-lg border border-line bg-surface-primary px-2 py-1 text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60" />
+                                className="enter-fade w-full rounded-lg border border-line bg-surface-primary px-2 py-1 text-pm-xs text-content-primary transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]" />
                             ) : (
                               <p key="read" className={`enter-fade text-pm-xs text-content-primary ${f.key === 'sale_price' ? 'tabular-nums' : ''}`}>{f.value || '—'}</p>
                             )}
@@ -524,7 +505,7 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
                           <div className="enter-fade rounded-xl border border-line/70 bg-surface-secondary/40 p-3">
                             <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Status</label>
                             <select value={selected.status} onChange={e => setSelected({...selected, status: e.target.value})}
-                              className="w-full rounded-lg border border-line bg-surface-primary px-2 py-1 text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60">
+                              className="w-full rounded-lg border border-line bg-surface-primary px-2 py-1 text-pm-xs text-content-primary transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]">
                               {CONTRACT_STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                             </select>
                           </div>
@@ -537,14 +518,15 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
 
 }
                   <Card>
-                    <div className="flex items-center gap-2.5 px-5 py-4 border-b border-line/70">
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-accent-muted text-accent">
+                    <div className="flex items-center gap-3 px-5 py-4 border-b border-line/70">
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-accent-muted text-accent shrink-0">
                         <Paperclip className="h-4 w-4" />
                       </span>
-                      <h2 className="text-pm-md font-semibold text-content-primary flex-1">Contract încărcat</h2>
+                      <h2 className="text-pm-md font-semibold text-content-primary flex-1 min-w-0 truncate">Contract încărcat</h2>
                       <label className={cn(
-                        'inline-flex items-center gap-1 text-pm-2xs font-semibold cursor-pointer',
-                        uploading ? 'text-content-muted cursor-not-allowed' : 'text-accent hover:underline',
+                        'inline-flex items-center gap-1 shrink-0 rounded-lg px-1.5 py-1 -mr-1.5 text-pm-2xs font-semibold cursor-pointer transition-smooth duration-150',
+                        'focus-within:outline-none focus-within:shadow-[var(--ring-soft)] active:scale-[0.98]',
+                        uploading ? 'text-content-muted cursor-not-allowed' : 'text-accent hover:bg-accent/8',
                       )}>
                         {uploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
                         {uploading ? 'Se încarcă...' : 'Încarcă fișier'}

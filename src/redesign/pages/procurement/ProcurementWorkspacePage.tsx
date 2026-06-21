@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Pencil, Trash2, Loader2, Download, Printer, Plus, Package, Truck, Clock, CheckCircle2, X as XIcon } from 'lucide-react';
+import { Pencil, Trash2, Loader2, Download, Printer, Plus, Package, Truck, Clock, X as XIcon } from 'lucide-react';
 import { SupplierToolsBar } from '@/pages/procurement/ProcurementEnhancements';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
@@ -14,7 +14,6 @@ import type { StatusTone } from '@/lib/statusTokens';
 
 import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import StatusBadge from '@/redesign/ui/StatusBadge';
@@ -332,7 +331,8 @@ function SuppliersTab() {
                       <span className="truncate" title={s.name}>{s.name}</span>
                       {s.website && (
                         <a href={s.website} target="_blank" rel="noreferrer"
-                           className="text-pm-2xs text-accent hover:underline shrink-0">↗</a>
+                           aria-label={`Deschide website ${s.name}`}
+                           className="inline-flex items-center justify-center text-pm-2xs text-accent shrink-0 rounded-md transition-smooth duration-150 hover:underline hover:text-accent focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">↗</a>
                       )}
                     </div>
                     {s.notes && (
@@ -556,7 +556,7 @@ function PurchaseOrderCreateModal({
     }
   };
 
-  const inputCls = 'w-full h-10 rounded-xl border border-line bg-surface-primary px-3.5 text-pm-sm text-content-primary placeholder:text-content-muted/70 transition-all duration-150 focus-visible:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]';
+  const inputCls = 'w-full h-10 rounded-xl border border-line bg-surface-primary px-3 text-pm-sm text-content-primary placeholder:text-content-muted/70 transition-smooth duration-150 focus-visible:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]';
   const labelCls = 'text-pm-xs font-semibold uppercase tracking-wider text-content-secondary mb-1.5 block';
 
   return (
@@ -567,7 +567,7 @@ function PurchaseOrderCreateModal({
           <IconButton onClick={onClose} aria-label="Închide"><XIcon aria-hidden /></IconButton>
         </div>
         <div className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelCls}>Furnizor *</label>
               <select value={supplierId ?? ''} onChange={e => setSupplierId(e.target.value ? Number(e.target.value) : null)}
@@ -593,7 +593,7 @@ function PurchaseOrderCreateModal({
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-pm-xs font-semibold uppercase tracking-wider text-content-secondary">Articole *</label>
-              <button type="button" onClick={addLine} className="text-pm-xs font-semibold text-accent hover:underline">+ Adaugă linie</button>
+              <button type="button" onClick={addLine} className="inline-flex items-center rounded-md px-1 -mx-1 text-pm-xs font-semibold text-accent transition-smooth duration-150 hover:underline active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">+ Adaugă linie</button>
             </div>
             <div className="space-y-2">
               {lines.map((l, i) => (
@@ -750,7 +750,7 @@ export function ReceptionsTab() {
                 key={o.id}
                 type="button"
                 onClick={() => loadPODetail(o.id)}
-                className={`w-full text-left px-4 py-2.5 border-b border-line hover:bg-surface-tertiary/30 transition-colors ${
+                className={`w-full text-left px-4 py-2.5 border-b border-line transition-smooth duration-150 hover:bg-surface-tertiary/30 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                   selectedPO?.id === o.id ? 'border-l-2 border-l-accent bg-accent/5' : ''
                 }`}
               >
@@ -781,10 +781,10 @@ export function ReceptionsTab() {
           <div>
             {}
             <div className="bg-surface-secondary border-b border-line px-4 py-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-pm-sm font-semibold text-content-primary font-mono">{selectedPO.order_number}</h3>
-                  <p className="text-pm-xs text-content-muted mt-0.5">{selectedPO.supplier_name} &middot; {formatDate(selectedPO.order_date)}</p>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="text-pm-sm font-semibold text-content-primary font-mono truncate">{selectedPO.order_number}</h3>
+                  <p className="text-pm-xs text-content-muted mt-0.5 truncate">{selectedPO.supplier_name} &middot; {formatDate(selectedPO.order_date)}</p>
                 </div>
                 <StatusBadge tone={orderStatusTone(selectedPO.status)} label={selectedPO.status} size="xs" />
               </div>
@@ -896,22 +896,11 @@ export default function ProcurementWorkspacePage({ initialTab = 'furnizori' }: P
   
   
   
-  const [kpi, setKpi] = useState({ suppliers: 0, orders: 0, pending: 0, done: 0 });
   const [toolSuppliers, setToolSuppliers] = useState<{ id: number; name: string }[]>([]);
   useEffect(() => {
-    Promise.all([
-      apiCommand<Supplier[]>('get_suppliers').catch(() => [] as Supplier[]),
-      apiCommand<PurchaseOrder[]>('get_purchase_orders').catch(() => [] as PurchaseOrder[]),
-    ]).then(([s, o]) => {
-      const isOpen = (st: string) => {
-        const x = (st || '').toLowerCase();
-        return x !== 'completed' && x !== 'cancelled' && x !== 'anulata' && x !== 'anulat'
-          && x !== 'finalizata' && x !== 'livrata';
-      };
-      const pending = o.filter(x => isOpen(x.status)).length;
-      setKpi({ suppliers: s.length, orders: o.length, pending, done: o.length - pending });
-      setToolSuppliers(s.map(x => ({ id: x.id, name: x.name })));
-    }).catch(() => {  });
+    apiCommand<Supplier[]>('get_suppliers')
+      .then(s => setToolSuppliers(s.map(x => ({ id: x.id, name: x.name }))))
+      .catch(() => {  });
   }, []);
 
   return (
@@ -924,10 +913,10 @@ export default function ProcurementWorkspacePage({ initialTab = 'furnizori' }: P
 
 }
         <header
-          className="enter-up shrink-0 pb-3.5 border-b border-line/60 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+          className="enter-up shrink-0 pb-4 border-b border-line/70 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
           style={{ animationDelay: '0ms' }}
         >
-          <div className="flex items-center gap-3.5 min-w-0">
+          <div className="flex items-center gap-3 min-w-0">
             <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
               <Package className="h-5 w-5" />
             </span>
@@ -940,15 +929,6 @@ export default function ProcurementWorkspacePage({ initialTab = 'furnizori' }: P
         </header>
 
         {
-}
-        <div className="enter-up shrink-0 grid grid-cols-2 md:grid-cols-4 gap-4" style={{ animationDelay: '80ms' }}>
-          <KpiCard icon={Truck}        iconColor="text-status-blue"  label="Furnizori"    value={kpi.suppliers.toLocaleString('ro-RO')} />
-          <KpiCard icon={Package}      iconColor="text-accent"       label="Comenzi"      value={kpi.orders.toLocaleString('ro-RO')} />
-          <KpiCard icon={Clock}        iconColor="text-status-amber" label="În așteptare" value={kpi.pending.toLocaleString('ro-RO')} hint={kpi.pending > 0 ? 'comenzi deschise' : undefined} />
-          <KpiCard icon={CheckCircle2} iconColor="text-status-green" label="Finalizate"   value={kpi.done.toLocaleString('ro-RO')} />
-        </div>
-
-        {
 
 
 
@@ -959,7 +939,7 @@ export default function ProcurementWorkspacePage({ initialTab = 'furnizori' }: P
           {
 
 }
-          <aside className="enter-up lg:col-span-4 min-h-0 flex flex-col gap-5" style={{ animationDelay: '160ms' }}>
+          <aside className="enter-up lg:col-span-3 min-h-0 flex flex-col gap-5" style={{ animationDelay: '160ms' }}>
             <Card tone="default" className="flex flex-col min-h-0 overflow-hidden">
               <div className="shrink-0 flex items-center gap-2 px-5 pt-5 pb-1">
                 <Truck className="h-3.5 w-3.5 text-accent shrink-0" />
@@ -974,8 +954,8 @@ export default function ProcurementWorkspacePage({ initialTab = 'furnizori' }: P
           {
 
 }
-          <Card tone="default" className="enter-up lg:col-span-8 min-h-0 flex flex-col overflow-hidden" style={{ animationDelay: '200ms' }}>
-            <div className="shrink-0 px-5 pt-5 pb-3 border-b border-line/40">
+          <Card tone="default" className="enter-up lg:col-span-9 min-h-0 flex flex-col overflow-hidden" style={{ animationDelay: '200ms' }}>
+            <div className="shrink-0 px-5 pt-5 pb-3 border-b border-line/70">
               <AnimatedTabs
                 active={activeTab}
                 onChange={(id) => setActiveTab(id as TabId)}

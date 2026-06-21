@@ -238,10 +238,10 @@ export default function AlertsPage({ user }: AlertsPageProps) {
 
 
 }
-        <div className="enter-up shrink-0 pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
+        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
             {}
-            <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
               <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                 <Bell className="h-5 w-5" aria-hidden />
               </span>
@@ -253,7 +253,7 @@ export default function AlertsPage({ user }: AlertsPageProps) {
             </div>
 
             {}
-            <div className="flex flex-wrap items-center gap-2.5 xl:ml-auto">
+            <div className="flex flex-wrap items-center gap-2 xl:ml-auto">
               <div className="relative group">
                 <Search className={filterSearchIconCls} />
                 <input
@@ -274,7 +274,7 @@ export default function AlertsPage({ user }: AlertsPageProps) {
                   </button>
                 )}
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <button onClick={() => setSeverityFilter('')} className={filterToggleCls(severityFilter === '')}>
                   Toate
                 </button>
@@ -298,19 +298,19 @@ export default function AlertsPage({ user }: AlertsPageProps) {
         <div className="enter-up shrink-0" style={{ animationDelay: '70ms' }}>
           <Page.Kpis cols={4}>
             <button type="button" onClick={() => toggleSeverity('critical')}
-              className={`text-left rounded-2xl transition-shadow focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'critical' ? 'ring-2 ring-status-red/40' : ''}`}>
+              className={`text-left rounded-2xl transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'critical' ? 'ring-2 ring-status-red/40' : ''}`}>
               <KpiCard label="Critical"  value={counts.critical} icon={AlertTriangle} iconColor="text-status-red" />
             </button>
             <button type="button" onClick={() => toggleSeverity('warning')}
-              className={`text-left rounded-2xl transition-shadow focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'warning' ? 'ring-2 ring-status-amber/40' : ''}`}>
+              className={`text-left rounded-2xl transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'warning' ? 'ring-2 ring-status-amber/40' : ''}`}>
               <KpiCard label="Warning"   value={counts.warning} icon={AlertTriangle} iconColor="text-status-amber" />
             </button>
             <button type="button" onClick={() => toggleSeverity('info')}
-              className={`text-left rounded-2xl transition-shadow focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'info' ? 'ring-2 ring-status-blue/40' : ''}`}>
+              className={`text-left rounded-2xl transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'info' ? 'ring-2 ring-status-blue/40' : ''}`}>
               <KpiCard label="Info"      value={counts.info} icon={Info} iconColor="text-status-blue" />
             </button>
             <button type="button" onClick={() => toggleSeverity('resolved')}
-              className={`text-left rounded-2xl transition-shadow focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'resolved' ? 'ring-2 ring-status-green/40' : ''}`}>
+              className={`text-left rounded-2xl transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'resolved' ? 'ring-2 ring-status-green/40' : ''}`}>
               <KpiCard label="Rezolvate" value={counts.resolved} icon={CheckCircle} iconColor="text-status-green" />
             </button>
           </Page.Kpis>
@@ -326,7 +326,7 @@ export default function AlertsPage({ user }: AlertsPageProps) {
           {}
           <section className="xl:col-span-8 min-w-0 min-h-0 flex flex-col">
             <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 flex-1">
-              <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-line/50">
+              <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3 border-b border-line/50">
                 <span className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted">Alerte active</span>
                 <span className="text-pm-xs text-content-muted shrink-0">
                   {visibleAlerts.length} {visibleAlerts.length === 1 ? 'alertă' : 'alerte'}
@@ -373,7 +373,7 @@ export default function AlertsPage({ user }: AlertsPageProps) {
                               disabled={ackingIds.has(alert.id)}
                               onClick={() => void handleAcknowledge(alert.id)}
                               aria-label={`Confirmă alerta ${alert.title}`}
-                              className="rounded-lg border border-line/70 px-2.5 py-1 text-pm-2xs font-semibold text-content-secondary hover:bg-surface-tertiary transition-smooth active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:opacity-50"
+                              className="rounded-lg border border-line/70 px-3 py-1 text-pm-2xs font-semibold text-content-secondary hover:bg-surface-tertiary transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:opacity-50"
                             >
                               {ackingIds.has(alert.id) ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Confirmă'}
                             </button>
@@ -407,11 +407,11 @@ export default function AlertsPage({ user }: AlertsPageProps) {
                       <button
                         key={p.value}
                         onClick={() => toggleSeverity(p.value)}
-                        className={`w-full rounded-lg px-2.5 py-2 text-left transition-colors ${
+                        className={`w-full rounded-lg px-3 py-2 text-left transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                           severityFilter === p.value ? 'bg-accent/5 ring-1 ring-accent/20' : 'hover:bg-surface-tertiary/30'
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <div className="flex items-center justify-between gap-2 mb-2">
                           <span className="flex items-center gap-1.5 text-pm-sm text-content-secondary">
                             <span className={`h-1.5 w-1.5 rounded-full ${ICON_COLOR[p.value].replace('text-', 'bg-')}`} aria-hidden />
                             {p.label}

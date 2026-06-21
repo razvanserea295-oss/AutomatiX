@@ -10,19 +10,22 @@ export default {
       },
       // Promix typography scale — use these instead of arbitrary text-[10px]/[11px].
       // Pairs each size with a sensible line-height so vertical rhythm stays consistent.
+      // Values are in `rem` (1rem = 16px at the default root) so type scales with the
+      // user's browser font-size setting — a WCAG 1.4.4 ("Resize text") requirement.
+      // Comments show the px equivalent at the 16px default for reference.
       fontSize: {
-        'pm-2xs': ['10px', { lineHeight: '14px', letterSpacing: '0.02em' }],
-        'pm-xs':  ['11px', { lineHeight: '16px' }],
-        'pm-sm':  ['12px', { lineHeight: '16px' }],
-        'pm-base':['13px', { lineHeight: '18px' }],
-        'pm-md':  ['14px', { lineHeight: '20px' }],
-        'pm-lg':  ['16px', { lineHeight: '22px' }],
-        'pm-xl':  ['18px', { lineHeight: '24px' }],
-        'pm-2xl': ['22px', { lineHeight: '28px' }],
+        'pm-2xs': ['0.625rem',  { lineHeight: '0.875rem', letterSpacing: '0.02em' }], // 10/14
+        'pm-xs':  ['0.6875rem', { lineHeight: '1rem' }],                              // 11/16
+        'pm-sm':  ['0.75rem',   { lineHeight: '1rem' }],                              // 12/16
+        'pm-base':['0.8125rem', { lineHeight: '1.125rem' }],                          // 13/18
+        'pm-md':  ['0.875rem',  { lineHeight: '1.25rem' }],                           // 14/20
+        'pm-lg':  ['1rem',      { lineHeight: '1.375rem' }],                          // 16/22
+        'pm-xl':  ['1.125rem',  { lineHeight: '1.5rem' }],                            // 18/24
+        'pm-2xl': ['1.375rem',  { lineHeight: '1.75rem' }],                           // 22/28
         // Hero scale — used by empty-state heroes and large dashboard
         // counters. Tracking is tight to read as "engineered display".
-        'pm-3xl': ['32px', { lineHeight: '36px', letterSpacing: '-0.02em' }],
-        'pm-eyebrow': ['10px', { lineHeight: '14px', letterSpacing: '0.16em', fontWeight: '700' }],
+        'pm-3xl': ['2rem', { lineHeight: '2.25rem', letterSpacing: '-0.02em' }],      // 32/36
+        'pm-eyebrow': ['0.625rem', { lineHeight: '0.875rem', letterSpacing: '0.16em', fontWeight: '700' }], // 10/14
       },
       colors: {
         accent: {
@@ -68,15 +71,12 @@ export default {
           purple: 'var(--status-purple)',
         },
       },
-      spacing: {
-        '0.5': '2px',
-        '1': '4px',
-        '2': '8px',
-        '3': '12px',
-        '4': '16px',
-        '6': '24px',
-        '8': '32px',
-      },
+      // NOTE: the previous `spacing` override pinned 0.5/1/2/3/4/6/8 to px.
+      // Those values are *identical* to Tailwind's default rem scale
+      // (0.25/0.5/0.75/1/1.5/2rem …) but in px they stopped responding to the
+      // browser's root font-size. Removed so the default rem scale applies —
+      // zero visual change at the 16px default, but spacing now scales for
+      // low-vision users (WCAG 1.4.4). Re-add here only for *non-default* steps.
       // Fiori-tuned: tight, engineered radius. Smaller = more industrial,
       // matches SAP's "serious tool" aesthetic. Pill shapes still use
       // `rounded-full`. Adjusting these CASCADES through every component

@@ -26,7 +26,7 @@ export interface StatusDotProps {
 export default function StatusDot({ tone = 'neutral', pulse = false, label, className = '' }: StatusDotProps) {
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
-      <span className={`relative inline-flex h-2 w-2 rounded-full ${TONE[tone]} ring-2 ring-surface-primary shadow-[var(--elevation-1)]`}>
+      <span className={`relative inline-flex h-2 w-2 shrink-0 rounded-full ${TONE[tone]} ring-2 ring-surface-primary shadow-[var(--elevation-1)]`}>
         {pulse && (
           <span
             className={`absolute inset-0 rounded-full ${TONE[tone]} opacity-60 animate-ping motion-reduce:animate-none`}
@@ -34,7 +34,7 @@ export default function StatusDot({ tone = 'neutral', pulse = false, label, clas
           />
         )}
       </span>
-      {label && <span className="text-pm-xs font-medium text-content-secondary">{label}</span>}
+      {label && <span className="min-w-0 truncate text-pm-xs font-medium text-content-secondary anim-fade-in">{label}</span>}
     </span>
   );
 }

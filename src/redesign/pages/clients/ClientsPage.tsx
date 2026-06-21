@@ -58,8 +58,9 @@ function initials(name: string): string {
 }
 
 const inputCls =
-  'w-full h-9 rounded-lg border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary ' +
-  'placeholder:text-content-muted/70 focus:outline-none focus:border-accent/50';
+  'w-full h-9 rounded-xl border border-line/70 bg-surface-secondary/40 px-3 text-pm-sm text-content-primary ' +
+  'placeholder:text-content-muted/70 transition-smooth duration-150 hover:border-content-muted/50 ' +
+  'focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)]';
 const fieldLabelCls = 'text-pm-2xs font-bold uppercase tracking-wide text-content-muted';
 
 export default function ClientsPage({ user: _user }: { user: User | null }) {
@@ -201,7 +202,7 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
     <Page fit>
       <Page.Body fit maxWidth="wide" padding="comfortable" className="relative">
 
-        <header className="enter-up shrink-0 flex flex-col gap-4 pb-3.5 border-b border-line/60 xl:flex-row xl:items-center xl:justify-between" style={{ animationDelay: '0ms' }}>
+        <header className="enter-up shrink-0 flex flex-col gap-4 pb-4 border-b border-line/60 xl:flex-row xl:items-center xl:justify-between" style={{ animationDelay: '0ms' }}>
           <div className="flex items-center gap-4 min-w-0">
             <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
               <Users className="h-5 w-5" />
@@ -227,12 +228,12 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
         </div>
 
         {/* Master-detail */}
-        <div className="enter-up flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-5" style={{ animationDelay: '160ms' }}>
+        <div className="enter-up flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-6" style={{ animationDelay: '160ms' }}>
 
           {/* List */}
           <Card padding="none" className="xl:col-span-4 min-w-0 min-h-0 flex flex-col overflow-hidden">
             <div className="shrink-0 px-4 pt-4 pb-3 border-b border-line/70">
-              <div className="flex items-center justify-between gap-2 mb-2.5">
+              <div className="flex items-center justify-between gap-2 mb-3">
                 <h2 className="text-pm-eyebrow font-semibold uppercase tracking-wide text-content-muted">Clienți</h2>
                 <span className="text-pm-2xs text-content-muted tabular-nums px-1.5 py-0.5 rounded-md bg-surface-tertiary">{filtered.length}</span>
               </div>
@@ -262,11 +263,12 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
                         aria-label={`Selectează ${c.name}`}
                         style={{ viewTransitionName: isSelected ? vtName('client', c.id) : undefined }}
                         className={cn(
-                          'group relative w-full cursor-pointer border-b border-line/60 px-3.5 py-2.5 text-left transition-all duration-150',
+                          'group relative w-full cursor-pointer border-b border-line/60 px-4 py-3 text-left transition-colors duration-150',
+                          'focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-[0.99]',
                           isSelected ? 'bg-accent/8 vt-morph' : 'hover:bg-surface-tertiary/40',
                         )}
                       >
-                        <span aria-hidden className={cn('absolute left-0 top-0 bottom-0 w-[3px] transition-all', isSelected ? 'bg-accent' : 'bg-transparent group-hover:bg-content-muted/30')} />
+                        <span aria-hidden className={cn('absolute left-0 top-0 bottom-0 w-[3px] transition-colors duration-150', isSelected ? 'bg-accent' : 'bg-transparent group-hover:bg-content-muted/30')} />
                         <div className="flex items-center gap-3">
                           <span className={cn('h-9 w-9 shrink-0 rounded-xl flex items-center justify-center text-pm-2xs font-bold', isSelected ? 'bg-accent/15 text-accent' : 'bg-surface-tertiary text-content-secondary')}>
                             {initials(c.name)}
@@ -289,7 +291,7 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
           </Card>
 
           {/* Detail */}
-          <div className="xl:col-span-8 min-w-0 min-h-0 overflow-y-auto flex flex-col gap-5 pr-0.5">
+          <div className="xl:col-span-8 min-w-0 min-h-0 overflow-y-auto flex flex-col gap-6 pr-0.5">
             {!selected ? (
               <Card padding="lg" className="flex flex-col items-center justify-center min-h-[60vh]">
                 <EmptyState icon={Users} title="Niciun client selectat" description="Alege un client din listă pentru a-i vedea fișa completă." />
@@ -299,7 +301,7 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
                 {/* Identity */}
                 <Card padding="lg" tone="elevated" vtName={vtName('client', selected.id)} className="min-w-0">
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="flex items-center gap-3 min-w-0">
                       <span className="h-12 w-12 shrink-0 rounded-2xl bg-accent/15 text-accent flex items-center justify-center text-pm-sm font-bold">{initials(selected.name)}</span>
                       <div className="min-w-0">
                         <div className="mb-1"><StatusBadge tone={selStats?.isActive ? 'success' : 'neutral'} label={selStats?.isActive ? 'Activ' : 'Inactiv'} size="xs" /></div>
@@ -316,7 +318,7 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
                   </div>
                 </Card>
 
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   {/* Contact */}
                   <Card padding="lg" className="min-w-0">
                     <SectionHeader title="Date de contact" icon={Mail} className="mb-4" />
@@ -382,11 +384,11 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
 
       {/* Create / edit client */}
       {dialogOpen && (
-        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4" onClick={() => { if (!submitting) setDialogOpen(false); }}>
-          <div className="w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)]" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4 anim-fade-in" onClick={() => { if (!submitting) setDialogOpen(false); }}>
+          <div className="w-full max-w-2xl max-h-[88vh] overflow-y-auto rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)] anim-scale-in" onClick={e => e.stopPropagation()}>
             <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line/70 bg-surface-primary px-4 py-3">
               <h3 className="text-pm-sm font-semibold text-content-primary">{editId != null ? 'Editează client' : 'Adaugă client'}</h3>
-              <button onClick={() => setDialogOpen(false)} className="p-1 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary" aria-label="Închide"><XIcon className="h-4 w-4" /></button>
+              <button onClick={() => setDialogOpen(false)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-content-muted transition-smooth duration-150 hover:bg-surface-tertiary hover:text-content-primary active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]" aria-label="Închide"><XIcon className="h-4 w-4" /></button>
             </header>
             <div className="p-4 space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -440,7 +442,7 @@ function DetailRow({ icon: Icon, label, value, href, mono }: {
       <div className="min-w-0 flex-1">
         <dt className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">{label}</dt>
         <dd className={cn('text-pm-sm mt-0.5 break-words', v ? 'text-content-primary' : 'text-content-muted', mono && v && 'font-mono text-pm-xs')}>
-          {v ? (href ? <a href={href} className="hover:text-accent hover:underline">{v}</a> : v) : '—'}
+          {v ? (href ? <a href={href} className="rounded-sm transition-colors duration-150 hover:text-accent hover:underline focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">{v}</a> : v) : '—'}
         </dd>
       </div>
     </div>

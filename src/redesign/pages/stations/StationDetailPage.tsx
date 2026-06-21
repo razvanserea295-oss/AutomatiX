@@ -376,12 +376,12 @@ export default function StationDetailPage({ stationId, onBack }: StationDetailPa
     <Page fit>
       {
 }
-      <div className="enter-up shrink-0 pb-3.5 border-b border-line/60 px-7 pt-6" style={{ animationDelay: '0ms' }}>
-        <div className="flex flex-wrap items-center gap-3.5">
+      <div className="enter-up shrink-0 pb-4 border-b border-line/60 px-6 pt-6" style={{ animationDelay: '0ms' }}>
+        <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={onBack}
-            className="shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border border-line text-pm-sm font-medium text-content-secondary bg-surface-primary transition-all duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-tertiary hover:text-content-primary focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
+            className="shrink-0 inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-xl border border-line text-pm-sm font-medium text-content-secondary bg-surface-primary transition-smooth duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-tertiary hover:text-content-primary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Înapoi
@@ -407,8 +407,8 @@ export default function StationDetailPage({ stationId, onBack }: StationDetailPa
               <StatusBadge tone="success" label="Garantie" dot />
             )}
             {station.location && (
-              <span className="flex items-center gap-1 text-pm-xs text-content-muted">
-                <MapPin className="h-3 w-3" />{station.location}
+              <span className="flex min-w-0 max-w-[14rem] items-center gap-1 text-pm-xs text-content-muted">
+                <MapPin className="h-3 w-3 shrink-0" /><span className="truncate">{station.location}</span>
               </span>
             )}
             {tabCreateButton}
@@ -451,7 +451,7 @@ export default function StationDetailPage({ stationId, onBack }: StationDetailPa
 
         {}
         <Card padding="none" className="shrink-0">
-          <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2">
             <Tabs<TabId>
               tabs={tabDescriptors}
               activeId={activeTab}
@@ -505,7 +505,7 @@ function OverviewTab({ station, moduleKeys }: { station: StationDetail; moduleKe
         <Card className="lg:col-span-7">
           <CardHeader
             title={
-              <span className="flex items-center gap-2.5">
+              <span className="flex items-center gap-2">
                 <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                   <ClipboardList className="h-4 w-4" />
                 </span>
@@ -514,7 +514,7 @@ function OverviewTab({ station, moduleKeys }: { station: StationDetail; moduleKe
             }
           />
           <CardBody>
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
               <InfoRow label="Cod" value={station.code} />
               <InfoRow label="Tip" value={station.station_type} />
               <InfoRow label="Client" value={station.client_name} />
@@ -538,7 +538,7 @@ function OverviewTab({ station, moduleKeys }: { station: StationDetail; moduleKe
         <Card className="lg:col-span-5">
           <CardHeader
             title={
-              <span className="flex items-center gap-2.5">
+              <span className="flex items-center gap-2">
                 <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                   <Package className="h-4 w-4" />
                 </span>
@@ -563,7 +563,7 @@ function OverviewTab({ station, moduleKeys }: { station: StationDetail; moduleKe
       <Card>
         <CardHeader
           title={
-            <span className="flex items-center gap-2.5">
+            <span className="flex items-center gap-2">
               <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                 <Clock className="h-4 w-4" />
               </span>
@@ -584,7 +584,7 @@ function OverviewTab({ station, moduleKeys }: { station: StationDetail; moduleKe
               <div key={step.label} className="flex items-center gap-2">
                 <div className="flex flex-col items-center">
                   <div className={`w-3.5 h-3.5 rounded-full border-2 transition-transform hover:scale-110 motion-reduce:transform-none ${step.date ? 'border-accent bg-accent/20 anim-glow' : 'border-line bg-surface-primary'}`} />
-                  <div className="mt-1.5 text-center">
+                  <div className="mt-2 text-center">
                     <p className="text-pm-2xs font-medium text-content-primary whitespace-nowrap">{step.label}</p>
                     <p className="text-pm-2xs text-content-muted">{formatDate(step.date)}</p>
                   </div>
@@ -617,7 +617,7 @@ function InterventionsTab({ interventions, onAdd }: { interventions: Interventio
     <Card>
       <CardHeader
         title={
-          <span className="flex items-center gap-2.5">
+          <span className="flex items-center gap-2">
             <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
               <Wrench className="h-4 w-4" />
             </span>
@@ -636,7 +636,7 @@ function InterventionsTab({ interventions, onAdd }: { interventions: Interventio
         ) : (
           <div className="space-y-3 stagger-in" key={`iv-${interventions.length}`}>
             {interventions.map((iv) => (
-              <div key={iv.id} className="rounded-xl border border-line/60 bg-surface-primary p-3.5 flex items-start gap-3">
+              <div key={iv.id} className="group rounded-xl border border-line/60 bg-surface-primary p-4 flex items-start gap-3 transition-smooth duration-150 hover:border-line hover:bg-surface-tertiary/30 hover:shadow-[var(--elevation-2)]">
                 <div className={`mt-1 w-2.5 h-2.5 rounded-full shrink-0 ${iv.is_urgent ? 'bg-status-red animate-pulse' : 'bg-accent'}`} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -650,8 +650,8 @@ function InterventionsTab({ interventions, onAdd }: { interventions: Interventio
                   {iv.problem_description && (
                     <p className="mt-1 text-pm-sm text-content-muted line-clamp-2">{iv.problem_description}</p>
                   )}
-                  <div className="mt-1.5 flex items-center gap-3 text-pm-2xs text-content-muted">
-                    <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(iv.open_date)}</span>
+                  <div className="mt-2 flex flex-wrap items-center gap-3 text-pm-2xs text-content-muted">
+                    <span className="flex items-center gap-1"><Calendar className="h-3 w-3 shrink-0" />{formatDate(iv.open_date)}</span>
                     {iv.close_date && <span>Inchis: {formatDate(iv.close_date)}</span>}
                     {iv.labor_cost > 0 && <span>Cost: {formatCurrency(iv.labor_cost)}</span>}
                   </div>
@@ -659,7 +659,7 @@ function InterventionsTab({ interventions, onAdd }: { interventions: Interventio
                     <p className="mt-1 text-pm-2xs text-content-muted italic">Note: {iv.final_notes}</p>
                   )}
                 </div>
-                <ChevronRight className="h-4 w-4 text-content-muted shrink-0 mt-1" />
+                <ChevronRight className="h-4 w-4 text-content-muted shrink-0 mt-1 transition-transform duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-0.5 group-hover:text-content-secondary motion-reduce:transform-none" />
               </div>
             ))}
           </div>
@@ -709,7 +709,7 @@ function MaintenanceTab({ plans, stationId, onChange }: { plans: MaintenancePlan
     <Card>
       <CardHeader
         title={
-          <span className="flex items-center gap-2.5">
+          <span className="flex items-center gap-2">
             <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
               <Clock className="h-4 w-4" />
             </span>
@@ -724,16 +724,16 @@ function MaintenanceTab({ plans, stationId, onChange }: { plans: MaintenancePlan
       />
       <CardBody>
         {show && (
-          <div className="mb-4 rounded-xl border border-accent/40 bg-surface-secondary p-3.5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="mb-4 rounded-xl border border-accent/40 bg-surface-secondary p-4 anim-fade-slide-in">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input value={maintenanceType} onChange={e => setMaintenanceType(e.target.value)} placeholder="Tip mentenanta"
-                className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
+                className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
               <input type="number" value={periodicityDays} onChange={e => setPeriodicityDays(e.target.value)} placeholder="Zile"
-                className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
+                className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
               <input type="date" value={nextDate} onChange={e => setNextDate(e.target.value)}
-                className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
+                className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
               <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Note"
-                className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
+                className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
             </div>
             <div className="flex justify-end gap-2 mt-3">
               <Button size="sm" variant="outline" onClick={() => setShow(false)}>Anulează</Button>
@@ -745,16 +745,16 @@ function MaintenanceTab({ plans, stationId, onChange }: { plans: MaintenancePlan
         {plans.length === 0 ? (
           <EmptyState icon={Clock} title="Niciun plan de mentenanta" description="Programează prima revizie pentru această stație." />
         ) : (
-          <div className="rounded-xl border border-line/60 overflow-hidden">
+          <div className="rounded-xl border border-line/60 overflow-x-auto">
             <table className="w-full text-left text-pm-sm">
               <thead>
                 <tr className="border-b border-line bg-surface-secondary">
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Tip</th>
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Periodicitate</th>
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Ultima executie</th>
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Urmatoarea</th>
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Status</th>
-                  <th className="px-3.5 py-2.5"></th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Tip</th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Periodicitate</th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Ultima executie</th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Urmatoarea</th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Status</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="stagger-in" key={`mt-${plans.length}`}>
@@ -762,15 +762,15 @@ function MaintenanceTab({ plans, stationId, onChange }: { plans: MaintenancePlan
                   const isOverdue = new Date(p.next_execution_date) < new Date() && p.status !== 'COMPLETED';
                   return (
                     <tr key={p.id} className={`group border-b border-line/60 last:border-0 hover:bg-surface-tertiary/30 transition-colors ${isOverdue ? 'bg-status-red/5' : ''}`}>
-                      <td className="px-3.5 py-2.5 text-content-primary font-medium">{p.maintenance_type}</td>
-                      <td className="px-3.5 py-2.5 text-content-muted tabular-nums">La {p.periodicity_days} zile</td>
-                      <td className="px-3.5 py-2.5 text-content-muted">{formatDate(p.last_execution_date)}</td>
-                      <td className={`px-3.5 py-2.5 ${isOverdue ? 'text-status-red font-medium' : 'text-content-muted'}`}>
+                      <td className="px-4 py-3 text-content-primary font-medium">{p.maintenance_type}</td>
+                      <td className="px-4 py-3 text-content-muted tabular-nums">La {p.periodicity_days} zile</td>
+                      <td className="px-4 py-3 text-content-muted">{formatDate(p.last_execution_date)}</td>
+                      <td className={`px-4 py-3 ${isOverdue ? 'text-status-red font-medium' : 'text-content-muted'}`}>
                         {formatDate(p.next_execution_date)}
                         {isOverdue && <span className="ml-1 text-pm-2xs">(DEPASIT)</span>}
                       </td>
-                      <td className="px-3.5 py-2.5"><StationStatusBadge status={p.status} /></td>
-                      <td className="px-3.5 py-2.5 text-right">
+                      <td className="px-4 py-3"><StationStatusBadge status={p.status} /></td>
+                      <td className="px-4 py-3 text-right">
                         <IconButton
                           intent="danger"
                           size="sm"
@@ -835,7 +835,7 @@ function PartsTab({ parts, stationId, onChange }: { parts: PartsRequest[]; stati
     <Card>
       <CardHeader
         title={
-          <span className="flex items-center gap-2.5">
+          <span className="flex items-center gap-2">
             <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
               <Package className="h-4 w-4" />
             </span>
@@ -851,14 +851,14 @@ function PartsTab({ parts, stationId, onChange }: { parts: PartsRequest[]; stati
       />
       <CardBody>
         {show && (
-          <div className="mb-4 rounded-xl border border-accent/40 bg-surface-secondary p-3.5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <input value={partName} onChange={e => setPartName(e.target.value)} placeholder="Nume piesa *" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
-              <input value={partCode} onChange={e => setPartCode(e.target.value)} placeholder="Cod" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
-              <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="Cantitate" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
-              <input value={supplier} onChange={e => setSupplier(e.target.value)} placeholder="Furnizor" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
-              <input type="number" value={estimatedCost} onChange={e => setEstimatedCost(e.target.value)} placeholder="Cost estimat (RON)" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
-              <input value={reason} onChange={e => setReason(e.target.value)} placeholder="Motiv" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
+          <div className="mb-4 rounded-xl border border-accent/40 bg-surface-secondary p-4 anim-fade-slide-in">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input value={partName} onChange={e => setPartName(e.target.value)} placeholder="Nume piesa *" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
+              <input value={partCode} onChange={e => setPartCode(e.target.value)} placeholder="Cod" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
+              <input type="number" value={quantity} onChange={e => setQuantity(e.target.value)} placeholder="Cantitate" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
+              <input value={supplier} onChange={e => setSupplier(e.target.value)} placeholder="Furnizor" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
+              <input type="number" value={estimatedCost} onChange={e => setEstimatedCost(e.target.value)} placeholder="Cost estimat (RON)" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
+              <input value={reason} onChange={e => setReason(e.target.value)} placeholder="Motiv" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
             </div>
             <div className="flex justify-end gap-2 mt-3">
               <Button size="sm" variant="outline" onClick={() => setShow(false)}>Anulează</Button>
@@ -874,29 +874,29 @@ function PartsTab({ parts, stationId, onChange }: { parts: PartsRequest[]; stati
             <table className="w-full text-left text-pm-sm">
               <thead>
                 <tr className="border-b border-line bg-surface-secondary">
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Piesa</th>
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Cod</th>
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Cant.</th>
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Furnizor</th>
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Cost est.</th>
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Comandat</th>
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Primit</th>
-                  <th className="px-3.5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Status</th>
-                  <th className="px-3.5 py-2.5"></th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Piesa</th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Cod</th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Cant.</th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Furnizor</th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Cost est.</th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Comandat</th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Primit</th>
+                  <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Status</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody className="stagger-in" key={`pt-${parts.length}`}>
                 {parts.map((p) => (
                   <tr key={p.id} className="group border-b border-line/60 last:border-0 hover:bg-surface-tertiary/30 transition-colors">
-                    <td className="px-3.5 py-2.5 text-content-primary font-medium">{p.part_name || '—'}</td>
-                    <td className="px-3.5 py-2.5 text-content-muted font-mono text-pm-2xs">{p.part_code || '—'}</td>
-                    <td className="px-3.5 py-2.5 text-content-primary tabular-nums">{p.quantity}</td>
-                    <td className="px-3.5 py-2.5 text-content-muted">{p.supplier || '—'}</td>
-                    <td className="px-3.5 py-2.5 text-content-primary tabular-nums">{formatCurrency(p.estimated_cost)}</td>
-                    <td className="px-3.5 py-2.5 text-content-muted">{formatDate(p.order_date)}</td>
-                    <td className="px-3.5 py-2.5 text-content-muted">{formatDate(p.received_date)}</td>
-                    <td className="px-3.5 py-2.5"><StationStatusBadge status={p.status} /></td>
-                    <td className="px-3.5 py-2.5 text-right">
+                    <td className="px-4 py-3 text-content-primary font-medium">{p.part_name || '—'}</td>
+                    <td className="px-4 py-3 text-content-muted font-mono text-pm-2xs">{p.part_code || '—'}</td>
+                    <td className="px-4 py-3 text-content-primary tabular-nums">{p.quantity}</td>
+                    <td className="px-4 py-3 text-content-muted">{p.supplier || '—'}</td>
+                    <td className="px-4 py-3 text-content-primary tabular-nums">{formatCurrency(p.estimated_cost)}</td>
+                    <td className="px-4 py-3 text-content-muted">{formatDate(p.order_date)}</td>
+                    <td className="px-4 py-3 text-content-muted">{formatDate(p.received_date)}</td>
+                    <td className="px-4 py-3"><StationStatusBadge status={p.status} /></td>
+                    <td className="px-4 py-3 text-right">
                       <IconButton
                         intent="danger"
                         size="sm"
@@ -957,7 +957,7 @@ function ChangesTab({ changes, stationId, onChange }: { changes: ChangeRequest[]
     <Card>
       <CardHeader
         title={
-          <span className="flex items-center gap-2.5">
+          <span className="flex items-center gap-2">
             <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
               <AlertTriangle className="h-4 w-4" />
             </span>
@@ -972,19 +972,19 @@ function ChangesTab({ changes, stationId, onChange }: { changes: ChangeRequest[]
       />
       <CardBody>
         {show && (
-          <div className="mb-4 rounded-xl border border-accent/40 bg-surface-secondary p-3.5">
+          <div className="mb-4 rounded-xl border border-accent/40 bg-surface-secondary p-4 anim-fade-slide-in">
             <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Descriere modificare *" rows={2}
-              className="w-full rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-2.5">
-              <select value={priority} onChange={e => setPriority(e.target.value)} className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50">
+              className="w-full rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+              <select value={priority} onChange={e => setPriority(e.target.value)} className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]">
                 <option value="LOW">Scazuta</option>
                 <option value="MEDIUM">Medie</option>
                 <option value="HIGH">Ridicata</option>
                 <option value="CRITICAL">Critica</option>
               </select>
-              <input type="number" value={estimatedCost} onChange={e => setEstimatedCost(e.target.value)} placeholder="Cost estimat" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
-              <input type="date" value={estimatedDeadline} onChange={e => setEstimatedDeadline(e.target.value)} className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
-              <input value={requestedByName} onChange={e => setRequestedByName(e.target.value)} placeholder="Solicitant" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm focus:outline-none focus:border-accent/50" />
+              <input type="number" value={estimatedCost} onChange={e => setEstimatedCost(e.target.value)} placeholder="Cost estimat" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
+              <input type="date" value={estimatedDeadline} onChange={e => setEstimatedDeadline(e.target.value)} className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
+              <input value={requestedByName} onChange={e => setRequestedByName(e.target.value)} placeholder="Solicitant" className="rounded-lg border border-line/70 bg-surface-secondary/40 px-3 py-2 text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
             </div>
             <div className="flex justify-end gap-2 mt-3">
               <Button size="sm" variant="outline" onClick={() => setShow(false)}>Anulează</Button>
@@ -998,17 +998,17 @@ function ChangesTab({ changes, stationId, onChange }: { changes: ChangeRequest[]
         ) : (
           <div className="space-y-3 stagger-in" key={`cr-${changes.length}`}>
             {changes.map((cr) => (
-              <div key={cr.id} className="group relative rounded-xl border border-line/60 bg-surface-primary p-3.5">
+              <div key={cr.id} className="group relative rounded-xl border border-line/60 bg-surface-primary p-4 transition-smooth duration-150 hover:border-line hover:bg-surface-tertiary/30 hover:shadow-[var(--elevation-2)]">
                 <div className="flex items-center gap-2 flex-wrap pr-9">
                   <span className="text-pm-sm font-medium text-content-primary">{cr.description}</span>
                   <PriorityBadge priority={cr.priority} />
                   <StationStatusBadge status={cr.status} />
                 </div>
-                <div className="flex items-center gap-3 text-pm-2xs text-content-muted mt-1.5">
+                <div className="flex flex-wrap items-center gap-3 text-pm-2xs text-content-muted mt-2">
                   {cr.requested_by_name && (
-                    <span className="flex items-center gap-1"><User className="h-3 w-3" />{cr.requested_by_name}</span>
+                    <span className="flex items-center gap-1"><User className="h-3 w-3 shrink-0" />{cr.requested_by_name}</span>
                   )}
-                  <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{formatDate(cr.request_date)}</span>
+                  <span className="flex items-center gap-1"><Calendar className="h-3 w-3 shrink-0" />{formatDate(cr.request_date)}</span>
                   {cr.estimated_cost > 0 && <span>Cost: {formatCurrency(cr.estimated_cost)}</span>}
                   {cr.estimated_deadline && <span>Termen: {formatDate(cr.estimated_deadline)}</span>}
                 </div>
@@ -1019,7 +1019,7 @@ function ChangesTab({ changes, stationId, onChange }: { changes: ChangeRequest[]
                   aria-label="Șterge cererea"
                   title="Șterge cererea"
                   onClick={() => remove(cr.id)}
-                  className="absolute top-2.5 right-2.5 opacity-70 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-3 right-3 opacity-70 group-hover:opacity-100 transition-smooth duration-150"
                 >
                   <Trash2 />
                 </IconButton>
@@ -1041,7 +1041,7 @@ function ActivityTab({ logs }: { logs: ActivityLog[] }) {
     <Card>
       <CardHeader
         title={
-          <span className="flex items-center gap-2.5">
+          <span className="flex items-center gap-2">
             <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
               <Activity className="h-4 w-4" />
             </span>
@@ -1055,7 +1055,7 @@ function ActivityTab({ logs }: { logs: ActivityLog[] }) {
         ) : (
           <div className="space-y-2 stagger-in" key={`log-${logs.length}`}>
             {logs.map((log) => (
-              <div key={log.id} className="flex items-start gap-3 rounded-xl border border-line/60 bg-surface-primary px-3.5 py-2.5">
+              <div key={log.id} className="flex items-start gap-3 rounded-xl border border-line/60 bg-surface-primary px-4 py-3 transition-smooth duration-150 hover:border-line hover:bg-surface-tertiary/30">
                 <div className="mt-1.5 w-2 h-2 rounded-full bg-accent shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">

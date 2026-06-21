@@ -4,44 +4,45 @@
    docs: "CSS Custom Properties for Theming"). Overriding them here — with extra
    specificity (:root:root) so we win regardless of the theme's inject order —
    cascades into the web components' shadow DOM. This de-genericizes the default
-   light-grey shell + SAP-blue accent into a branded navy shell + emerald accent.
+   light-grey shell + SAP-blue accent into the Automatix branded deep-navy
+   shell (#16307A) + primary blue (#2D5BE3) accent.
    ========================================================================== */
 :root:root {
   /* --- Branded shell bar (Horizon default: light grey #eff1f2, dark text) --- */
-  --sapShellColor: #16213a;
-  --sapShell_Background: #16213a;
+  --sapShellColor: #16307A;
+  --sapShell_Background: #16307A;
   --sapShell_BackgroundImage: none;
   --sapShell_BackgroundGradient: none;
-  --sapShell_BorderColor: #16213a;
+  --sapShell_BorderColor: #16307A;
   --sapShell_TextColor: #eaf0f8;
   --sapShell_InteractiveTextColor: #eaf0f8;
-  --sapShell_InteractiveBackgroundColor: #16213a;
-  --sapShell_Hover_Background: #243352;
-  --sapShell_Active_Background: #0f1830;
+  --sapShell_InteractiveBackgroundColor: #16307A;
+  --sapShell_Hover_Background: #1D3F8A;
+  --sapShell_Active_Background: #0f2060;
   --sapShell_Hover_Foreground: #ffffff;
 
-  /* --- Brand accent (Horizon default: SAP blue #0070f2) → emerald --- */
-  --sapBrandColor: #12936a;
-  --sapHighlightColor: #12936a;
-  --sapActiveColor: #0e7d5a;
-  --sapSelectedColor: #12936a;
-  --sapContent_Selected_TextColor: #0e7d5a;
-  --sapContent_Selected_ForegroundColor: #12936a; /* was SAP blue #0064d9 — selected nav text/icon */
-  --sapContent_Selected_BackgroundColor: #e6f5ef;
+  /* --- Brand accent (Horizon default: SAP blue #0070f2) → Automatix blue --- */
+  --sapBrandColor: #2D5BE3;
+  --sapHighlightColor: #2D5BE3;
+  --sapActiveColor: #2350CC;
+  --sapSelectedColor: #2D5BE3;
+  --sapContent_Selected_TextColor: #2350CC;
+  --sapContent_Selected_ForegroundColor: #2D5BE3;
+  --sapContent_Selected_BackgroundColor: #EAF0FE;
 
   /* Emphasized (primary) buttons */
-  --sapButton_Emphasized_Background: #12936a;
-  --sapButton_Emphasized_Hover_Background: #0e7d5a;
-  --sapButton_Emphasized_Active_Background: #0c6b4d;
-  --sapButton_Emphasized_BorderColor: #12936a;
-  --sapButton_Emphasized_Hover_BorderColor: #0e7d5a;
+  --sapButton_Emphasized_Background: #2D5BE3;
+  --sapButton_Emphasized_Hover_Background: #2350CC;
+  --sapButton_Emphasized_Active_Background: #1A3EA8;
+  --sapButton_Emphasized_BorderColor: #2D5BE3;
+  --sapButton_Emphasized_Hover_BorderColor: #2350CC;
   --sapButton_Emphasized_TextColor: #ffffff;
 
   /* Selection (lists, tables, side navigation) */
-  --sapList_SelectionBackgroundColor: #d8f0e7;
-  --sapList_SelectionBorderColor: #12936a;
-  --sapList_SelectionHoverBackground: #c9ebde;
-  --sapList_Hover_SelectionBackground: #c9ebde;
+  --sapList_SelectionBackgroundColor: #dce8ff;
+  --sapList_SelectionBorderColor: #2D5BE3;
+  --sapList_SelectionHoverBackground: #c8d8ff;
+  --sapList_Hover_SelectionBackground: #c8d8ff;
 }
 
 /* ---- SideNavigation: dark navy rail, cohesive with the ShellBar -----------
@@ -50,28 +51,28 @@
    div exposes no ::part, so vars are the only lever). The popover/overflow menu
    is portalled to <body> so it keeps the default light theme. */
 ui5-side-navigation {
-  background: #16213a;
-  --sapList_Background: #16213a;
-  --sapGroup_ContentBackground: #16213a;
+  background: #16307A;
+  --sapList_Background: #16307A;
+  --sapGroup_ContentBackground: #16307A;
   --sapList_TextColor: #c7d2e4;
   --sapTextColor: #c7d2e4;
   --sapContent_IconColor: #c7d2e4;
   --sapContent_NonInteractiveIconColor: #c7d2e4;
-  --sapList_Hover_Background: #233250;
-  --sapList_BorderColor: #233250;
-  --sapGroup_ContentBorderColor: #233250;
-  --sapGroup_TitleTextColor: #8fa1bd;
+  --sapList_Hover_Background: #1D3F8A;
+  --sapList_BorderColor: #1D3F8A;
+  --sapGroup_ContentBorderColor: #1D3F8A;
+  --sapGroup_TitleTextColor: #84ABFF;
 }
-/* Active workspace: emerald pill + bright emerald label/icon */
+/* Active workspace: brand blue pill + bright blue label/icon */
 ui5-side-navigation-item[selected],
 ui5-side-navigation-sub-item[selected] {
-  --sapList_SelectionBackgroundColor: #123a30;
-  --sapList_SelectionHoverBackground: #16463a;
-  --sapList_SelectionBorderColor: #2bb583;
-  --sapList_TextColor: #36d39a;
-  --sapTextColor: #36d39a;
-  --sapContent_IconColor: #36d39a;
-  --sapContent_NonInteractiveIconColor: #36d39a;
+  --sapList_SelectionBackgroundColor: #0f2060;
+  --sapList_SelectionHoverBackground: #1a3690;
+  --sapList_SelectionBorderColor: #4D86FF;
+  --sapList_TextColor: #84ABFF;
+  --sapTextColor: #84ABFF;
+  --sapContent_IconColor: #84ABFF;
+  --sapContent_NonInteractiveIconColor: #84ABFF;
 }
 
 /* The ShellBar sits on the dark brand background, but Horizon defaults its
@@ -86,26 +87,26 @@ ui5-shellbar {
 }
 
 /* ---- Dark mode (sap_horizon_dark) -----------------------------------------
-   The navy shell + emerald brand carry over; only re-tune the emerald for dark
+   The navy shell + brand blue carry over; only re-tune the blue for dark
    contrast and the list-selection tints (Horizon dark defaults are far too
    light against the dark page). The `.dark` class is toggled by themeStore in
    lockstep with the UI5 theme (see src/ui5-config.ts). */
 :root:root.dark {
-  --sapBrandColor: #2bb583;
-  --sapHighlightColor: #2bb583;
-  --sapActiveColor: #36d39a;
-  --sapSelectedColor: #2bb583;
-  --sapContent_Selected_ForegroundColor: #36d39a;
-  --sapContent_Selected_TextColor: #36d39a;
-  --sapContent_Selected_BackgroundColor: #123a30;
+  --sapBrandColor: #4D86FF;
+  --sapHighlightColor: #4D86FF;
+  --sapActiveColor: #84ABFF;
+  --sapSelectedColor: #4D86FF;
+  --sapContent_Selected_ForegroundColor: #84ABFF;
+  --sapContent_Selected_TextColor: #84ABFF;
+  --sapContent_Selected_BackgroundColor: #0f2060;
 
-  --sapButton_Emphasized_Background: #12936a;
-  --sapButton_Emphasized_Hover_Background: #0e7d5a;
-  --sapButton_Emphasized_Active_Background: #0c6b4d;
-  --sapButton_Emphasized_BorderColor: #12936a;
+  --sapButton_Emphasized_Background: #2D5BE3;
+  --sapButton_Emphasized_Hover_Background: #2350CC;
+  --sapButton_Emphasized_Active_Background: #1A3EA8;
+  --sapButton_Emphasized_BorderColor: #2D5BE3;
 
-  --sapList_SelectionBackgroundColor: #123a30;
-  --sapList_SelectionBorderColor: #2bb583;
-  --sapList_SelectionHoverBackground: #16463a;
-  --sapList_Hover_SelectionBackground: #16463a;
+  --sapList_SelectionBackgroundColor: #0f2060;
+  --sapList_SelectionBorderColor: #4D86FF;
+  --sapList_SelectionHoverBackground: #1a3690;
+  --sapList_Hover_SelectionBackground: #1a3690;
 }

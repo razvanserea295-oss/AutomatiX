@@ -38,7 +38,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { flushSync } from 'react-dom';
-import { Inbox, Send, Globe, Plus, Loader2, X, MessageCircle, CheckCircle2, AlertTriangle, FileText, User as UserIcon, Calendar as CalendarIcon, Reply, RotateCcw, Paperclip, Upload, Download, Trash2, Pencil, Clock, FileSpreadsheet, FileImage, FileArchive, FileCode, File as FileIcon, Box, Search } from 'lucide-react';
+import { Inbox, Send, Globe, Plus, Loader2, X, MessageCircle, CheckCircle2, AlertTriangle, FileText, User as UserIcon, Calendar as CalendarIcon, Reply, RotateCcw, Paperclip, Upload, Download, Trash2, Pencil, FileSpreadsheet, FileImage, FileArchive, FileCode, File as FileIcon, Box, Search } from 'lucide-react';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 import { confirmDialog } from '@/redesign/ui/ConfirmDialog';
@@ -46,7 +46,6 @@ import { formatFileSize } from '@/lib/fileUpload';
 import { uploadBriefingFile, BRIEFING_MAX_BYTES } from '@/lib/briefingUpload';
 import { downloadOneBriefingAttachment } from '@/lib/downloadPdf';
 import Page from '@/redesign/ui/Page';
-import KpiCard from '@/redesign/ui/KpiCard';
 import { GlassCard, MetricValue, EmptyState } from '@/redesign/ui';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import type { StatusTone } from '@/lib/statusTokens';
@@ -192,15 +191,7 @@ export default function ProjectBriefingsPage() {
     [list, selectedId],
   );
 
-  
-  const briefStats = useMemo(() => ({
-    total: list.length,
-    active: list.filter(b => !['accepted', 'completed', 'rejected', 'cancelled'].includes(b.status)).length,
-    clarifs: list.reduce((s, b) => s + (b.open_clarifications || 0), 0),
-    done: list.filter(b => b.status === 'completed' || b.status === 'accepted').length,
-  }), [list]);
 
-  
   const visibleList = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return list;
@@ -212,9 +203,12 @@ export default function ProjectBriefingsPage() {
     );
   }, [list, search]);
 
-  
-  
-  
+  useEffect(() => {
+    if (selectedId === null && visibleList.length > 0) setSelectedId(visibleList[0].id);
+  }, [visibleList, selectedId]);
+
+
+
   useEffect(() => {
     if (!selected || !me) return;
     if (selected.assigned_to_user_id !== me.id) return;
@@ -250,9 +244,9 @@ export default function ProjectBriefingsPage() {
 
 
 }
-        <div className="enter-up shrink-0 pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
+        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex items-center gap-3.5 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
               <span className="h-11 w-11 rounded-2xl bg-accent-muted flex items-center justify-center shrink-0">
                 <MessageCircle className="h-5 w-5 text-accent" aria-hidden />
               </span>
@@ -262,7 +256,7 @@ export default function ProjectBriefingsPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 xl:ml-auto">
+            <div className="flex flex-wrap items-center gap-2 xl:ml-auto">
               <div className="relative group">
                 <Search className={filterSearchIconCls} aria-hidden />
                 <input
@@ -278,7 +272,7 @@ export default function ProjectBriefingsPage() {
                 )}
               </div>
 
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <button onClick={() => switchMode('inbox')} className={filterToggleCls(mode === 'inbox')}>
                   <Inbox className="h-3.5 w-3.5" /> Primite
                 </button>
@@ -308,23 +302,10 @@ export default function ProjectBriefingsPage() {
 
         {
 
-}
-        <div className="enter-up shrink-0" style={{ animationDelay: '70ms' }}>
-          <Page.Kpis cols={4}>
-            <KpiCard label="Total briefing-uri" value={briefStats.total}   icon={MessageCircle} iconColor="text-accent" />
-            <KpiCard label="În lucru"           value={briefStats.active}  icon={Clock}         iconColor="text-status-amber" />
-            <KpiCard label="Clarificări"        value={briefStats.clarifs} icon={AlertTriangle} iconColor="text-status-red"
-              hint={briefStats.clarifs > 0 ? 'așteaptă răspuns' : 'fără întrebări deschise'} />
-            <KpiCard label="Finalizate"         value={briefStats.done}    icon={CheckCircle2}  iconColor="text-status-green" />
-          </Page.Kpis>
-        </div>
-
-        {
-
 
 
 }
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 flex-1 min-h-0">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0">
 
           {}
           <section className="xl:col-span-8 enter-up min-w-0 flex flex-col min-h-0" style={{ animationDelay: '140ms' }}>
@@ -350,7 +331,7 @@ export default function ProjectBriefingsPage() {
           {}
           <aside className="xl:col-span-4 enter-up flex flex-col min-h-0" style={{ animationDelay: '200ms' }}>
             <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 flex-1">
-              <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-line/40 shrink-0">
+              <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line/40 shrink-0">
                 <h2 className="text-pm-md font-semibold text-content-primary">
                   {mode === 'inbox' ? 'Primite' : mode === 'sent' ? 'Trimise' : 'Toate'}
                 </h2>
@@ -380,8 +361,8 @@ export default function ProjectBriefingsPage() {
                     key={b.id}
                     onClick={() => selectBriefing(b.id)}
                     style={{ viewTransitionName: selectedId === b.id ? vtName('briefing', b.id) : undefined }}
-                    className={`w-full text-left px-4 py-3 border-b border-line hover:bg-surface-tertiary/30 transition-colors ${
-                      selectedId === b.id ? 'bg-accent/8 border-l-2 border-l-accent vt-morph' : ''
+                    className={`w-full text-left px-4 py-3 border-b border-line border-l-2 hover:bg-surface-tertiary/30 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
+                      selectedId === b.id ? 'bg-accent/8 border-l-accent vt-morph' : 'border-l-transparent'
                     }`}
                   >
                     <div className="flex items-start gap-2 mb-1">
@@ -548,7 +529,7 @@ function BriefingAttachments({ briefingId, me }: { briefingId: number; me: User 
         onChange={(e) => setNote(e.target.value)}
         maxLength={500}
         placeholder="Notă aplicată fișierelor pe care le adaugi acum (opțional)"
-        className="w-full px-2.5 py-1.5 border border-line bg-surface-primary rounded text-pm-xs text-content-primary placeholder:text-content-muted/70 focus:outline-none focus:border-accent"
+        className="w-full px-3 py-2 border border-line bg-surface-primary rounded-xl text-pm-xs text-content-primary placeholder:text-content-muted/70 transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]"
       />
 
       {}
@@ -557,7 +538,7 @@ function BriefingAttachments({ briefingId, me }: { briefingId: number; me: User 
         onDragOver={(e) => { e.preventDefault(); if (!dragActive) setDragActive(true); }}
         onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
         onDrop={onDrop}
-        className={`flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-4 py-6 text-center cursor-pointer transition-colors ${dragActive ? 'border-accent bg-accent/5' : 'border-line hover:border-accent/50 hover:bg-surface-tertiary/30'}`}
+        className={`flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-4 py-6 text-center cursor-pointer transition-smooth duration-150 ${dragActive ? 'border-accent bg-accent/5' : 'border-line hover:border-accent/50 hover:bg-surface-tertiary/30'}`}
       >
         <Upload className={`h-5 w-5 ${dragActive ? 'text-accent' : 'text-content-muted'}`} />
         <p className="text-pm-xs text-content-secondary">Trage fișiere aici sau <span className="text-accent font-medium">click pentru a selecta</span></p>
@@ -609,12 +590,12 @@ function BriefingAttachments({ briefingId, me }: { briefingId: number; me: User 
                     }}
                     autoFocus rows={2} maxLength={500}
                     placeholder="Notă fișier (max 500)…"
-                    className="w-full px-2 py-1 border border-accent/60 bg-surface-primary rounded text-pm-2xs text-content-primary focus:outline-none resize-none"
+                    className="w-full px-2 py-1 border border-accent/60 bg-surface-primary rounded-lg text-pm-2xs text-content-primary transition-smooth duration-150 focus:outline-none focus-visible:shadow-[var(--ring-soft)] resize-none"
                   />
                 ) : (
                   <button type="button" onClick={() => { setEditingId(a.id); setEditNote(a.annotation || ''); }}
                     title="Click pentru a edita nota"
-                    className="w-full text-left text-pm-2xs rounded px-2 py-1 hover:bg-surface-tertiary/40 transition-colors">
+                    className="w-full text-left text-pm-2xs rounded-lg px-2 py-1 hover:bg-surface-tertiary/40 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
                     {a.annotation
                       ? <span className="text-content-secondary whitespace-pre-wrap break-words">{a.annotation}</span>
                       : <span className="text-content-muted/70 inline-flex items-center gap-1"><Pencil className="h-3 w-3" /> Adaugă notă</span>}
@@ -740,7 +721,7 @@ function BriefingDetail({
         <DetailTab active={tab === 'clarifications'} onClick={() => setTab('clarifications')}>
           <MessageCircle className="h-3.5 w-3.5" /> Clarificări
           {briefing.open_clarifications > 0 && (
-            <span className="ml-1 bg-status-red text-white rounded-full px-1.5 py-0 text-pm-2xs font-bold">
+            <span className="anim-scale-in ml-1 inline-flex items-center justify-center min-w-[1.125rem] px-1.5 py-0 rounded-full bg-status-red/12 text-status-red ring-1 ring-status-red/20 text-pm-2xs font-bold tabular-nums">
               {briefing.open_clarifications}
             </span>
           )}
@@ -750,19 +731,19 @@ function BriefingDetail({
       {}
       <div className="flex-1 overflow-y-auto p-6">
         {tab === 'briefing' ? (
-          <div key="tab-briefing" className="enter-up space-y-5 max-w-3xl">
+          <div key="tab-briefing" className="enter-up space-y-6 max-w-3xl">
             <Section title="Scop"                  content={briefing.scope} />
             <Section title="Cerințe tehnice"       content={briefing.technical_requirements} />
             <Section title="Așteptări client"      content={briefing.client_expectations} />
             {briefing.rejection_reason && (
-              <div className="border border-status-red/40 bg-status-red/5 rounded p-3">
+              <div className="border border-status-red/40 bg-status-red/5 rounded-xl p-3">
                 <p className="text-pm-xs font-semibold uppercase tracking-wider text-status-red mb-1">
                   <AlertTriangle className="h-3 w-3 inline mr-1" /> Motiv refuz
                 </p>
                 <p className="text-pm-sm text-content-primary whitespace-pre-wrap">{briefing.rejection_reason}</p>
               </div>
             )}
-            <div className="border-t border-line pt-5">
+            <div className="border-t border-line pt-6">
               <BriefingAttachments briefingId={briefing.id} me={me} />
             </div>
           </div>
@@ -787,7 +768,7 @@ function BriefingDetail({
             )}
 
             {!isClosed && (
-              <div className="border border-line rounded p-3 bg-surface-tertiary/30 mt-4">
+              <div className="border border-line rounded-xl p-3 bg-surface-tertiary/30 mt-4">
                 <p className="text-pm-xs font-semibold uppercase tracking-wider text-content-muted mb-2">
                   Pune o întrebare nouă
                 </p>
@@ -796,7 +777,7 @@ function BriefingDetail({
                   onChange={(e) => setNewQuestion(e.target.value)}
                   rows={3}
                   placeholder="Ce nu este clar din briefing?"
-                  className="w-full px-3 py-2 border border-line bg-surface-primary rounded text-pm-sm focus:outline-none focus:border-accent resize-none"
+                  className="w-full px-3 py-2 border border-line bg-surface-primary rounded-xl text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] resize-none"
                 />
                 <div className="flex items-center justify-end mt-2">
                   <Button size="sm" onClick={askQuestion} disabled={askingBusy || !newQuestion.trim()}>
@@ -862,7 +843,7 @@ function BriefingDetail({
               onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); submitReject(); } }}
               rows={4} autoFocus
               placeholder="Explică de ce refuzi acest briefing…"
-              className="w-full px-3.5 py-2.5 bg-surface-primary border border-line rounded-xl text-pm-sm text-content-primary placeholder:text-content-muted/70 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] resize-none leading-relaxed"
+              className="w-full px-3.5 py-2.5 bg-surface-primary border border-line rounded-xl text-pm-sm text-content-primary placeholder:text-content-muted/70 transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] resize-none leading-relaxed"
             />
           </div>
           <div className="flex gap-3 pt-1">
@@ -893,7 +874,7 @@ function Section({ title, content }: { title: string; content: string | null }) 
 function DetailTab({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button onClick={onClick}
-      className={`px-4 py-2 text-pm-sm font-medium flex items-center gap-1.5 border-b-2 ${
+      className={`px-4 py-2 text-pm-sm font-medium inline-flex items-center gap-1.5 border-b-2 transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
         active ? 'border-accent text-content-primary' : 'border-transparent text-content-muted hover:text-content-primary'
       }`}>
       {children}
@@ -933,7 +914,7 @@ function ClarificationItem({
   };
 
   return (
-    <div className={`border rounded p-3 ${clar.status === 'pending' ? 'border-status-amber/40 bg-status-amber/5' : 'border-line bg-surface-primary'}`}>
+    <div className={`border rounded-xl p-3 ${clar.status === 'pending' ? 'border-status-amber/40 bg-status-amber/5' : 'border-line bg-surface-primary'}`}>
       <div className="flex items-start gap-2">
         <MessageCircle className={`h-4 w-4 mt-0.5 shrink-0 ${clar.status === 'pending' ? 'text-status-amber' : 'text-content-muted'}`} />
         <div className="flex-1 min-w-0">
@@ -951,7 +932,7 @@ function ClarificationItem({
           </p>
           <p className="text-pm-sm text-content-primary mt-1 whitespace-pre-wrap">{clar.answer}</p>
           <button onClick={reopen} disabled={busy}
-            className="text-pm-2xs text-content-muted hover:text-status-red mt-1.5 flex items-center gap-1">
+            className="text-pm-2xs text-content-muted hover:text-status-red mt-1.5 inline-flex items-center gap-1 rounded-lg transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50">
             <RotateCcw className="h-3 w-3" /> Redeschide
           </button>
         </div>
@@ -961,7 +942,7 @@ function ClarificationItem({
         <div className="ml-6 mt-2">
           {!replyOpen && (
             <button onClick={() => setReplyOpen(true)}
-              className="anim-pop text-pm-xs text-accent hover:underline flex items-center gap-1">
+              className="anim-pop text-pm-xs text-accent hover:underline inline-flex items-center gap-1 rounded-lg transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
               <Reply className="h-3 w-3" /> Răspunde
             </button>
           )}
@@ -975,7 +956,7 @@ function ClarificationItem({
               <div className="space-y-2">
                 <textarea value={reply} onChange={(e) => setReply(e.target.value)} rows={3} autoFocus={replyOpen}
                   placeholder="Răspunsul tău..."
-                  className="w-full px-3 py-2 border border-line bg-surface-primary rounded text-pm-sm focus:outline-none focus:border-accent resize-none" />
+                  className="w-full px-3 py-2 border border-line bg-surface-primary rounded-xl text-pm-sm transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] resize-none" />
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" onClick={() => { setReplyOpen(false); setReply(''); }} disabled={busy}>
                     Anulează
@@ -1088,13 +1069,13 @@ function CreateModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+    <div className="anim-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="anim-scale-in bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-line/70">
           <h2 className="text-pm-lg font-semibold text-content-primary">Briefing nou</h2>
           <button onClick={onClose} aria-label="Închide"
-            className="p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-all duration-150 hover:rotate-90">
+            className="p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-all duration-150 hover:rotate-90 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -1102,12 +1083,12 @@ function CreateModal({
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           <Field label="Titlu" required>
             <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="ex: Stație betoane M60 — proiectare turn"
-              className="w-full h-10 px-3 border border-line bg-surface-primary rounded text-pm-sm focus:outline-none focus:border-accent" />
+              className="w-full h-10 px-3 border border-line bg-surface-primary rounded-xl text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]" />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Proiectant" required>
               <select value={assignedTo} onChange={(e) => setAssignedTo(e.target.value ? Number(e.target.value) : '')}
-                className="w-full h-10 px-3 border border-line bg-surface-primary rounded text-pm-sm focus:outline-none focus:border-accent">
+                className="w-full h-10 px-3 border border-line bg-surface-primary rounded-xl text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]">
                 <option value="">— Selectează —</option>
                 {users.map(u => (
                   <option key={u.id} value={u.id}>
@@ -1118,7 +1099,7 @@ function CreateModal({
             </Field>
             <Field label="Proiect (opțional)">
               <select value={projectId} onChange={(e) => setProjectId(e.target.value ? Number(e.target.value) : '')}
-                className="w-full h-10 px-3 border border-line bg-surface-primary rounded text-pm-sm focus:outline-none focus:border-accent">
+                className="w-full h-10 px-3 border border-line bg-surface-primary rounded-xl text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]">
                 <option value="">— Standalone —</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
@@ -1127,11 +1108,11 @@ function CreateModal({
           <div className="grid grid-cols-2 gap-3">
             <Field label="Deadline">
               <input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)}
-                className="w-full h-10 px-3 border border-line bg-surface-primary rounded text-pm-sm focus:outline-none focus:border-accent" />
+                className="w-full h-10 px-3 border border-line bg-surface-primary rounded-xl text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]" />
             </Field>
             <Field label="Prioritate">
               <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)}
-                className="w-full h-10 px-3 border border-line bg-surface-primary rounded text-pm-sm focus:outline-none focus:border-accent">
+                className="w-full h-10 px-3 border border-line bg-surface-primary rounded-xl text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]">
                 {(Object.keys(PRIORITY_LABEL) as Priority[]).map(p =>
                   <option key={p} value={p}>{PRIORITY_LABEL[p]}</option>)}
               </select>
@@ -1139,13 +1120,13 @@ function CreateModal({
           </div>
           <Field label="Scop"><textarea value={scope} onChange={(e) => setScope(e.target.value)} rows={3}
             placeholder="Ce trebuie făcut, în mare?"
-            className="w-full px-3 py-2 border border-line bg-surface-primary rounded text-pm-sm focus:outline-none focus:border-accent resize-none" /></Field>
+            className="w-full px-3 py-2 border border-line bg-surface-primary rounded-xl text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] resize-none" /></Field>
           <Field label="Cerințe tehnice"><textarea value={tech} onChange={(e) => setTech(e.target.value)} rows={3}
             placeholder="Specs, materiale, dimensiuni, standarde..."
-            className="w-full px-3 py-2 border border-line bg-surface-primary rounded text-pm-sm focus:outline-none focus:border-accent resize-none" /></Field>
+            className="w-full px-3 py-2 border border-line bg-surface-primary rounded-xl text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] resize-none" /></Field>
           <Field label="Așteptări client"><textarea value={client} onChange={(e) => setClient(e.target.value)} rows={3}
             placeholder="Ce așteaptă clientul ca rezultat final?"
-            className="w-full px-3 py-2 border border-line bg-surface-primary rounded text-pm-sm focus:outline-none focus:border-accent resize-none" /></Field>
+            className="w-full px-3 py-2 border border-line bg-surface-primary rounded-xl text-pm-sm text-content-primary transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] resize-none" /></Field>
 
           {
 }
@@ -1160,7 +1141,7 @@ function CreateModal({
               onDragOver={(e) => { e.preventDefault(); if (!dragActive) setDragActive(true); }}
               onDragLeave={(e) => { e.preventDefault(); setDragActive(false); }}
               onDrop={onDrop}
-              className={`flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-4 py-5 text-center transition-colors ${saving ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} ${dragActive ? 'border-accent bg-accent/5' : 'border-line hover:border-accent/50 hover:bg-surface-tertiary/30'}`}
+              className={`flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed px-4 py-6 text-center transition-smooth duration-150 ${saving ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'} ${dragActive ? 'border-accent bg-accent/5' : 'border-line hover:border-accent/50 hover:bg-surface-tertiary/30'}`}
             >
               <Upload className={`h-5 w-5 ${dragActive ? 'text-accent' : 'text-content-muted'}`} />
               <p className="text-pm-xs text-content-secondary">Trage fișiere aici sau <span className="text-accent font-medium">click pentru a selecta</span></p>
@@ -1179,7 +1160,7 @@ function CreateModal({
                         <p className="text-pm-2xs text-content-muted">{formatFileSize(f.size)}</p>
                       </div>
                       <button type="button" onClick={() => removeFile(i)} disabled={saving} title="Elimină"
-                        className="p-1 rounded text-content-muted hover:bg-status-red/10 hover:text-status-red transition-colors disabled:opacity-50">
+                        className="p-1 rounded-lg text-content-muted hover:bg-status-red/10 hover:text-status-red transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50">
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>

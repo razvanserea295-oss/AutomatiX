@@ -221,11 +221,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           ].join(' ')}
         >
           <span
-            className="mb-5 inline-flex h-[72px] w-[72px] items-center justify-center rounded-[22px] border border-line/60 bg-surface-primary/80 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.12)]"
+            className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-line/60 bg-surface-primary/80 backdrop-blur-xl shadow-[var(--elevation-3)]"
           >
             <GearLogo size={36} />
           </span>
-          <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.02em] text-content-primary">
+          <h1 className="text-pm-2xl font-semibold leading-tight tracking-[-0.02em] text-content-primary">
             Automatix
           </h1>
           <p className="mt-1 text-pm-sm font-normal text-content-muted">
@@ -234,15 +234,15 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         </div>
 
         {}
-        <div className="relative overflow-hidden rounded-[26px] border border-line/60 bg-surface-primary/55 p-6 backdrop-blur-2xl shadow-[0_24px_80px_rgba(0,0,0,0.22),0_2px_8px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.08)]">
+        <div className="glass-floating rounded-3xl border border-line/70 p-8 enter-scale" style={{ animationDelay: '120ms' }}>
           {pending2FA ? (
             
             <div className="anim-fade-slide-in">
               <div className="mb-5 flex flex-col items-center text-center">
-                <span className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent/12 text-accent">
+                <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-accent/15 text-accent ring-1 ring-accent/25">
                   <ShieldCheck className="h-5 w-5" />
                 </span>
-                <h2 className="text-pm-lg font-semibold tracking-[-0.01em] text-content-primary">Verificare în doi pași</h2>
+                <h2 className="text-pm-lg font-semibold text-content-primary">Verificare în doi pași</h2>
                 <p className="mt-1 max-w-[260px] text-pm-xs leading-relaxed text-content-muted">
                   Deschide aplicația de autentificare și introdu codul curent de 6 cifre.
                 </p>
@@ -263,15 +263,15 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                     placeholder="000000"
                     autoFocus
                     aria-invalid={!!error}
-                    className="h-[52px] w-full rounded-xl border border-line/70 bg-surface-secondary/60 text-center font-mono text-pm-xl tracking-[0.45em] text-content-primary placeholder:text-content-muted/35 transition-all duration-200 focus:outline-none focus:border-accent/70 focus:bg-surface-primary focus:shadow-[0_0_0_4px_var(--color-accent-muted)] disabled:opacity-50"
+                    className="h-12 w-full rounded-xl border border-line/70 bg-surface-secondary/80 text-center font-mono text-pm-xl tracking-[0.45em] text-content-primary placeholder:text-content-muted/40 transition-all duration-200 focus:outline-none focus:border-accent focus:bg-surface-primary focus:shadow-[var(--ring-soft)] disabled:opacity-50"
                   />
                 </div>
 
                 <InlineError error={error} />
 
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-3">
                   <button type="button" onClick={handle2FACancel} disabled={loading}
-                    className="h-11 flex-1 rounded-xl border border-line/70 bg-surface-secondary/50 px-4 text-pm-sm font-medium text-content-secondary transition-colors duration-150 hover:bg-surface-tertiary active:scale-[0.98] disabled:opacity-50">
+                    className="h-11 flex-1 rounded-xl border border-line/70 bg-surface-secondary/50 px-4 text-pm-sm font-medium text-content-secondary transition-smooth duration-150 hover:bg-surface-tertiary hover:border-line active:scale-[0.98] focus:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50">
                     Înapoi
                   </button>
                   <PrimaryButton loading={loading} disabled={loading || twoFaCode.length !== 6} label="Verifică" loadingLabel="Se verifică…" />
@@ -292,7 +292,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                     type="button"
                     onClick={handleDemoLogin}
                     disabled={loading}
-                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-pm-sm font-semibold text-[var(--color-on-accent)] transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-50"
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-pm-sm font-semibold text-[var(--color-on-accent)] transition-smooth duration-150 hover:opacity-90 active:scale-[0.98] focus:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50"
                   >
                     {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                     Intră în demo
@@ -305,7 +305,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               <div className="overflow-hidden rounded-xl border border-line/70 bg-surface-secondary/60 transition-all duration-200 focus-within:border-accent/70 focus-within:shadow-[0_0_0_4px_var(--color-accent-muted)]">
                 {}
                 <div className="relative flex items-center">
-                  <User aria-hidden className="pointer-events-none absolute left-3.5 h-4 w-4 text-content-muted/70" />
+                  <User aria-hidden className="pointer-events-none absolute left-3 h-4 w-4 text-content-muted/70" />
                   <label htmlFor="login-username" className="sr-only">Utilizator</label>
                   <input
                     id="login-username"
@@ -320,10 +320,10 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                   />
                 </div>
                 {}
-                <div aria-hidden className="mx-3.5 h-px bg-line/60" />
+                <div aria-hidden className="mx-3 h-px bg-line/60" />
                 {}
                 <div className="relative flex items-center">
-                  <Lock aria-hidden className="pointer-events-none absolute left-3.5 h-4 w-4 text-content-muted/70" />
+                  <Lock aria-hidden className="pointer-events-none absolute left-3 h-4 w-4 text-content-muted/70" />
                   <label htmlFor="login-password" className="sr-only">Parolă</label>
                   <input
                     id="login-password"
@@ -339,7 +339,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                   <button
                     type="button"
                     onClick={() => setShowPwd(!showPwd)}
-                    className="absolute right-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-content-muted/70 transition-colors duration-150 hover:bg-surface-tertiary/70 hover:text-content-primary"
+                    className="absolute right-2 inline-flex h-8 w-8 items-center justify-center rounded-lg text-content-muted/70 transition-smooth duration-150 hover:bg-surface-tertiary/70 hover:text-content-primary active:scale-95 focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
                     tabIndex={-1}
                     aria-label={showPwd ? 'Ascunde parola' : 'Afișează parola'}
                   >
@@ -356,13 +356,13 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="peer h-[26px] w-[44px] cursor-pointer appearance-none rounded-full bg-surface-tertiary transition-colors duration-200 checked:bg-accent focus:outline-none focus-visible:shadow-[0_0_0_4px_var(--color-accent-muted)]"
+                    className="peer h-[26px] w-11 cursor-pointer appearance-none rounded-full bg-surface-tertiary transition-colors duration-200 checked:bg-accent focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
                     role="switch"
                     aria-checked={rememberMe}
                   />
                   <span
                     aria-hidden
-                    className="pointer-events-none absolute left-[3px] top-[3px] h-5 w-5 rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.3)] transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] peer-checked:translate-x-[18px]"
+                    className="pointer-events-none absolute left-[3px] top-[3px] h-5 w-5 rounded-full bg-surface-primary shadow-[var(--elevation-2)] transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)] peer-checked:translate-x-[18px]"
                   />
                 </span>
               </label>
@@ -377,7 +377,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                 <button
                   type="button"
                   onClick={() => setShowServer((v) => !v)}
-                  className="text-pm-xs text-accent/90 transition-colors duration-150 hover:text-accent hover:underline underline-offset-2"
+                  className="rounded-md px-1 py-0.5 text-pm-xs text-accent/90 transition-colors duration-150 hover:text-accent hover:underline underline-offset-2 focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
                 >
                   Probleme la conectare?
                 </button>
@@ -387,7 +387,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                     <button
                       type="button"
                       onClick={() => { window.localStorage.removeItem(STORAGE_KEYS.TENANT_SLUG); window.location.reload(); }}
-                      className="text-pm-xs text-content-muted transition-colors duration-150 hover:text-content-secondary hover:underline underline-offset-2"
+                      className="rounded-md px-1 py-0.5 text-pm-xs text-content-muted transition-colors duration-150 hover:text-content-secondary hover:underline underline-offset-2 focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
                     >
                       Schimbă firma
                     </button>
@@ -408,7 +408,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           <button
             type="button"
             onClick={() => setShowServer(!showServer)}
-            className="inline-flex items-center gap-1.5 rounded-full border border-line/50 bg-surface-primary/40 px-3 py-1 text-pm-2xs text-content-muted backdrop-blur-xl transition-colors duration-150 hover:text-content-secondary"
+            className="inline-flex items-center gap-1.5 rounded-full border border-line/50 bg-surface-primary/40 px-3 py-1 text-pm-2xs text-content-muted backdrop-blur-xl transition-smooth duration-150 hover:border-line hover:text-content-secondary active:scale-[0.98] focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
           >
             {serverOk === false ? (
               <WifiOff className="h-3 w-3 text-status-red" />
@@ -417,12 +417,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             ) : (
               <Server className="h-3 w-3" />
             )}
-            <span className={serverOk === false ? 'text-status-red' : serverOk === true ? 'text-status-green' : ''}>
+            <span className={`min-w-0 max-w-[260px] truncate ${serverOk === false ? 'text-status-red' : serverOk === true ? 'text-status-green' : ''}`}>
               {serverOk === false ? 'Server inaccesibil' : serverUrl ? serverUrl : 'Configurează server'}
             </span>
           </button>
           {showServer && (
-            <div className="mx-auto mt-2.5 max-w-[340px] space-y-2 anim-fade-slide-in">
+            <div className="mx-auto mt-3 max-w-[340px] space-y-2 anim-fade-slide-in">
               <input
                 type="text"
                 value={serverUrl}
@@ -430,12 +430,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                 readOnly={isWebBrowser}
                 placeholder="http://192.168.1.12:3500"
                 title={isWebBrowser ? 'În browser, URL-ul este fixat la adresa de unde s-a încărcat pagina.' : undefined}
-                className={`h-10 w-full rounded-xl border border-line/70 bg-surface-secondary/60 px-3.5 text-pm-xs text-content-primary placeholder:text-content-muted/50 backdrop-blur-sm transition-all duration-200 focus:outline-none focus:border-accent/70 focus:shadow-[0_0_0_4px_var(--color-accent-muted)] ${isWebBrowser ? 'cursor-not-allowed opacity-70' : ''}`}
+                className={`h-10 w-full rounded-xl border border-line/70 bg-surface-secondary/60 px-3 text-pm-xs text-content-primary placeholder:text-content-muted/50 backdrop-blur-sm transition-all duration-200 focus:outline-none focus:border-accent/70 focus:shadow-[0_0_0_4px_var(--color-accent-muted)] ${isWebBrowser ? 'cursor-not-allowed opacity-70' : ''}`}
               />
               <button
                 type="button"
                 onClick={handleServerSave}
-                className="h-10 w-full rounded-xl border border-line/70 bg-surface-secondary/50 text-pm-xs font-medium text-content-primary transition-colors duration-150 hover:bg-surface-tertiary active:scale-[0.98]"
+                className="h-10 w-full rounded-xl border border-line/70 bg-surface-secondary/50 text-pm-xs font-medium text-content-primary transition-smooth duration-150 hover:bg-surface-tertiary hover:border-line active:scale-[0.98] focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
               >
                 Testează conexiunea
               </button>
@@ -475,11 +475,11 @@ function PrimaryButton({
       className={[
         'flex h-11 w-full flex-1 items-center justify-center gap-2 rounded-xl',
         'bg-accent text-pm-md font-semibold text-[var(--color-on-accent)]',
-        'shadow-[0_2px_12px_var(--color-accent-muted),inset_0_1px_0_rgba(255,255,255,0.18)]',
+        'shadow-[0_2px_12px_var(--color-accent-muted)]',
         'transition-all duration-150 ease-out',
         'hover:brightness-[1.07] active:scale-[0.98] active:brightness-95',
-        'focus:outline-none focus-visible:shadow-[0_0_0_4px_var(--color-accent-muted)]',
-        'disabled:opacity-55 disabled:saturate-[0.8] disabled:shadow-none',
+        'focus:outline-none focus-visible:shadow-[var(--ring-soft)]',
+        'disabled:pointer-events-none disabled:opacity-55 disabled:saturate-[0.8] disabled:shadow-none',
       ].join(' ')}
     >
       {loading ? (

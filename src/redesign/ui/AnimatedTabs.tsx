@@ -35,7 +35,7 @@ export default function AnimatedTabs({ tabs, active, onChange, className = '' }:
     <div
       ref={ref}
       role="tablist"
-      className={`relative inline-flex items-center gap-1 rounded-full border border-line/70 bg-surface-secondary p-1 ${className}`}
+      className={`relative inline-flex items-center gap-1 rounded-full border border-line/70 bg-surface-secondary surface-frost p-1 ${className}`}
     >
       <span
         aria-hidden
@@ -52,8 +52,8 @@ export default function AnimatedTabs({ tabs, active, onChange, className = '' }:
             aria-selected={on}
             data-tab={t.id}
             onClick={() => onChange(t.id)}
-            className={`relative z-[1] inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full text-pm-xs font-semibold transition-colors focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
-              on ? 'text-accent' : 'text-content-secondary hover:text-content-primary'
+            className={`relative z-[1] inline-flex items-center justify-center gap-1.5 h-8 px-3.5 rounded-full text-pm-xs font-semibold whitespace-nowrap transition-smooth duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.97] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50 ${
+              on ? 'text-[var(--color-on-accent)]' : 'text-content-secondary hover:text-content-primary'
             }`}
           >
             {Icon && <Icon className="h-3.5 w-3.5" />}

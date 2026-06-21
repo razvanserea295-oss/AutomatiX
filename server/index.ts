@@ -25,9 +25,11 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import fs from 'fs';
 import path from 'path';
 import http from 'http';
-import { initDatabaseForServer, getDb, saveDatabase, flushDatabase, isFreshDatabase } from './db';
+import { initDatabaseForServer, getDb, saveDatabase, flushDatabase, isFreshDatabase, getDbPath, getLastSaveAt } from './db';
+import { acquireInstanceLock, releaseInstanceLock } from './instanceLock';
 import { ensureBlankTenant } from './tenantInit';
 import { DeplasariService } from '../electron/services/deplasariService';
 import { runMigrations } from '../electron/db/migrations';
@@ -49,7 +51,11 @@ import { registerPartsTreeUpload } from './partsTreeUpload';
 import { registerBriefingUpload } from './briefingUpload';
 import { registerAvatarUpload } from './avatarUpload';
 import { registerDownloads } from './downloads';
+import { registerSourceArchive } from './sourceArchive';
+import { registerSourceUpdate } from './sourceUpdate';
 import { startBackupScheduler } from './backup';
+import { getAutoBackupDirectory } from './autoBackup';
+import { registerSharedStorageApi } from './sharedStorageApi';
 
 const PORT = parseInt(process.env.PROMIX_PORT || '3500', 10);
 const UPDATES_DIR = process.env.PROMIX_UPDATES_DIR || path.join(process.cwd(), 'updates');
@@ -60,7 +66,7 @@ const UPDATES_DIR = process.env.PROMIX_UPDATES_DIR || path.join(process.cwd(), '
 
 
 
-const BODY_LIMIT = process.env.PROMIX_BODY_LIMIT || '500mb';
+const BODY_LIMIT = process.env.PROMIX_BODY_LIMIT || '50mb';
 const TRUST_PROXY = process.env.PROMIX_TRUST_PROXY === '1';
 const RATE_LIMIT_OFF = process.env.PROMIX_RATE_LIMIT_OFF === '1';
 
@@ -95,6 +101,25 @@ if (TRUST_PROXY) app.set('trust proxy', 1);
 
 
 
+// SAP Fiori (classic SAPUI5) CSP allowance.
+// The Fiori UI mode can mount classic SAPUI5 controls (Smart Table, VizFrame,
+// Gantt, Network Graph, Process Flow, PDF Viewer) loaded from SAP's public CDN.
+// SAPUI5 needs that origin reachable for scripts/styles/fonts/XHR, and sap.viz
+// (charts) compiles code at runtime → 'unsafe-eval'. This widens the otherwise
+// strict CSP, so it is gated behind PROMIX_FIORI_CLASSIC (ON unless set to '0')
+// and logged loudly at boot. Set PROMIX_FIORI_CLASSIC=0 to keep the strict
+// baseline (which disables the classic-control parts of Fiori mode).
+const FIORI_CLASSIC = process.env.PROMIX_FIORI_CLASSIC !== '0';
+const SAP_UI5_CDN = 'https://ui5.sap.com';
+const cspScriptExtra  = FIORI_CLASSIC ? [SAP_UI5_CDN, "'unsafe-eval'"] : [];
+const cspStyleExtra   = FIORI_CLASSIC ? [SAP_UI5_CDN] : [];
+const cspFontExtra    = FIORI_CLASSIC ? [SAP_UI5_CDN] : [];
+const cspImgExtra     = FIORI_CLASSIC ? [SAP_UI5_CDN] : [];
+const cspConnectExtra = FIORI_CLASSIC ? [SAP_UI5_CDN] : [];
+if (FIORI_CLASSIC) {
+  console.warn(`[security] PROMIX_FIORI_CLASSIC on — CSP widened for SAP UI5 CDN (${SAP_UI5_CDN} on script/style/font/img/connect + script 'unsafe-eval' for sap.viz charts). Set PROMIX_FIORI_CLASSIC=0 to disable classic Fiori controls and restore the strict CSP.`);
+}
+
 app.use(helmet({
   contentSecurityPolicy: {
     useDefaults: true,
@@ -103,17 +128,19 @@ app.use(helmet({
       baseUri: ["'self'"],
       objectSrc: ["'none'"],
       frameAncestors: ["'self'"],
-      scriptSrc: ["'self'"],
-      
-      
-      
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", 'data:', 'blob:'],   
-      fontSrc: ["'self'", 'data:'],
-      connectSrc: ["'self'"],                  
+      // PDF Viewer (sap.m.PDFViewer) renders the document in a blob: iframe.
+      frameSrc: ["'self'", 'blob:'],
+      scriptSrc: ["'self'", ...cspScriptExtra],
+
+
+
+      styleSrc: ["'self'", "'unsafe-inline'", ...cspStyleExtra],
+      imgSrc: ["'self'", 'data:', 'blob:', ...cspImgExtra],
+      fontSrc: ["'self'", 'data:', ...cspFontExtra],
+      connectSrc: ["'self'", ...cspConnectExtra],
       workerSrc: ["'self'", 'blob:'],
-      
-      
+
+
       upgradeInsecureRequests: null,
     },
   },
@@ -248,10 +275,22 @@ const APP_VERSION = (() => {
 })();
 
 app.get('/api/health', (_req, res) => {
+  // Actually probe the DB — a static "ok" hid a locked/broken DB from monitoring.
+  let dbOk = false;
+  try {
+    const r = getDb().exec('SELECT 1');
+    dbOk = Array.isArray(r) && r.length > 0;
+  } catch { dbOk = false; }
 
+  const lastSaveAt = getLastSaveAt();
+  // Age (ms) of the last successful snapshot write. Steadily growing past the
+  // 30s save interval signals saves are failing even while requests still serve.
+  const lastSaveAgeMs = lastSaveAt ? Date.now() - lastSaveAt : null;
 
-  res.json({
-    status: 'ok',
+  res.status(dbOk ? 200 : 503).json({
+    status: dbOk ? 'ok' : 'degraded',
+    db: dbOk ? 'ok' : 'error',
+    lastSaveAgeMs,
     version: APP_VERSION,
     mode: 'server',
     demo: process.env.PROMIX_DEMO === '1',
@@ -557,6 +596,20 @@ app.get('/api/portal/:token', tokenLimiter, (req, res) => {
 
 app.use('/api/update', express.static(UPDATES_DIR, { fallthrough: false }));
 
+// Auto-backup download endpoint - serves files directly without loading into memory
+const AUTO_BACKUP_DIR = getAutoBackupDirectory();
+app.get('/api/auto-backup/:filename', (req, res) => {
+  const filename = path.basename(req.params.filename);
+  const filepath = path.join(AUTO_BACKUP_DIR, filename);
+  if (!filename.endsWith('.zip') || !fs.existsSync(filepath)) {
+    res.status(404).json({ message: 'Backup not found' });
+    return;
+  }
+  res.set('Content-Type', 'application/zip');
+  res.set('Content-Disposition', `attachment; filename="${filename}"`);
+  fs.createReadStream(filepath).pipe(res);
+});
+
 
 
 
@@ -572,6 +625,11 @@ registerReleaseUpload(app, UPDATES_DIR);
 
 
 registerPartsTreeDownload(app);
+
+// Admin-only temporary source-code archive download (Instrumente → Arhivă).
+registerSourceArchive(app);
+// Admin-only live source update via upload + restart.
+registerSourceUpdate(app);
 
 
 // global express.json() body parser would matter (json parser skips
@@ -591,6 +649,8 @@ registerAvatarUpload(app);
 
 
 registerDownloads(app);
+
+registerSharedStorageApi(app);
 
 if (!RATE_LIMIT_OFF) app.use('/api/cmd', globalLimiter);
 
@@ -751,9 +811,23 @@ app.use((err: any, _req: any, res: any, _next: any) => {
 
 
 async function main() {
+  // Single-instance guard FIRST — never let two servers share one promix.db
+  // (full-snapshot persistence means the second would silently clobber the first).
+  try {
+    await acquireInstanceLock(getDbPath());
+  } catch (e) {
+    console.error('[server]', e instanceof Error ? e.message : e);
+    logServerEvent('FATAL', 'refused to start — another instance holds the DB lock', e);
+    process.exit(1);
+  }
+
   console.log('[server] Initializing database...');
   const db = await initDatabaseForServer();
   runMigrations(db);
+  // Persist the migrated schema synchronously NOW. Otherwise the first durable
+  // save is the debounced one below, and a crash in that window would re-run the
+  // (not always idempotent) migrations on next boot.
+  try { flushDatabase(); } catch (e) { console.error('[server] flush after migrations failed:', e); }
 
   
   
@@ -936,6 +1010,7 @@ async function main() {
   });
   
   process.on('exit', (code) => {
+    try { releaseInstanceLock(); } catch { /* best effort */ }
     logServerEvent('EXIT', `process exiting with code ${code}`);
   });
 
@@ -948,6 +1023,8 @@ async function main() {
   process.on('uncaughtException', (err) => {
     console.error('[server] uncaughtException (kept alive):', err);
     logServerEvent('CRASH', 'uncaughtException (kept alive)', err);
+    // Best-effort: persist in-memory writes before we risk a later hard exit.
+    try { flushDatabase(); } catch (e) { console.error('[server] flush after uncaughtException failed:', e); }
   });
   process.on('unhandledRejection', (reason) => {
     console.error('[server] unhandledRejection (kept alive):', reason);

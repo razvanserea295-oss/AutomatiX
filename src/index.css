@@ -56,15 +56,15 @@
 
 :root {
   color-scheme: light dark;
-  accent-color: #0D9488;
+  accent-color: #2D5BE3;
 
   /* Light — SAP Fiori 3 "Belize" design language. Clean neutral ladder with
      the signature Fiori page background (#F7F7F7). The shell bar is the
      canonical Belize dark blue-grey (#354A5F) — the application's anchor.
      Brand/accent is the Belize emphasized blue (#0A6ED1); semantic status
      from SAP Fundamentals. Font family is SAP "72" (Arial-metric fallback). */
-  --color-accent:        #0D9488;                  /* teal-600 — brand (deep for contrast on light) */
-  --color-accent-muted:  rgba(13, 148, 136, 0.10);
+  --color-accent:        #2D5BE3;                  /* brand blue — primary */
+  --color-accent-muted:  rgba(45, 91, 227, 0.10);
   --color-on-accent:     #FFFFFF;
   /* Surface ladder. CRITICAL: `bg-primary` MUST be a light card surface in
      light mode, otherwise every component using `bg-surface-primary` (forms,
@@ -89,7 +89,7 @@
   /* Fiori side navigation surface — separate from shell bar */
   --color-nav-bg:        #FFFFFF;                  /* Side nav background */
   --color-nav-hover:     #F5F6F7;                  /* Side nav item hover */
-  --color-nav-active-bg: rgba(13, 148, 136, 0.10); /* Active item tint (teal) */
+  --color-nav-active-bg: rgba(45, 91, 227, 0.10); /* Active item tint (blue) */
 
   /* Shell tokens — the dark Fiori shell bar (Titlebar / StatusBar). These
      stay dark in BOTH themes because the app shell forces a dark wrapper. */
@@ -153,13 +153,13 @@
   --highlight-edge: rgba(15, 23, 42, 0.04);
 
   /* Soft focus ring — replaces the 2px outline on premium components.
-     Subtle SAP Blue halo, no harsh outline. */
-  --ring-soft: 0 0 0 2px rgba(13, 148, 136, 0.30);
-  --ring-strong: 0 0 0 2px rgba(13, 148, 136, 0.60);
+     Brand blue halo, no harsh outline. */
+  --ring-soft: 0 0 0 2px rgba(45, 91, 227, 0.30);
+  --ring-strong: 0 0 0 2px rgba(45, 91, 227, 0.60);
 
   /* Accent glow — subtle on light (no harsh halo). */
-  --glow-accent:    0 4px 16px -6px rgba(13, 148, 136, 0.30);
-  --glow-accent-sm: 0 2px 8px -2px rgba(13, 148, 136, 0.22);
+  --glow-accent:    0 4px 16px -6px rgba(45, 91, 227, 0.30);
+  --glow-accent-sm: 0 2px 8px -2px rgba(45, 91, 227, 0.22);
 
   /* Fiori-tuned radius scale — smaller, more "engineered". Cards get 4px,
      not 10px, which is the SAP signature for "this is a serious tool". */
@@ -195,29 +195,28 @@
   /* Dark — Fiori+ dark variant. The shell bar stays its canonical color
      (#354A5F) via the forced `dark` wrapper. Page canvas lifts visibly
      above the shell; cards lift above page; popovers float highest. */
-  /* Brand accent — emerald/teal, vivid on dark for a "lit" premium feel. */
-  --color-accent:        #2DD4BF;                  /* teal-400 — brand */
-  --color-accent-muted:  rgba(45, 212, 191, 0.14);
-  --color-on-accent:     #04231D;                  /* deep teal-black on bright accent */
-  /* Premium-dark NEUTRAL graphite ladder. Deep near-black canvas, graphite
-     cards lifted above it, popovers floating highest — a clean monotonic
-     luminance climb (rail < page < primary < secondary < elevated < tertiary).
-     Pure neutral greys (no blue cast) so only the teal accent carries hue. */
-  --color-bg-rail:       #0A0A0A;                  /* StatusBar — near black */
-  --color-bg-primary:    #181818;                  /* Shell bar / card / form surface */
-  --color-bg-page:       #0F0F0F;                  /* Page canvas — deep */
-  --color-bg-secondary:  #1D1D1D;                  /* Cards / panels — lifted */
-  --color-bg-tertiary:   #282828;                  /* Hover / raised (lightest) */
-  --color-bg-elevated:   #212121;                  /* Dropdown / popover — floats */
-  --color-text-primary:  #ECECEC;                  /* neutral near-white */
-  --color-text-secondary:#AFAFAF;                  /* secondary */
-  --color-text-muted:    #7C7C7C;                  /* AA muted */
-  --color-border:        #2C2C2C;                  /* visible but quiet */
-  --color-border-subtle: #1F1F1F;                  /* hairline dividers */
+  /* Brand accent — bright blue, vivid on dark for a "lit" premium feel. */
+  --color-accent:        #0078D4;                  /* VS Code button/focus blue */
+  --color-accent-muted:  rgba(0, 120, 212, 0.18);
+  --color-on-accent:     #FFFFFF;                  /* white text on the blue button */
+  /* Visual Studio Code "Dark Modern" surface ladder — chrome #181818, editor
+     canvas #1F1F1F, panels #252526, hover #37373D. Monotonic luminance climb
+     (rail < page < primary < secondary < elevated < tertiary). */
+  --color-bg-rail:       #181818;                  /* StatusBar — VS Code chrome */
+  --color-bg-primary:    #252526;                  /* Shell bar / card — VS Code sideBar */
+  --color-bg-page:       #1F1F1F;                  /* Page canvas — VS Code editor.background */
+  --color-bg-secondary:  #2D2D2D;                  /* Cards / panels — lifted */
+  --color-bg-tertiary:   #37373D;                  /* Hover / raised — VS Code list selection */
+  --color-bg-elevated:   #2D2D30;                  /* Dropdown / popover — VS Code editorWidget */
+  --color-text-primary:  #D4D4D4;                  /* VS Code editor.foreground */
+  --color-text-secondary:#9D9D9D;                  /* VS Code descriptionForeground */
+  --color-text-muted:    #717171;                  /* VS Code disabledForeground */
+  --color-border:        #3C3C3C;                  /* VS Code input / separator */
+  --color-border-subtle: #2B2B2B;                  /* VS Code panel.border */
 
-  --color-nav-bg:        #0F0F0F;                  /* Side nav — matches page canvas */
-  --color-nav-hover:     #1C1C1C;                  /* Side nav hover */
-  --color-nav-active-bg: rgba(45, 212, 191, 0.12);
+  --color-nav-bg:        #181818;                  /* VS Code sideBar / titleBar */
+  --color-nav-hover:     #2A2D2E;                  /* VS Code list.hoverBackground */
+  --color-nav-active-bg: rgba(0, 120, 212, 0.18);
 
   --shell-bg:      var(--color-bg-primary);
   --shell-surface: var(--color-bg-secondary);
@@ -227,13 +226,13 @@
   --shell-accent:  var(--color-accent);
   --shell-hover:   var(--color-bg-tertiary);
 
-  /* Status — SAP Fundamentals vivid for dark backgrounds */
-  --status-green:  #36A41D;  /* SAP Positive dark */
-  --status-red:    #E00000;  /* SAP Negative dark */
-  --status-amber:  #F58B00;  /* SAP Critical dark */
-  --status-blue:   #2DD4BF;  /* Informative — teal (no blue) */
-  --status-teal:   #2DD4BF;
-  --status-purple: #A78BFA;
+  /* Status — VS Code editor/terminal token palette */
+  --status-green:  #73C991;  /* VS Code testing-passed green */
+  --status-red:    #F14C4C;  /* VS Code error red */
+  --status-amber:  #CCA700;  /* VS Code editorWarning amber */
+  --status-blue:   #3794FF;  /* VS Code link / info blue */
+  --status-teal:   #4EC9B0;  /* VS Code types teal */
+  --status-purple: #C586C0;  /* VS Code keyword purple */
 
   /* Role colors — dark mode */
   --role-admin-bg:      rgba(251, 113, 133, 0.12);
@@ -274,13 +273,12 @@
   --highlight-top: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 1.5px);
   --highlight-edge: rgba(255, 255, 255, 0.04);
 
-  --ring-soft: 0 0 0 3px rgba(45, 212, 191, 0.34);
-  --ring-strong: 0 0 0 3px rgba(45, 212, 191, 0.62);
+  --ring-soft: 0 0 0 3px rgba(0, 120, 212, 0.34);
+  --ring-strong: 0 0 0 3px rgba(0, 120, 212, 0.62);
 
-  /* Accent glow — the teal "lit" halo that gives the dark theme its premium
-     feel. Applied to primary buttons, active nav, focused KPIs. */
-  --glow-accent:    0 0 0 1px rgba(45, 212, 191, 0.16), 0 8px 28px -8px rgba(45, 212, 191, 0.45);
-  --glow-accent-sm: 0 0 16px -4px rgba(45, 212, 191, 0.45);
+  /* Accent glow — VS Code blue halo on primary buttons, active nav, focused KPIs. */
+  --glow-accent:    0 0 0 1px rgba(0, 120, 212, 0.18), 0 8px 28px -8px rgba(0, 120, 212, 0.45);
+  --glow-accent-sm: 0 0 16px -4px rgba(0, 120, 212, 0.45);
 }
 
 @layer base {
@@ -649,9 +647,9 @@
   pointer-events: none;
   z-index: 0;
   background:
-    radial-gradient(42rem 32rem at 18% 22%, rgba(8, 145, 178, 0.16), transparent 65%),
-    radial-gradient(36rem 28rem at 82% 78%, rgba(34, 211, 238, 0.12), transparent 70%),
-    radial-gradient(28rem 22rem at 55% 110%, rgba(15, 118, 110, 0.08), transparent 70%);
+    radial-gradient(42rem 32rem at 18% 22%, rgba(22, 48, 122, 0.16), transparent 65%),
+    radial-gradient(36rem 28rem at 82% 78%, rgba(45, 91, 227, 0.12), transparent 70%),
+    radial-gradient(28rem 22rem at 55% 110%, rgba(77, 134, 255, 0.08), transparent 70%);
   filter: blur(40px);
   animation: halo-drift 24s ease-in-out infinite alternate;
 }
@@ -685,17 +683,17 @@
 
 .login-aurora-orb-1 {
   top: -25%; left: -10%;
-  background: radial-gradient(circle at center, rgba(8, 145, 178, 0.55), transparent 60%);
+  background: radial-gradient(circle at center, rgba(22, 48, 122, 0.65), transparent 60%);
   animation: aurora-drift-1 22s ease-in-out infinite alternate;
 }
 .login-aurora-orb-2 {
   top: 20%; right: -15%;
-  background: radial-gradient(circle at center, rgba(34, 211, 238, 0.45), transparent 60%);
+  background: radial-gradient(circle at center, rgba(45, 91, 227, 0.45), transparent 60%);
   animation: aurora-drift-2 26s ease-in-out infinite alternate;
 }
 .login-aurora-orb-3 {
   bottom: -30%; left: 25%;
-  background: radial-gradient(circle at center, rgba(15, 118, 110, 0.30), transparent 65%);
+  background: radial-gradient(circle at center, rgba(77, 134, 255, 0.25), transparent 65%);
   animation: aurora-drift-3 30s ease-in-out infinite alternate;
 }
 
@@ -719,9 +717,9 @@
  * ==========================================================================*/
 .boot-loader {
   background:
-    radial-gradient(60rem 40rem at 50% 20%, rgba(8, 145, 178, 0.22), transparent 65%),
-    radial-gradient(48rem 32rem at 20% 90%, rgba(34, 211, 238, 0.12), transparent 70%),
-    linear-gradient(155deg, #0a0f12 0%, #0d1418 45%, #0f1a1f 100%);
+    radial-gradient(60rem 40rem at 50% 20%, rgba(22, 48, 122, 0.35), transparent 65%),
+    radial-gradient(48rem 32rem at 20% 90%, rgba(45, 91, 227, 0.14), transparent 70%),
+    linear-gradient(155deg, #080c1a 0%, #0c1228 45%, #0f162e 100%);
   color: #e8edf4;
 }
 .boot-loader-orb {
@@ -731,7 +729,7 @@
   width: 70rem;
   height: 70rem;
   border-radius: 999px;
-  background: radial-gradient(circle at center, rgba(8, 145, 178, 0.35), transparent 60%);
+  background: radial-gradient(circle at center, rgba(45, 91, 227, 0.35), transparent 60%);
   filter: blur(90px);
   opacity: 0.45;
   pointer-events: none;
@@ -743,7 +741,7 @@
 .boot-ring {
   position: absolute;
   inset: 0;
-  border: 1px solid rgba(34, 211, 238, 0.35);
+  border: 1px solid rgba(77, 134, 255, 0.35);
   border-radius: 999px;
   opacity: 0;
   animation: boot-ring-pulse 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
@@ -753,9 +751,9 @@
 .boot-ring-3 { animation-delay: 1.8s; }
 
 @keyframes boot-ring-pulse {
-  0%   { transform: scale(0.6); opacity: 0; border-color: rgba(34, 211, 238, 0.55); }
+  0%   { transform: scale(0.6); opacity: 0; border-color: rgba(77, 134, 255, 0.55); }
   20%  { opacity: 0.8; }
-  100% { transform: scale(1.75); opacity: 0; border-color: rgba(34, 211, 238, 0); }
+  100% { transform: scale(1.75); opacity: 0; border-color: rgba(77, 134, 255, 0); }
 }
 
 /* Soft breathing halo right under the gear */
@@ -763,7 +761,7 @@
   position: absolute;
   inset: 18%;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(8, 145, 178, 0.55), transparent 70%);
+  background: radial-gradient(circle, rgba(45, 91, 227, 0.55), transparent 70%);
   filter: blur(18px);
   animation: boot-halo-breathe 3.2s ease-in-out infinite;
 }
@@ -777,7 +775,7 @@
    animation collisions. */
 .boot-gear {
   animation: boot-gear-spin 8s linear infinite;
-  filter: drop-shadow(0 4px 16px rgba(8, 145, 178, 0.45));
+  filter: drop-shadow(0 4px 16px rgba(45, 91, 227, 0.50));
 }
 @keyframes boot-gear-spin {
   from { transform: rotate(0deg); }
@@ -807,14 +805,14 @@
 .aurora-backdrop {
   background:
     radial-gradient(60rem 40rem at 50% 20%, var(--color-accent-muted), transparent 65%),
-    radial-gradient(48rem 32rem at 80% 85%, rgba(34, 211, 238, 0.12), transparent 70%),
+    radial-gradient(48rem 32rem at 80% 85%, rgba(45, 91, 227, 0.10), transparent 70%),
     var(--color-bg-primary);
 }
 .dark .aurora-backdrop {
   background:
-    radial-gradient(60rem 40rem at 50% 20%, rgba(8, 145, 178, 0.22), transparent 65%),
-    radial-gradient(48rem 32rem at 20% 90%, rgba(34, 211, 238, 0.12), transparent 70%),
-    linear-gradient(155deg, #0a0f12 0%, #0d1418 45%, #0f1a1f 100%);
+    radial-gradient(60rem 40rem at 50% 20%, rgba(22, 48, 122, 0.30), transparent 65%),
+    radial-gradient(48rem 32rem at 20% 90%, rgba(45, 91, 227, 0.14), transparent 70%),
+    linear-gradient(155deg, #080c1a 0%, #0c1228 45%, #0f162e 100%);
 }
 .aurora-backdrop-orb {
   position: absolute;

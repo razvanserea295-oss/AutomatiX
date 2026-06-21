@@ -35,7 +35,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
-import { ClipboardCheck, Save, Loader2, CheckSquare, FileText, Minimize2, Maximize2, Pencil, Eye, Gauge, Layers, ListChecks, CalendarClock, History } from 'lucide-react';
+import { ClipboardCheck, Save, Loader2, CheckSquare, FileText, Minimize2, Maximize2, Pencil, Eye, CalendarClock, History } from 'lucide-react';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 import { formatDateTimeRo } from '@/lib/format';
@@ -51,7 +51,6 @@ import { useCountUp } from '@/hooks/useCountUp';
 
 import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import EmptyState from '@/redesign/ui/EmptyState';
@@ -295,7 +294,7 @@ export default function FisaProiectantPage({ user }: { user: User | null }) {
         {
 }
         <header
-          className="enter-up shrink-0 flex flex-col gap-4 pb-3.5 border-b border-line/60 xl:flex-row xl:items-center xl:justify-between"
+          className="enter-up shrink-0 flex flex-col gap-4 pb-4 border-b border-line/60 xl:flex-row xl:items-center xl:justify-between"
           style={{ animationDelay: '0ms' }}
         >
           <div className="flex items-center gap-4 min-w-0">
@@ -313,11 +312,11 @@ export default function FisaProiectantPage({ user }: { user: User | null }) {
 
           {
 }
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <select
               value={projectId || ''}
               onChange={e => { const v = Number(e.target.value); if (v) selectProjectMorph(v); }}
-              className="h-9 rounded-xl border border-line bg-surface-primary px-3 text-pm-sm text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 max-w-[260px]"
+              className="h-9 max-w-[260px] rounded-xl border border-line bg-surface-primary px-3 text-pm-sm text-content-primary transition-smooth duration-150 hover:border-line/80 hover:bg-surface-tertiary focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
             >
               <option value="">Selectează proiect...</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -376,30 +375,6 @@ export default function FisaProiectantPage({ user }: { user: User | null }) {
             )}
           </div>
         </header>
-
-        {}
-        {/* KPI strip only once a fișă is open — otherwise it's four "0"s above
-            the project picker, which reads as broken/empty. */}
-        {checklist && (
-          <div className="enter-up shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-4" style={{ animationDelay: '80ms' }}>
-            <KpiCard
-              vtName={vtName('fisa-kpi', 'progres')}
-              label="Progres fișă" icon={Gauge} value={`${progressData.pct}%`}
-            />
-            <KpiCard
-              vtName={vtName('fisa-kpi', 'verificate')}
-              label="Puncte verificate" icon={ListChecks} value={progressData.done} iconColor="text-status-green"
-            />
-            <KpiCard
-              vtName={vtName('fisa-kpi', 'total')}
-              label="Total puncte" icon={CheckSquare} value={progressData.total}
-            />
-            <KpiCard
-              vtName={vtName('fisa-kpi', 'ansambluri')}
-              label="Ansambluri" icon={Layers} value={tracking.length}
-            />
-          </div>
-        )}
 
         {
 
@@ -496,7 +471,7 @@ export default function FisaProiectantPage({ user }: { user: User | null }) {
                     <span className="text-pm-sm font-semibold tabular-nums text-content-primary">{pctCount}%</span>
                   </div>
                   <div className="h-2 rounded-full bg-surface-tertiary overflow-hidden">
-                    <div className="anim-bar-grow h-full rounded-full bg-accent transition-all duration-500 motion-reduce:transition-none" style={{ width: `${progressData.pct}%` }} />
+                    <div className="anim-bar-grow h-full rounded-full bg-accent transition-colors duration-150 motion-reduce:transition-none" style={{ width: `${progressData.pct}%` }} />
                   </div>
                   <p className="mt-1.5 text-pm-2xs text-content-muted tabular-nums">{progressData.done}/{progressData.total} puncte verificate</p>
                 </div>
@@ -539,10 +514,10 @@ export default function FisaProiectantPage({ user }: { user: User | null }) {
               <div className="flex border-b border-line/70 shrink-0 px-2">
                 {([['tracking', 'Tracking Ansambluri', CheckSquare], ['specs', 'Specificatii Tehnice', FileText]] as [Tab, string, typeof CheckSquare][]).map(([id, label, Icon]) => (
                   <button key={id} onClick={() => setTab(id)}
-                    className={`flex items-center gap-1.5 px-4 py-3 text-pm-sm transition-colors border-b-2 ${tab === id
+                    className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-t-lg border-b-2 px-4 py-3 text-pm-sm transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${tab === id
                       ? 'text-accent border-accent font-semibold'
-                      : 'text-content-muted hover:text-content-primary border-transparent'}`}>
-                    <Icon className="h-4 w-4" /> {label}
+                      : 'text-content-muted hover:text-content-primary border-transparent hover:bg-surface-tertiary/50'}`}>
+                    <Icon className="h-4 w-4 shrink-0" /> {label}
                   </button>
                 ))}
               </div>
@@ -607,7 +582,7 @@ function TrackingTab({ tracking, onToggle, onToggleZincare, compact, readOnly }:
                     <span className="text-pm-xs text-accent mr-1">{asm.id}.</span>{asm.assembly}
                   </td>
                   <td rowSpan={asm.subs.length} className={`px-2 ${cellPySub} text-center border-b border-line align-top`}>
-                    <input type="checkbox" checked={asm.zincare} disabled={readOnly} onChange={() => onToggleZincare(ai)} className={`${checkSize} accent-[var(--color-accent)] ${readOnly ? 'cursor-default' : 'cursor-pointer'}`} />
+                    <input type="checkbox" checked={asm.zincare} disabled={readOnly} onChange={() => onToggleZincare(ai)} className={`${checkSize} rounded accent-[var(--color-accent)] transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:opacity-40 ${readOnly ? 'cursor-default' : 'cursor-pointer'}`} />
                   </td>
                 </>
               ) : null}
@@ -617,7 +592,7 @@ function TrackingTab({ tracking, onToggle, onToggleZincare, compact, readOnly }:
               {cols.map(col => (
                 <td key={col} className={`px-2 ${cellPySub} text-center border-b border-line`}>
                   <input type="checkbox" checked={sub[col] as boolean} disabled={readOnly} onChange={() => onToggle(ai, si, col)}
-                    className={`${checkSize} accent-[var(--color-accent)] ${readOnly ? 'cursor-default' : 'cursor-pointer'}`} />
+                    className={`${checkSize} rounded accent-[var(--color-accent)] transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:opacity-40 ${readOnly ? 'cursor-default' : 'cursor-pointer'}`} />
                 </td>
               ))}
             </tr>
@@ -639,8 +614,8 @@ function SpecsTab({ specs, onUpdateField, onUpdateHeader, onUpdateBeneficiar, co
   const gridGap = compact ? 'gap-2' : 'gap-3';
   const roCls = readOnly ? ' cursor-default read-only:bg-surface-secondary/30' : '';
   const inputClass = (compact
-    ? 'w-full rounded-lg border border-line/70 bg-surface-secondary/40 px-2 py-1 text-pm-xs text-content-primary placeholder:text-content-muted focus:outline-none focus:border-accent/50 transition-smooth'
-    : 'w-full rounded-lg border border-line/70 bg-surface-secondary/40 px-2 py-1.5 text-pm-xs text-content-primary placeholder:text-content-muted focus:outline-none focus:border-accent/50 transition-smooth') + roCls;
+    ? 'w-full rounded-lg border border-line/70 bg-surface-secondary/40 px-2 py-1 text-pm-xs text-content-primary placeholder:text-content-muted transition-smooth duration-150 hover:border-line focus:border-accent/50 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]'
+    : 'w-full rounded-lg border border-line/70 bg-surface-secondary/40 px-2 py-1.5 text-pm-xs text-content-primary placeholder:text-content-muted transition-smooth duration-150 hover:border-line focus:border-accent/50 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]') + roCls;
 
   return (
     <div className="flex flex-col">
@@ -682,7 +657,7 @@ function SpecsTab({ specs, onUpdateField, onUpdateHeader, onUpdateBeneficiar, co
                   </select>
                 ) : field.type === 'checkbox' ? (
                   <input type="checkbox" checked={!!field.value} disabled={readOnly} onChange={e => onUpdateField(si, fi, e.target.checked)}
-                    className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} accent-[var(--color-accent)] ${readOnly ? 'cursor-default' : ''}`} />
+                    className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} rounded accent-[var(--color-accent)] transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:opacity-40 ${readOnly ? 'cursor-default' : 'cursor-pointer'}`} />
                 ) : (
                   <input value={(field.value as string) || ''} onChange={e => onUpdateField(si, fi, e.target.value)}
                     readOnly={readOnly} className={inputClass} />
