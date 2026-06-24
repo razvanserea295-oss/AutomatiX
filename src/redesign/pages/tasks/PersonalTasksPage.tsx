@@ -456,17 +456,19 @@ export default function PersonalTasksPage({ user }: { user: User | null }) {
 
 
 }
-        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
+        <div className="enter-up shrink-0 pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             {}
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-3.5 min-w-0">
               <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                 <CheckSquare className="h-5 w-5 text-accent" />
               </span>
               <div className="min-w-0">
-                {/* Eyebrow removed — breadcrumb already shows "Personal". */}
-                <h1 className="text-pm-lg font-semibold text-content-primary leading-tight truncate">Task-urile mele</h1>
-                <p className="mt-0.5 text-pm-sm text-content-muted">TODO personal, task-uri delegate și mențiuni</p>
+                <p className="text-pm-eyebrow text-accent mb-0.5 flex items-center gap-2">
+                  <span className="inline-block h-px w-3.5 bg-accent/50" aria-hidden />
+                  Personal
+                </p>
+                <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">Task-urile mele</h1>
               </div>
             </div>
 
@@ -500,8 +502,8 @@ export default function PersonalTasksPage({ user }: { user: User | null }) {
                 onSearchChange={setSearch}
                 searchPlaceholder="Caută în task-uri…"
               >
-                <label className="text-pm-xs inline-flex items-center gap-2 text-content-muted cursor-pointer transition-smooth duration-150 hover:text-content-primary">
-                  <input type="checkbox" checked={showDone} onChange={e => setShowDone(e.target.checked)} className="accent-accent" />
+                <label className="text-pm-xs flex items-center gap-1.5 text-content-muted cursor-pointer">
+                  <input type="checkbox" checked={showDone} onChange={e => setShowDone(e.target.checked)} />
                   Arată terminate
                 </label>
               </FilterBar>
@@ -524,7 +526,7 @@ export default function PersonalTasksPage({ user }: { user: User | null }) {
         {
 
 }
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 flex-1 min-h-0">
 
           {}
           <aside className="xl:col-span-4 enter-up min-h-0 flex" style={{ animationDelay: '140ms' }}>
@@ -535,7 +537,7 @@ export default function PersonalTasksPage({ user }: { user: User | null }) {
                   <span className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted">Mențiuni recente</span>
                   {unread > 0 && <span className="text-pm-2xs font-bold tabular-nums text-status-amber">{unread}</span>}
                 </div>
-                {unread > 0 && <button onClick={markAllRead} className="text-pm-xs text-accent rounded transition-smooth duration-150 hover:underline focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-[0.98] shrink-0">Toate citite</button>}
+                {unread > 0 && <button onClick={markAllRead} className="text-pm-xs text-accent hover:underline shrink-0">Toate citite</button>}
               </div>
               <div className="density-compact px-5 pb-5 flex-1 min-h-0 overflow-y-auto">
                 {loading ? (
@@ -550,18 +552,18 @@ export default function PersonalTasksPage({ user }: { user: User | null }) {
                       const sourceLabel = isTaskAssignment ? `Task delegat #${m.source_id}` : `${m.source_type} #${m.source_id}`;
                       const headerLabel = isTaskAssignment ? `${m.actor_name || 'Cineva'} ți-a delegat un task` : (m.actor_name || 'Cineva');
                       return (
-                        <div key={m.id} className={`glass-surface rounded-lg p-3 transition-smooth duration-150 ${m.is_read ? 'opacity-60' : 'border-accent/30'}`}>
+                        <div key={m.id} className={`glass-surface rounded-lg p-3 ${m.is_read ? 'opacity-60' : 'border-accent/30'}`}>
                           <div className="flex items-center justify-between mb-1 gap-2">
-                            <span className="text-pm-sm font-semibold text-content-primary flex items-center gap-1.5 min-w-0">
+                            <span className="text-xs font-semibold text-content-primary flex items-center gap-1 min-w-0">
                               <SourceIcon className={`h-3 w-3 shrink-0 ${isTaskAssignment ? 'text-status-purple' : 'text-accent'}`} />
                               <span className="truncate">{headerLabel}</span>
                             </span>
                             <span className="text-pm-2xs text-content-muted shrink-0">{formatDateTimeRo(m.created_at)}</span>
                           </div>
-                          <p className="text-pm-sm text-content-secondary whitespace-pre-wrap">{m.snippet}</p>
-                          <div className="flex items-center justify-between gap-2 mt-2">
-                            <span className="text-pm-2xs text-content-muted min-w-0 truncate">{sourceLabel}</span>
-                            {!m.is_read && <button onClick={() => markRead(m.id)} className="text-pm-2xs text-accent rounded transition-smooth duration-150 hover:underline focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-[0.98] shrink-0">Marchează citit</button>}
+                          <p className="text-xs text-content-secondary whitespace-pre-wrap">{m.snippet}</p>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-pm-2xs text-content-muted">{sourceLabel}</span>
+                            {!m.is_read && <button onClick={() => markRead(m.id)} className="text-pm-2xs text-accent hover:underline">Marchează citit</button>}
                           </div>
                         </div>
                       );
@@ -575,7 +577,7 @@ export default function PersonalTasksPage({ user }: { user: User | null }) {
           {}
           <section className="xl:col-span-8 enter-up min-w-0 min-h-0 flex" style={{ animationDelay: '200ms' }}>
             <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 w-full">
-              <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-4 border-b border-line/40">
+              <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-line/40">
                 <h2 className="text-pm-md font-semibold text-content-primary">
                   {mainTab === 'tasks' ? 'Ale mele' : mainTab === 'delegated' ? 'Delegate de mine' : 'Statusuri'}
                 </h2>
@@ -694,7 +696,7 @@ function KpiMini({ icon: Icon, label, value, warn }: {
   label: string; value: number; warn?: boolean;
 }) {
   return (
-    <GlassCard size="compact" className="flex items-center gap-3 !p-5">
+    <GlassCard size="compact" className="flex items-center gap-3.5 !p-5">
       <span className="h-11 w-11 rounded-xl bg-accent/12 text-accent flex items-center justify-center shrink-0">
         <Icon className="h-5 w-5" />
       </span>
@@ -728,7 +730,7 @@ function TaskCard({
   return (
     <div
       style={{ viewTransitionName: selected ? vtName('task', task.id) : undefined }}
-      className={`group glass-surface rounded-lg hover-lift transition-smooth duration-150 p-3 flex items-start gap-3 ${selected ? 'vt-morph ring-1 ring-accent/40' : ''} ${
+      className={`group glass-surface rounded-lg hover-lift p-3 flex items-start gap-3 ${selected ? 'vt-morph' : ''} ${
       task.status === 'done'
         ? (task.completion_status === 'unresolved' ? 'border-status-red/40 opacity-80'
           : task.completion_status === 'needs_clarification' ? 'border-status-amber/40 opacity-80'
@@ -736,14 +738,14 @@ function TaskCard({
         : overdue ? 'border-status-red/40' : 'border-line'
     }`}>
       {onToggle && (
-        <input type="checkbox" checked={task.status === 'done'} onChange={onToggle} className="mt-0.5 accent-accent cursor-pointer" />
+        <input type="checkbox" checked={task.status === 'done'} onChange={onToggle} className="mt-0.5" />
       )}
       <div className="flex-1 min-w-0">
-        <p className={`text-pm-base text-content-primary truncate ${task.status === 'done' && task.completion_status === 'resolved' ? 'line-through' : ''}`}>
+        <p className={`text-sm text-content-primary ${task.status === 'done' && task.completion_status === 'resolved' ? 'line-through' : ''}`}>
           {task.title}
         </p>
-        {task.description && <p className="text-pm-sm text-content-muted mt-0.5 truncate">{task.description}</p>}
-        <div className="flex items-center gap-2 mt-2 flex-wrap">
+        {task.description && <p className="text-xs text-content-muted mt-0.5">{task.description}</p>}
+        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
           <StatusBadge tone={PRIORITY_TONE[task.priority]} label={task.priority} size="xs" />
           {task.due_date && (
             <span className={`text-pm-2xs flex items-center gap-1 ${overdue ? 'text-status-red font-bold' : 'text-content-muted'}`}>
@@ -756,13 +758,13 @@ function TaskCard({
             <StatusBadge tone={completion.tone} label={completion.label} size="xs" />
           )}
           {task.assigned_by_name && (
-            <span className="text-pm-2xs px-1.5 py-0.5 rounded-md bg-accent/15 text-accent inline-flex items-center gap-1 max-w-[12rem] min-w-0">
-              <UserPlus className="h-2.5 w-2.5 shrink-0" /> <span className="truncate">de la {task.assigned_by_name}</span>
+            <span className="text-pm-2xs px-1.5 py-px rounded bg-accent/15 text-accent flex items-center gap-1">
+              <UserPlus className="h-2.5 w-2.5" /> de la {task.assigned_by_name}
             </span>
           )}
           {showAssignee && task.user_name && (
-            <span className="text-pm-2xs px-1.5 py-0.5 rounded-md bg-status-blue/15 text-status-blue inline-flex items-center gap-1 max-w-[12rem] min-w-0">
-              <UserPlus className="h-2.5 w-2.5 shrink-0" /> <span className="truncate">către {task.user_name}</span>
+            <span className="text-pm-2xs px-1.5 py-px rounded bg-status-blue/15 text-status-blue flex items-center gap-1">
+              <UserPlus className="h-2.5 w-2.5" /> către {task.user_name}
             </span>
           )}
           {
@@ -816,13 +818,13 @@ function TaskEditorModal({
     setDraft((prev: any) => ({ ...prev, [key]: value }));
   const isDelegating = canAssign && draft.assignee_id && Number(draft.assignee_id) !== currentUserId;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 anim-fade-in" onClick={onClose}>
-      <div className="bg-surface-secondary rounded-2xl border border-line shadow-[var(--elevation-4)] w-full max-w-2xl max-h-[90vh] overflow-y-auto anim-scale-in" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line">
-          <h3 className="text-pm-md font-semibold text-content-primary min-w-0 truncate">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="bg-surface-secondary rounded-lg border border-line shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-line">
+          <h3 className="text-sm font-semibold text-content-primary">
             {mode === 'create' ? (isDelegating ? 'Task delegat nou' : 'Task nou') : 'Editează task'}
           </h3>
-          <button onClick={onClose} aria-label="Închide" className="shrink-0 p-1.5 -mr-1 rounded-lg text-content-muted transition-smooth duration-150 hover:text-content-primary hover:bg-surface-tertiary focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-95"><X className="h-4 w-4" /></button>
+          <button onClick={onClose} className="p-1 text-content-muted hover:text-content-primary"><X className="h-4 w-4" /></button>
         </div>
 
         <div className="p-5 space-y-4">
@@ -834,7 +836,7 @@ function TaskEditorModal({
               value={draft.title || ''}
               onChange={e => set('title', e.target.value)}
               placeholder="Ce trebuie făcut?"
-              className="w-full h-9 rounded-xl border border-line bg-surface-primary px-3 text-pm-base text-content-primary transition-smooth duration-150 focus:outline-none focus-visible:outline-none focus:shadow-[var(--ring-soft)] focus:border-accent"
+              className="w-full h-9 border border-line bg-surface-primary px-3 text-sm text-content-primary focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
 
@@ -846,7 +848,7 @@ function TaskEditorModal({
               onChange={e => set('description', e.target.value)}
               placeholder="Sumar 1-2 propoziții"
               rows={2}
-              className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-base text-content-primary resize-none transition-smooth duration-150 focus:outline-none focus-visible:outline-none focus:shadow-[var(--ring-soft)] focus:border-accent"
+              className="w-full border border-line bg-surface-primary px-3 py-2 text-sm text-content-primary resize-none focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
 
@@ -860,7 +862,7 @@ function TaskEditorModal({
               onChange={e => set('instructions', e.target.value)}
               placeholder="Pași concreți, criterii de acceptare, link-uri către documente, etc."
               rows={4}
-              className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-base text-content-primary resize-none transition-smooth duration-150 focus:outline-none focus-visible:outline-none focus:shadow-[var(--ring-soft)] focus:border-accent"
+              className="w-full border border-line bg-surface-primary px-3 py-2 text-sm text-content-primary resize-none focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
 
@@ -874,7 +876,7 @@ function TaskEditorModal({
               onChange={e => set('notes', e.target.value)}
               placeholder="Context, observații, referințe"
               rows={2}
-              className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-base text-content-primary resize-none transition-smooth duration-150 focus:outline-none focus-visible:outline-none focus:shadow-[var(--ring-soft)] focus:border-accent"
+              className="w-full border border-line bg-surface-primary px-3 py-2 text-sm text-content-primary resize-none focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
 
@@ -886,7 +888,7 @@ function TaskEditorModal({
                 <select
                   value={draft.assignee_id ?? ''}
                   onChange={e => set('assignee_id', e.target.value ? Number(e.target.value) : null)}
-                  className="w-full h-9 rounded-xl border border-line bg-surface-primary px-2 text-pm-base text-content-primary transition-smooth duration-150 focus:outline-none focus-visible:outline-none focus:shadow-[var(--ring-soft)] focus:border-accent"
+                  className="w-full h-9 border border-line bg-surface-primary px-2 text-sm text-content-primary"
                 >
                   <option value="">— Pentru mine —</option>
                   {users.filter(u => u.id !== currentUserId).map(u => (
@@ -900,7 +902,7 @@ function TaskEditorModal({
               <select
                 value={draft.priority || 'normal'}
                 onChange={e => set('priority', e.target.value)}
-                className="w-full h-9 rounded-xl border border-line bg-surface-primary px-2 text-pm-base text-content-primary transition-smooth duration-150 focus:outline-none focus-visible:outline-none focus:shadow-[var(--ring-soft)] focus:border-accent"
+                className="w-full h-9 border border-line bg-surface-primary px-2 text-sm text-content-primary"
               >
                 <option value="low">Scăzută</option>
                 <option value="normal">Normală</option>
@@ -915,7 +917,7 @@ function TaskEditorModal({
                 type="date"
                 value={draft.due_date || ''}
                 onChange={e => set('due_date', e.target.value || null)}
-                className="w-full h-9 rounded-xl border border-line bg-surface-primary px-2 text-pm-base text-content-primary transition-smooth duration-150 focus:outline-none focus-visible:outline-none focus:shadow-[var(--ring-soft)] focus:border-accent"
+                className="w-full h-9 border border-line bg-surface-primary px-2 text-sm text-content-primary"
               />
             </div>
           </div>
@@ -959,13 +961,13 @@ function TaskInfoModal({
 }) {
   const isDone = task.status === 'done';
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 anim-fade-in" onClick={onClose}>
-      <div className="bg-surface-secondary rounded-2xl border border-line shadow-[var(--elevation-4)] w-full max-w-2xl max-h-[90vh] overflow-y-auto anim-scale-in" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line">
-          <h3 className="text-pm-md font-semibold text-content-primary flex items-center gap-2 min-w-0">
-            <Info className="h-4 w-4 text-accent shrink-0" /> <span className="truncate">Detalii task</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="bg-surface-secondary rounded-lg border border-line shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-line">
+          <h3 className="text-sm font-semibold text-content-primary flex items-center gap-2">
+            <Info className="h-4 w-4 text-accent" /> Detalii task
           </h3>
-          <button onClick={onClose} aria-label="Închide" className="shrink-0 p-1.5 -mr-1 rounded-lg text-content-muted transition-smooth duration-150 hover:text-content-primary hover:bg-surface-tertiary focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-95"><X className="h-4 w-4" /></button>
+          <button onClick={onClose} className="p-1 text-content-muted hover:text-content-primary"><X className="h-4 w-4" /></button>
         </div>
 
         <div className="p-5 space-y-4">
@@ -980,13 +982,13 @@ function TaskInfoModal({
               <span className="text-pm-2xs text-content-muted">• {STATUS_LABEL[task.status]}</span>
               {task.due_date && <span className="text-pm-2xs text-content-muted flex items-center gap-1"><Clock className="h-3 w-3" /> Termen: {task.due_date}</span>}
               {task.assigned_by_name && (
-                <span className="text-pm-2xs px-1.5 py-0.5 rounded-md bg-accent/15 text-accent inline-flex items-center gap-1">
-                  <UserPlus className="h-2.5 w-2.5 shrink-0" /> delegat de {task.assigned_by_name}
+                <span className="text-pm-2xs px-1.5 py-px rounded bg-accent/15 text-accent flex items-center gap-1">
+                  <UserPlus className="h-2.5 w-2.5" /> delegat de {task.assigned_by_name}
                 </span>
               )}
               {task.user_name && (
-                <span className="text-pm-2xs px-1.5 py-0.5 rounded-md bg-status-blue/15 text-status-blue inline-flex items-center gap-1">
-                  <UserPlus className="h-2.5 w-2.5 shrink-0" /> către {task.user_name}
+                <span className="text-pm-2xs px-1.5 py-px rounded bg-status-blue/15 text-status-blue flex items-center gap-1">
+                  <UserPlus className="h-2.5 w-2.5" /> către {task.user_name}
                 </span>
               )}
             </div>
@@ -996,7 +998,7 @@ function TaskInfoModal({
           {task.description && (
             <div>
               <p className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted mb-1">Descriere</p>
-              <p className="text-pm-base text-content-secondary whitespace-pre-wrap">{task.description}</p>
+              <p className="text-sm text-content-secondary whitespace-pre-wrap">{task.description}</p>
             </div>
           )}
 
@@ -1006,7 +1008,7 @@ function TaskInfoModal({
               <p className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted mb-1 flex items-center gap-1">
                 <FileText className="h-3 w-3" /> Instrucțiuni
               </p>
-              <div className="text-pm-base text-content-secondary whitespace-pre-wrap bg-surface-primary/40 border border-line/60 rounded-lg p-3">
+              <div className="text-sm text-content-secondary whitespace-pre-wrap bg-surface-primary/40 border border-line/60 p-3">
                 {task.instructions}
               </div>
             </div>
@@ -1018,25 +1020,25 @@ function TaskInfoModal({
               <p className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted mb-1 flex items-center gap-1">
                 <Layers className="h-3 w-3" /> Note
               </p>
-              <p className="text-pm-base text-content-secondary whitespace-pre-wrap">{task.notes}</p>
+              <p className="text-sm text-content-secondary whitespace-pre-wrap">{task.notes}</p>
             </div>
           )}
 
           {}
           {isDone && (
-            <div className={`border-l-4 rounded-lg p-3 ${
+            <div className={`border-l-4 p-3 ${
               task.completion_status === 'unresolved' ? 'border-l-status-red bg-status-red/5'
               : task.completion_status === 'needs_clarification' ? 'border-l-status-amber bg-status-amber/5'
               : 'border-l-status-green bg-status-green/5'
             }`}>
               <p className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted mb-1">Finalizare</p>
-              <p className="text-pm-base text-content-primary">
+              <p className="text-sm text-content-primary">
                 {task.completion_status && COMPLETION_STATUS_LABEL[task.completion_status]}
                 {task.completed_by_name && <span className="text-content-muted"> · de {task.completed_by_name}</span>}
                 {task.completed_at && <span className="text-content-muted"> · {formatDateTimeRo(task.completed_at)}</span>}
               </p>
               {task.completion_note && (
-                <p className="text-pm-base text-content-secondary mt-2 whitespace-pre-wrap">"{task.completion_note}"</p>
+                <p className="text-sm text-content-secondary mt-1.5 whitespace-pre-wrap">"{task.completion_note}"</p>
               )}
             </div>
           )}
@@ -1048,16 +1050,16 @@ function TaskInfoModal({
 
 }
               {isAssignee && (
-                <div className="mb-3 bg-status-blue/5 border-l-2 border-status-blue/40 rounded-lg p-3">
-                  <p className="text-pm-xs text-content-secondary mb-2">
+                <div className="mb-3 bg-status-blue/5 border-l-2 border-status-blue/40 p-2.5">
+                  <p className="text-pm-xs text-content-secondary mb-1.5">
                     Nu e clar ce ai de făcut? Cere clarificări delegatorului — task-ul rămâne deschis.
                   </p>
                   <button
                     type="button"
                     onClick={onAskClarification}
-                    className="h-8 px-3 bg-status-blue/15 text-status-blue text-pm-xs font-semibold rounded-lg inline-flex items-center justify-center gap-1.5 transition-smooth duration-150 hover:bg-status-blue/25 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-[0.98]"
+                    className="h-7 px-2.5 bg-status-blue/15 hover:bg-status-blue/25 text-status-blue text-pm-xs font-semibold rounded inline-flex items-center gap-1.5"
                   >
-                    <HelpCircle className="h-3.5 w-3.5" /> Cere clarificări
+                    <HelpCircle className="h-3 w-3" /> Cere clarificări
                   </button>
                 </div>
               )}
@@ -1068,27 +1070,27 @@ function TaskInfoModal({
                 onChange={e => setCompletionNote(e.target.value)}
                 placeholder="Notă opțională — ce s-a făcut, ce a rămas, etc."
                 rows={3}
-                className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-base text-content-primary resize-none transition-smooth duration-150 focus:outline-none focus-visible:outline-none focus:shadow-[var(--ring-soft)] focus:border-accent"
+                className="w-full border border-line bg-surface-primary px-3 py-2 text-sm text-content-primary resize-none focus:outline-none focus:ring-1 focus:ring-accent"
               />
               <div className="flex items-center gap-2 mt-3 flex-wrap">
                 <button
                   type="button"
                   onClick={() => { setCompletionStatus('resolved'); onComplete('resolved'); }}
-                  className="h-8 px-3 bg-status-green/15 text-status-green text-pm-sm font-semibold rounded-lg inline-flex items-center justify-center gap-1.5 transition-smooth duration-150 hover:bg-status-green/25 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-[0.98]"
+                  className="h-8 px-3 bg-status-green/15 hover:bg-status-green/25 text-status-green text-xs font-semibold rounded inline-flex items-center gap-1.5"
                 >
                   <CheckSquare className="h-3.5 w-3.5" /> Rezolvat
                 </button>
                 <button
                   type="button"
                   onClick={() => { setCompletionStatus('needs_clarification'); onComplete('needs_clarification'); }}
-                  className="h-8 px-3 bg-status-amber/15 text-status-amber text-pm-sm font-semibold rounded-lg inline-flex items-center justify-center gap-1.5 transition-smooth duration-150 hover:bg-status-amber/25 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-[0.98]"
+                  className="h-8 px-3 bg-status-amber/15 hover:bg-status-amber/25 text-status-amber text-xs font-semibold rounded inline-flex items-center gap-1.5"
                 >
                   <HelpCircle className="h-3.5 w-3.5" /> Necesită clarificări
                 </button>
                 <button
                   type="button"
                   onClick={() => { setCompletionStatus('unresolved'); onComplete('unresolved'); }}
-                  className="h-8 px-3 bg-status-red/15 text-status-red text-pm-sm font-semibold rounded-lg inline-flex items-center justify-center gap-1.5 transition-smooth duration-150 hover:bg-status-red/25 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-[0.98]"
+                  className="h-8 px-3 bg-status-red/15 hover:bg-status-red/25 text-status-red text-xs font-semibold rounded inline-flex items-center gap-1.5"
                 >
                   <AlertTriangle className="h-3.5 w-3.5" /> Nerezolvat
                 </button>
@@ -1173,14 +1175,14 @@ function StatusuriTab({
         <div key={s.key} className={`bg-surface-primary border-l-2 ${s.tone} pl-3`}>
           <p className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">{s.title}</p>
           <p className="text-pm-xs text-content-muted mt-0.5 mb-2">{s.description}</p>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {s.items.map(t => (
-              <div key={t.id} className="glass-surface rounded-lg p-3 flex items-start gap-3 transition-smooth duration-150">
+              <div key={t.id} className="glass-surface rounded-lg p-3 flex items-start gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-pm-base font-medium text-content-primary truncate">{t.title}</p>
+                  <p className="text-sm font-medium text-content-primary">{t.title}</p>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
                     {t.user_name && (
-                      <span className="text-pm-2xs px-1.5 py-0.5 rounded-md bg-status-blue/15 text-status-blue">
+                      <span className="text-pm-2xs px-1.5 py-px rounded bg-status-blue/15 text-status-blue">
                         finalizat de {t.completed_by_name || t.user_name}
                       </span>
                     )}
@@ -1194,12 +1196,12 @@ function StatusuriTab({
                     )}
                   </div>
                   {t.completion_note && (
-                    <p className="text-pm-xs text-content-secondary mt-2 italic">"{t.completion_note}"</p>
+                    <p className="text-pm-xs text-content-secondary mt-1.5 italic">"{t.completion_note}"</p>
                   )}
                 </div>
                 <button
                   onClick={() => onReview(t)}
-                  className="shrink-0 h-8 px-3 bg-accent text-[var(--color-on-accent)] text-pm-xs font-semibold rounded-lg inline-flex items-center justify-center gap-1.5 transition-smooth duration-150 hover:opacity-90 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-[0.98]"
+                  className="shrink-0 h-8 px-3 bg-accent text-surface-primary text-pm-xs font-semibold rounded inline-flex items-center gap-1.5 hover:opacity-90"
                 >
                   <Reply className="h-3.5 w-3.5" /> Review
                 </button>
@@ -1218,18 +1220,18 @@ function StatusuriTab({
           <p className="text-pm-xs text-content-muted mt-0.5 mb-2">
             Task-uri pe care le-ai marcat finalizate sau pentru care ai cerut clarificări — aștepți decizia delegatorului.
           </p>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {buckets.waiting_response.map(t => (
-              <div key={t.id} className="glass-surface rounded-lg p-3 transition-smooth duration-150">
-                <p className="text-pm-base font-medium text-content-primary truncate">{t.title}</p>
+              <div key={t.id} className="glass-surface rounded-lg p-3">
+                <p className="text-sm font-medium text-content-primary">{t.title}</p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {t.assigned_by_name && (
-                    <span className="text-pm-2xs px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">
+                    <span className="text-pm-2xs px-1.5 py-px rounded bg-accent/15 text-accent">
                       delegat de {t.assigned_by_name}
                     </span>
                   )}
                   {t.clarification_pending && (
-                    <span className="text-pm-2xs px-1.5 py-0.5 rounded-md bg-status-blue/15 text-status-blue">
+                    <span className="text-pm-2xs px-1.5 py-px rounded bg-status-blue/15 text-status-blue">
                       clarificare cerută
                     </span>
                   )}
@@ -1243,7 +1245,7 @@ function StatusuriTab({
                   )}
                 </div>
                 {t.completion_note && (
-                  <p className="text-pm-xs text-content-secondary mt-2 italic">"{t.completion_note}"</p>
+                  <p className="text-pm-xs text-content-secondary mt-1.5 italic">"{t.completion_note}"</p>
                 )}
               </div>
             ))}
@@ -1281,13 +1283,13 @@ function ReviewModal({
     : 'Acceptă-l ca nerezolvat sau reasignează altcuiva.';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 anim-fade-in" onClick={onClose}>
-      <div className="bg-surface-secondary rounded-2xl border border-line shadow-[var(--elevation-4)] w-full max-w-xl max-h-[90vh] overflow-y-auto anim-scale-in" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line">
-          <h3 className="text-pm-md font-semibold text-content-primary flex items-center gap-2 min-w-0">
-            <Inbox className="h-4 w-4 text-accent shrink-0" /> <span className="truncate">Review status — {statusLabel}</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="bg-surface-secondary rounded-lg border border-line shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-line">
+          <h3 className="text-sm font-semibold text-content-primary flex items-center gap-2">
+            <Inbox className="h-4 w-4 text-accent" /> Review status — {statusLabel}
           </h3>
-          <button onClick={onClose} aria-label="Închide" className="shrink-0 p-1.5 -mr-1 rounded-lg text-content-muted transition-smooth duration-150 hover:text-content-primary hover:bg-surface-tertiary focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-95"><X className="h-4 w-4" /></button>
+          <button onClick={onClose} className="p-1 text-content-muted hover:text-content-primary"><X className="h-4 w-4" /></button>
         </div>
         <div className="p-5 space-y-4">
           <div>
@@ -1296,9 +1298,9 @@ function ReviewModal({
           </div>
 
           {task.completion_note && (
-            <div className="bg-surface-primary/40 border border-line/60 rounded-lg p-3">
+            <div className="bg-surface-primary/40 border border-line/60 p-3">
               <p className="text-pm-2xs uppercase tracking-wide text-content-muted mb-1">Notă de la asignat</p>
-              <p className="text-pm-base text-content-secondary whitespace-pre-wrap">"{task.completion_note}"</p>
+              <p className="text-sm text-content-secondary whitespace-pre-wrap">"{task.completion_note}"</p>
             </div>
           )}
 
@@ -1311,7 +1313,7 @@ function ReviewModal({
               onChange={e => setNote(e.target.value)}
               placeholder="Ce vrei să-i transmiți..."
               rows={4}
-              className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-base text-content-primary resize-none transition-smooth duration-150 focus:outline-none focus-visible:outline-none focus:shadow-[var(--ring-soft)] focus:border-accent"
+              className="w-full border border-line bg-surface-primary px-3 py-2 text-sm text-content-primary resize-none focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
 
@@ -1321,7 +1323,7 @@ function ReviewModal({
               <select
                 value={reassignTo}
                 onChange={e => setReassignTo(e.target.value ? Number(e.target.value) : '')}
-                className="w-full h-9 rounded-xl border border-line bg-surface-primary px-2 text-pm-base text-content-primary transition-smooth duration-150 focus:outline-none focus-visible:outline-none focus:shadow-[var(--ring-soft)] focus:border-accent"
+                className="w-full h-9 border border-line bg-surface-primary px-2 text-sm text-content-primary"
               >
                 <option value="">— păstrează același asignat —</option>
                 {users.map(u => (
@@ -1378,13 +1380,13 @@ function ClarificationModal({
   onSubmit: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 anim-fade-in" onClick={onClose}>
-      <div className="bg-surface-secondary rounded-2xl border border-line shadow-[var(--elevation-4)] w-full max-w-lg anim-scale-in" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line">
-          <h3 className="text-pm-md font-semibold text-content-primary flex items-center gap-2 min-w-0">
-            <HelpCircle className="h-4 w-4 text-status-blue shrink-0" /> <span className="truncate">Cere clarificări</span>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="bg-surface-secondary rounded-lg border border-line shadow-xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-line">
+          <h3 className="text-sm font-semibold text-content-primary flex items-center gap-2">
+            <HelpCircle className="h-4 w-4 text-status-blue" /> Cere clarificări
           </h3>
-          <button onClick={onClose} aria-label="Închide" className="shrink-0 p-1.5 -mr-1 rounded-lg text-content-muted transition-smooth duration-150 hover:text-content-primary hover:bg-surface-tertiary focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-95"><X className="h-4 w-4" /></button>
+          <button onClick={onClose} className="p-1 text-content-muted hover:text-content-primary"><X className="h-4 w-4" /></button>
         </div>
         <div className="p-5 space-y-3">
           <p className="text-pm-xs text-content-muted">
@@ -1396,7 +1398,7 @@ function ClarificationModal({
             onChange={e => setText(e.target.value)}
             placeholder="Ce trebuie clarificat?"
             rows={4}
-            className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-base text-content-primary resize-none transition-smooth duration-150 focus:outline-none focus-visible:outline-none focus:shadow-[var(--ring-soft)] focus:border-accent"
+            className="w-full border border-line bg-surface-primary px-3 py-2 text-sm text-content-primary resize-none focus:outline-none focus:ring-1 focus:ring-accent"
           />
         </div>
         <div className="px-5 py-3 border-t border-line flex justify-end gap-2 bg-surface-primary/40">

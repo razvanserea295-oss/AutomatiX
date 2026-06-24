@@ -242,15 +242,18 @@ export default function DeplasariPage({ user }: { user: User | null }) {
 
 
 }
-        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
+        <div className="enter-up shrink-0 pb-3.5 border-b border-line/60" style={{ animationDelay: '0ms' }}>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center gap-3.5 min-w-0">
               <span className="h-11 w-11 rounded-2xl bg-accent-muted flex items-center justify-center shrink-0">
                 <MapPin className="h-5 w-5 text-accent" aria-hidden />
               </span>
               <div className="min-w-0">
-                {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-                <div className="flex items-center gap-2 min-w-0">
+                <p className="text-pm-eyebrow text-accent flex items-center gap-2">
+                  <span className="inline-block h-px w-3.5 bg-accent/50" aria-hidden />
+                  Personal
+                </p>
+                <div className="flex items-center gap-2.5 min-w-0">
                   <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">Deplasări</h1>
                   {activeDeplasari.length > 0 && (
                     <StatusBadge tone="info" size="xs" label={`${activeDeplasari.length} în deplasare`} className="self-center" />
@@ -376,13 +379,13 @@ export default function DeplasariPage({ user }: { user: User | null }) {
                           </div>
                           <div className="flex items-center gap-0.5 shrink-0">
                             <button onClick={() => setViewing(d)} title="Detalii"
-                              className="grid place-items-center h-7 w-7 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-accent transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Info className="h-4 w-4" /></button>
+                              className="grid place-items-center h-7 w-7 rounded text-content-muted hover:bg-surface-tertiary hover:text-accent transition-colors"><Info className="h-4 w-4" /></button>
                             <button onClick={() => setPaying(d)} title="Plăți & buget"
-                              className="grid place-items-center h-7 w-7 rounded-lg text-content-secondary hover:bg-status-green/10 hover:text-status-green transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Wallet className="h-4 w-4" /></button>
+                              className="grid place-items-center h-7 w-7 rounded text-content-secondary hover:bg-status-green/10 hover:text-status-green transition-colors"><Wallet className="h-4 w-4" /></button>
                             <button onClick={() => setEditing(d)} title="Editează — date, status și costuri"
-                              className="grid place-items-center h-7 w-7 rounded-lg text-content-secondary hover:bg-accent/10 hover:text-accent transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Pencil className="h-4 w-4" /></button>
+                              className="grid place-items-center h-7 w-7 rounded text-content-secondary hover:bg-accent/10 hover:text-accent transition-colors"><Pencil className="h-4 w-4" /></button>
                             <button onClick={() => handleMarkReturned(d.id)} title="Marcat întors"
-                              className="grid place-items-center h-7 w-7 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-status-green transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><ArrowLeft className="h-4 w-4" /></button>
+                              className="grid place-items-center h-7 w-7 rounded text-content-muted hover:bg-surface-tertiary hover:text-status-green transition-colors"><ArrowLeft className="h-4 w-4" /></button>
                           </div>
                         </div>
                       </div>
@@ -463,13 +466,13 @@ export default function DeplasariPage({ user }: { user: User | null }) {
                       <td className="sticky right-0 z-[5] bg-surface-primary border-l border-line/60 px-3 py-2 border-b border-line/40 group-hover:bg-surface-tertiary">
                         <div className="flex items-center gap-1 justify-end">
                           <button onClick={() => setViewing(d)} title="Detalii"
-                            className="grid place-items-center h-7 w-7 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-accent transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Info className="h-4 w-4" /></button>
+                            className="grid place-items-center h-7 w-7 rounded text-content-muted hover:bg-surface-tertiary hover:text-accent transition-colors"><Info className="h-4 w-4" /></button>
                           <button onClick={() => setPaying(d)} title="Plăți & buget — înregistrează plăți către delegați, vezi bugetul rămas, închide delegația"
-                            className="grid place-items-center h-7 w-7 rounded-lg text-content-secondary hover:bg-status-green/10 hover:text-status-green transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Wallet className="h-4 w-4" /></button>
+                            className="grid place-items-center h-7 w-7 rounded text-content-secondary hover:bg-status-green/10 hover:text-status-green transition-colors"><Wallet className="h-4 w-4" /></button>
                           <button onClick={() => setEditing(d)} title="Editează — date, status și costuri"
-                            className="grid place-items-center h-7 w-7 rounded-lg text-content-secondary hover:bg-accent/10 hover:text-accent transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Pencil className="h-4 w-4" /></button>
+                            className="grid place-items-center h-7 w-7 rounded text-content-secondary hover:bg-accent/10 hover:text-accent transition-colors"><Pencil className="h-4 w-4" /></button>
                           <button onClick={() => handleDelete(d.id)} title="Șterge"
-                            className="grid place-items-center h-7 w-7 rounded-lg text-content-muted hover:bg-status-red/10 hover:text-status-red transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Trash2 className="h-4 w-4" /></button>
+                            className="grid place-items-center h-7 w-7 rounded text-content-muted hover:bg-status-red/10 hover:text-status-red transition-colors"><Trash2 className="h-4 w-4" /></button>
                         </div>
                       </td>
                     </tr>
@@ -642,12 +645,12 @@ function CreateDeplasareModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 enter-fade" onClick={onClose}>
-      <div className="bg-surface-primary border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-lg max-h-[90vh] flex flex-col enter-scale" onClick={e => e.stopPropagation()}>
+      <div className="bg-surface-primary border border-line w-full max-w-lg max-h-[90vh] flex flex-col enter-scale" onClick={e => e.stopPropagation()}>
         <div className="shrink-0 border-b border-line p-4 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-content-primary flex items-center gap-2">
             <Plane className="h-4 w-4" /> {isEdit ? 'Editează deplasarea' : 'Deplasare nouă'}
           </h3>
-          <button onClick={onClose} className="grid place-items-center h-7 w-7 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><XIcon className="h-4 w-4" /></button>
+          <button onClick={onClose} className="p-1 hover:bg-surface-tertiary"><XIcon className="h-4 w-4" /></button>
         </div>
 
         <div className="p-4 space-y-3 flex-1 min-h-0 overflow-y-auto">
@@ -663,7 +666,7 @@ function CreateDeplasareModal({
                 Persoane suplimentare (optional)
               </label>
               <button type="button" onClick={addExtra}
-                className="text-pm-2xs text-accent hover:underline inline-flex items-center gap-1 rounded-lg transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+                className="text-pm-2xs text-accent hover:underline flex items-center gap-1">
                 <Plus className="h-3 w-3" /> adaugă
               </button>
             </div>
@@ -678,7 +681,7 @@ function CreateDeplasareModal({
                       className="flex-1 input-md" />
                     <button type="button" onClick={() => removeExtra(i)}
                       title="Șterge"
-                      className="grid place-items-center h-9 w-9 shrink-0 rounded-lg text-content-muted hover:text-status-red hover:bg-surface-tertiary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+                      className="p-1.5 text-content-muted hover:text-status-red hover:bg-surface-tertiary">
                       <XIcon className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -758,7 +761,7 @@ function CreateDeplasareModal({
                     total={diurna} onTotalChange={setDiurna}
                   />
                 </div>
-                <div className="mt-2 flex items-center justify-between bg-surface-secondary px-3 py-1.5 rounded-lg">
+                <div className="mt-2 flex items-center justify-between bg-surface-secondary px-3 py-1.5 rounded">
                   <span className="text-pm-xs text-content-muted">Total costuri</span>
                   <span className="text-sm font-semibold tabular-nums text-content-primary">{money((Number(transport) || 0) + (Number(accommodation) || 0) + (Number(diurna) || 0) + (Number(otherCost) || 0), currency)}</span>
                 </div>
@@ -772,7 +775,7 @@ function CreateDeplasareModal({
         </div>
 
         <div className="shrink-0 border-t border-line p-3 flex items-center justify-end gap-2">
-          <button onClick={onClose} className="px-3 py-1.5 text-xs rounded-xl border border-line hover:bg-surface-tertiary transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+          <button onClick={onClose} className="px-3 py-1.5 text-xs border border-line hover:bg-surface-tertiary">
             Anulează
           </button>
           <Button size="sm" onClick={submit} disabled={submitting}>
@@ -853,12 +856,12 @@ function CompleteCostsModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 enter-fade" onClick={onClose}>
-      <div className="bg-surface-primary border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-md max-h-[90vh] flex flex-col enter-scale" onClick={e => e.stopPropagation()}>
+      <div className="bg-surface-primary border border-line w-full max-w-md max-h-[90vh] flex flex-col enter-scale" onClick={e => e.stopPropagation()}>
         <div className="shrink-0 border-b border-line p-4 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-content-primary flex items-center gap-2">
             <DollarSign className="h-4 w-4" /> Completeaza costuri
           </h3>
-          <button onClick={onClose} className="grid place-items-center h-7 w-7 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><XIcon className="h-4 w-4" /></button>
+          <button onClick={onClose} className="p-1 hover:bg-surface-tertiary"><XIcon className="h-4 w-4" /></button>
         </div>
 
         <div className="p-4 space-y-3 flex-1 min-h-0 overflow-y-auto">
@@ -906,7 +909,7 @@ function CompleteCostsModal({
             total={diurna} onTotalChange={setDiurna}
           />
 
-          <div className="bg-surface-secondary px-3 py-2 rounded-lg flex items-center justify-between">
+          <div className="bg-surface-secondary px-3 py-2 flex items-center justify-between">
             <span className="text-pm-xs text-content-muted">Total</span>
             <span className="text-sm font-semibold text-content-primary tabular-nums">{money(total, currency)}</span>
           </div>
@@ -923,7 +926,7 @@ function CompleteCostsModal({
         </div>
 
         <div className="shrink-0 border-t border-line p-3 flex items-center justify-end gap-2">
-          <button onClick={onClose} className="px-3 py-1.5 text-xs rounded-xl border border-line hover:bg-surface-tertiary transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+          <button onClick={onClose} className="px-3 py-1.5 text-xs border border-line hover:bg-surface-tertiary">
             Mai tarziu
           </button>
           <Button size="sm" onClick={submit} disabled={submitting}>
@@ -980,7 +983,7 @@ function DeplasareInfoModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 enter-fade" onClick={onClose}>
-      <div className="bg-surface-primary border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-xl max-h-[90vh] flex flex-col enter-scale" onClick={e => e.stopPropagation()}>
+      <div className="bg-surface-primary border border-line w-full max-w-xl max-h-[90vh] flex flex-col enter-scale" onClick={e => e.stopPropagation()}>
         {}
         <div className="shrink-0 border-b border-line p-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -997,7 +1000,7 @@ function DeplasareInfoModal({
             </div>
             {deplasare.reason && <p className="text-pm-xs text-content-muted mt-1 truncate">{deplasare.reason}</p>}
           </div>
-          <button onClick={onClose} className="grid place-items-center h-7 w-7 shrink-0 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><XIcon className="h-4 w-4" /></button>
+          <button onClick={onClose} className="p-1 hover:bg-surface-tertiary shrink-0"><XIcon className="h-4 w-4" /></button>
         </div>
 
         {}
@@ -1007,7 +1010,7 @@ function DeplasareInfoModal({
             <div className="flex flex-wrap gap-1.5">
               {allPersons.map((p, i) => (
                 <span key={i}
-                  className={`text-xs px-2 py-1 rounded-lg border ${i === 0 ? 'border-status-blue/40 bg-status-blue/5 text-status-blue font-semibold' : 'border-line text-content-secondary bg-surface-secondary'}`}>
+                  className={`text-xs px-2 py-1 border ${i === 0 ? 'border-status-blue/40 bg-status-blue/5 text-status-blue font-semibold' : 'border-line text-content-secondary bg-surface-secondary'}`}>
                   {i === 0 ? '★ ' : ''}{p}
                 </span>
               ))}
@@ -1040,11 +1043,11 @@ function DeplasareInfoModal({
           {}
           <Section icon={<DollarSign className="h-3.5 w-3.5" />} title="Costuri">
             {!hasCosts ? (
-              <div className="text-center py-3 px-3 rounded-lg bg-surface-tertiary/40 border border-dashed border-line">
+              <div className="text-center py-3 px-3 bg-surface-tertiary/40 border border-dashed border-line">
                 <p className="text-pm-xs text-content-muted italic">Costurile nu au fost completate încă.</p>
                 {deplasare.status === 'intors' && (
                   <button onClick={onCompleteCosts}
-                    className={`mt-2 text-xs font-semibold inline-flex items-center gap-1 rounded-lg transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${isOverdue ? 'text-status-red hover:underline' : 'text-accent hover:underline'}`}>
+                    className={`mt-2 text-xs font-semibold inline-flex items-center gap-1 ${isOverdue ? 'text-status-red hover:underline' : 'text-accent hover:underline'}`}>
                     <DollarSign className="h-3 w-3" /> Completează acum
                   </button>
                 )}
@@ -1098,7 +1101,7 @@ function DeplasareInfoModal({
                 <DollarSign className="h-3 w-3" /> Completează costuri
               </Button>
             )}
-            <button onClick={onClose} className="px-3 py-1.5 text-xs rounded-xl border border-line hover:bg-surface-tertiary transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+            <button onClick={onClose} className="px-3 py-1.5 text-xs border border-line hover:bg-surface-tertiary">
               Închide
             </button>
           </div>
@@ -1133,7 +1136,7 @@ function InfoRow({ label, value, highlight }: { label: string; value: string; hi
 function CostBox({ label, value, dim, currency }: { label: string; value: number; dim?: boolean; currency?: string | null }) {
   const money = useMoney();
   return (
-    <div className={`border border-line rounded-lg bg-surface-secondary px-2 py-2 ${dim ? 'opacity-60' : ''}`}>
+    <div className={`border border-line bg-surface-secondary px-2 py-2 ${dim ? 'opacity-60' : ''}`}>
       <div className="text-pm-2xs text-content-muted uppercase tracking-wide font-semibold">{label}</div>
       <div className="text-sm font-semibold tabular-nums text-content-primary mt-0.5">
         {money(value, currency)}
@@ -1213,7 +1216,7 @@ function PaymentsSection({ deplasare, onOpenPayments }: { deplasare: Deplasare; 
       </div>
       {onOpenPayments && (
         <button type="button" onClick={onOpenPayments}
-          className="mt-2 text-pm-2xs text-accent hover:underline inline-flex items-center gap-1 rounded-lg transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+          className="mt-2 text-pm-2xs text-accent hover:underline inline-flex items-center gap-1">
           <Wallet className="h-3 w-3" /> Deschide panoul complet Plăți &amp; buget (dată, beneficiar, notă, închidere)
         </button>
       )}
@@ -1225,13 +1228,13 @@ function PaymentsSection({ deplasare, onOpenPayments }: { deplasare: Deplasare; 
       {payments.length > 0 && (
         <div className="space-y-1.5 mt-2 stagger-in" key={`paysec-${payments.length}`}>
           {payments.map(p => (
-            <div key={p.id} className="flex items-center gap-2 border border-line rounded-lg bg-surface-secondary px-2.5 py-1.5">
+            <div key={p.id} className="flex items-center gap-2 border border-line bg-surface-secondary px-2.5 py-1.5">
               <div className="min-w-0 flex-1">
-                <p className="text-pm-xs text-content-primary tabular-nums truncate">{money(p.amount, p.currency)}{p.paid_to ? ` · ${p.paid_to}` : ''}</p>
-                <p className="text-pm-2xs text-content-muted truncate">{p.paid_at}{p.created_by_name ? ` · ${p.created_by_name}` : ''}</p>
+                <p className="text-pm-xs text-content-primary tabular-nums">{money(p.amount, p.currency)}{p.paid_to ? ` · ${p.paid_to}` : ''}</p>
+                <p className="text-pm-2xs text-content-muted">{p.paid_at}{p.created_by_name ? ` · ${p.created_by_name}` : ''}</p>
               </div>
               <button type="button" onClick={() => remove(p.id)} title="Șterge plata"
-                className="grid place-items-center h-7 w-7 shrink-0 rounded-lg text-content-muted hover:bg-status-red/10 hover:text-status-red transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Trash2 className="h-3.5 w-3.5" /></button>
+                className="p-1 text-content-muted hover:text-status-red transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
           ))}
         </div>
@@ -1399,7 +1402,7 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 enter-fade" onClick={onClose}>
-      <div className="bg-surface-primary border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-xl max-h-[90vh] flex flex-col enter-scale" onClick={e => e.stopPropagation()}>
+      <div className="bg-surface-primary border border-line w-full max-w-xl max-h-[90vh] flex flex-col enter-scale" onClick={e => e.stopPropagation()}>
         {}
         <div className="shrink-0 border-b border-line p-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -1415,7 +1418,7 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
               {deplasare.project_name ? ` · ${deplasare.project_name}` : ''}
             </p>
           </div>
-          <button onClick={onClose} className="grid place-items-center h-7 w-7 shrink-0 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><XIcon className="h-4 w-4" /></button>
+          <button onClick={onClose} className="p-1 hover:bg-surface-tertiary shrink-0"><XIcon className="h-4 w-4" /></button>
         </div>
 
         {}
@@ -1427,8 +1430,8 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
               <Mini label="Cheltuit (plătit)" value={money(summary.total_paid, tripCur)} />
               <Mini label="Rămas" value={money(summary.remaining, tripCur)} strong />
             </div>
-            <div className="mt-2 h-1.5 rounded-full bg-surface-tertiary overflow-hidden">
-              <div className={`anim-bar-grow h-full rounded-full transition-colors duration-150 ${overBudget ? 'bg-status-red' : 'bg-accent'}`}
+            <div className="mt-2 h-1.5 rounded bg-surface-tertiary overflow-hidden">
+              <div className={`anim-bar-grow h-full rounded transition-all ${overBudget ? 'bg-status-red' : 'bg-accent'}`}
                 style={{ width: `${paidPct}%` }} />
             </div>
             {overBudget && (
@@ -1450,9 +1453,9 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
             ) : (
               <div className="space-y-1.5 stagger-in" key={`pay-${payments.length}`}>
                 {payments.map(p => (
-                  <div key={p.id} className="flex items-center gap-2 border border-line rounded-lg bg-surface-secondary px-2.5 py-1.5">
+                  <div key={p.id} className="flex items-center gap-2 border border-line bg-surface-secondary px-2.5 py-1.5">
                     <div className="min-w-0 flex-1">
-                      <p className="text-pm-xs text-content-primary tabular-nums truncate">
+                      <p className="text-pm-xs text-content-primary tabular-nums">
                         <span className="font-semibold">{money(p.amount, p.currency)}</span>
                         {p.currency.toUpperCase() !== tripCur && (
                           <span className="text-content-muted"> ({p.amount.toLocaleString('ro-RO')} {p.currency.toUpperCase()})</span>
@@ -1465,7 +1468,7 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
                       </p>
                     </div>
                     <button type="button" onClick={() => remove(p.id)} title="Șterge plata"
-                      className="grid place-items-center h-7 w-7 shrink-0 rounded-lg text-content-muted hover:bg-status-red/10 hover:text-status-red transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Trash2 className="h-3.5 w-3.5" /></button>
+                      className="p-1 text-content-muted hover:text-status-red transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
                   </div>
                 ))}
               </div>
@@ -1473,7 +1476,7 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
 
             {}
             {!isCancelled && (
-              <div className="mt-3 border border-line/60 rounded-lg bg-surface-secondary/40 p-2.5 space-y-2">
+              <div className="mt-3 border border-line/60 bg-surface-secondary/40 p-2.5 space-y-2">
                 <p className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">Adaugă plată</p>
                 <div className="grid grid-cols-3 gap-2">
                   <Field label="Data">
@@ -1525,7 +1528,7 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
           {}
           <Section icon={<CheckCircle2 className="h-3.5 w-3.5" />} title="Închidere delegație">
             {isClosed ? (
-              <div className="border border-status-green/40 rounded-lg bg-status-green/5 px-3 py-2.5">
+              <div className="border border-status-green/40 bg-status-green/5 px-3 py-2.5">
                 <p className="text-pm-xs text-status-green font-semibold flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5" /> Delegație încheiată
                 </p>
@@ -1538,7 +1541,7 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
             ) : isCancelled ? (
               <p className="text-pm-xs text-content-muted italic">Deplasarea este anulată.</p>
             ) : canClose ? (
-              <div className="border border-line/60 rounded-lg bg-surface-secondary/40 px-3 py-2.5 flex items-center justify-between gap-3">
+              <div className="border border-line/60 bg-surface-secondary/40 px-3 py-2.5 flex items-center justify-between gap-3">
                 <p className="text-pm-2xs text-content-secondary min-w-0">
                   La închidere, toate costurile înregistrate (buget + diurnă) se transferă automat în <span className="font-semibold">Financiar / Cheltuieli</span>{!deplasare.project_id && <span className="text-content-muted"> (ca o cheltuială fără proiect)</span>}.
                 </p>
@@ -1556,7 +1559,7 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
 
         {}
         <div className="shrink-0 border-t border-line p-3 flex items-center justify-end">
-          <button onClick={onClose} className="px-3 py-1.5 text-xs rounded-xl border border-line hover:bg-surface-tertiary transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+          <button onClick={onClose} className="px-3 py-1.5 text-xs border border-line hover:bg-surface-tertiary">
             Închide fereastra
           </button>
         </div>
@@ -1569,7 +1572,7 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
 
 function Mini({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
-    <div className="border border-line rounded-lg bg-surface-secondary px-2 py-1.5">
+    <div className="border border-line bg-surface-secondary px-2 py-1.5">
       <div className="text-pm-2xs text-content-muted uppercase tracking-wide">{label}</div>
       <div className={`tabular-nums ${strong ? 'text-sm font-semibold text-content-primary' : 'text-pm-xs text-content-secondary'}`}>{value}</div>
     </div>
@@ -1619,7 +1622,7 @@ function DiurnaField({ days, people, currency = 'RON', ratePerDay, onRateChange,
   const dayLabel = days === 1 ? 'zi' : 'zile';
   const persLabel = headcount === 1 ? 'persoană' : 'persoane';
   return (
-    <div className="border border-line/60 rounded-lg bg-surface-secondary/40 p-2.5">
+    <div className="border border-line/60 bg-surface-secondary/40 p-2.5">
       <div className="flex items-center justify-between mb-1.5">
         <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">Diurnă</label>
         <span className="text-pm-2xs text-content-muted inline-flex items-center gap-1" title="Persoane în delegație (principal + suplimentari)">
@@ -1637,7 +1640,7 @@ function DiurnaField({ days, people, currency = 'RON', ratePerDay, onRateChange,
           onClick={() => onTotalChange(computed ? String(computed) : '')}
           disabled={rate <= 0}
           title={`Calculează: ${rate} ${cur} × ${days} ${dayLabel} × ${headcount} ${persLabel} = ${money(computed, cur)}`}
-          className="h-9 shrink-0 px-2.5 inline-flex items-center justify-center gap-1 rounded-xl text-pm-xs font-semibold bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+          className="h-9 shrink-0 px-2.5 inline-flex items-center gap-1 text-pm-xs font-semibold bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
           <Calculator className="h-3.5 w-3.5" /> = total
         </button>
         <div className="flex-1 min-w-0">
