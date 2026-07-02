@@ -15,7 +15,7 @@
 
 
 import { useEffect, useState } from 'react';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, X } from '@/icons';
 import Button from '@/redesign/ui/Button';
 
 export interface ConfirmOptions {

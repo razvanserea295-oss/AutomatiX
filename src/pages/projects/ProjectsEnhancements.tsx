@@ -6,7 +6,7 @@
 
 
 import { useMemo } from 'react';
-import { Activity } from 'lucide-react';
+import { Activity } from '@/icons';
 import { SectionCard } from '@/components/enhancements';
 
 interface MinimalProject {

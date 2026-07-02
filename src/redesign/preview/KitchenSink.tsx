@@ -8,7 +8,7 @@ import { flushSync } from 'react-dom';
 import {
   Plus, Search, Package, Users, DollarSign, FolderKanban, Bell, Sun, Moon, Inbox,
   ArrowLeft, ArrowUpRight, Building2, Calendar,
-} from 'lucide-react';
+} from '@/icons';
 import Button from '../ui/Button';
 import Card, { CardHeader, CardBody } from '../ui/Card';
 import Page from '../ui/Page';
@@ -135,7 +135,7 @@ export default function KitchenSink() {
             {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             {dark ? 'Light' : 'Dark'}
           </Button>
-          <Avatar name="Răzvan Serea" size="sm" online />
+          <Avatar name="Răzvan Serea" size="sm" status="online" />
         </div>
       </header>
 

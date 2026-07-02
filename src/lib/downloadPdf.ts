@@ -2,6 +2,8 @@ import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 import { getServerUrl } from '@/config/server';
 import { STORAGE_KEYS, getStorage } from '@/config/localStorage';
+import { saveBlobAfterUserGesture } from '@/lib/browserDownload';
+import { isBrowserWebRuntime } from '@/lib/runtime';
 
 export interface PdfPayload {
   base64: string;
@@ -9,12 +11,15 @@ export interface PdfPayload {
   mime: string;
 }
 
-function triggerDownload(pdf: PdfPayload): void {
+function payloadToBlob(pdf: PdfPayload): Blob {
   const binary = atob(pdf.base64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  const blob = new Blob([bytes], { type: pdf.mime || 'application/pdf' });
-  const url = URL.createObjectURL(blob);
+  return new Blob([bytes], { type: pdf.mime || 'application/pdf' });
+}
+
+function triggerDownload(pdf: PdfPayload): void {
+  const url = URL.createObjectURL(payloadToBlob(pdf));
   const a = document.createElement('a');
   a.href = url;
   a.download = pdf.filename;
@@ -35,8 +40,15 @@ export async function downloadDocumentPdf(
   id: number,
 ): Promise<void> {
   try {
-    const pdf = await apiCommand<PdfPayload>('export_document_pdf', { type, id });
-    triggerDownload(pdf);
+    if (isBrowserWebRuntime()) {
+      await saveBlobAfterUserGesture(`${type}-${id}.pdf`, async () => {
+        const pdf = await apiCommand<PdfPayload>('export_document_pdf', { type, id });
+        return payloadToBlob(pdf);
+      });
+    } else {
+      const pdf = await apiCommand<PdfPayload>('export_document_pdf', { type, id });
+      triggerDownload(pdf);
+    }
     toast.success('PDF descărcat');
   } catch (err) {
     toast.error(err instanceof Error ? err.message : 'Eroare la generarea PDF-ului');
@@ -57,8 +69,20 @@ interface ContractAttachmentFull { id: number; filename: string | null; mime: st
 
 export async function downloadOneContractAttachment(id: number): Promise<void> {
   try {
-    const f = await apiCommand<ContractAttachmentFull>('get_contract_attachment', { id });
-    triggerDownload({ base64: f.base64, filename: f.filename || `contract-file-${id}`, mime: f.mime || 'application/octet-stream' });
+    const filename = `contract-file-${id}`;
+    if (isBrowserWebRuntime()) {
+      await saveBlobAfterUserGesture(filename, async () => {
+        const f = await apiCommand<ContractAttachmentFull>('get_contract_attachment', { id });
+        return payloadToBlob({
+          base64: f.base64,
+          filename: f.filename || filename,
+          mime: f.mime || 'application/octet-stream',
+        });
+      });
+    } else {
+      const f = await apiCommand<ContractAttachmentFull>('get_contract_attachment', { id });
+      triggerDownload({ base64: f.base64, filename: f.filename || filename, mime: f.mime || 'application/octet-stream' });
+    }
   } catch (err) {
     toast.error(err instanceof Error ? err.message : 'Eroare la descărcarea fișierului');
   }
@@ -92,8 +116,20 @@ export function downloadOneBriefingAttachment(id: number): void {
 
 export async function downloadOneQuotationAttachment(id: number): Promise<void> {
   try {
-    const f = await apiCommand<ContractAttachmentFull>('get_quotation_attachment', { id });
-    triggerDownload({ base64: f.base64, filename: f.filename || `oferta-fisier-${id}`, mime: f.mime || 'application/octet-stream' });
+    const filename = `oferta-fisier-${id}`;
+    if (isBrowserWebRuntime()) {
+      await saveBlobAfterUserGesture(filename, async () => {
+        const f = await apiCommand<ContractAttachmentFull>('get_quotation_attachment', { id });
+        return payloadToBlob({
+          base64: f.base64,
+          filename: f.filename || filename,
+          mime: f.mime || 'application/octet-stream',
+        });
+      });
+    } else {
+      const f = await apiCommand<ContractAttachmentFull>('get_quotation_attachment', { id });
+      triggerDownload({ base64: f.base64, filename: f.filename || filename, mime: f.mime || 'application/octet-stream' });
+    }
   } catch (err) {
     toast.error(err instanceof Error ? err.message : 'Eroare la descărcarea fișierului');
   }
@@ -111,8 +147,20 @@ export async function downloadContractAttachments(contractId: number): Promise<v
       return;
     }
     for (const meta of files) {
-      const f = await apiCommand<ContractAttachmentFull>('get_contract_attachment', { id: meta.id });
-      triggerDownload({ base64: f.base64, filename: f.filename || `contract-${contractId}-${meta.id}`, mime: f.mime || 'application/octet-stream' });
+      const fallbackName = `contract-${contractId}-${meta.id}`;
+      if (isBrowserWebRuntime()) {
+        await saveBlobAfterUserGesture(meta.filename || fallbackName, async () => {
+          const f = await apiCommand<ContractAttachmentFull>('get_contract_attachment', { id: meta.id });
+          return payloadToBlob({
+            base64: f.base64,
+            filename: f.filename || fallbackName,
+            mime: f.mime || 'application/octet-stream',
+          });
+        });
+      } else {
+        const f = await apiCommand<ContractAttachmentFull>('get_contract_attachment', { id: meta.id });
+        triggerDownload({ base64: f.base64, filename: f.filename || fallbackName, mime: f.mime || 'application/octet-stream' });
+      }
     }
     toast.success(files.length > 1 ? `${files.length} fișiere descărcate` : 'Fișier descărcat');
   } catch (err) {
@@ -133,8 +181,15 @@ export async function downloadOfferPdf(leadId: number): Promise<void> {
 
 export async function downloadOfferPdfFromQuotation(quotationId: number): Promise<void> {
   try {
-    const pdf = await apiCommand<PdfPayload>('generate_pdf_quotation', { quotation_id: quotationId });
-    triggerDownload(pdf);
+    if (isBrowserWebRuntime()) {
+      await saveBlobAfterUserGesture(`oferta-${quotationId}.pdf`, async () => {
+        const pdf = await apiCommand<PdfPayload>('generate_pdf_quotation', { quotation_id: quotationId });
+        return payloadToBlob(pdf);
+      });
+    } else {
+      const pdf = await apiCommand<PdfPayload>('generate_pdf_quotation', { quotation_id: quotationId });
+      triggerDownload(pdf);
+    }
     toast.success('PDF descărcat');
   } catch (err) {
     toast.error(err instanceof Error ? err.message : 'Eroare la generarea PDF-ului');

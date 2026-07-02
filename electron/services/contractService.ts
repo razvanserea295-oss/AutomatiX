@@ -2,6 +2,7 @@ import type { Database } from 'sql.js';
 import { CommandError } from '../middleware/errors';
 import type { UserWithRole } from './authService';
 import { queryOne } from '../db/sqlHelpers';
+import { ProjectService } from './projectService';
 
 
 
@@ -29,7 +30,8 @@ export interface Contract {
 }
 
 export interface CreateContractRequest {
-  project_id: number; title: string; client_id: number;
+  // Optional: when omitted a project is auto-created from the contract (see createContract).
+  project_id?: number | null; title: string; client_id: number;
   site_location?: string | null; delivered_product?: string | null;
   sale_price?: number | null; execution_term?: string | null;
   pif_term?: string | null; observations?: string | null;
@@ -126,22 +128,44 @@ export class ContractService {
   }
 
   static createContract(db: Database, user: UserWithRole, req: CreateContractRequest): Contract {
-    const exists = queryOne(db, 'SELECT COUNT(*) as cnt FROM contracts WHERE project_id = ?', [req.project_id], r => r.cnt as number);
-    if (exists && exists > 0) throw CommandError.conflict('Proiectul are deja un contract');
+    if (!req.title?.trim()) throw CommandError.badRequest('Titlul contractului este obligatoriu');
+    if (!req.client_id) throw CommandError.badRequest('Clientul este obligatoriu');
 
-    const next = (queryOne(db, 'SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM contracts', [], r => r.next_id as number)) || 1;
-    const code = `CTR-${String(next).padStart(4, '0')}`;
-
-    // Contract header + its seeded sections must be atomic — a section insert
-    // failing mid-loop previously left a contract with no/partial sections.
-    // Same fix as goods receipt (audit 2026-06-11).
+    // Contract header, its auto-created project (if any) and its seeded sections
+    // must be atomic — a section insert failing mid-loop previously left a
+    // contract with no/partial sections (same fix as goods receipt, audit 2026-06-11);
+    // and a rollback must also undo a project spun up only for this contract.
     db.run('BEGIN');
     let contractId: number;
     try {
+      // A contract can be the starting point of the workflow: if no project was
+      // chosen, spin one up automatically (named after the contract, linked to the
+      // same client) so the user no longer has to create a project beforehand.
+      // Reuses ProjectService.create for full consistency (defaults, activity,
+      // audit, notebook stages) and its manage_projects permission gate.
+      let projectId = req.project_id ?? null;
+      if (!projectId) {
+        const project = ProjectService.create(db, {
+          name: req.title.trim(),
+          client_id: req.client_id,
+          description: 'Proiect creat automat odată cu contractul.',
+          // Contractul e sursa de venit a proiectului → propagă prețul de vânzare
+          // în valoarea estimată (altfel forecast-ul de venituri rămânea 0).
+          estimated_value: req.sale_price ?? 0,
+        }, user);
+        projectId = project.id;
+      } else {
+        const exists = queryOne(db, 'SELECT COUNT(*) as cnt FROM contracts WHERE project_id = ?', [projectId], r => r.cnt as number);
+        if (exists && exists > 0) throw CommandError.conflict('Proiectul are deja un contract');
+      }
+
+      const next = (queryOne(db, 'SELECT COALESCE(MAX(id), 0) + 1 as next_id FROM contracts', [], r => r.next_id as number)) || 1;
+      const code = `CTR-${String(next).padStart(4, '0')}`;
+
       db.run(
         `INSERT INTO contracts (project_id, contract_code, title, client_id, site_location, delivered_product, sale_price, execution_term, pif_term, observations, created_by, status)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')`,
-        [req.project_id, code, req.title, req.client_id, req.site_location ?? null,
+        [projectId, code, req.title, req.client_id, req.site_location ?? null,
          req.delivered_product ?? null, req.sale_price ?? 0, req.execution_term ?? null,
          req.pif_term ?? null, req.observations ?? null, user.id]
       );

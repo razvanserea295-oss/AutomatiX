@@ -18,24 +18,26 @@
 
 
 
-import { spawn } from 'child_process';
-import fs from 'fs';
+
 import path from 'path';
-import { getDb, saveDatabase, flushDatabase } from './db';
+import { getDb, saveDatabase } from './db';
+import { logger } from './eventLog';
 import { CommandError } from '../electron/middleware/errors';
 import { logAuditEvent } from '../electron/db/auditLogs';
 import { AuthService } from '../electron/services/authService';
 import { installExternalDb } from '../electron/db/connection';
 import { getCommand, commandCount, wrapCommand, ipcRegister } from '../electron/commands/registry';
-import { emit as sseEmit } from './eventHub';
+import { scheduleServerRespawn } from './serverRespawn';
 import { runRollingBackupServer, listBackupsServer, getBackupDirectory, BACKUP_CONFIG } from './backup';
 import {
   createZipBackup, listAutoBackups, getConfig as getAutoBackupConfig,
   setConfig as setAutoBackupConfig, restoreInPlace, readAutoBackup,
-  getAutoBackupDirectory, startAutoBackupScheduler, type BackupConfigPatch,
+  getAutoBackupDirectory, startAutoBackupScheduler, importUploadedBackup,
+  type BackupConfigPatch,
 } from './autoBackup';
 import { listAuditUnified, countAuditUnified, exportAuditUnifiedCsv, type AuditListFilters } from '../electron/db/audit';
 import { validateCommandArgs } from './inputValidation';
+import { emit as sseEmit } from './eventHub';
 
 
 
@@ -124,6 +126,19 @@ export function registerCommandHandlers(): void {
     console.warn('[server] IPC aggregator failed; some commands may be unregistered:', err);
   }
 
+  // Belt-and-suspenders: if remote-support registrar failed or was missing from an
+  // older handler bundle, register its commands here so the page works after deploy.
+  try {
+    if (!getCommand('get_remote_endpoints')) {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { registerRemoteSupportHandlers } = require('../electron/ipc/remoteSupport');
+      registerRemoteSupportHandlers();
+      console.log('[server] remote support IPC handlers registered (fallback)');
+    }
+  } catch (err) {
+    console.warn('[server] remote support handlers unavailable:', err);
+  }
+
   
   
   
@@ -135,10 +150,13 @@ export function registerCommandHandlers(): void {
       const level = (args?.level as 'info' | 'warn' | 'error' | 'debug') || 'info';
       const msg = args?.message ?? '';
       const meta = args?.meta;
+      // Route client (renderer) errors into the same structured/rotating log as
+      // the server, so all errors land in one place (data/logs/server-events.log).
       const line = `[renderer:${level}] ${msg}`;
-      if (level === 'error') console.error(line, meta ?? '');
-      else if (level === 'warn') console.warn(line, meta ?? '');
-      else console.log(line, meta ?? '');
+      if (level === 'error') logger.error(line, meta);
+      else if (level === 'warn') logger.warn(line, meta);
+      else if (level === 'debug') logger.debug(line, meta);
+      else logger.info(line, meta);
       return { ok: true };
     });
   }
@@ -298,6 +316,17 @@ export function registerCommandHandlers(): void {
     return restoreInPlace(String(name));
   });
 
+  // Migration: upload a backup zip (from an old standalone/Electron desktop) and
+  // restore it into THIS tenant. Admin only; restoreInPlace makes a safety
+  // backup first. Used to move a firm's local data into its cloud tenant.
+  ipcRegister('auto_backup_import', async (args: any) => {
+    requireAdminFromArgs(args);
+    const a = (args?.request ?? args ?? {});
+    const base64 = String(a.base64 ?? a.data ?? '');
+    if (!base64) throw CommandError.badRequest('Conținut backup lipsă (base64).');
+    return importUploadedBackup(String(a.name ?? 'import.zip'), base64);
+  });
+
   
   
   
@@ -308,15 +337,11 @@ export function registerCommandHandlers(): void {
   ipcRegister('restart_server', async (args: any) => {
     const actor = requireAdminFromArgs(args);
 
-    const node = process.execPath;     
-    const entry = process.argv[1];     
-    const cwd = process.cwd();
-    const isWin = process.platform === 'win32';
+    const entry = process.argv[1];
     if (!entry) {
       throw CommandError.internal('Nu pot determina scriptul serverului (process.argv[1] lipsă).');
     }
 
-    
     try {
       logAuditEvent(
         getDb(), actor.id, 'SERVER_RESTART', 'system', null,
@@ -326,47 +351,16 @@ export function registerCommandHandlers(): void {
       saveDatabase();
     } catch (e) { console.warn('[restart] audit log failed (continuing):', e); }
 
-    
     try {
-      fs.writeFileSync(path.join(cwd, '.restart-marker'), JSON.stringify({
-        at: new Date().toISOString(),
+      scheduleServerRespawn({
         by: actor.username,
-        user_id: actor.id,
-        old_pid: process.pid,
-        entry,
+        userId: actor.id,
         reason: 'restart_server command',
-      }, null, 2));
-    } catch (e) { console.warn('[restart] marker write failed (continuing):', e); }
-
-    
-    
-    
-    
-    try {
-      const child = isWin
-        
-        
-        
-        
-        
-        ? spawn('cmd.exe', ['/c', `ping -n 3 127.0.0.1 >nul & "${node}" "${entry}"`],
-            { cwd, detached: true, stdio: 'ignore', windowsHide: true, windowsVerbatimArguments: true })
-        : spawn('sh', ['-c', `sleep 2; exec "${node}" "${entry}"`],
-            { cwd, detached: true, stdio: 'ignore' });
-      child.unref();
-      console.log(`[restart] respawn scheduled (child pid ${child.pid}); pid ${process.pid} will exit in ~1s`);
+      });
     } catch (e) {
       console.error('[restart] spawn failed — staying up:', e);
       throw CommandError.internal('Nu am putut porni procesul nou — restart anulat, serverul rămâne pornit.');
     }
-
-    
-    
-    setTimeout(() => {
-      try { flushDatabase(); } catch (e) { console.error('[restart] DB flush failed:', e); }
-      console.log('[restart] exiting now for respawn.');
-      process.exit(0);
-    }, 1000);
 
     return {
       ok: true,

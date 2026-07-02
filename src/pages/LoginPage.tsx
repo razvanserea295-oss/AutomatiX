@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent, type KeyboardEvent } from 'react';
-import { Loader2, Server, Wifi, WifiOff, Eye, EyeOff, ShieldCheck, User, Lock } from 'lucide-react';
+import { Loader2, Server, Wifi, WifiOff, Eye, EyeOff, ShieldCheck, User, Lock } from '@/icons';
 import { getServerUrl, setServerUrl, isServerReachable } from '@/config/server';
 import { STORAGE_KEYS, getStorage, setStorage, removeStorage } from '@/config/localStorage';
 import GearLogo from '@/components/ui/GearLogo';
@@ -201,10 +201,54 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   };
 
   return (
-    <div className="relative isolate flex min-h-screen items-center justify-center overflow-hidden bg-surface-page px-4 py-10">
+    <div className="relative isolate flex min-h-screen overflow-hidden bg-surface-page">
       {}
       <AppBackground />
 
+      {/* Brand panel — desktop only */}
+      <aside className="relative z-10 hidden w-[44%] max-w-[560px] flex-col justify-between overflow-hidden bg-[var(--color-accent)] px-12 py-14 text-[var(--color-on-accent)] lg:flex">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{ background: 'radial-gradient(120% 85% at 0% 0%, rgba(255,255,255,0.18), transparent 58%)' }}
+        />
+        <div aria-hidden className="pointer-events-none absolute -bottom-28 -right-28 opacity-[0.08]">
+          <GearLogo size={460} className="brightness-0 invert" />
+        </div>
+
+        <div className="relative flex items-center gap-3">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+            <GearLogo size={22} className="brightness-0 invert" />
+          </span>
+          <span className="text-pm-lg font-semibold tracking-tight">Automatix</span>
+        </div>
+
+        <div className="relative max-w-[400px]">
+          <h2 className="text-[30px] font-semibold leading-[1.12] tracking-[-0.02em]">
+            Producția ta, de la ofertă la livrare — într-un singur loc.
+          </h2>
+          <p className="mt-4 text-pm-sm leading-relaxed opacity-80">
+            Proiecte, stocuri, achiziții, vânzări și mentenanță — coordonate dintr-o singură platformă.
+          </p>
+          <ul className="mt-9 space-y-3.5">
+            {[
+              'Comenzi, producție și depozit sincronizate',
+              'Vizibilitate în timp real pe proiecte',
+              'Acces securizat, pe rol',
+            ].map((t) => (
+              <li key={t} className="flex items-start gap-3 text-pm-sm">
+                <span aria-hidden className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-current opacity-80" />
+                <span className="opacity-95">{t}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="relative text-pm-2xs opacity-70">© Automatix Software</p>
+      </aside>
+
+      {/* Form column */}
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-10">
       <div
         className={[
           'relative z-10 w-full max-w-[400px] transition-all ease-[cubic-bezier(0.32,0.72,0,1)]',
@@ -221,7 +265,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           ].join(' ')}
         >
           <span
-            className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-line/60 bg-surface-primary/80 backdrop-blur-xl shadow-[var(--elevation-3)]"
+            className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-[var(--color-accent)]/30 bg-surface-primary/80 backdrop-blur-xl shadow-[var(--elevation-3)] ring-4 ring-[var(--color-accent)]/10"
           >
             <GearLogo size={36} />
           </span>
@@ -234,7 +278,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         </div>
 
         {}
-        <div className="glass-floating rounded-3xl border border-line/70 p-8 enter-scale" style={{ animationDelay: '120ms' }}>
+        <div className="glass-floating rounded-3xl border border-line/70 border-t-[3px] border-t-[var(--color-accent)] p-8 enter-scale" style={{ animationDelay: '120ms' }}>
           {pending2FA ? (
             
             <div className="anim-fade-slide-in">
@@ -292,7 +336,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                     type="button"
                     onClick={handleDemoLogin}
                     disabled={loading}
-                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-accent text-pm-sm font-semibold text-[var(--color-on-accent)] transition-smooth duration-150 hover:opacity-90 active:scale-[0.98] focus:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50"
+                    className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[var(--color-accent)] text-pm-sm font-semibold text-white transition-smooth duration-150 hover:opacity-90 active:scale-[0.98] focus:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50"
                   >
                     {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                     Intră în demo
@@ -445,8 +489,9 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
         {}
         <p className="mt-7 text-center text-pm-2xs text-content-muted/80">
-          <span className="tabular-nums">v1.1.4</span> · Promix Technologies
+          <span className="tabular-nums">v1.1.4</span> · Automatix Software
         </p>
+      </div>
       </div>
     </div>
   );
@@ -474,7 +519,7 @@ function PrimaryButton({
       disabled={disabled}
       className={[
         'flex h-11 w-full flex-1 items-center justify-center gap-2 rounded-xl',
-        'bg-accent text-pm-md font-semibold text-[var(--color-on-accent)]',
+        'bg-[var(--color-accent)] text-pm-md font-semibold text-white',
         'shadow-[0_2px_12px_var(--color-accent-muted)]',
         'transition-all duration-150 ease-out',
         'hover:brightness-[1.07] active:scale-[0.98] active:brightness-95',

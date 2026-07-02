@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Search, ExternalLink, ClipboardCheck, Clipboard, AlertTriangle, CheckCircle2, Loader2, Upload, Package } from 'lucide-react';
+import { Search, ExternalLink, ClipboardCheck, Clipboard, AlertTriangle, CheckCircle2, Loader2, Upload, Package } from '@/icons';
 import licenses from '@/assets/licenses.json';
 import type { User } from '@/core/types';
 import { getServerUrl, isServerMode } from '@/config/server';

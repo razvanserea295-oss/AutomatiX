@@ -1,38 +1,11 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Loader2, MapPin, Calendar, User, ArrowLeft,
+  Loader2, Calendar, User, ArrowLeft,
   Wrench, ClipboardList, Clock, Package, Activity, AlertTriangle,
   Plus, ChevronRight, Trash2,
-} from 'lucide-react';
+} from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 import type { User as AppUser } from '@/core/types';
@@ -42,7 +15,9 @@ import { STATION_PIECE_MODULES, slugToLabel } from '@/constants/stationPieceModu
 import { formatDateRo, formatCurrencyRon } from '@/lib/format';
 import { confirmDialog } from '@/components/ConfirmDialog';
 import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout } from '@/app-ui';
 import Button from '@/redesign/ui/Button';
+import { THEAD_STICKY } from '@/redesign/ui/SortableTh';
 import Card, { CardBody, CardHeader } from '@/redesign/ui/Card';
 import KpiCard from '@/redesign/ui/KpiCard';
 import IconButton from '@/redesign/ui/IconButton';
@@ -51,10 +26,6 @@ import Tabs, { type TabDescriptor } from '@/redesign/ui/Tabs';
 import EmptyState from '@/redesign/ui/EmptyState';
 import { vtName } from '@/redesign/lib/viewTransition';
 import type { StatusTone } from '@/lib/statusTokens';
-
-
-
-
 
 interface StationDetail {
   id: number;
@@ -165,10 +136,6 @@ const TABS: { id: TabId; label: string; icon: React.ComponentType<{ className?: 
   { id: 'activity', label: 'Jurnal', icon: Activity },
 ];
 
-
-
-
-
 function statusTone(status: string): StatusTone {
   const s = status.toUpperCase();
   if (['ACTIVE', 'COMPLETED', 'RECEIVED', 'INSTALLED', 'APPROVED'].includes(s)) return 'success';
@@ -197,10 +164,6 @@ function PriorityBadge({ priority }: { priority: string }) {
 
 const formatDate = formatDateRo;
 const formatCurrency = formatCurrencyRon;
-
-
-
-
 
 interface StationDetailPageProps {
   user: AppUser | null;
@@ -271,9 +234,6 @@ export default function StationDetailPage({ stationId, onBack }: StationDetailPa
   useEffect(() => { void fetchStation(); }, [fetchStation]);
   useEffect(() => { void fetchTabData(activeTab); }, [activeTab, fetchTabData]);
 
-  
-  
-  
   useEffect(() => {
     const onVisible = () => {
       if (document.visibilityState === 'visible') {
@@ -289,7 +249,6 @@ export default function StationDetailPage({ stationId, onBack }: StationDetailPa
     };
   }, [activeTab, fetchStation, fetchTabData]);
 
-  
   const interventionFields: FormField[] = [
     {
       name: 'intervention_type', label: 'Tip interventie', type: 'select', required: true,
@@ -321,7 +280,6 @@ export default function StationDetailPage({ stationId, onBack }: StationDetailPa
     await fetchTabData('interventions');
   };
 
-  
   if (loading && !station) {
     return (
       <Page>
@@ -347,11 +305,7 @@ export default function StationDetailPage({ stationId, onBack }: StationDetailPa
 
   if (!station) return null;
 
-  
   const moduleKeys = STATION_PIECE_MODULES.map((m) => m.slug);
-
-  
-  const warrantyActive = station.warranty_end_date && new Date(station.warranty_end_date) > new Date();
 
   const tabDescriptors: TabDescriptor<TabId>[] = TABS.map(({ id, label, icon: Icon }) => ({
     id,
@@ -359,8 +313,6 @@ export default function StationDetailPage({ stationId, onBack }: StationDetailPa
     icon: <Icon className="h-3.5 w-3.5" />,
   }));
 
-  
-  
   const tabCreateButton = (() => {
     if (activeTab === 'interventions') {
       return (
@@ -373,52 +325,28 @@ export default function StationDetailPage({ stationId, onBack }: StationDetailPa
   })();
 
   return (
-    <Page fit>
-      {
-}
-      <div className="enter-up shrink-0 pb-4 border-b border-line/60 px-6 pt-6" style={{ animationDelay: '0ms' }}>
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="shrink-0 inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-xl border border-line text-pm-sm font-medium text-content-secondary bg-surface-primary transition-smooth duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] hover:bg-surface-tertiary hover:text-content-primary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Înapoi
-          </button>
-
-          <span className="h-11 w-11 rounded-2xl bg-accent-muted flex items-center justify-center shrink-0">
-            <Wrench className="h-5 w-5 text-accent" />
-          </span>
-
-          <div className="min-w-0">
-            {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-            <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">{station.name}</h1>
-            <p className="text-pm-sm text-content-muted truncate leading-tight">
-              {`Cod: ${station.code} | Client: ${station.client_name}${station.project_name ? ` | Proiect: ${station.project_name}` : ''}`}
-            </p>
-          </div>
-
-          <div className="flex-1" />
-
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <StationStatusBadge status={station.status} />
-            {warrantyActive && (
-              <StatusBadge tone="success" label="Garantie" dot />
+    <>
+    <DashboardLayout
+        
+        chrome={(
+          <PageChrome
+            actions={tabCreateButton}
+            toolbar={(
+              <Tabs<TabId>
+                tabs={tabDescriptors}
+                activeId={activeTab}
+                onChange={setActiveTab}
+                variant="segmented"
+              />
             )}
-            {station.location && (
-              <span className="flex min-w-0 max-w-[14rem] items-center gap-1 text-pm-xs text-content-muted">
-                <MapPin className="h-3 w-3 shrink-0" /><span className="truncate">{station.location}</span>
-              </span>
-            )}
-            {tabCreateButton}
-          </div>
-        </div>
-      </div>
-
-      <Page.Body fit maxWidth="wide" padding="comfortable">
-
-        {}
+          />
+        )}
+      leading={
+        <Button variant="ghost" size="sm" onClick={() => window.history.back()}>
+          <ArrowLeft className="h-4 w-4" /> Stații
+        </Button>
+      }
+      kpis={
         <Page.Kpis cols={4} className="shrink-0 stagger-in" key={`kpis-${interventions.length}-${maintenance.length}-${parts.length}-${changes.length}`}>
           <KpiCard
             label="Intervenții"
@@ -448,24 +376,10 @@ export default function StationDetailPage({ stationId, onBack }: StationDetailPa
             icon={AlertTriangle}
           />
         </Page.Kpis>
-
-        {}
-        <Card padding="none" className="shrink-0">
-          <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2">
-            <Tabs<TabId>
-              tabs={tabDescriptors}
-              activeId={activeTab}
-              onChange={setActiveTab}
-              variant="segmented"
-            />
-            {tabCreateButton}
-          </div>
-        </Card>
-
-        {}
+      }
+    >
         <div className="flex-1 min-h-0 overflow-y-auto">
-          {}
-          <div key={activeTab} className="enter-up">
+          <div key={activeTab} className="">
             {activeTab === 'overview' && <OverviewTab station={station} moduleKeys={moduleKeys} />}
             {activeTab === 'interventions' && (
               <InterventionsTab interventions={interventions} onAdd={() => interventionModal.openModal()} />
@@ -476,9 +390,8 @@ export default function StationDetailPage({ stationId, onBack }: StationDetailPa
             {activeTab === 'activity' && <ActivityTab logs={activityLog} />}
           </div>
         </div>
-      </Page.Body>
+    </DashboardLayout>
 
-      {}
       <FormModal
         isOpen={interventionModal.isOpen}
         onClose={interventionModal.closeModal}
@@ -488,20 +401,14 @@ export default function StationDetailPage({ stationId, onBack }: StationDetailPa
         initialData={{}}
         submitLabel="Creeaza"
       />
-    </Page>
+    </>
   );
 }
-
-
-
-
 
 function OverviewTab({ station, moduleKeys }: { station: StationDetail; moduleKeys: string[] }) {
   return (
     <div className="space-y-4">
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        {}
         <Card className="lg:col-span-7">
           <CardHeader
             title={
@@ -533,8 +440,6 @@ function OverviewTab({ station, moduleKeys }: { station: StationDetail; moduleKe
             )}
           </CardBody>
         </Card>
-
-        {}
         <Card className="lg:col-span-5">
           <CardHeader
             title={
@@ -558,8 +463,6 @@ function OverviewTab({ station, moduleKeys }: { station: StationDetail; moduleKe
           </CardBody>
         </Card>
       </div>
-
-      {}
       <Card>
         <CardHeader
           title={
@@ -607,10 +510,6 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
     </div>
   );
 }
-
-
-
-
 
 function InterventionsTab({ interventions, onAdd }: { interventions: Intervention[]; onAdd: () => void }) {
   return (
@@ -668,10 +567,6 @@ function InterventionsTab({ interventions, onAdd }: { interventions: Interventio
     </Card>
   );
 }
-
-
-
-
 
 function MaintenanceTab({ plans, stationId, onChange }: { plans: MaintenancePlan[]; stationId: number; onChange: () => void }) {
   const [show, setShow] = useState(false);
@@ -747,7 +642,7 @@ function MaintenanceTab({ plans, stationId, onChange }: { plans: MaintenancePlan
         ) : (
           <div className="rounded-xl border border-line/60 overflow-x-auto">
             <table className="w-full text-left text-pm-sm">
-              <thead>
+              <thead className={THEAD_STICKY}>
                 <tr className="border-b border-line bg-surface-secondary">
                   <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Tip</th>
                   <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Periodicitate</th>
@@ -793,10 +688,6 @@ function MaintenanceTab({ plans, stationId, onChange }: { plans: MaintenancePlan
     </Card>
   );
 }
-
-
-
-
 
 function PartsTab({ parts, stationId, onChange }: { parts: PartsRequest[]; stationId: number; onChange: () => void }) {
   const totalCost = parts.reduce((s, p) => s + p.estimated_cost * p.quantity, 0);
@@ -872,7 +763,7 @@ function PartsTab({ parts, stationId, onChange }: { parts: PartsRequest[]; stati
         ) : (
           <div className="rounded-xl border border-line/60 overflow-x-auto">
             <table className="w-full text-left text-pm-sm">
-              <thead>
+              <thead className={THEAD_STICKY}>
                 <tr className="border-b border-line bg-surface-secondary">
                   <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Piesa</th>
                   <th className="px-4 py-3 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Cod</th>
@@ -918,10 +809,6 @@ function PartsTab({ parts, stationId, onChange }: { parts: PartsRequest[]; stati
     </Card>
   );
 }
-
-
-
-
 
 function ChangesTab({ changes, stationId, onChange }: { changes: ChangeRequest[]; stationId: number; onChange: () => void }) {
   const [show, setShow] = useState(false);
@@ -1031,10 +918,6 @@ function ChangesTab({ changes, stationId, onChange }: { changes: ChangeRequest[]
     </Card>
   );
 }
-
-
-
-
 
 function ActivityTab({ logs }: { logs: ActivityLog[] }) {
   return (

@@ -21,18 +21,21 @@
 
 
 
+import './loadProjectEnv';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import http from 'http';
 import { initDatabaseForServer, getDb, saveDatabase, flushDatabase, isFreshDatabase, getDbPath, getLastSaveAt } from './db';
 import { acquireInstanceLock, releaseInstanceLock } from './instanceLock';
 import { ensureBlankTenant } from './tenantInit';
 import { DeplasariService } from '../electron/services/deplasariService';
 import { runMigrations } from '../electron/db/migrations';
+import { neutralizeFactoryCredentials } from './factoryCreds';
 import { seedDemoData } from './demoSeed';
 import { registerCommandHandlers, handleCommand, isMutatingCommand } from './commandRouter';
 import { startScheduler } from '../electron/services/escalationCron';
@@ -44,7 +47,11 @@ import { AuthService } from '../electron/services/authService';
 import { getDb as getServerDb } from './db';
 import { PortalService } from '../electron/services/portalService';
 import { RfqService } from '../electron/services/rfqService';
-import { logServerEvent, getServerLogPath } from './eventLog';
+import { logServerEvent, getServerLogPath, logger } from './eventLog';
+import { initMonitoring, captureException } from './monitoring';
+
+// Error monitoring (no-op unless SENTRY_DSN is set).
+initMonitoring();
 import { registerReleaseUpload } from './releaseUpload';
 import { registerPartsTreeDownload } from './partsTreeDownload';
 import { registerPartsTreeUpload } from './partsTreeUpload';
@@ -56,6 +63,10 @@ import { registerSourceUpdate } from './sourceUpdate';
 import { startBackupScheduler } from './backup';
 import { getAutoBackupDirectory } from './autoBackup';
 import { registerSharedStorageApi } from './sharedStorageApi';
+import { registerLicense, instanceLicensed, ACTIVATION_ALLOWLIST } from './license';
+import { registerLeads } from './leads';
+import { registerRemoteSupportRoutes } from './remoteSupport';
+import { attachRustDeskWsProxy } from './rustdeskWsProxy';
 
 const PORT = parseInt(process.env.PROMIX_PORT || '3500', 10);
 const UPDATES_DIR = process.env.PROMIX_UPDATES_DIR || path.join(process.cwd(), 'updates');
@@ -69,6 +80,11 @@ const UPDATES_DIR = process.env.PROMIX_UPDATES_DIR || path.join(process.cwd(), '
 const BODY_LIMIT = process.env.PROMIX_BODY_LIMIT || '50mb';
 const TRUST_PROXY = process.env.PROMIX_TRUST_PROXY === '1';
 const RATE_LIMIT_OFF = process.env.PROMIX_RATE_LIMIT_OFF === '1';
+
+// Per-tenant license gate. OFF by default so deploying the code never bricks a
+// running instance; flip PROMIX_LICENSE_GATE=1 in the launcher once the firm's
+// license is imported. Demo instances are always exempt (license-free showcase).
+const LICENSE_GATE_ON = process.env.PROMIX_LICENSE_GATE === '1' && process.env.PROMIX_DEMO !== '1';
 
 
 
@@ -111,13 +127,18 @@ if (TRUST_PROXY) app.set('trust proxy', 1);
 // baseline (which disables the classic-control parts of Fiori mode).
 const FIORI_CLASSIC = process.env.PROMIX_FIORI_CLASSIC !== '0';
 const SAP_UI5_CDN = 'https://ui5.sap.com';
+// @ui5/webcomponents pulls its theming base content (the "72" font family, theme
+// params) from the jsDelivr-hosted @sap-theming package — even in the normal
+// SaaS shell (the components are used app-wide), not just Fiori mode. Allow that
+// CDN so the fonts/assets load instead of being CSP-blocked (cosmetic but noisy).
+const SAP_THEMING_CDN = 'https://cdn.jsdelivr.net';
 const cspScriptExtra  = FIORI_CLASSIC ? [SAP_UI5_CDN, "'unsafe-eval'"] : [];
-const cspStyleExtra   = FIORI_CLASSIC ? [SAP_UI5_CDN] : [];
-const cspFontExtra    = FIORI_CLASSIC ? [SAP_UI5_CDN] : [];
-const cspImgExtra     = FIORI_CLASSIC ? [SAP_UI5_CDN] : [];
-const cspConnectExtra = FIORI_CLASSIC ? [SAP_UI5_CDN] : [];
+const cspStyleExtra   = [SAP_THEMING_CDN, ...(FIORI_CLASSIC ? [SAP_UI5_CDN] : [])];
+const cspFontExtra    = [SAP_THEMING_CDN, ...(FIORI_CLASSIC ? [SAP_UI5_CDN] : [])];
+const cspImgExtra     = [SAP_THEMING_CDN, ...(FIORI_CLASSIC ? [SAP_UI5_CDN] : [])];
+const cspConnectExtra = [SAP_THEMING_CDN, ...(FIORI_CLASSIC ? [SAP_UI5_CDN] : [])];
 if (FIORI_CLASSIC) {
-  console.warn(`[security] PROMIX_FIORI_CLASSIC on — CSP widened for SAP UI5 CDN (${SAP_UI5_CDN} on script/style/font/img/connect + script 'unsafe-eval' for sap.viz charts). Set PROMIX_FIORI_CLASSIC=0 to disable classic Fiori controls and restore the strict CSP.`);
+  logger.warn(`[security] PROMIX_FIORI_CLASSIC on — CSP widened for SAP UI5 CDN (${SAP_UI5_CDN} on script/style/font/img/connect + script 'unsafe-eval' for sap.viz charts). Set PROMIX_FIORI_CLASSIC=0 to disable classic Fiori controls and restore the strict CSP.`);
 }
 
 app.use(helmet({
@@ -274,6 +295,31 @@ const APP_VERSION = (() => {
   }
 })();
 
+// Build fingerprint — a short hash of the served frontend's index.html (which
+// references Vite's content-hashed chunks, so it changes whenever ANY frontend
+// asset changes). Desktop thin-clients poll this and reload when it changes, so
+// a deploy reaches them instantly even without a version bump. Memoized; the
+// server restarts on every source-update, so it's recomputed per deploy.
+let _buildId: string | null = null;
+function buildId(): string {
+  if (_buildId) return _buildId;
+  const candidates = [
+    path.join(process.cwd(), 'dist', 'index.html'),
+    path.join(__dirname, '../../dist/index.html'),
+    path.join(__dirname, '../../../dist/index.html'),
+  ];
+  for (const p of candidates) {
+    try {
+      if (fs.existsSync(p)) {
+        _buildId = crypto.createHash('sha1').update(fs.readFileSync(p)).digest('hex').slice(0, 12);
+        return _buildId;
+      }
+    } catch { /* try next */ }
+  }
+  _buildId = APP_VERSION;
+  return _buildId;
+}
+
 app.get('/api/health', (_req, res) => {
   // Actually probe the DB — a static "ok" hid a locked/broken DB from monitoring.
   let dbOk = false;
@@ -292,6 +338,7 @@ app.get('/api/health', (_req, res) => {
     db: dbOk ? 'ok' : 'error',
     lastSaveAgeMs,
     version: APP_VERSION,
+    buildId: buildId(),
     mode: 'server',
     demo: process.env.PROMIX_DEMO === '1',
     businessType: process.env.PROMIX_BUSINESS_TYPE || 'manufacturing',
@@ -489,30 +536,105 @@ const DIST_DIR = (() => {
   return candidates.find(p => fs.existsSync(path.join(p, 'index.html'))) || candidates[0];
 })();
 
-app.use(express.static(DIST_DIR, { index: false })); 
+// ── Host-based shell selection (marketing landing vs the app SPA) ────────────
+// automatix.online / www  → dist/landing.html (the presentation site);
+// app.automatix.online and everything else (localhost, tauri, LAN) → the SPA.
+// API, /t, /ai, /downloads and /m are host-agnostic (matched before the SPA
+// fallback), so this only chooses which HTML document to hand back.
+const LANDING_HOSTS = new Set(
+  (process.env.PROMIX_LANDING_HOSTS || 'automatix.online,www.automatix.online')
+    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean),
+);
+function axHostOf(req: express.Request): string {
+  const xfh = String(req.headers['x-forwarded-host'] || '').split(',')[0].trim();
+  const h = xfh || req.headers.host || req.hostname || '';
+  return h.toLowerCase().split(':')[0];
+}
+function wantsLanding(req: express.Request): boolean {
+  return LANDING_HOSTS.size > 0 && LANDING_HOSTS.has(axHostOf(req));
+}
+function sendShell(req: express.Request, res: express.Response): void {
+  const fsx = require('fs') as typeof import('fs');
+  res.set('Cache-Control', 'no-store');
+  if (wantsLanding(req)) {
+    const landing = path.join(DIST_DIR, 'landing.html');
+    if (fsx.existsSync(landing)) { res.sendFile(landing); return; }
+  }
+  const indexPath = path.join(DIST_DIR, 'index.html');
+  if (fsx.existsSync(indexPath)) { res.sendFile(indexPath); return; }
+  res.set('Content-Type', 'text/html; charset=utf-8');
+  res.send(MOBILE_HTML);
+}
+
+// /downloads/* is license-gated (see registerDownloads). Keep express.static
+// from serving the installer straight out of dist/downloads (Vite copies
+// public/ → dist/), which would bypass the license check entirely.
+const IMMUTABLE_DIST_ASSET_RE = /^assets\/.+-[A-Za-z0-9_-]{8,}\.(?:js|mjs|cjs|css|woff2?|ttf|otf|svg|png|jpe?g|webp|gif|ico)$/i;
+const staticMw = express.static(DIST_DIR, {
+  index: false,
+  setHeaders: (res, filePath) => {
+    const relPath = path.relative(DIST_DIR, filePath).replace(/\\/g, '/');
+    if (relPath.endsWith('.html')) {
+      // HTML shell must always revalidate so it points at the current chunk set.
+      res.setHeader('Cache-Control', 'no-store');
+      return;
+    }
+    if (IMMUTABLE_DIST_ASSET_RE.test(relPath)) {
+      // Fingerprinted files are content-addressed and safe to cache forever.
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      return;
+    }
+    // Non-fingerprinted static files (manifest, icons, etc.) stay short-lived.
+    res.setHeader('Cache-Control', 'public, max-age=300, must-revalidate');
+  },
+});
+app.use((req, res, next) => {
+  if (req.path.startsWith('/downloads/')) return next();
+  return staticMw(req, res, next);
+});
 
 
 app.get(['/m', '/m/'], (_req, res) => {
+  // The mobile page is a self-contained app with one inline <script>. The global
+  // CSP has no 'unsafe-inline' for scripts, which silently blanked the page — so
+  // serve /m with a per-request nonce that whitelists just this trusted script.
+  const nonce = globalThis.crypto.randomUUID();
   res.set('Content-Type', 'text/html; charset=utf-8');
   res.set('Cache-Control', 'no-store');
-  res.send(MOBILE_HTML);
+  res.set(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "frame-ancestors 'self'",
+      "img-src 'self' data: blob:",
+      "connect-src 'self'",
+      "style-src 'self' 'unsafe-inline'",
+      `script-src 'self' 'nonce-${nonce}'`,
+    ].join('; '),
+  );
+  res.send(MOBILE_HTML.replace('<script>', `<script nonce="${nonce}">`));
 });
 
 
 
-app.get('/', (_req, res) => {
-  const indexPath = path.join(DIST_DIR, 'index.html');
-  const fs = require('fs') as typeof import('fs');
-  if (fs.existsSync(indexPath)) {
-    res.set('Cache-Control', 'no-store');
-    res.sendFile(indexPath);
-  } else {
-    
-    res.set('Content-Type', 'text/html; charset=utf-8');
-    res.set('Cache-Control', 'no-store');
-    res.send(MOBILE_HTML);
-  }
-});
+app.get('/', (req, res) => { sendShell(req, res); });
+
+// ── Manager portal (standalone admin console) ────────────────────────────────
+// /manager is its own Vite entry (manager.html), host-agnostic: the same console
+// is reachable on app.* or the apex. It logs in via the broker (/api/auth/login)
+// and drives the existing per-tenant commands (users, licenses, leads). Served
+// before the SPA fallback so it isn't swallowed by index.html / landing.html.
+function sendManagerShell(_req: express.Request, res: express.Response): void {
+  const fsx = require('fs') as typeof import('fs');
+  res.set('Cache-Control', 'no-store');
+  const shell = path.join(DIST_DIR, 'manager.html');
+  if (fsx.existsSync(shell)) { res.sendFile(shell); return; }
+  res.status(404).send('Manager portal build missing');
+}
+app.get(['/manager', '/manager/'], sendManagerShell);
+app.get('/manager/*path', sendManagerShell);
 
 
 
@@ -599,6 +721,22 @@ app.use('/api/update', express.static(UPDATES_DIR, { fallthrough: false }));
 // Auto-backup download endpoint - serves files directly without loading into memory
 const AUTO_BACKUP_DIR = getAutoBackupDirectory();
 app.get('/api/auto-backup/:filename', (req, res) => {
+  // Admin-only: backup zips contain the (encrypted) database. Accept the session
+  // token via Bearer header or ?token= query (so a plain <a download> link works).
+  const token =
+    req.headers.authorization?.replace(/^Bearer\s+/i, '') || (req.query.token as string) || '';
+  if (!token) { res.status(401).json({ message: 'token required' }); return; }
+  try {
+    const user = AuthService.validateSession(getServerDb(), token) as { role_name?: string } | null;
+    if (!user || String(user.role_name || '').toLowerCase() !== 'admin') {
+      res.status(403).json({ message: 'necesită drepturi de administrator' });
+      return;
+    }
+  } catch {
+    res.status(401).json({ message: 'invalid token' });
+    return;
+  }
+
   const filename = path.basename(req.params.filename);
   const filepath = path.join(AUTO_BACKUP_DIR, filename);
   if (!filename.endsWith('.zip') || !fs.existsSync(filepath)) {
@@ -650,6 +788,12 @@ registerAvatarUpload(app);
 
 registerDownloads(app);
 
+registerRemoteSupportRoutes(app, tokenLimiter);
+
+registerLicense(app);
+
+registerLeads(app);
+
 registerSharedStorageApi(app);
 
 if (!RATE_LIMIT_OFF) app.use('/api/cmd', globalLimiter);
@@ -688,7 +832,19 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
         // 2FA challenge {requires_2fa,challenge}; the session/challenge already
         // lives in THIS tenant's instance, reachable next via /t/<slug>.
         const data = await r.json();
-        res.json({ tenant_slug: slug, ...data });
+        // When the gate is armed, tell the client up front whether this firm's
+        // instance still needs activation so it can show the activation screen
+        // instead of the dashboard. Login itself still succeeds — the
+        // per-command gate keeps everything else blocked until an admin imports
+        // a license. Skipped for the 2FA-challenge response (no token yet).
+        let requiresLicense = false;
+        if (LICENSE_GATE_ON && data && data.token) {
+          try {
+            const lr = await fetch(`http://127.0.0.1:${port}/api/license/tenant-state`);
+            if (lr.ok) { const ls = await lr.json() as { licensed?: boolean }; requiresLicense = !ls.licensed; }
+          } catch { /* unreachable → per-command gate still enforces */ }
+        }
+        res.json({ tenant_slug: slug, requires_license: requiresLicense, ...data });
         return;
       }
       // 401 (wrong tenant / bad creds) or other → try the next firm.
@@ -698,6 +854,15 @@ app.post('/api/auth/login', authLimiter, async (req, res) => {
   res.status(401).json({ code: 401, message: 'Username sau parolă incorectă' });
 });
 
+
+// Commands allowed even when the account is flagged must_change_password — the
+// minimal surface needed to authenticate and get OUT of that state. Everything
+// else is 403'd server-side so the force-password-change step can't be bypassed
+// (the flag was previously enforced ONLY in the React client, so a default
+// admin/1234 could drive the entire API once an instance was reachable).
+const MUST_CHANGE_ALLOWLIST = new Set<string>([
+  'login', 'login_verify_2fa', 'logout', 'validate_session', 'change_password',
+]);
 
 app.post('/api/cmd/:command',
 
@@ -728,19 +893,37 @@ app.post('/api/cmd/:command',
     const token = headerToken || body.token || '';
     const args = { ...body, token, client_ip: req.ip };
 
-    
-    
-    // page or button can bypass it. (Demo-mode global read-only is handled in
-    
-    
-    if (token && isMutatingCommand(command)) {
-      try {
-        const u = AuthService.validateSession(getServerDb(), token) as { role_name?: string } | null;
-        if (u && String(u.role_name || '').toLowerCase() === 'viewer') {
+    // ── Per-tenant license gate ──────────────────────────────────────────────
+    // Until this instance has a valid, non-revoked license, only the activation
+    // surface (login + import_license + a few reads) runs; everything else gets
+    // 402 so the client can route to the activation screen. Each firm is its own
+    // process+DB, so instanceLicensed() is per-tenant for free. Toggled by
+    // PROMIX_LICENSE_GATE (demo exempt).
+    if (LICENSE_GATE_ON && !ACTIVATION_ALLOWLIST.has(command) && !instanceLicensed()) {
+      res.status(402).json({ code: 402, message: 'Licență necesară pentru această firmă.', requires_license: true });
+      return;
+    }
+
+    // ── Session-derived gates: must_change_password + viewer read-only ────────
+    // One session lookup drives both. must_change_password is now enforced HERE
+    // (server-side), not only in the React shell, so a freshly seeded/default
+    // admin cannot run ANY command until the password is rotated. The flag is
+    // re-queried from the DB each request (never trust the login snapshot). An
+    // invalid/expired token falls through to handleCommand, which performs its
+    // own auth and returns the proper 401.
+    if (token && !MUST_CHANGE_ALLOWLIST.has(command)) {
+      let sessionUser: { role_name?: string; must_change_password?: boolean } | null = null;
+      try { sessionUser = AuthService.validateSession(getServerDb(), token); } catch { sessionUser = null; }
+      if (sessionUser) {
+        if (sessionUser.must_change_password) {
+          res.status(403).json({ code: 403, message: 'Schimbă-ți parola înainte de a continua.', must_change_password: true });
+          return;
+        }
+        if (isMutatingCommand(command) && String(sessionUser.role_name || '').toLowerCase() === 'viewer') {
           res.status(403).json({ code: 403, message: 'Rol „Vizitator" — doar vizualizare. Nu poți modifica date.' });
           return;
         }
-      } catch {  }
+      }
     }
 
     try {
@@ -750,7 +933,7 @@ app.post('/api/cmd/:command',
       const hasCode = err && Number.isInteger(err.code) && err.code >= 100 && err.code < 600;
       if (hasCode) {
         
-        console.error(`[server] ${command} failed (${err.code}): ${err.message}`);
+        logger.error(`[server] ${command} failed (${err.code}): ${err.message}`);
         res.status(err.code).json({ code: err.code, message: err.message });
       } else {
         // Friendly mapping for raw sql.js constraint violations (UNIQUE / FK /
@@ -758,12 +941,12 @@ app.post('/api/cmd/:command',
         // generic 500. Anything else stays a safe generic 400/500 (no SQL leak).
         const dbErr = mapSqliteConstraintError(err);
         if (dbErr) {
-          console.error(`[server] ${command} rejected (${dbErr.code} db-constraint):`, err instanceof Error ? err.message : err);
+          logger.error(`[server] ${command} rejected (${dbErr.code} db-constraint):`, err instanceof Error ? err.message : err);
           res.status(dbErr.code).json({ code: dbErr.code, message: dbErr.message });
         } else {
           const isInput = typeof err === 'string' || err instanceof TypeError || err instanceof RangeError;
           const code = isInput ? 400 : 500;
-          console.error(`[server] ${command} ${isInput ? 'rejected (400 bad input)' : 'crashed (500)'}:`, err);
+          logger.error(`[server] ${command} ${isInput ? 'rejected (400 bad input)' : 'crashed (500)'}:`, err);
           res.status(code).json({
             code,
             message: isInput ? 'Cerere invalidă: parametri lipsă sau incorecți.' : 'Eroare internă.',
@@ -779,18 +962,7 @@ app.post('/api/cmd/:command',
 
 
 
-app.get(/^(?!\/api).*/, (_req, res) => {
-  const indexPath = path.join(DIST_DIR, 'index.html');
-  const fs = require('fs') as typeof import('fs');
-  if (fs.existsSync(indexPath)) {
-    res.set('Cache-Control', 'no-store');
-    res.sendFile(indexPath);
-  } else {
-    res.set('Content-Type', 'text/html; charset=utf-8');
-    res.set('Cache-Control', 'no-store');
-    res.send(MOBILE_HTML);
-  }
-});
+app.get(/^(?!\/api).*/, (req, res) => { sendShell(req, res); });
 
 
 
@@ -801,7 +973,8 @@ app.use((err: any, _req: any, res: any, _next: any) => {
   const code = err?.code && Number.isInteger(err.code) && err.code >= 100 && err.code < 600
     ? err.code : 500;
   
-  console.error(`[server] unhandled error (${code}):`, err?.message || err);
+  logger.error(`[server] unhandled error (${code}):`, err?.message || err);
+  if (code >= 500) captureException(err, { source: 'express-error-handler', code });
   if (res.headersSent) return;
   res.status(code).json({
     code,
@@ -828,6 +1001,12 @@ async function main() {
   // save is the debounced one below, and a crash in that window would re-run the
   // (not always idempotent) migrations on next boot.
   try { flushDatabase(); } catch (e) { console.error('[server] flush after migrations failed:', e); }
+
+  // Security: invalidate the seeded factory passwords (admin/1234 + the shared
+  // demo "Promix2024!") so a released instance is never reachable with a known
+  // default. Idempotent; skipped for demo / PROMIX_ALLOW_DEFAULT_CREDS=1.
+  try { await neutralizeFactoryCredentials(db, flushDatabase); }
+  catch (e) { console.error('[server] factory-credential neutralization failed:', e); }
 
   
   
@@ -940,16 +1119,19 @@ async function main() {
   console.log('[server] Starting rolling backup scheduler (every 6h, keep 14 daily)...');
   startBackupScheduler();
 
-  app.listen(PORT, BIND_HOST, () => {
+  const httpServer = http.createServer(app);
+  attachRustDeskWsProxy(httpServer);
+
+  httpServer.listen(PORT, BIND_HOST, () => {
     console.log(`[server] automatiX server running on http://${BIND_HOST}:${PORT}`);
     if (BIND_HOST === '127.0.0.1') {
       console.log('[server] Bound to LOOPBACK only — reachable from THIS PC. For tablets/LAN clients set PROMIX_LAN=1 (or PROMIX_BIND_HOST=0.0.0.0); behind a proxy set PROMIX_TRUST_PROXY=1.');
     } else {
       console.log(`[server] Clients can connect using: http://<this-pc-ip>:${PORT}`);
-      if (!TRUST_PROXY) console.warn('[server] ⚠  Bound to ALL interfaces without a reverse proxy — exposed directly on the network. Ensure this host is on a trusted LAN, or put a TLS proxy in front.');
+      if (!TRUST_PROXY) logger.warn('[server] ⚠  Bound to ALL interfaces without a reverse proxy — exposed directly on the network. Ensure this host is on a trusted LAN, or put a TLS proxy in front.');
     }
     console.log(`[server] Lifecycle log (shutdown/crash): ${getServerLogPath()}`);
-    if (CORS_ALLOW_ALL) console.warn('[server] ⚠  CORS: PROMIX_ALLOWED_ORIGINS contains "*" — ALL origins allowed. Dev/diagnostic only; lock this down before production.');
+    if (CORS_ALLOW_ALL) logger.warn('[server] ⚠  CORS: PROMIX_ALLOWED_ORIGINS contains "*" — ALL origins allowed. Dev/diagnostic only; lock this down before production.');
     else if (ALLOWED_ORIGINS.length > 0) console.log(`[server] CORS allowlist: ${ALLOWED_ORIGINS.join(', ')} (+ loopback)`);
     else console.log('[server] CORS: strict (same-origin + loopback only). Set PROMIX_ALLOWED_ORIGINS for cross-origin web clients.');
     if (TRUST_PROXY) console.log('[server] Trust-proxy mode: ON (X-Forwarded-For honored)');
@@ -963,8 +1145,8 @@ async function main() {
   
   
   if (
+    process.env.PROMIX_RUN_DEMO === '1' &&
     process.env.PROMIX_DEMO !== '1' &&
-    process.env.PROMIX_RUN_DEMO !== '0' &&
     process.env.PROMIX_TENANT !== '1'
   ) {
     try {
@@ -980,7 +1162,7 @@ async function main() {
           windowsHide: true,
         });
         child.on('error', (e: Error) => console.warn('[demo] auto-start failed:', e.message));
-        console.log('[server] demo instance auto-starting on :3600 (login with the demo creds → demo; set PROMIX_RUN_DEMO=0 to disable)');
+        console.log('[server] demo instance starting on :3600 (PROMIX_RUN_DEMO=1; login with the demo creds → demo)');
       } else {
         console.warn('[demo] auto-start skipped — scripts/serve-demo.cjs not found');
       }
@@ -1021,14 +1203,16 @@ async function main() {
   
   
   process.on('uncaughtException', (err) => {
-    console.error('[server] uncaughtException (kept alive):', err);
+    logger.error('[server] uncaughtException (kept alive):', err);
     logServerEvent('CRASH', 'uncaughtException (kept alive)', err);
+    captureException(err, { source: 'uncaughtException' });
     // Best-effort: persist in-memory writes before we risk a later hard exit.
     try { flushDatabase(); } catch (e) { console.error('[server] flush after uncaughtException failed:', e); }
   });
   process.on('unhandledRejection', (reason) => {
-    console.error('[server] unhandledRejection (kept alive):', reason);
+    logger.error('[server] unhandledRejection (kept alive):', reason);
     logServerEvent('CRASH', 'unhandledRejection (kept alive)', reason);
+    captureException(reason, { source: 'unhandledRejection' });
   });
 }
 

@@ -1,0 +1,15 @@
+# Optional Caddy reverse proxy for RustDesk WebSocket (embedded viewer)
+# Place inside your site block or import from main Caddyfile.
+
+rustdesk.example.com {
+	# Web ID / relay WebSocket (adjust upstream if hbbs/hbbr on another host)
+	handle_path /ws/id/* {
+		reverse_proxy localhost:21118
+	}
+	handle_path /ws/relay/* {
+		reverse_proxy localhost:21119
+	}
+}
+
+# TCP ports 21116 and 21117 are typically exposed directly or via layer-4 proxy;
+# Caddy handles HTTP/WebSocket only.

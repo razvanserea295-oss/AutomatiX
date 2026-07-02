@@ -1,43 +1,12 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, Fragment } from 'react';
 import {
   MapPin, Plus, Check, Loader2, Trash2, Plane, ArrowLeft, Pencil,
   DollarSign, Calendar, Users, X as XIcon, AlertOctagon, Info, Briefcase,
   FileText, User as UserIcon, Clock, Calculator, Wallet, Lock, CheckCircle2,
-} from 'lucide-react';
+  ChevronRight,
+} from '@/icons';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
 import { useProjectStore } from '@/store/projectStore';
@@ -57,7 +26,9 @@ import FilterBar from '@/redesign/ui/FilterBar';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import SortableTh from '@/redesign/ui/SortableTh';
 import TableFiller from '@/redesign/ui/TableFiller';
-import { GlassCard, Skeleton, EmptyState } from '@/redesign/ui';
+import { PageChrome, DashboardLayout, Panel, PAGE_GRID_12, LIST_TILE } from '@/app-ui';
+import { Skeleton, EmptyState } from '@/redesign/ui';
+import { THEAD_STICKY } from '@/redesign/ui/SortableTh';
 import { vtName } from '@/redesign/lib/viewTransition';
 
 interface Deplasare {
@@ -73,11 +44,6 @@ interface Deplasare {
   additional_persons?: string[] | null;
 }
 
-
-
-
-
-
 function tripDays(departure?: string | null, ret?: string | null): number {
   if (!departure) return 1;
   const start = new Date(`${departure}T00:00:00`).getTime();
@@ -86,11 +52,13 @@ function tripDays(departure?: string | null, ret?: string | null): number {
   return Math.max(1, Math.round((end - start) / 86_400_000) + 1);
 }
 
-
-
-
-
-
+/** 'YYYY-MM' → „Iulie 2026" (prima literă mare). '0000-00' = fără dată. */
+function monthLabel(key: string): string {
+  if (key === '0000-00') return 'Fără dată';
+  const [y, m] = key.split('-').map(Number);
+  const s = new Date(y, (m || 1) - 1, 1).toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
 
 function computeDisplayStatus(d: Deplasare): string {
   if (d.status !== 'in_deplasare') return d.status;
@@ -98,7 +66,6 @@ function computeDisplayStatus(d: Deplasare): string {
   if (d.departure_date > today) return 'viitoare';
   return d.status;
 }
-
 
 function daysSinceReturn(d: Deplasare): number | null {
   if (!d.return_date) return null;
@@ -122,8 +89,7 @@ export default function DeplasariPage({ user }: { user: User | null }) {
   const [editing, setEditing] = useState<Deplasare | null>(null);
   const [viewing, setViewing] = useState<Deplasare | null>(null);
   const [paying, setPaying] = useState<Deplasare | null>(null);
-  
-  
+
   const canCloseTrip = user?.role_id === 1 || user?.role_id === 3;
 
   const fetch = useCallback(() => {
@@ -145,7 +111,6 @@ export default function DeplasariPage({ user }: { user: User | null }) {
     [deplasari],
   );
 
-  
   const overdueCosts = useMemo(
     () => deplasari.filter(d => {
       if (d.status !== 'intors') return false;
@@ -156,10 +121,6 @@ export default function DeplasariPage({ user }: { user: User | null }) {
     [deplasari],
   );
 
-  
-  
-  
-  
   const totalRecordedCost = useMemo(
     () => deplasari.reduce((s, d) => {
       const v = d.total_cost ?? 0;
@@ -196,6 +157,41 @@ export default function DeplasariPage({ user }: { user: User | null }) {
     { key: 'departure_date', dir: 'desc' },
   );
 
+  // ── Grupare pe lună (după data plecării) — ține lista curată, lunile vechi
+  //    împăturite dar clar etichetate (contor + total), ușor de găsit. ──────────
+  const monthGroups = useMemo(() => {
+    const groups = new Map<string, Deplasare[]>();
+    for (const d of sortedDeplasari) {
+      const key = (d.departure_date || '').slice(0, 7) || '0000-00';
+      let arr = groups.get(key);
+      if (!arr) { arr = []; groups.set(key, arr); }
+      arr.push(d);
+    }
+    return [...groups.keys()]
+      .sort((a, b) => (a < b ? 1 : a > b ? -1 : 0)) // luna cea mai nouă prima
+      .map(key => {
+        const trips = groups.get(key)!;
+        return { key, label: monthLabel(key), trips, total: trips.reduce((s, d) => s + (d.total_cost ?? 0), 0) };
+      });
+  }, [sortedDeplasari]);
+
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
+  const monthsInitedRef = useRef(false);
+  useEffect(() => {
+    // Prima încărcare cu date: lasă doar luna curentă desfășurată, restul pliate.
+    if (!monthsInitedRef.current && monthGroups.length > 0) {
+      monthsInitedRef.current = true;
+      setCollapsedMonths(new Set(monthGroups.slice(1).map(g => g.key)));
+    }
+  }, [monthGroups]);
+  const toggleMonth = (key: string) => setCollapsedMonths(prev => {
+    const next = new Set(prev);
+    if (next.has(key)) next.delete(key); else next.add(key);
+    return next;
+  });
+  // La căutare/filtrare desfășoară tot, ca rezultatele să fie vizibile.
+  const isFiltering = !!search.trim() || !!filterStatus;
+
   const handleMarkReturned = async (id: number) => {
     const today = new Date().toISOString().split('T')[0];
     await apiCommand('update_deplasare', { id, status: 'intors', return_date: today });
@@ -215,11 +211,6 @@ export default function DeplasariPage({ user }: { user: User | null }) {
     }
   };
 
-  
-  
-  
-  
-  
   const TABLE_MIN_W = 1000;
   const topScrollRef = useRef<HTMLDivElement>(null);
   const tableScrollRef = useRef<HTMLDivElement>(null);
@@ -232,106 +223,54 @@ export default function DeplasariPage({ user }: { user: User | null }) {
     if (top && tbl && top.scrollLeft !== tbl.scrollLeft) top.scrollLeft = tbl.scrollLeft;
   };
 
+  const statusFilterBar = (
+    <FilterBar
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Caută persoana, destinatie..."
+      filters={[{
+        key: 'status',
+        label: 'Status',
+        options: [
+          { value: 'viitoare', label: 'Viitoare' },
+          { value: 'in_deplasare', label: 'In deplasare' },
+          { value: 'intors', label: 'Intors (costuri lipsa)' },
+          { value: 'finalizat', label: 'Finalizat' },
+          { value: 'anulat', label: 'Anulat' },
+        ],
+        value: filterStatus,
+        onChange: setFilterStatus,
+      }]}
+    />
+  );
+
   return (
-    <Page fit>
-      <Page.Body fit>
-
-        {
-
-
-
-
-}
-        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="h-11 w-11 rounded-2xl bg-accent-muted flex items-center justify-center shrink-0">
-                <MapPin className="h-5 w-5 text-accent" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-                <div className="flex items-center gap-2 min-w-0">
-                  <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">Deplasări</h1>
-                  {activeDeplasari.length > 0 && (
-                    <StatusBadge tone="info" size="xs" label={`${activeDeplasari.length} în deplasare`} className="self-center" />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 lg:ml-auto">
-              <div className="hidden md:block">
-                <FilterBar
-                  search={search}
-                  onSearchChange={setSearch}
-                  searchPlaceholder="Caută persoana, destinatie..."
-                  filters={[{
-                    key: 'status',
-                    label: 'Status',
-                    options: [
-                      { value: 'viitoare', label: 'Viitoare' },
-                      { value: 'in_deplasare', label: 'In deplasare' },
-                      { value: 'intors', label: 'Intors (costuri lipsa)' },
-                      { value: 'finalizat', label: 'Finalizat' },
-                      { value: 'anulat', label: 'Anulat' },
-                    ],
-                    value: filterStatus,
-                    onChange: setFilterStatus,
-                  }]}
-                />
-              </div>
+    <>
+    <DashboardLayout
+        
+        chrome={(
+          <PageChrome
+            actions={
               <Button size="md" onClick={() => setShowCreate(true)}>
                 <Plus className="h-4 w-4" /> Deplasare nouă
               </Button>
-            </div>
-          </div>
-          {}
-          <div className="md:hidden mt-3">
-            <FilterBar
-              search={search}
-              onSearchChange={setSearch}
-              searchPlaceholder="Caută persoana, destinatie..."
-              filters={[{
-                key: 'status',
-                label: 'Status',
-                options: [
-                  { value: 'viitoare', label: 'Viitoare' },
-                  { value: 'in_deplasare', label: 'In deplasare' },
-                  { value: 'intors', label: 'Intors (costuri lipsa)' },
-                  { value: 'finalizat', label: 'Finalizat' },
-                  { value: 'anulat', label: 'Anulat' },
-                ],
-                value: filterStatus,
-                onChange: setFilterStatus,
-              }]}
-            />
-          </div>
-        </div>
-
-        {
-
-}
-        <div className="enter-up shrink-0" style={{ animationDelay: '70ms' }}>
+            }
+            toolbar={statusFilterBar}
+          />
+        )}
+      kpis={
           <Page.Kpis cols={4}>
             <KpiCard label="Total deplasări"    value={deplasari.length}                  icon={MapPin}        iconColor="text-accent" />
             <KpiCard label="Active acum"         value={activeDeplasari.length}            icon={Plane}         iconColor="text-status-blue" />
             <KpiCard label="Costuri întârziate"  value={overdueCosts.length}               icon={AlertOctagon}  iconColor={overdueCosts.length > 0 ? 'text-status-red' : 'text-status-amber'} hint={overdueCosts.length > 0 ? 'necesită completare' : undefined} />
             <KpiCard label="Cost total"          value={money(totalRecordedCost, 'RON')}   icon={DollarSign}    iconColor="text-status-green" hint="EUR convertit la cursul curent" />
           </Page.Kpis>
-        </div>
-
-        {
-
-
-}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch flex-1 min-h-0">
-
-          {
-
-}
-          <aside className="xl:col-span-4 enter-up flex flex-col gap-5 min-h-0 overflow-y-auto xl:overflow-visible" style={{ animationDelay: '140ms' }}>
+      }
+    >
+        <div className={`${PAGE_GRID_12} items-stretch`}>
+          <aside className="xl:col-span-4 flex flex-col gap-5 min-h-0 overflow-y-auto xl:overflow-visible">
             {overdueCosts.length > 0 && (
-              <GlassCard size="regular" className="anim-pop anim-glow !p-4 border-l-2 !border-l-status-red/60">
+              <Panel padding="md" className="anim-pop anim-glow border-l-2 !border-l-status-red/60">
                 <div className="flex items-start gap-3">
                   <AlertOctagon className="h-5 w-5 text-status-red shrink-0 mt-0.5" />
                   <div className="min-w-0">
@@ -343,24 +282,25 @@ export default function DeplasariPage({ user }: { user: User | null }) {
                     </p>
                   </div>
                 </div>
-              </GlassCard>
+              </Panel>
             )}
 
-            <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 flex-1">
-              <div className="flex items-center gap-2 px-5 pt-5 pb-3 shrink-0">
-                <Plane className="h-3.5 w-3.5 text-accent shrink-0" />
-                <span className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted">În deplasare acum</span>
-                {activeDeplasari.length > 0 && <span className="text-pm-2xs font-bold tabular-nums text-accent">{activeDeplasari.length}</span>}
-              </div>
-              <div className="px-5 pb-5 flex-1 min-h-0 overflow-y-auto">
+            <Panel
+              fill
+              scroll
+              className="flex flex-col min-h-0 flex-1"
+              title="În deplasare acum"
+              subtitle={activeDeplasari.length > 0 ? `${activeDeplasari.length} active` : undefined}
+              bodyClassName="px-5 pb-5"
+            >
                 {loading ? (
-                  <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height={92} rounded="lg" />)}</div>
+                  <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height={92} borderRadius="lg" />)}</div>
                 ) : activeDeplasari.length === 0 ? (
                   <EmptyState icon={Plane} title="Nimeni plecat" description="Nu există deplasări active în acest moment." />
                 ) : (
                   <div className="space-y-2 stagger-in" key={`active-${activeDeplasari.length}`}>
                     {activeDeplasari.map(d => (
-                      <div key={d.id} className="glass-surface rounded-lg hover-lift p-3 border-l-2 border-l-status-blue vt-morph"
+                      <div key={d.id} className={`${LIST_TILE} p-3 border-l-2 border-l-status-blue vt-morph`}
                         style={{ viewTransitionName: vtName('deplasare', d.id) }}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
@@ -376,35 +316,31 @@ export default function DeplasariPage({ user }: { user: User | null }) {
                           </div>
                           <div className="flex items-center gap-0.5 shrink-0">
                             <button onClick={() => setViewing(d)} title="Detalii"
-                              className="grid place-items-center h-7 w-7 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-accent transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Info className="h-4 w-4" /></button>
+                              className="grid place-items-center h-7 w-7 rounded text-content-muted hover:bg-surface-tertiary hover:text-accent transition-colors"><Info className="h-4 w-4" /></button>
                             <button onClick={() => setPaying(d)} title="Plăți & buget"
-                              className="grid place-items-center h-7 w-7 rounded-lg text-content-secondary hover:bg-status-green/10 hover:text-status-green transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Wallet className="h-4 w-4" /></button>
+                              className="grid place-items-center h-7 w-7 rounded text-content-secondary hover:bg-status-green/10 hover:text-status-green transition-colors"><Wallet className="h-4 w-4" /></button>
                             <button onClick={() => setEditing(d)} title="Editează — date, status și costuri"
-                              className="grid place-items-center h-7 w-7 rounded-lg text-content-secondary hover:bg-accent/10 hover:text-accent transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Pencil className="h-4 w-4" /></button>
+                              className="grid place-items-center h-7 w-7 rounded text-content-secondary hover:bg-accent/10 hover:text-accent transition-colors"><Pencil className="h-4 w-4" /></button>
                             <button onClick={() => handleMarkReturned(d.id)} title="Marcat întors"
-                              className="grid place-items-center h-7 w-7 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-status-green transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><ArrowLeft className="h-4 w-4" /></button>
+                              className="grid place-items-center h-7 w-7 rounded text-content-muted hover:bg-surface-tertiary hover:text-status-green transition-colors"><ArrowLeft className="h-4 w-4" /></button>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
-            </GlassCard>
+            </Panel>
           </aside>
 
-          {
-
-}
-          <div className="xl:col-span-8 enter-up min-w-0 flex flex-col min-h-0" style={{ animationDelay: '210ms' }}>
-            <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 flex-1">
-              <div className="px-5 pt-5 pb-3 flex items-center justify-between shrink-0">
-                <span className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Toate deplasările</span>
-                <span className="text-pm-2xs text-content-muted">{sortedDeplasari.length} {sortedDeplasari.length === 1 ? 'înregistrare' : 'inregistrari'}</span>
-              </div>
-              {
-
-}
+          <div className="xl:col-span-8 min-w-0 flex flex-col min-h-0">
+            <Panel
+              fill
+              scroll
+              className="flex flex-col min-h-0 flex-1"
+              title="Toate deplasările"
+              subtitle={`${sortedDeplasari.length} ${sortedDeplasari.length === 1 ? 'înregistrare' : 'inregistrari'}`}
+              bodyClassName="p-0 flex flex-col min-h-0"
+            >
               <div ref={topScrollRef} onScroll={syncFromTop}
                 className="overflow-x-auto overflow-y-hidden px-5 shrink-0">
                 <div style={{ width: TABLE_MIN_W, height: 1 }} />
@@ -423,7 +359,7 @@ export default function DeplasariPage({ user }: { user: User | null }) {
                   <col className="w-[10%]" />
                   <col className="w-[15%]" />
                 </colgroup>
-                <thead className="sticky top-0 z-10 bg-surface-primary shadow-[inset_0_-1px_0_var(--color-border)]">
+                <thead className={THEAD_STICKY}>
                   <tr>
                     <SortableTh sortKey="person_name"    sort={sort} onSort={toggle}>Persoana</SortableTh>
                     <SortableTh sortKey="destination"    sort={sort} onSort={toggle}>Destinatie</SortableTh>
@@ -437,8 +373,23 @@ export default function DeplasariPage({ user }: { user: User | null }) {
                 </thead>
                 <tbody className="stagger-in" key={`rows-${filterStatus}-${search}`}>
                   {loading ? (
-                    <tr><td colSpan={8} className="px-3 py-3"><div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} height={28} rounded="sm" />)}</div></td></tr>
-                  ) : sortedDeplasari.map(d => {
+                    <tr><td colSpan={8} className="px-3 py-3"><div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} height={28} borderRadius="sm" />)}</div></td></tr>
+                  ) : monthGroups.map(group => {
+                    const collapsed = !isFiltering && collapsedMonths.has(group.key);
+                    return (
+                    <Fragment key={group.key}>
+                      <tr>
+                        <td colSpan={8} className="p-0 border-b border-line/50 bg-surface-secondary/60">
+                          <button type="button" onClick={() => toggleMonth(group.key)}
+                            className="flex w-full items-center gap-2 px-4 py-1.5 text-left hover:bg-surface-tertiary/50 transition-colors focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+                            <ChevronRight className={`h-3.5 w-3.5 shrink-0 text-content-muted transition-transform duration-150 ${collapsed ? '' : 'rotate-90'}`} />
+                            <span className="text-pm-xs font-semibold text-content-primary">{group.label}</span>
+                            <span className="text-pm-2xs text-content-muted">· {group.trips.length} {group.trips.length === 1 ? 'deplasare' : 'deplasări'}</span>
+                            {group.total > 0 && <span className="ml-auto text-pm-2xs tabular-nums text-content-secondary">{money(group.total, 'RON')}</span>}
+                          </button>
+                        </td>
+                      </tr>
+                      {!collapsed && group.trips.map(d => {
                     const ds = daysSinceReturn(d);
                     const isOverdue = d.status === 'intors' && ds != null && ds > 7
                       && !(d.transport_cost && d.transport_cost > 0 && d.accommodation_cost && d.accommodation_cost > 0);
@@ -463,26 +414,29 @@ export default function DeplasariPage({ user }: { user: User | null }) {
                       <td className="sticky right-0 z-[5] bg-surface-primary border-l border-line/60 px-3 py-2 border-b border-line/40 group-hover:bg-surface-tertiary">
                         <div className="flex items-center gap-1 justify-end">
                           <button onClick={() => setViewing(d)} title="Detalii"
-                            className="grid place-items-center h-7 w-7 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-accent transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Info className="h-4 w-4" /></button>
+                            className="grid place-items-center h-7 w-7 rounded text-content-muted hover:bg-surface-tertiary hover:text-accent transition-colors"><Info className="h-4 w-4" /></button>
                           <button onClick={() => setPaying(d)} title="Plăți & buget — înregistrează plăți către delegați, vezi bugetul rămas, închide delegația"
-                            className="grid place-items-center h-7 w-7 rounded-lg text-content-secondary hover:bg-status-green/10 hover:text-status-green transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Wallet className="h-4 w-4" /></button>
+                            className="grid place-items-center h-7 w-7 rounded text-content-secondary hover:bg-status-green/10 hover:text-status-green transition-colors"><Wallet className="h-4 w-4" /></button>
                           <button onClick={() => setEditing(d)} title="Editează — date, status și costuri"
-                            className="grid place-items-center h-7 w-7 rounded-lg text-content-secondary hover:bg-accent/10 hover:text-accent transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Pencil className="h-4 w-4" /></button>
+                            className="grid place-items-center h-7 w-7 rounded text-content-secondary hover:bg-accent/10 hover:text-accent transition-colors"><Pencil className="h-4 w-4" /></button>
                           <button onClick={() => handleDelete(d.id)} title="Șterge"
-                            className="grid place-items-center h-7 w-7 rounded-lg text-content-muted hover:bg-status-red/10 hover:text-status-red transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Trash2 className="h-4 w-4" /></button>
+                            className="grid place-items-center h-7 w-7 rounded text-content-muted hover:bg-status-red/10 hover:text-status-red transition-colors"><Trash2 className="h-4 w-4" /></button>
                         </div>
                       </td>
                     </tr>
                     );
+                      })}
+                    </Fragment>
+                    );
                   })}
-                  <TableFiller cols={8} count={Math.max(0, 16 - sortedDeplasari.length)} />
+                  <TableFiller cols={8} count={Math.max(0, 15 - monthGroups.reduce((n, g) => n + 1 + ((!isFiltering && collapsedMonths.has(g.key)) ? 0 : g.trips.length), 0))} />
                 </tbody>
               </table>
               </div>
-            </GlassCard>
+            </Panel>
           </div>
         </div>
-      </Page.Body>
+    </DashboardLayout>
 
       {showCreate && (
         <CreateDeplasareModal
@@ -526,39 +480,9 @@ export default function DeplasariPage({ user }: { user: User | null }) {
           onChanged={() => { fetch(); void useDashboardStore.getState().invalidate(); }}
         />
       )}
-    </Page>
+    </>
   );
 }
-
-
-
-
-
-
-function KpiMini({ icon: Icon, label, value, warn, format }: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string; value: number; warn?: boolean; format?: (n: number) => string;
-}) {
-  return (
-    <GlassCard size="compact" className="flex items-center gap-3.5 !p-5">
-      <span className="h-11 w-11 rounded-xl bg-accent/12 text-accent flex items-center justify-center shrink-0">
-        <Icon className="h-5 w-5" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted truncate">{label}</p>
-        <span className={`mt-0.5 block text-display font-semibold tracking-tight tabular-nums ${warn ? 'text-status-red' : 'text-content-primary'}`}>
-          {format ? format(value) : new Intl.NumberFormat('ro-RO').format(Math.round(value))}
-        </span>
-      </div>
-    </GlassCard>
-  );
-}
-void KpiMini;
-
-
-
-
-
 
 function CreateDeplasareModal({
   projects, onClose, onCreated, editing,
@@ -579,8 +503,7 @@ function CreateDeplasareModal({
   const [returnDate, setReturnDate] = useState(editing?.return_date ?? '');
   const [notes, setNotes] = useState(editing?.notes ?? '');
   const [extraPersons, setExtraPersons] = useState<string[]>(editing?.additional_persons ?? []);
-  
-  
+
   const [status, setStatus] = useState(editing?.status ?? 'in_deplasare');
   const [transport, setTransport] = useState(editing?.transport_cost ? String(editing.transport_cost) : '');
   const [accommodation, setAccommodation] = useState(editing?.accommodation_cost ? String(editing.accommodation_cost) : '');
@@ -612,8 +535,7 @@ function CreateDeplasareModal({
         additional_persons: extraPersons.map(s => s.trim()).filter(Boolean),
       };
       if (isEdit && editing) {
-        
-        
+
         await apiCommand('update_deplasare', { request: {
           id: editing.id, status, ...fields,
           transport_cost: Number(transport) || 0,
@@ -627,8 +549,7 @@ function CreateDeplasareModal({
         } });
         toast.success('Deplasare actualizată');
       } else {
-        
-        
+
         await apiCommand('create_deplasare', { request: fields });
         toast.success('Deplasare înregistrată');
       }
@@ -641,13 +562,13 @@ function CreateDeplasareModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 enter-fade" onClick={onClose}>
-      <div className="bg-surface-primary border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-lg max-h-[90vh] flex flex-col enter-scale" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-surface-primary border border-line w-full max-w-lg max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="shrink-0 border-b border-line p-4 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-content-primary flex items-center gap-2">
             <Plane className="h-4 w-4" /> {isEdit ? 'Editează deplasarea' : 'Deplasare nouă'}
           </h3>
-          <button onClick={onClose} className="grid place-items-center h-7 w-7 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><XIcon className="h-4 w-4" /></button>
+          <button onClick={onClose} className="p-1 hover:bg-surface-tertiary"><XIcon className="h-4 w-4" /></button>
         </div>
 
         <div className="p-4 space-y-3 flex-1 min-h-0 overflow-y-auto">
@@ -655,15 +576,13 @@ function CreateDeplasareModal({
             <input value={personName} onChange={e => setPersonName(e.target.value)}
               placeholder="Nume complet" className="w-full input-md" />
           </Field>
-
-          {}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">
                 Persoane suplimentare (optional)
               </label>
               <button type="button" onClick={addExtra}
-                className="text-pm-2xs text-accent hover:underline inline-flex items-center gap-1 rounded-lg transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+                className="text-pm-2xs text-accent hover:underline flex items-center gap-1">
                 <Plus className="h-3 w-3" /> adaugă
               </button>
             </div>
@@ -678,7 +597,7 @@ function CreateDeplasareModal({
                       className="flex-1 input-md" />
                     <button type="button" onClick={() => removeExtra(i)}
                       title="Șterge"
-                      className="grid place-items-center h-9 w-9 shrink-0 rounded-lg text-content-muted hover:text-status-red hover:bg-surface-tertiary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+                      className="p-1.5 text-content-muted hover:text-status-red hover:bg-surface-tertiary">
                       <XIcon className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -758,9 +677,9 @@ function CreateDeplasareModal({
                     total={diurna} onTotalChange={setDiurna}
                   />
                 </div>
-                <div className="mt-2 flex items-center justify-between bg-surface-secondary px-3 py-1.5 rounded-lg">
+                <div className="mt-2 flex items-center justify-between bg-surface-secondary px-3 py-1.5 rounded">
                   <span className="text-pm-xs text-content-muted">Total costuri</span>
-                  <span className="text-sm font-semibold tabular-nums text-content-primary">{money((Number(transport) || 0) + (Number(accommodation) || 0) + (Number(diurna) || 0) + (Number(otherCost) || 0), currency)}</span>
+                  <span className="text-sm font-semibold tabular-nums text-content-primary">{money((Number(transport) || 0) + (Number(accommodation) || 0) + (Number(food) || 0) + (Number(diurna) || 0) + (Number(otherCost) || 0), currency)}</span>
                 </div>
               </div>
             </>
@@ -772,7 +691,7 @@ function CreateDeplasareModal({
         </div>
 
         <div className="shrink-0 border-t border-line p-3 flex items-center justify-end gap-2">
-          <button onClick={onClose} className="px-3 py-1.5 text-xs rounded-xl border border-line hover:bg-surface-tertiary transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+          <button onClick={onClose} className="px-3 py-1.5 text-xs border border-line hover:bg-surface-tertiary">
             Anulează
           </button>
           <Button size="sm" onClick={submit} disabled={submitting}>
@@ -786,11 +705,6 @@ function CreateDeplasareModal({
     </div>
   );
 }
-
-
-
-
-
 
 function CompleteCostsModal({
   deplasare, onClose, onCompleted,
@@ -852,13 +766,13 @@ function CompleteCostsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 enter-fade" onClick={onClose}>
-      <div className="bg-surface-primary border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-md max-h-[90vh] flex flex-col enter-scale" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-surface-primary border border-line w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="shrink-0 border-b border-line p-4 flex items-center justify-between">
           <h3 className="text-sm font-semibold text-content-primary flex items-center gap-2">
             <DollarSign className="h-4 w-4" /> Completeaza costuri
           </h3>
-          <button onClick={onClose} className="grid place-items-center h-7 w-7 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><XIcon className="h-4 w-4" /></button>
+          <button onClick={onClose} className="p-1 hover:bg-surface-tertiary"><XIcon className="h-4 w-4" /></button>
         </div>
 
         <div className="p-4 space-y-3 flex-1 min-h-0 overflow-y-auto">
@@ -906,7 +820,7 @@ function CompleteCostsModal({
             total={diurna} onTotalChange={setDiurna}
           />
 
-          <div className="bg-surface-secondary px-3 py-2 rounded-lg flex items-center justify-between">
+          <div className="bg-surface-secondary px-3 py-2 flex items-center justify-between">
             <span className="text-pm-xs text-content-muted">Total</span>
             <span className="text-sm font-semibold text-content-primary tabular-nums">{money(total, currency)}</span>
           </div>
@@ -923,7 +837,7 @@ function CompleteCostsModal({
         </div>
 
         <div className="shrink-0 border-t border-line p-3 flex items-center justify-end gap-2">
-          <button onClick={onClose} className="px-3 py-1.5 text-xs rounded-xl border border-line hover:bg-surface-tertiary transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+          <button onClick={onClose} className="px-3 py-1.5 text-xs border border-line hover:bg-surface-tertiary">
             Mai tarziu
           </button>
           <Button size="sm" onClick={submit} disabled={submitting}>
@@ -937,12 +851,6 @@ function CompleteCostsModal({
     </div>
   );
 }
-
-
-
-
-
-
 
 function DeplasareInfoModal({
   deplasare, onClose, onCompleteCosts, onOpenPayments,
@@ -969,7 +877,6 @@ function DeplasareInfoModal({
 
   const allPersons = [deplasare.person_name, ...(deplasare.additional_persons ?? [])];
 
-  
   const dep = new Date(deplasare.departure_date);
   const ret = deplasare.return_date ? new Date(deplasare.return_date) : null;
   const tripDays = ret
@@ -979,9 +886,8 @@ function DeplasareInfoModal({
   const statusToken = deplasareStatus(computeDisplayStatus(deplasare));
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 enter-fade" onClick={onClose}>
-      <div className="bg-surface-primary border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-xl max-h-[90vh] flex flex-col enter-scale" onClick={e => e.stopPropagation()}>
-        {}
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-surface-primary border border-line w-full max-w-xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="shrink-0 border-b border-line p-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -997,32 +903,25 @@ function DeplasareInfoModal({
             </div>
             {deplasare.reason && <p className="text-pm-xs text-content-muted mt-1 truncate">{deplasare.reason}</p>}
           </div>
-          <button onClick={onClose} className="grid place-items-center h-7 w-7 shrink-0 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><XIcon className="h-4 w-4" /></button>
+          <button onClick={onClose} className="p-1 hover:bg-surface-tertiary shrink-0"><XIcon className="h-4 w-4" /></button>
         </div>
-
-        {}
         <div className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
-          {}
           <Section icon={<Users className="h-3.5 w-3.5" />} title={`Persoane (${allPersons.length})`}>
             <div className="flex flex-wrap gap-1.5">
               {allPersons.map((p, i) => (
                 <span key={i}
-                  className={`text-xs px-2 py-1 rounded-lg border ${i === 0 ? 'border-status-blue/40 bg-status-blue/5 text-status-blue font-semibold' : 'border-line text-content-secondary bg-surface-secondary'}`}>
+                  className={`text-xs px-2 py-1 border ${i === 0 ? 'border-status-blue/40 bg-status-blue/5 text-status-blue font-semibold' : 'border-line text-content-secondary bg-surface-secondary'}`}>
                   {i === 0 ? '★ ' : ''}{p}
                 </span>
               ))}
             </div>
           </Section>
-
-          {}
           <Section icon={<MapPin className="h-3.5 w-3.5" />} title="Traseu">
             <div className="grid grid-cols-2 gap-3">
               <InfoRow label="Destinație" value={deplasare.destination} />
               <InfoRow label="Proiect" value={deplasare.project_name || '—'} highlight={!!deplasare.project_name} />
             </div>
           </Section>
-
-          {}
           <Section icon={<Calendar className="h-3.5 w-3.5" />} title="Cronologie">
             <div className="grid grid-cols-3 gap-3">
               <InfoRow label="Plecare" value={deplasare.departure_date} />
@@ -1036,15 +935,13 @@ function DeplasareInfoModal({
               </p>
             )}
           </Section>
-
-          {}
           <Section icon={<DollarSign className="h-3.5 w-3.5" />} title="Costuri">
             {!hasCosts ? (
-              <div className="text-center py-3 px-3 rounded-lg bg-surface-tertiary/40 border border-dashed border-line">
+              <div className="text-center py-3 px-3 bg-surface-tertiary/40 border border-dashed border-line">
                 <p className="text-pm-xs text-content-muted italic">Costurile nu au fost completate încă.</p>
                 {deplasare.status === 'intors' && (
                   <button onClick={onCompleteCosts}
-                    className={`mt-2 text-xs font-semibold inline-flex items-center gap-1 rounded-lg transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${isOverdue ? 'text-status-red hover:underline' : 'text-accent hover:underline'}`}>
+                    className={`mt-2 text-xs font-semibold inline-flex items-center gap-1 ${isOverdue ? 'text-status-red hover:underline' : 'text-accent hover:underline'}`}>
                     <DollarSign className="h-3 w-3" /> Completează acum
                   </button>
                 )}
@@ -1070,23 +967,17 @@ function DeplasareInfoModal({
 
 }
           <PaymentsSection deplasare={deplasare} onOpenPayments={onOpenPayments} />
-
-          {}
           {deplasare.notes && (
             <Section icon={<FileText className="h-3.5 w-3.5" />} title="Note">
               <p className="text-pm-xs text-content-secondary whitespace-pre-wrap leading-relaxed">{deplasare.notes}</p>
             </Section>
           )}
-
-          {}
           <Section icon={<UserIcon className="h-3.5 w-3.5" />} title="Înregistrare">
             <p className="text-pm-xs text-content-muted">
               Creat de <span className="text-content-secondary font-medium">{deplasare.created_by_name || '—'}</span> la {new Date(deplasare.created_at).toLocaleString('ro-RO')}
             </p>
           </Section>
         </div>
-
-        {}
         <div className="shrink-0 border-t border-line p-3 flex items-center justify-between">
           <div className="flex items-center gap-1 text-pm-2xs text-content-muted">
             <Briefcase className="h-3 w-3" />
@@ -1098,7 +989,7 @@ function DeplasareInfoModal({
                 <DollarSign className="h-3 w-3" /> Completează costuri
               </Button>
             )}
-            <button onClick={onClose} className="px-3 py-1.5 text-xs rounded-xl border border-line hover:bg-surface-tertiary transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+            <button onClick={onClose} className="px-3 py-1.5 text-xs border border-line hover:bg-surface-tertiary">
               Închide
             </button>
           </div>
@@ -1133,7 +1024,7 @@ function InfoRow({ label, value, highlight }: { label: string; value: string; hi
 function CostBox({ label, value, dim, currency }: { label: string; value: number; dim?: boolean; currency?: string | null }) {
   const money = useMoney();
   return (
-    <div className={`border border-line rounded-lg bg-surface-secondary px-2 py-2 ${dim ? 'opacity-60' : ''}`}>
+    <div className={`border border-line bg-surface-secondary px-2 py-2 ${dim ? 'opacity-60' : ''}`}>
       <div className="text-pm-2xs text-content-muted uppercase tracking-wide font-semibold">{label}</div>
       <div className="text-sm font-semibold tabular-nums text-content-primary mt-0.5">
         {money(value, currency)}
@@ -1147,7 +1038,6 @@ interface TripPayment {
   paid_to: string | null; note: string | null; category: string | null; created_by_name: string | null;
 }
 
-
 const BUDGET_LINES: { v: string; l: string }[] = [
   { v: 'general', l: 'General / Avans' },
   { v: 'transport', l: 'Transport' },
@@ -1159,12 +1049,6 @@ const BUDGET_LINES: { v: string; l: string }[] = [
 const budgetLabel = (v: string | null | undefined) => BUDGET_LINES.find(b => b.v === v)?.l ?? (v || '');
 
 const ALL_TRAVELLERS = '__ALL__';
-
-
-
-
-
-
 
 function PaymentsSection({ deplasare, onOpenPayments }: { deplasare: Deplasare; onOpenPayments?: () => void }) {
   const money = useMoney();
@@ -1213,7 +1097,7 @@ function PaymentsSection({ deplasare, onOpenPayments }: { deplasare: Deplasare; 
       </div>
       {onOpenPayments && (
         <button type="button" onClick={onOpenPayments}
-          className="mt-2 text-pm-2xs text-accent hover:underline inline-flex items-center gap-1 rounded-lg transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+          className="mt-2 text-pm-2xs text-accent hover:underline inline-flex items-center gap-1">
           <Wallet className="h-3 w-3" /> Deschide panoul complet Plăți &amp; buget (dată, beneficiar, notă, închidere)
         </button>
       )}
@@ -1225,13 +1109,13 @@ function PaymentsSection({ deplasare, onOpenPayments }: { deplasare: Deplasare; 
       {payments.length > 0 && (
         <div className="space-y-1.5 mt-2 stagger-in" key={`paysec-${payments.length}`}>
           {payments.map(p => (
-            <div key={p.id} className="flex items-center gap-2 border border-line rounded-lg bg-surface-secondary px-2.5 py-1.5">
+            <div key={p.id} className="flex items-center gap-2 border border-line bg-surface-secondary px-2.5 py-1.5">
               <div className="min-w-0 flex-1">
-                <p className="text-pm-xs text-content-primary tabular-nums truncate">{money(p.amount, p.currency)}{p.paid_to ? ` · ${p.paid_to}` : ''}</p>
-                <p className="text-pm-2xs text-content-muted truncate">{p.paid_at}{p.created_by_name ? ` · ${p.created_by_name}` : ''}</p>
+                <p className="text-pm-xs text-content-primary tabular-nums">{money(p.amount, p.currency)}{p.paid_to ? ` · ${p.paid_to}` : ''}</p>
+                <p className="text-pm-2xs text-content-muted">{p.paid_at}{p.created_by_name ? ` · ${p.created_by_name}` : ''}</p>
               </div>
               <button type="button" onClick={() => remove(p.id)} title="Șterge plata"
-                className="grid place-items-center h-7 w-7 shrink-0 rounded-lg text-content-muted hover:bg-status-red/10 hover:text-status-red transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Trash2 className="h-3.5 w-3.5" /></button>
+                className="p-1 text-content-muted hover:text-status-red transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
             </div>
           ))}
         </div>
@@ -1251,15 +1135,6 @@ function PaymentsSection({ deplasare, onOpenPayments }: { deplasare: Deplasare; 
     </Section>
   );
 }
-
-
-
-
-
-
-
-
-
 
 interface PaymentsSummary {
   total_paid: number; total_cost: number; remaining: number;
@@ -1291,8 +1166,7 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [closing, setClosing] = useState(false);
-  
-  
+
   const [status, setStatus] = useState(deplasare.status);
   const [exportedId, setExportedId] = useState<number | null>(deplasare.exported_expense_id ?? null);
 
@@ -1315,8 +1189,7 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
 
   const eurRate = summary.eur_rate || eurRateStore || 4.97;
   const amtNum = Number(amount) || 0;
-  
-  
+
   const amtInTripCur = payCur === tripCur ? amtNum
     : payCur === 'EUR' ? amtNum * eurRate
     : eurRate > 0 ? amtNum / eurRate : amtNum;
@@ -1398,9 +1271,8 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 enter-fade" onClick={onClose}>
-      <div className="bg-surface-primary border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-xl max-h-[90vh] flex flex-col enter-scale" onClick={e => e.stopPropagation()}>
-        {}
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-surface-primary border border-line w-full max-w-xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="shrink-0 border-b border-line p-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -1415,20 +1287,17 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
               {deplasare.project_name ? ` · ${deplasare.project_name}` : ''}
             </p>
           </div>
-          <button onClick={onClose} className="grid place-items-center h-7 w-7 shrink-0 rounded-lg text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><XIcon className="h-4 w-4" /></button>
+          <button onClick={onClose} className="p-1 hover:bg-surface-tertiary shrink-0"><XIcon className="h-4 w-4" /></button>
         </div>
-
-        {}
         <div className="p-4 space-y-4 flex-1 min-h-0 overflow-y-auto">
-          {}
           <Section icon={<DollarSign className="h-3.5 w-3.5" />} title="Buget deplasare">
             <div className="grid grid-cols-3 gap-2">
               <Mini label="Buget total" value={money(budget, tripCur)} />
               <Mini label="Cheltuit (plătit)" value={money(summary.total_paid, tripCur)} />
               <Mini label="Rămas" value={money(summary.remaining, tripCur)} strong />
             </div>
-            <div className="mt-2 h-1.5 rounded-full bg-surface-tertiary overflow-hidden">
-              <div className={`anim-bar-grow h-full rounded-full transition-colors duration-150 ${overBudget ? 'bg-status-red' : 'bg-accent'}`}
+            <div className="mt-2 h-1.5 rounded bg-surface-tertiary overflow-hidden">
+              <div className={`anim-bar-grow h-full rounded transition-all ${overBudget ? 'bg-status-red' : 'bg-accent'}`}
                 style={{ width: `${paidPct}%` }} />
             </div>
             {overBudget && (
@@ -1442,17 +1311,15 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
               </p>
             )}
           </Section>
-
-          {}
           <Section icon={<Wallet className="h-3.5 w-3.5" />} title={`Plăți către delegați (${payments.length})`}>
             {payments.length === 0 ? (
               <p className="text-pm-xs text-content-muted italic py-1">Nicio plată înregistrată încă.</p>
             ) : (
               <div className="space-y-1.5 stagger-in" key={`pay-${payments.length}`}>
                 {payments.map(p => (
-                  <div key={p.id} className="flex items-center gap-2 border border-line rounded-lg bg-surface-secondary px-2.5 py-1.5">
+                  <div key={p.id} className="flex items-center gap-2 border border-line bg-surface-secondary px-2.5 py-1.5">
                     <div className="min-w-0 flex-1">
-                      <p className="text-pm-xs text-content-primary tabular-nums truncate">
+                      <p className="text-pm-xs text-content-primary tabular-nums">
                         <span className="font-semibold">{money(p.amount, p.currency)}</span>
                         {p.currency.toUpperCase() !== tripCur && (
                           <span className="text-content-muted"> ({p.amount.toLocaleString('ro-RO')} {p.currency.toUpperCase()})</span>
@@ -1465,15 +1332,13 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
                       </p>
                     </div>
                     <button type="button" onClick={() => remove(p.id)} title="Șterge plata"
-                      className="grid place-items-center h-7 w-7 shrink-0 rounded-lg text-content-muted hover:bg-status-red/10 hover:text-status-red transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Trash2 className="h-3.5 w-3.5" /></button>
+                      className="p-1 text-content-muted hover:text-status-red transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
                   </div>
                 ))}
               </div>
             )}
-
-            {}
             {!isCancelled && (
-              <div className="mt-3 border border-line/60 rounded-lg bg-surface-secondary/40 p-2.5 space-y-2">
+              <div className="mt-3 border border-line/60 bg-surface-secondary/40 p-2.5 space-y-2">
                 <p className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">Adaugă plată</p>
                 <div className="grid grid-cols-3 gap-2">
                   <Field label="Data">
@@ -1521,11 +1386,9 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
               </div>
             )}
           </Section>
-
-          {}
           <Section icon={<CheckCircle2 className="h-3.5 w-3.5" />} title="Închidere delegație">
             {isClosed ? (
-              <div className="border border-status-green/40 rounded-lg bg-status-green/5 px-3 py-2.5">
+              <div className="border border-status-green/40 bg-status-green/5 px-3 py-2.5">
                 <p className="text-pm-xs text-status-green font-semibold flex items-center gap-1.5">
                   <CheckCircle2 className="h-3.5 w-3.5" /> Delegație încheiată
                 </p>
@@ -1538,7 +1401,7 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
             ) : isCancelled ? (
               <p className="text-pm-xs text-content-muted italic">Deplasarea este anulată.</p>
             ) : canClose ? (
-              <div className="border border-line/60 rounded-lg bg-surface-secondary/40 px-3 py-2.5 flex items-center justify-between gap-3">
+              <div className="border border-line/60 bg-surface-secondary/40 px-3 py-2.5 flex items-center justify-between gap-3">
                 <p className="text-pm-2xs text-content-secondary min-w-0">
                   La închidere, toate costurile înregistrate (buget + diurnă) se transferă automat în <span className="font-semibold">Financiar / Cheltuieli</span>{!deplasare.project_id && <span className="text-content-muted"> (ca o cheltuială fără proiect)</span>}.
                 </p>
@@ -1553,10 +1416,8 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
             )}
           </Section>
         </div>
-
-        {}
         <div className="shrink-0 border-t border-line p-3 flex items-center justify-end">
-          <button onClick={onClose} className="px-3 py-1.5 text-xs rounded-xl border border-line hover:bg-surface-tertiary transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+          <button onClick={onClose} className="px-3 py-1.5 text-xs border border-line hover:bg-surface-tertiary">
             Închide fereastra
           </button>
         </div>
@@ -1569,7 +1430,7 @@ function PaymentsModal({ deplasare, canClose, onClose, onChanged }: {
 
 function Mini({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
-    <div className="border border-line rounded-lg bg-surface-secondary px-2 py-1.5">
+    <div className="border border-line bg-surface-secondary px-2 py-1.5">
       <div className="text-pm-2xs text-content-muted uppercase tracking-wide">{label}</div>
       <div className={`tabular-nums ${strong ? 'text-sm font-semibold text-content-primary' : 'text-pm-xs text-content-secondary'}`}>{value}</div>
     </div>
@@ -1587,22 +1448,14 @@ function Field({ label, required, children }: { label: string; required?: boolea
   );
 }
 
-
 function CurrencySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
     <select value={value} onChange={e => onChange(e.target.value)}
       className="input-md tabular-nums" aria-label="Monedă">
       <option value="RON">RON</option>
-      <option value="EUR">EUR</option>
     </select>
   );
 }
-
-
-
-
-
-
 
 function DiurnaField({ days, people, currency = 'RON', ratePerDay, onRateChange, total, onTotalChange }: {
   days: number;
@@ -1619,7 +1472,7 @@ function DiurnaField({ days, people, currency = 'RON', ratePerDay, onRateChange,
   const dayLabel = days === 1 ? 'zi' : 'zile';
   const persLabel = headcount === 1 ? 'persoană' : 'persoane';
   return (
-    <div className="border border-line/60 rounded-lg bg-surface-secondary/40 p-2.5">
+    <div className="border border-line/60 bg-surface-secondary/40 p-2.5">
       <div className="flex items-center justify-between mb-1.5">
         <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">Diurnă</label>
         <span className="text-pm-2xs text-content-muted inline-flex items-center gap-1" title="Persoane în delegație (principal + suplimentari)">
@@ -1637,7 +1490,7 @@ function DiurnaField({ days, people, currency = 'RON', ratePerDay, onRateChange,
           onClick={() => onTotalChange(computed ? String(computed) : '')}
           disabled={rate <= 0}
           title={`Calculează: ${rate} ${cur} × ${days} ${dayLabel} × ${headcount} ${persLabel} = ${money(computed, cur)}`}
-          className="h-9 shrink-0 px-2.5 inline-flex items-center justify-center gap-1 rounded-xl text-pm-xs font-semibold bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
+          className="h-9 shrink-0 px-2.5 inline-flex items-center gap-1 text-pm-xs font-semibold bg-accent/10 text-accent border border-accent/30 hover:bg-accent/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
           <Calculator className="h-3.5 w-3.5" /> = total
         </button>
         <div className="flex-1 min-w-0">

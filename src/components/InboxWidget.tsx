@@ -7,7 +7,7 @@
 
 
 import { useEffect, useState } from 'react';
-import { Inbox, Check, X, AlertTriangle, Loader2, Clock, ArrowRight, Flame } from 'lucide-react';
+import { Inbox, Check, X, AlertTriangle, Loader2, Clock, ArrowRight, Flame } from '@/icons';
 import { useHandoffStore, type ProjectHandoff } from '@/store/handoffStore';
 import { toast } from '@/store/toastStore';
 

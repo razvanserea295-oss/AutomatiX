@@ -105,7 +105,17 @@ Write-Host '[2/3] Pornesc node server :3500...' -ForegroundColor Yellow
 $env:PROMIX_TRUST_PROXY = '1'
 # Public site rides the cloudflared tunnel; without this the strict CORS
 # policy rejects every API POST coming from the browser (Origin header).
-$env:PROMIX_ALLOWED_ORIGINS = 'https://automatix.online'
+# Marketing landing (apex + www) and the app SPA (app.*) share this one server.
+$env:PROMIX_ALLOWED_ORIGINS = 'https://automatix.online,https://www.automatix.online,https://app.automatix.online'
+# Hosts that should serve the marketing LANDING instead of the app SPA. The app
+# subdomain and everything else (localhost, LAN) keep serving the SPA.
+$env:PROMIX_LANDING_HOSTS = 'automatix.online,www.automatix.online'
+# Per-tenant license gate. Leave OFF until this firm's license is imported, then
+# set to '1' to enforce (login → activation screen until activated). Demo exempt.
+# $env:PROMIX_LICENSE_GATE = '1'
+# Online revocation: pull a SIGNED revocation list periodically. Publish the
+# generator's out/revocations.json at this URL (e.g. copy it to dist/license/).
+# $env:PROMIX_CRL_URL = 'https://automatix.online/license/revocations.json'
 # 8 GB heap — generous for the migrated DB (now ~28 MB) plus upload buffers.
 $env:NODE_OPTIONS = '--max-old-space-size=8192'
 # Off-site backup mirror (STRONGLY recommended): point this at another physical

@@ -158,6 +158,16 @@ function calcLineTotal(line: CreateQuotationLineInput): number {
   return roundMoney(q * p * (1 - disc));
 }
 
+/**
+ * Cota TVA poate veni ca fracție (0.19) sau, dintr-o greșeală de input, ca procent
+ * (19). Normalizează mereu la fracție ca să nu ajungem la 1900% TVA. (>1 → /100)
+ */
+function normalizeTvaRate(r: number | null | undefined): number {
+  const v = Number(r);
+  if (!Number.isFinite(v) || v <= 0) return 0;
+  return v > 1 ? v / 100 : v;
+}
+
 function calcTotals(lines: CreateQuotationLineInput[], discountPercent: number, tvaRate: number) {
   const lineTotals = lines.map(calcLineTotal);
   const lineSum = sumMoney(lineTotals);
@@ -391,7 +401,7 @@ export class QuotationService {
       throw CommandError.badRequest('Cel puțin o linie de ofertă este necesară');
     }
 
-    const tvaRate = req.tva_rate ?? 0.21;
+    const tvaRate = normalizeTvaRate(req.tva_rate ?? 0.21);
     const discount = req.discount_percent ?? 0;
     const totals = calcTotals(req.lines, discount, tvaRate);
 
@@ -455,7 +465,7 @@ export class QuotationService {
       description: l.description, quantity: l.quantity, unit: l.unit,
       unit_price: l.unit_price, discount_percent: l.discount_percent,
     }));
-    const tvaRate = req.tva_rate ?? existing.tva_rate;
+    const tvaRate = normalizeTvaRate(req.tva_rate ?? existing.tva_rate);
     const discount = req.discount_percent ?? existing.discount_percent;
     const totals = calcTotals(lines, discount, tvaRate);
 

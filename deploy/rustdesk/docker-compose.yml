@@ -1,0 +1,27 @@
+services:
+  hbbs:
+    image: rustdesk/rustdesk-server:latest
+    container_name: promix-rustdesk-hbbs
+    command: hbbs -r ${RUSTDESK_RELAY_HOST:-hbbr}:21117
+    volumes:
+      - rustdesk-data:/root
+    ports:
+      - "21116:21116"
+      - "21118:21118"
+    restart: unless-stopped
+    depends_on:
+      - hbbr
+
+  hbbr:
+    image: rustdesk/rustdesk-server:latest
+    container_name: promix-rustdesk-hbbr
+    command: hbbr
+    volumes:
+      - rustdesk-data:/root
+    ports:
+      - "21117:21117"
+      - "21119:21119"
+    restart: unless-stopped
+
+volumes:
+  rustdesk-data:

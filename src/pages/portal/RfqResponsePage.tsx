@@ -1,6 +1,7 @@
+import { PageToolbar } from '@/app-ui';
 import { useState, useEffect } from 'react';
 import { useRoute } from 'wouter';
-import { Loader2, AlertTriangle, Send, CheckCircle, X } from 'lucide-react';
+import { Loader2, AlertTriangle, Send, CheckCircle, X } from '@/icons';
 import { getServerUrl } from '@/config/server';
 
 interface RfqItem {
@@ -104,14 +105,8 @@ export default function RfqResponsePage() {
 
   return (
     <div className="min-h-screen bg-surface-page">
-      <header className="bg-surface-primary border-b border-line">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <h1 className="text-pm-lg font-bold text-content-primary truncate">{data.rfq.title}</h1>
-          <p className="text-pm-xs text-content-muted truncate">Cerere ofertă {data.rfq.rfq_number}{data.invitation.supplier_name ? ` — ${data.invitation.supplier_name}` : ''}</p>
-        </div>
-      </header>
-
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-4">
+        <PageToolbar />
         {data.rfq.description && (
           <div className="bg-surface-primary rounded-2xl shadow-[var(--elevation-1)] border border-line p-4 anim-slide-up">
             <p className="text-pm-base text-content-secondary">{data.rfq.description}</p>
@@ -183,8 +178,6 @@ export default function RfqResponsePage() {
                 <label className="block text-pm-eyebrow uppercase text-content-muted mb-1">Monedă</label>
                 <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full h-10 px-3 border border-line rounded-xl bg-surface-primary text-pm-base text-content-primary transition-smooth duration-150 hover:border-content-muted focus-visible:outline-none focus-visible:border-accent focus-visible:shadow-[var(--ring-soft)]">
                   <option value="RON">RON</option>
-                  <option value="EUR">EUR</option>
-                  <option value="USD">USD</option>
                 </select>
               </div>
               <div className="col-span-3 min-w-0">

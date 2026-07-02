@@ -1,4 +1,4 @@
-import { Download, FileSpreadsheet, FileText, Printer } from 'lucide-react';
+import { Download, FileSpreadsheet, FileText, Printer } from '@/icons';
 import Popover from './Popover';
 import Button from '@/components/ui/Button';
 

@@ -17,7 +17,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const children = [];
 
-function run(cmd, args, env) {
+function run(cmd, args, env, onExit) {
   const c = spawn(cmd, args, {
     cwd: root,
     stdio: 'inherit',
@@ -26,7 +26,8 @@ function run(cmd, args, env) {
   });
   children.push(c);
   c.on('exit', (code) => {
-    if (code && code !== 0) shutdown(code);
+    if (onExit) onExit(code ?? 0);
+    else if (code && code !== 0) shutdown(code);
   });
   return c;
 }
@@ -42,9 +43,15 @@ process.on('SIGTERM', () => shutdown(0));
 run(npx, ['vite']);
 
 
-run(npx, ['tsc', '-p', 'tsconfig.server.json'], {});
-run('node', ['dist-server/server/index.js'], { PROMIX_RATE_LIMIT_OFF: '1', PROMIX_PORT: '3500' });
-
+// Compile server BEFORE starting it — otherwise Node loads stale dist-server
+// and new IPC commands (e.g. remote support) return "No handler registered".
+run(npx, ['tsc', '-p', 'tsconfig.server.json'], {}, (tscCode) => {
+  if (tscCode !== 0) {
+    shutdown(tscCode);
+    return;
+  }
+  run('node', ['dist-server/server/index.js'], { PROMIX_RATE_LIMIT_OFF: '1', PROMIX_PORT: '3500' });
+});
 
 run(npx, ['tsc', '-p', 'tsconfig.electron.json']);
 setTimeout(() => {

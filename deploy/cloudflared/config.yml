@@ -12,32 +12,63 @@
 #      # opens browser, authorizes Cloudflare account
 #   3. cloudflared tunnel create promix
 #      # outputs: Created tunnel <NAME> with id <UUID>
-#   4. cloudflared tunnel route dns promix promix.example.com
-#      # creates the public DNS record automatically
-#   5. Edit this file: replace <TUNNEL_UUID> below with the id from step 3
-#      and `promix.example.com` with your hostname.
+#   4. Route BOTH the marketing apex and the app subdomain to this tunnel:
+#        cloudflared tunnel route dns promix automatix.online
+#        cloudflared tunnel route dns promix www.automatix.online
+#        cloudflared tunnel route dns promix app.automatix.online
+#      # creates the public DNS records automatically
+#   5. Edit this file: replace <TUNNEL_UUID> below with the id from step 3.
 #   6. sudo cp deploy/cloudflared/config.yml /etc/cloudflared/config.yml
 #      sudo cp ~/.cloudflared/<TUNNEL_UUID>.json /etc/cloudflared/
 #      sudo cp deploy/cloudflared/cloudflared.service /etc/systemd/system/
 #      sudo systemctl daemon-reload
 #      sudo systemctl enable --now cloudflared
 #
-# Then on promix-server.service set PROMIX_TRUST_PROXY=1 and (recommended)
-# PROMIX_ALLOWED_ORIGINS=https://promix.example.com.
+# Then on promix-server.service set PROMIX_TRUST_PROXY=1 and
+# PROMIX_ALLOWED_ORIGINS=https://automatix.online,https://www.automatix.online,https://app.automatix.online
+#
+# IMPORTANT: the same single server (:3500) serves BOTH the marketing landing
+# (automatix.online / www) and the app SPA (app.automatix.online). It decides
+# which by the request Host, so the original hostname MUST reach the server —
+# do NOT rewrite it to `localhost`. We set httpHostHeader to the matching
+# hostname per rule (the old single-rule config used `localhost`, which would
+# break host routing).
 
-tunnel: <TUNNEL_UUID>
-credentials-file: /etc/cloudflared/<TUNNEL_UUID>.json
+tunnel: eb0fd8b3-d530-49d4-9ad0-1f56f3f9c538
+credentials-file: /etc/cloudflared/eb0fd8b3-d530-49d4-9ad0-1f56f3f9c538.json
 
 ingress:
-  # Public hostname — must match `cloudflared tunnel route dns ...` above.
-  - hostname: promix.example.com
+  # App SPA.
+  - hostname: app.automatix.online
     service: http://localhost:3500
     originRequest:
-      # Don't buffer responses — keeps long-running command requests snappy.
       noTLSVerify: false
       connectTimeout: 30s
       tlsTimeout: 10s
       keepAliveTimeout: 90s
-      httpHostHeader: localhost
+      httpHostHeader: app.automatix.online
+  # Marketing landing (apex).
+  - hostname: automatix.online
+    service: http://localhost:3500
+    originRequest:
+      noTLSVerify: false
+      connectTimeout: 30s
+      tlsTimeout: 10s
+      keepAliveTimeout: 90s
+      httpHostHeader: automatix.online
+  # Marketing landing (www).
+  - hostname: www.automatix.online
+    service: http://localhost:3500
+    originRequest:
+      noTLSVerify: false
+      connectTimeout: 30s
+      tlsTimeout: 10s
+      keepAliveTimeout: 90s
+      httpHostHeader: www.automatix.online
+  # RustDesk — TCP for QuickSupport clients (expose hbbs/hbbr through the tunnel).
+  - hostname: id.automatix.online
+    service: tcp://localhost:21116
+  - hostname: relay.automatix.online
+    service: tcp://localhost:21117
   # Catch-all — required by cloudflared. 404 on anything else.
   - service: http_status:404

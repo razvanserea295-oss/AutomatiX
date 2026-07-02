@@ -16,7 +16,8 @@ import type { Express, Request, Response } from 'express';
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { spawn, spawnSync } from 'child_process';
+import { spawnSync } from 'child_process';
+import { scheduleServerRespawn } from './serverRespawn';
 import extract from 'extract-zip';
 import { ipcRegister } from '../electron/commands/registry';
 import { CommandError } from '../electron/middleware/errors';
@@ -42,30 +43,7 @@ let updateInProgress = false;
 
 // ── shared respawn (mirrors restart_server in commandRouter.ts) ─────────────
 function scheduleRespawn(byName: string, reason: string): void {
-  const node = process.execPath;
-  const entry = process.argv[1];
-  const cwd = process.cwd();
-  const isWin = process.platform === 'win32';
-  if (!entry) throw CommandError.internal('Nu pot determina scriptul serverului (process.argv[1] lipsă).');
-
-  try {
-    fs.writeFileSync(path.join(cwd, '.restart-marker'), JSON.stringify({
-      at: new Date().toISOString(), by: byName, old_pid: process.pid, entry, reason,
-    }, null, 2));
-  } catch (e) { console.warn('[update/restart] marker write failed (continuing):', e); }
-
-  const child = isWin
-    ? spawn('cmd.exe', ['/c', `ping -n 3 127.0.0.1 >nul & "${node}" "${entry}"`],
-        { cwd, detached: true, stdio: 'ignore', windowsHide: true, windowsVerbatimArguments: true })
-    : spawn('sh', ['-c', `sleep 2; exec "${node}" "${entry}"`], { cwd, detached: true, stdio: 'ignore' });
-  child.unref();
-  console.log(`[update/restart] respawn scheduled (child pid ${child.pid}) — ${reason}`);
-
-  setTimeout(() => {
-    try { flushDatabase(); } catch (e) { console.error('[update/restart] DB flush failed:', e); }
-    console.log('[update/restart] exiting now for respawn.');
-    process.exit(0);
-  }, 1200);
+  scheduleServerRespawn({ by: byName, reason });
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────
@@ -178,6 +156,12 @@ export function registerSourceUpdate(app: Express): void {
   // Upload a source zip and update the app in place.
   const rawParser = express.raw({ type: 'application/octet-stream', limit: MAX_UPLOAD_BYTES });
   app.post('/api/source-archive/upload', rawParser, async (req: Request, res: Response) => {
+    // Defence-in-depth: live source replacement is remote-code-execution by design.
+    // Require an explicit opt-in env flag on top of the admin check, so the endpoint
+    // is inert on a normal production deploy unless the operator turns it on.
+    if (process.env.PROMIX_ALLOW_SOURCE_UPDATE !== '1') {
+      return res.status(403).json({ ok: false, code: 403, message: 'Source update dezactivat (setează PROMIX_ALLOW_SOURCE_UPDATE=1 pentru a activa).' });
+    }
     let user;
     try { user = requireAdmin(req); }
     catch (e) {

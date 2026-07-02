@@ -1,0 +1,398 @@
+/* ============================================================================
+ * Loading system — skeleton shimmer, inline refetch, button states, optimistic
+ * ========================================================================== */
+
+:root {
+  --bg-surface: var(--color-bg-tertiary);
+  --bg-elevated: var(--color-bg-elevated);
+  --z-progress: 90;
+}
+
+@keyframes ix-shimmer {
+  0% { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+@keyframes ix-panel-progress {
+  0% { transform: scaleX(0); opacity: 1; }
+  100% { transform: scaleX(0.85); opacity: 1; }
+}
+
+@keyframes ix-panel-progress-done {
+  to { transform: scaleX(1); opacity: 0; }
+}
+
+@keyframes ix-global-crawl {
+  0% { width: 20%; }
+  100% { width: 88%; }
+}
+
+@keyframes ix-progress-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+
+@keyframes ix-row-pulse {
+  0%, 100% { background-color: transparent; }
+  50% { background-color: color-mix(in srgb, var(--color-accent-muted) 55%, transparent); }
+}
+
+@keyframes ix-row-collapse {
+  to { opacity: 0; max-height: 0; padding-block: 0; margin-block: 0; border-width: 0; }
+}
+
+@keyframes ix-row-slide-in {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ix-accent-border-flash {
+  0% { box-shadow: inset 3px 0 0 var(--color-accent); }
+  100% { box-shadow: inset 3px 0 0 transparent; }
+}
+
+@keyframes ix-btn-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ix-btn-dash {
+  0% { stroke-dashoffset: 32; }
+  50% { stroke-dashoffset: 8; }
+  100% { stroke-dashoffset: 32; }
+}
+
+@keyframes ix-btn-label-out {
+  to { opacity: 0; }
+}
+
+@keyframes ix-btn-spinner-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ix-btn-success-flash {
+  0% { background-color: var(--color-accent); }
+  40% { background-color: var(--status-green); }
+  100% { background-color: var(--color-accent); }
+}
+
+@keyframes ix-btn-error-flash {
+  0% { background-color: var(--color-accent); }
+  40% { background-color: var(--status-red); }
+  100% { background-color: var(--color-accent); }
+}
+
+@keyframes ix-empty-glow-pulse {
+  0%, 100% { opacity: 0.08; transform: scale(1); }
+  50% { opacity: 0.14; transform: scale(1.06); }
+}
+
+@keyframes ix-cta-attention {
+  0%, 100% { box-shadow: none; }
+  50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 18%, transparent); }
+}
+
+@keyframes ix-float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ─── Skeleton blocks ─────────────────────────────────────────────────────── */
+
+/* Legacy ds-skeleton alias — enhanced shimmer when class is applied */
+.ds-skeleton.ix-skeleton-enhanced,
+.ix-skeleton {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    var(--bg-surface) 0%,
+    var(--bg-elevated) 50%,
+    var(--bg-surface) 100%
+  );
+  background-size: 600px 100%;
+  animation: ix-shimmer 1.8s ease-in-out infinite;
+}
+
+.ix-skeleton-wave > .ix-skeleton:nth-child(1),
+.ix-skeleton-wave > .ix-skeleton-line:nth-child(1) { animation-delay: 0ms; }
+.ix-skeleton-wave > .ix-skeleton:nth-child(2),
+.ix-skeleton-wave > .ix-skeleton-line:nth-child(2) { animation-delay: 150ms; }
+.ix-skeleton-wave > .ix-skeleton:nth-child(3),
+.ix-skeleton-wave > .ix-skeleton-line:nth-child(3) { animation-delay: 300ms; }
+.ix-skeleton-wave > .ix-skeleton:nth-child(n+4),
+.ix-skeleton-wave > .ix-skeleton-line:nth-child(n+4) {
+  animation-delay: calc(300ms + (var(--ix-wave-i, 0) * 150ms));
+}
+
+.ix-skeleton-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.ix-skeleton-line {
+  height: 0.75rem;
+  border-radius: var(--radius-md);
+}
+
+/* ─── Page loading reserve (tier 1 — no flash) ─────────────────────────────── */
+
+.ix-loading-reserve {
+  flex: 1;
+  min-height: 240px;
+}
+
+/* ─── Tier 3 elapsed context ────────────────────────────────────────────────── */
+
+.ix-loading-elapsed {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  font-size: var(--pm-xs, 0.75rem);
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border-subtle);
+  background: color-mix(in srgb, var(--color-bg-secondary) 80%, transparent);
+}
+
+.ix-loading-elapsed-bar {
+  flex: 1;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--color-bg-tertiary);
+  overflow: hidden;
+}
+
+.ix-loading-elapsed-fill {
+  height: 100%;
+  width: 35%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 60%, white));
+  animation: ix-global-crawl 2.4s ease-in infinite;
+}
+
+/* ─── Panel progress bar (refetch) ─────────────────────────────────────────── */
+
+.ix-panel-progress-host {
+  position: relative;
+}
+
+.ix-panel-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 2;
+  pointer-events: none;
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 55%, white));
+  animation: ix-panel-progress 1s ease-out forwards;
+}
+
+.ix-panel-progress--done {
+  animation: ix-panel-progress-done 300ms ease-out forwards;
+}
+
+/* ─── Refetch dim ───────────────────────────────────────────────────────────── */
+
+.ix-refetch-dim {
+  transition: opacity 200ms ease;
+}
+
+.ix-refetch-dim--active {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ─── Row optimistic / updating ─────────────────────────────────────────────── */
+
+.ix-row-updating {
+  animation: ix-row-pulse 1.2s ease-in-out infinite;
+}
+
+.ix-row-new {
+  animation: ix-row-slide-in 250ms cubic-bezier(0.34, 1.4, 0.64, 1) both,
+             ix-accent-border-flash 600ms ease-out both;
+}
+
+.ix-row-deleting {
+  opacity: 0.4;
+  animation: ix-row-collapse 250ms ease-in forwards;
+  overflow: hidden;
+}
+
+.ix-row-undo {
+  animation: ix-row-slide-in 250ms cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+.ix-saving-hint {
+  font-size: var(--pm-xs, 0.75rem);
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* ─── Button loading ────────────────────────────────────────────────────────── */
+
+.ix-btn-loading {
+  position: relative;
+}
+
+.ix-btn-loading .ix-btn-label--out {
+  animation: ix-btn-label-out 100ms ease forwards;
+}
+
+.ix-btn-loading .ix-btn-spinner-wrap {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: ix-btn-spinner-in 150ms ease forwards;
+}
+
+.ix-btn-spinner {
+  width: 15px;
+  height: 15px;
+  animation: ix-btn-spin 800ms linear infinite;
+}
+
+.ix-btn-spinner-track {
+  fill: none;
+  stroke: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  stroke-width: 2;
+}
+
+.ix-btn-spinner-arc {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 32;
+  animation: ix-btn-dash 1.2s ease-in-out infinite;
+}
+
+.ix-btn--success-flash {
+  animation: ix-btn-success-flash 500ms ease;
+}
+
+.ix-btn--error-flash {
+  animation: ix-btn-error-flash 500ms ease;
+}
+
+/* ─── Global progress bar ───────────────────────────────────────────────────── */
+
+.ix-global-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  z-index: var(--z-progress);
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 50%, white));
+  transition: width 300ms ease, opacity 300ms ease;
+}
+
+.ix-global-progress--crawl {
+  animation: ix-global-crawl 3s ease-in forwards;
+}
+
+.ix-global-progress--error {
+  background: var(--status-red);
+  animation: ix-progress-shake 400ms ease;
+}
+
+.ix-global-progress--fade {
+  opacity: 0;
+}
+
+/* ─── Designed empty / error states ─────────────────────────────────────────── */
+
+.ix-designed-empty {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.ix-designed-empty-icon-wrap {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.ix-designed-empty-glow {
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-accent) 0%, transparent 70%);
+  opacity: 0.08;
+  animation: ix-empty-glow-pulse 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.ix-designed-empty-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-2xl);
+  background: var(--color-accent-muted);
+  color: var(--color-accent);
+  animation: ix-float-y 4s ease-in-out infinite;
+}
+
+.ix-designed-empty-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.ix-designed-empty-cta--pulse {
+  animation: ix-cta-attention 2s ease-in-out 1.5s 2;
+}
+
+.ix-error-state-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-2xl);
+  background: color-mix(in srgb, var(--status-amber) 12%, transparent);
+  color: var(--status-amber);
+}
+
+.ix-error-state-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ix-skeleton,
+  .ds-skeleton.ix-skeleton-enhanced,
+  .ix-panel-progress,
+  .ix-global-progress--crawl,
+  .ix-designed-empty-icon,
+  .ix-designed-empty-glow,
+  .ix-designed-empty-cta--pulse,
+  .ix-row-new,
+  .ix-row-deleting,
+  .ix-btn-spinner {
+    animation: none !important;
+  }
+}
+
+html[data-motion='reduced'] .ix-skeleton,
+html[data-motion='reduced'] .ds-skeleton.ix-skeleton-enhanced,
+html[data-motion='reduced'] .ix-designed-empty-icon,
+html[data-motion='reduced'] .ix-designed-empty-glow {
+  animation: none !important;
+}

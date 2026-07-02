@@ -1,29 +1,19 @@
-
-
-
-
-
-
 import type { HTMLAttributes, ReactNode } from 'react';
 import Card, { CardHeader, CardBody } from './Card';
+import { DESKTOP_PAGE_FIT, PAGE_GAP } from '@/redesign/layout/constants';
 
 interface PageProps extends HTMLAttributes<HTMLDivElement> {
-  
-
-
-
-
-
-
+  /** When true, page fills the shell and defers vertical scroll to children on lg+. */
   fit?: boolean;
   layout?: 'col' | 'row';
   children: ReactNode;
 }
 
 function Page({ fit = false, layout = 'col', children, className = '', ...rest }: PageProps) {
+  const fitCls = fit ? DESKTOP_PAGE_FIT : 'flex w-full flex-col min-w-0 flex-1 min-h-0';
   return (
     <div
-      className={`app-surface flex flex-1 ${layout === 'row' ? 'flex-row' : 'flex-col'} min-h-0 ${fit ? 'overflow-hidden' : 'overflow-y-auto'} ${className}`}
+      className={`app-surface ${fitCls} ${layout === 'row' ? '!flex-row' : ''} ${className}`}
       {...rest}
     >
       {children}
@@ -32,16 +22,11 @@ function Page({ fit = false, layout = 'col', children, className = '', ...rest }
 }
 
 interface PageBodyProps extends HTMLAttributes<HTMLDivElement> {
-  
+  /** Content width cap — `narrow` centers a form column; `wide`/`full` span the shell. */
   maxWidth?: 'narrow' | 'wide' | 'full';
-  
+  /** Outer gutters — all non-flush variants share the same horizontal inset. */
   padding?: 'flush' | 'tight' | 'comfortable' | 'spacious';
-  
-
-
-
-
-
+  /** Flex column that grows inside a `fit` page — use with fill panels/tables. */
   fit?: boolean;
   children: ReactNode;
 }
@@ -55,46 +40,41 @@ interface PageBodyProps extends HTMLAttributes<HTMLDivElement> {
 // the `full` pages. `narrow` stays a genuine reading width for forms.
 const maxWidthClass = {
   narrow: 'max-w-[1280px]',
-  wide:   'max-w-[1920px]',
+  wide:   'max-w-none',
   full:   'max-w-none',
 };
 
 const padClass = {
   flush:       'px-0 py-0',
-  tight:       'px-6 py-4',
-  comfortable: 'px-6 py-6',
-  spacious:    'px-6 py-8',
+  tight:       'px-3 py-3 sm:px-4 sm:py-4 lg:px-6',
+  comfortable: 'px-3 py-4 sm:px-4 lg:px-6 lg:py-6',
+  spacious:    'px-3 py-5 sm:px-4 lg:px-6 lg:py-8',
 };
 
 
 function PageBody({
-  maxWidth = 'wide',
+  maxWidth = 'full',
   padding = 'comfortable',
   fit = false,
   className = '',
   children,
   ...rest
 }: PageBodyProps) {
-  const layout = fit ? 'flex flex-1 flex-col min-h-0 gap-6' : 'space-y-6';
+  const layout = fit ? `flex flex-col ${PAGE_GAP} lg:flex-1 lg:min-h-0` : 'space-y-4 lg:space-y-6';
+  const center = maxWidth === 'narrow' ? 'mx-auto' : '';
   return (
-    <div className={`page-body mx-auto w-full ${maxWidthClass[maxWidth]} ${padClass[padding]} ${layout} ${className}`} {...rest}>
+    <div className={`page-body w-full ${center} ${maxWidthClass[maxWidth]} ${padClass[padding]} ${layout} ${className}`} {...rest}>
       {children}
     </div>
   );
 }
 
 interface PageSectionProps {
-  
   eyebrow?: ReactNode;
-  
   title?: ReactNode;
-  
   description?: ReactNode;
-  
   actions?: ReactNode;
-  
   flush?: boolean;
-  
   id?: string;
   className?: string;
   children?: ReactNode;
@@ -133,16 +113,15 @@ function PageSection({ eyebrow, title, description, actions, id, className = '',
 }
 
 interface KpiGridProps extends HTMLAttributes<HTMLDivElement> {
-  
   cols?: 2 | 3 | 4 | 5 | 6;
 }
 
 const kpiCols: Record<NonNullable<KpiGridProps['cols']>, string> = {
-  2: 'grid grid-cols-2 gap-4',
-  3: 'grid grid-cols-2 md:grid-cols-3 gap-4',
-  4: 'grid grid-cols-2 md:grid-cols-4 gap-4',
-  5: 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4',
-  6: 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4',
+  2: 'grid grid-cols-1 items-stretch sm:grid-cols-2 gap-3 sm:gap-4',
+  3: 'grid grid-cols-1 items-stretch sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4',
+  4: 'grid grid-cols-1 items-stretch sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4',
+  5: 'grid grid-cols-1 items-stretch sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-3 sm:gap-4',
+  6: 'grid grid-cols-1 items-stretch sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-3 sm:gap-4',
 };
 
 

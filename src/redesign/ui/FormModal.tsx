@@ -9,7 +9,7 @@
 
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import Modal from '@/redesign/ui/Modal';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle } from '@/icons';
 import { toast } from '@/store/toastStore';
 import { confirmDialog } from '@/redesign/ui/ConfirmDialog';
 import Button from '@/redesign/ui/Button';

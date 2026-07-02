@@ -1,4 +1,4 @@
-import { Bookmark, Plus, X } from 'lucide-react';
+import { Bookmark, Plus, X } from '@/icons';
 import { useLocalStorage } from './useLocalStorage';
 
 export interface SavedFilter {

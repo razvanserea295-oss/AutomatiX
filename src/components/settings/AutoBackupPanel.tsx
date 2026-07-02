@@ -9,12 +9,13 @@
 
 
 import { useCallback, useEffect, useState } from 'react';
-import { Archive, Download, RotateCcw, Save, ShieldAlert, Cloud } from 'lucide-react';
+import { Archive, Download, RotateCcw, Save, ShieldAlert, Cloud } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 import { getErrorMessage } from '@/utils/errors';
 import { confirmDialog } from '@/components/ConfirmDialog';
 import Button from '@/components/ui/Button';
+import { STORAGE_KEYS, getStorage } from '@/config/localStorage';
 
 interface AutoBackupConfig {
   enabled: boolean;
@@ -97,8 +98,10 @@ export default function AutoBackupPanel() {
 
   const download = useCallback(async (name: string) => {
     try {
+      const token = getStorage(STORAGE_KEYS.TOKEN);
+      if (!token) { toast.error('Sesiune expirată — autentifică-te din nou'); return; }
       const a = document.createElement('a');
-      a.href = `${window.location.origin}/api/auto-backup/${encodeURIComponent(name)}`;
+      a.href = `${window.location.origin}/api/auto-backup/${encodeURIComponent(name)}?token=${encodeURIComponent(token)}`;
       a.download = name;
       document.body.appendChild(a);
       a.click();

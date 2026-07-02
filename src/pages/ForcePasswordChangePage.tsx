@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Loader2, ShieldAlert, Eye, EyeOff } from 'lucide-react';
+import { Loader2, ShieldAlert, Eye, EyeOff } from '@/icons';
 import { useAuthStore } from '@/store/authStore';
 import GearLogo from '@/components/ui/GearLogo';
 import PasswordChangeEnhancements, { recordPasswordHistory } from '@/pages/auth/PasswordChangeEnhancements';

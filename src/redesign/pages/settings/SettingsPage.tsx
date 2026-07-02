@@ -1,51 +1,5 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useCallback, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 import { apiCommand } from '@/api/commands';
@@ -61,6 +15,7 @@ import HelpPanel from '@/components/settings/HelpPanel';
 import { useSetupStore } from '@/store/setupStore';
 import { useAccentStore } from '@/store/accentStore';
 import { useLayoutStore } from '@/store/layoutStore';
+import { useAuthStore } from '@/store/authStore';
 import { useMotionStore } from '@/store/motionStore';
 import { useTextScaleStore } from '@/store/textScaleStore';
 import { useCardTransparencyStore } from '@/store/cardTransparencyStore';
@@ -71,7 +26,7 @@ import {
   Settings, AlertCircle, Sun, Moon, Bell, User as UserIcon, Mail, Building2,
   Server, ScrollText, Info, Database, Clock, Folder, RefreshCw, Shield, ShieldCheck,
   Megaphone, Wrench, HelpCircle, ArrowRight, Palette, RotateCcw,
-} from 'lucide-react';
+} from '@/icons';
 import BroadcastsAdminPanel from '@/components/settings/BroadcastsAdminPanel';
 import MaintenanceModePanel from '@/components/settings/MaintenanceModePanel';
 import { maskCui, maskIban, validateCui, validateIban } from '@/lib/inputMasks';
@@ -83,11 +38,8 @@ import {
   setNativeNotificationsEnabled, nativeNotify,
 } from '@/lib/nativeNotify';
 
-import Page from '@/redesign/ui/Page';
 import Card, { CardBody } from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
-import HeroHeader from '@/redesign/ui/HeroHeader';
-import SectionHeader from '@/redesign/ui/SectionHeader';
+import { PageChrome, DashboardLayout } from '@/app-ui';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import EmptyState from '@/redesign/ui/EmptyState';
 import type { StatusTone } from '@/lib/statusTokens';
@@ -95,10 +47,7 @@ import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
 import LayoutPresetPicker from './LayoutPresetPicker';
 import Segmented from '@/redesign/ui/Segmented';
 import PageCustomizerWizard from './PageCustomizerWizard';
-
-
-
-
+import { getInterfaceMode, setInterfaceMode } from '@/v2/lib/interfaceMode';
 
 type Section = 'aspect' | 'notificari' | 'cont' | 'email' | 'fiscal' | 'anunturi' | 'mentenanta' | 'server' | 'audit' | 'backup' | 'despre' | 'ajutor';
 
@@ -116,13 +65,6 @@ interface SettingsPageProps {
   currentTheme: 'light' | 'dark';
   onQuitApplication?: () => void;
 }
-
-
-
-
-
-
-
 
 type NavGroup = 'personal' | 'companie' | 'platforma';
 
@@ -148,21 +90,9 @@ const GROUP_LABELS: Record<NavGroup, string> = {
 };
 const GROUP_ORDER: NavGroup[] = ['personal', 'companie', 'platforma'];
 
-
-
-
-
 export default function SettingsPage({ user, onThemeChange, currentTheme }: SettingsPageProps) {
   const [activeSection, setActiveSection] = useState<Section>('aspect');
 
-  
-  
-  
-  
-  
-  
-  
-  
   const visibleNav = NAV_ITEMS.filter((item) => {
     const r = (user?.role_name || '').toLowerCase();
     if (item.id === 'fiscal')   return r === 'admin' || r === 'manager' || r === 'financiar';
@@ -175,69 +105,31 @@ export default function SettingsPage({ user, onThemeChange, currentTheme }: Sett
     return true;
   });
 
-  const active = visibleNav.find(n => n.id === activeSection);
-  const ActiveIcon = active?.icon || Settings;
   const isAdmin = (user?.role_name || '').toLowerCase() === 'admin';
-  const roleLabel = user?.role_name === 'admin' ? 'Administrator' : (user?.role_name || 'Utilizator');
 
-  
-  
+  useEffect(() => {
+    const pending = sessionStorage.getItem('promix_settings_section') as Section | null;
+    if (!pending) return;
+    sessionStorage.removeItem('promix_settings_section');
+    if (visibleNav.some((item) => item.id === pending)) {
+      setActiveSection(pending);
+    }
+  }, [visibleNav]);
+
   const selectSection = useCallback((id: Section) => {
     if (id === activeSection) return;
     startMorphTransition(() => flushSync(() => setActiveSection(id)), { dir: 'forward' });
   }, [activeSection]);
 
   return (
-    <Page fit className="mod-shell">
-      <Page.Body fit maxWidth="wide" padding="comfortable">
-        {}
-        <HeroHeader
-          className="enter-up" style={{ animationDelay: '0ms' }}
-          eyebrow="Sistem"
-          icon={Settings}
-          title="Setări"
-          subtitle="Configurare aplicație, cont, fiscal și integrări"
-          actions={
-            <div className="flex items-center gap-2">
-              <SetupContinueBanner isAdmin={isAdmin} />
-              <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-accent-muted text-accent text-pm-xs font-semibold whitespace-nowrap">
-                <Shield className="h-3.5 w-3.5" /> {roleLabel}
-              </span>
-            </div>
-          }
-        />
-
-        {}
-        <Page.Kpis cols={4} className="shrink-0 enter-up" style={{ animationDelay: '60ms' }}>
-          <KpiCard
-            label="Temă activă" value={currentTheme === 'dark' ? 'Întunecat' : 'Luminos'}
-            icon={currentTheme === 'dark' ? Moon : Sun} iconColor="text-accent"
-            hint="Comută din secțiunea Aspect"
+    <DashboardLayout
+        chrome={(
+          <PageChrome
+            actions={<SetupContinueBanner isAdmin={isAdmin} />}
           />
-          <KpiCard
-            label="Rol cont" value={roleLabel}
-            icon={Shield} iconColor="text-status-blue"
-            hint={user?.username ? `@${user.username}` : '—'}
-          />
-          <KpiCard
-            label="Secțiuni disponibile" value={visibleNav.length}
-            icon={Settings} iconColor="text-status-teal"
-            hint={`din ${NAV_ITEMS.length} totale`}
-          />
-          <KpiCard
-            label="2FA cont" value={(user as { totp_enabled?: boolean } | null)?.totp_enabled ? 'Activat' : 'Inactiv'}
-            icon={(user as { totp_enabled?: boolean } | null)?.totp_enabled ? ShieldCheck : Shield}
-            iconColor={(user as { totp_enabled?: boolean } | null)?.totp_enabled ? 'text-status-green' : 'text-content-muted'}
-            hint="Gestionează din Cont"
-          />
-        </Page.Kpis>
-
-        {
-
-
-}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 enter-up" style={{ animationDelay: '120ms' }}>
-          {}
+        )}
+    >
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
           <nav className="lg:col-span-4 xl:col-span-3 flex min-h-0" aria-label="Secțiuni setări">
             <Card padding="none" tone="flat" className="flex flex-col min-h-0 flex-1 overflow-hidden">
               <CardBody padding="sm" className="space-y-4 min-h-0 overflow-y-auto">
@@ -293,14 +185,7 @@ export default function SettingsPage({ user, onThemeChange, currentTheme }: Sett
               <CardBody padding="lg" className="min-h-0 overflow-y-auto">
                 {
 }
-                <div key={activeSection} className="enter-up">
-                  <SectionHeader
-                    icon={ActiveIcon}
-                    title={active?.label || 'Setări'}
-                    meta={active?.description}
-                  />
-
-                  {}
+                <div key={activeSection} className="">
                   {activeSection === 'aspect' && <AspectSection currentTheme={currentTheme} onThemeChange={onThemeChange} />}
                   {activeSection === 'notificari' && <NotificariSection />}
                   {activeSection === 'cont' && <ContSection user={user} />}
@@ -318,20 +203,9 @@ export default function SettingsPage({ user, onThemeChange, currentTheme }: Sett
             </Card>
           </div>
         </div>
-      </Page.Body>
-    </Page>
+    </DashboardLayout>
   );
 }
-
-
-
-
-
-
-
-
-
-
 
 function SetupContinueBanner({ isAdmin }: { isAdmin: boolean }) {
   const completed = useSetupStore(s => s.completed);
@@ -405,10 +279,6 @@ function StatusPill({ ok, message }: { ok: boolean; message: string }) {
   );
 }
 
-
-
-
-
 // Curated accent presets (all saturated enough to read with white text). The
 // custom picker below covers anything else; `null` restores the theme default.
 const ACCENT_PRESETS = ['#2D5BE3', '#6D28D9', '#0E7490', '#0D9488', '#107E3E', '#E9730C', '#E11D48', '#DB2777'];
@@ -435,10 +305,37 @@ function AspectSection({ currentTheme, onThemeChange }: { currentTheme: 'light' 
   const setShellLayout = useShellLayoutStore(s => s.setLayout);
   const uiMode = useUiModeStore(s => s.mode);
   const setUiMode = useUiModeStore(s => s.setMode);
+  const navLayout = useLayoutStore(s => s.navLayout);
+  const setNavLayout = useLayoutStore(s => s.setNavLayout);
+  const isAdmin = useAuthStore(s => (s.user?.role_name || '').toLowerCase() === 'admin');
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [interfaceMode, setInterfaceModeLocal] = useState<'v2' | 'classic'>(() => getInterfaceMode());
+
+  const switchInterface = (mode: 'v2' | 'classic') => {
+    setInterfaceMode(mode);
+    setInterfaceModeLocal(mode);
+    window.location.hash = mode === 'v2' ? '#/v2/settings' : '#/settings';
+    window.location.reload();
+  };
 
   return (
     <SectionGroup>
+      <div className="mb-5 border-b border-line/60 pb-5">
+        <p className="text-pm-sm font-semibold text-content-primary">Interfație aplicație</p>
+        <p className="mb-3 text-pm-xs text-content-muted">
+          Noua interfață (recomandat) sau interfața clasică.
+        </p>
+        <Segmented
+          ariaLabel="Interfație aplicație"
+          value={interfaceMode}
+          onChange={switchInterface}
+          options={[
+            { id: 'v2', label: 'Nouă (v2)' },
+            { id: 'classic', label: 'Clasică' },
+          ]}
+        />
+      </div>
+
       {/* Interface switch — Modern (this SaaS UI) vs SAP Fiori (UI5). Applies
           immediately: Root re-mounts the selected presentation layer. */}
       <div className="mb-5 border-b border-line/60 pb-5">
@@ -453,6 +350,29 @@ function AspectSection({ currentTheme, onThemeChange }: { currentTheme: 'light' 
           options={[{ id: 'saas', label: 'Modern' }, { id: 'fiori', label: 'Fiori (SAP)' }]}
         />
       </div>
+
+      {/* Navigation surface — admin-only alternatives to the left sidebar.
+          Applies immediately on desktop; the overlay opens from the floating
+          button, Ctrl+\ or the titlebar menu icon. */}
+      {isAdmin && (
+        <div className="mb-5 border-b border-line/60 pb-5">
+          <p className="text-pm-sm font-semibold text-content-primary">Mod de navigare</p>
+          <p className="mb-3 text-pm-xs text-content-muted">
+            Înlocuiește meniul din stânga. <strong>Launchpad</strong> = grilă pe tot ecranul; <strong>Radial</strong> = meniu circular.
+            Doar pentru administratori, pe desktop. Se deschide din butonul flotant, cu <kbd>Ctrl</kbd>+<kbd>\</kbd> sau din iconul de meniu.
+          </p>
+          <Segmented
+            ariaLabel="Mod de navigare"
+            value={navLayout}
+            onChange={setNavLayout}
+            options={[
+              { id: 'sidebar', label: 'Sidebar' },
+              { id: 'launchpad', label: 'Launchpad' },
+              { id: 'radial', label: 'Radial' },
+            ]}
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3">
         {themes.map(t => {
@@ -538,7 +458,11 @@ function AspectSection({ currentTheme, onThemeChange }: { currentTheme: 'light' 
           ariaLabel="Densitate"
           value={density}
           onChange={setDensity}
-          options={[{ id: 'comfortable', label: 'Confortabil' }, { id: 'compact', label: 'Compact' }]}
+          options={[
+            { id: 'comfortable', label: 'Confortabil' },
+            { id: 'compact', label: 'Compact' },
+            { id: 'dense', label: 'Dens' },
+          ]}
         />
       </div>
 
@@ -589,7 +513,6 @@ function AspectSection({ currentTheme, onThemeChange }: { currentTheme: 'light' 
           options={[{ id: 'default', label: 'Normal' }, { id: 'transparent', label: 'Transparent' }, { id: 'ghost', label: 'Invizibil' }]}
         />
       </div>
-    
 
       {/* ── Layout & Shell ────────────────────────────────────────────────────── */}
       <div className="mt-6 border-t-2 border-line pt-5">
@@ -753,10 +676,6 @@ function AspectSection({ currentTheme, onThemeChange }: { currentTheme: 'light' 
   );
 }
 
-
-
-
-
 interface NotifPref { event_type: string; email_enabled: boolean; in_app_enabled: boolean; }
 
 const EVENT_LABELS: Record<string, { label: string; hint: string }> = {
@@ -769,9 +688,6 @@ const EVENT_LABELS: Record<string, { label: string; hint: string }> = {
   invoice_due_soon:  { label: 'Factură aproape de scadență',    hint: 'Expiră în 3 zile' },
   daily_briefing:    { label: 'Briefing zilnic',                hint: 'Digest trimis dimineața' },
 };
-
-
-
 
 function DesktopNotifToggle() {
   const available = nativeNotificationsAvailable();
@@ -877,10 +793,6 @@ function NotificariSection() {
   );
 }
 
-
-
-
-
 function ContSection({ user }: { user: User | null }) {
   const fields = [
     { label: 'Utilizator', value: user?.username ?? '—' },
@@ -894,10 +806,7 @@ function ContSection({ user }: { user: User | null }) {
     <div className="space-y-6">
       <SectionGroup>
         <div className="space-y-4">
-          {}
           <AvatarUpload user={user} />
-
-          {}
           <div className="flex items-center gap-4 p-4 rounded-lg border border-line bg-surface-primary">
             <div className="h-14 w-14 rounded-full bg-accent/10 flex items-center justify-center text-pm-xl font-bold text-accent">
               {(user?.full_name || user?.username || '?')[0].toUpperCase()}
@@ -910,8 +819,6 @@ function ContSection({ user }: { user: User | null }) {
               <p className="text-pm-xs text-content-muted">{user?.role_name === 'admin' ? 'Administrator' : 'Utilizator'}</p>
             </div>
           </div>
-
-          {}
           {fields.map((f) => (
             <FieldRow key={f.label} label={f.label}>
               <div className="rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-sm text-content-primary truncate" title={f.value}>
@@ -927,15 +834,8 @@ function ContSection({ user }: { user: User | null }) {
   );
 }
 
-
-
-
-
-
 function TwoFactorPanel({ user }: { user: User | null }) {
-  
-  
-  
+
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [step, setStep] = useState<'idle' | 'setup' | 'disable'>('idle');
   const [secret, setSecret] = useState<string | null>(null);
@@ -943,10 +843,6 @@ function TwoFactorPanel({ user }: { user: User | null }) {
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
 
-  
-  
-  
-  
   useEffect(() => {
     setEnabled(Boolean((user as { totp_enabled?: boolean } | null)?.totp_enabled));
   }, [user]);
@@ -1029,7 +925,7 @@ function TwoFactorPanel({ user }: { user: User | null }) {
             <p className="text-pm-sm text-content-secondary">
               <strong>Pasul 1.</strong> Adaugă acest cont în aplicația ta de autentificare. Scanează QR-ul (sau introdu manual cheia).
             </p>
-            <div className="bg-white p-3 rounded-xl inline-block anim-scale-in">
+            <div className="bg-surface-primary p-3 rounded-xl inline-block anim-scale-in">
               <img alt="QR 2FA" src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(otpUrl)}`} width={180} height={180} />
             </div>
             <FieldRow label="Cheie (manual)" hint="Dacă nu poți scana QR, introdu cheia direct în aplicație">
@@ -1076,10 +972,6 @@ function TwoFactorPanel({ user }: { user: User | null }) {
     </SectionGroup>
   );
 }
-
-
-
-
 
 function ServerSection() {
   const [url, setUrl] = useState(getServerUrl());
@@ -1142,7 +1034,6 @@ function ServerSection() {
 
   return (
     <div className="space-y-6">
-      {}
       {'electron' in window && (
         <div className="rounded-lg border border-line bg-surface-primary p-5 space-y-4">
           <div className="flex items-center justify-between">
@@ -1182,8 +1073,6 @@ function ServerSection() {
           {serverMsg && !serverRunning && <p className="text-pm-xs text-content-muted">{serverMsg}</p>}
         </div>
       )}
-
-      {}
       <SectionGroup title="Conexiune server (client)">
         <FieldRow label="URL Server" hint="Acceptă URL-uri din rețeaua locală sau publice HTTPS.">
           <div className="flex gap-2">
@@ -1226,11 +1115,6 @@ function ServerSection() {
     </div>
   );
 }
-
-
-
-
-
 
 interface BackupStatus {
   directory: string;
@@ -1335,7 +1219,6 @@ function BackupSection() {
 
   return (
     <div className="space-y-6">
-      {}
       <SectionGroup title="Stare">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <StatCard
@@ -1365,8 +1248,6 @@ function BackupSection() {
           />
         </div>
       </SectionGroup>
-
-      {}
       <SectionGroup>
         <div className="flex items-center gap-2">
           <button
@@ -1390,8 +1271,6 @@ function BackupSection() {
           copiaza periodic folderul intr-un drive extern sau cloud.
         </p>
       </SectionGroup>
-
-      {}
       <SectionGroup title={`Backup-uri (${list.length})`}>
         {list.length === 0 ? (
           <EmptyState
@@ -1426,8 +1305,6 @@ function BackupSection() {
           </div>
         )}
       </SectionGroup>
-
-      {}
       <AutoBackupPanel />
     </div>
   );
@@ -1458,21 +1335,6 @@ function truncatePath(p: string, max = 40): string {
   return '...' + p.slice(p.length - max + 3);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 const EMAIL_DRAFT_KEY = 'promix_email_setup_draft_v1';
 const EMAIL_DRAFT_INITIAL = {
   email_address: '', display_name: '', imap_host: '', imap_port: '993',
@@ -1488,9 +1350,7 @@ function EmailSection() {
   const [, setHasAccount] = useState(false);
 
   useEffect(() => {
-    
-    
-    
+
     apiCommand<any>('email_get_account').then(acc => {
       if (!acc) return;
       setHasAccount(true);
@@ -1527,9 +1387,7 @@ function EmailSection() {
       await apiCommand('email_save_account', { ...config, imap_port: Number(config.imap_port), smtp_port: Number(config.smtp_port) });
       setHasAccount(true);
       setStatus('Salvat!');
-      
-      
-      
+
       setConfig(prev => ({ ...prev, imap_password: '', smtp_password: '' }));
     }
     catch (err) { setStatus(err instanceof Error ? getErrorMessage(err) : 'Eroare'); }
@@ -1584,10 +1442,6 @@ function EmailSection() {
   );
 }
 
-
-
-
-
 function FiscalSection() {
   const [settings, setSettings] = useState<CompanySettings | null>(null);
   const [saving, setSaving] = useState(false);
@@ -1633,18 +1487,13 @@ function FiscalSection() {
     try {
       const result = await apiCommand<CompanySettings>('update_company_settings', { ...settings, tva_rate: settings.tva_rate });
       setSettings(result); setSaved(true); toast.success('Setările fiscale au fost salvate');
-      
-      
-      
+
       void useSettingsStore.getState().load(true);
       setTimeout(() => setSaved(false), 2000);
     } catch (err) { toast.error(err instanceof Error ? getErrorMessage(err) : 'Eroare'); }
     finally { setSaving(false); }
   };
 
-  
-  
-  
   const handleRefreshBnr = async () => {
     setRefreshingBnr(true);
     try {
@@ -1670,7 +1519,6 @@ function FiscalSection() {
     { key: 'bank_name', label: 'Banca' },
     { key: 'iban', label: 'IBAN' },
     { key: 'tva_rate', label: 'Cota TVA', type: 'number', hint: 'ex: 0.19 = 19%' },
-    { key: 'eur_to_ron_rate', label: 'Curs EUR/RON', type: 'number' },
   ];
 
   return (
@@ -1695,47 +1543,12 @@ function FiscalSection() {
           );
         })}
 
-        <FieldRow label="Monedă default">
-          <select value={settings.default_currency} onChange={e => handleChange('default_currency', e.target.value)}
-            className={inputCls}>
-            <option value="RON">RON</option>
-            <option value="EUR">EUR</option>
+        <FieldRow label="Monedă">
+          <select value="RON" disabled className={inputCls}>
+            <option value="RON">RON (lei)</option>
           </select>
         </FieldRow>
       </div>
-
-      {}
-      <div className="flex items-center gap-3 flex-wrap">
-        <button type="button" onClick={handleRefreshBnr} disabled={refreshingBnr}
-          className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-xl border border-line text-pm-xs text-content-secondary hover:bg-surface-tertiary hover:text-content-primary active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50 transition-smooth duration-150">
-          <RefreshCw className={`h-3.5 w-3.5 shrink-0 ${refreshingBnr ? 'animate-spin' : ''}`} /> Actualizează din BNR
-        </button>
-        <span className="text-pm-2xs text-content-muted">
-          {settings.eur_to_ron_rate_updated_at
-            ? `Curs actualizat ${formatDateTimeRo(settings.eur_to_ron_rate_updated_at)}${settings.eur_to_ron_rate_source ? ` · ${settings.eur_to_ron_rate_source === 'bnr' ? 'BNR' : 'manual'}` : ''}`
-            : 'Cursul nu a fost încă sincronizat din BNR'}
-        </span>
-      </div>
-
-      {}
-      {bnrHistory.length > 0 && (
-        <div className="rounded-xl border border-line overflow-hidden anim-fade-slide-in">
-          <div className="px-3 py-1.5 bg-surface-secondary border-b border-line text-pm-2xs font-semibold uppercase tracking-wide text-content-muted">
-            Istoric curs EUR/RON
-          </div>
-          <div key={bnrHistory.length} className="max-h-44 overflow-y-auto divide-y divide-line stagger-in">
-            {bnrHistory.map(h => (
-              <div key={h.id} className="flex items-center justify-between gap-3 px-3 py-1.5 text-pm-xs">
-                <span className="tabular-nums font-medium text-content-primary whitespace-nowrap">{h.rate.toFixed(4)} <span className="text-content-muted font-normal">RON/EUR</span></span>
-                <span className="text-pm-2xs text-content-muted text-right">
-                  {h.published_date || formatDateTimeRo(h.fetched_at)}
-                  <span className="ml-1.5 text-content-muted/70">· {h.source === 'bnr' ? 'BNR' : h.source === 'seed' ? 'inițial' : 'manual'}</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <SaveBtn onClick={handleSave} saving={saving} saved={saved} />
     </div>

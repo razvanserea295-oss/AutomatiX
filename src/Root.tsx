@@ -1,21 +1,25 @@
-import { lazy, Suspense } from 'react';
 import App from './App';
-import BootLoader from './components/BootLoader';
-import { useUiModeStore } from './store/uiModeStore';
+import V2App from './v2/app/V2App';
+import DensityProvider from './components/DensityProvider';
+import { ensureDefaultV2Route, getInterfaceMode } from './v2/lib/interfaceMode';
 
-// Thin entry that selects the presentation layer. SaaS is the default and is
-// eager (zero overhead for the common path); the whole Fiori (UI5) tree is
-// lazy-loaded only when the user opts into Fiori mode.
-const FioriApp = lazy(() => import('./fiori/FioriApp'));
+ensureDefaultV2Route();
 
+// Classic is the default interface. V2 available via Settings toggle.
 export default function Root() {
-  const mode = useUiModeStore(s => s.mode);
-  if (mode === 'fiori') {
+  const mode = getInterfaceMode();
+  if (mode === 'classic') {
     return (
-      <Suspense fallback={<BootLoader />}>
-        <FioriApp />
-      </Suspense>
+      <DensityProvider>
+        <div className="classic-root">
+          <App />
+        </div>
+      </DensityProvider>
     );
   }
-  return <App />;
+  return (
+    <DensityProvider>
+      <V2App />
+    </DensityProvider>
+  );
 }

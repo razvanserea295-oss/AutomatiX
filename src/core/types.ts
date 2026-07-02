@@ -257,6 +257,15 @@ export interface Client {
   phone: string;
   address: string;
   created_at: string;
+  // Extended columns (migration 061_clients_extended + base schema) — optional.
+  city?: string;
+  county?: string;
+  notes?: string;
+  updated_at?: string;
+  cui?: string;
+  reg_com?: string;
+  bank_name?: string;
+  iban?: string;
 }
 
 

@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react';
 import {
   Download, Monitor, Apple, Terminal, Cpu, HardDrive, ShieldCheck,
   CheckCircle2, Loader2, AlertCircle, Clock,
-} from 'lucide-react';
+} from '@/icons';
 import { getServerUrl } from '@/config/server';
+import { authorizeInstallerDownload, installerDownloadErrorMessage, triggerInstallerFileDownload } from '@/lib/installerDownload';
+import { PageChrome, DashboardLayout, Panel } from '@/app-ui';
 
 interface LatestInfo {
   available: boolean;
+  platform?: Platform;
   version: string | null;
   file: string | null;
   url: string | null;
@@ -36,46 +39,93 @@ const OS_META: Record<Platform, { label: string; Icon: typeof Monitor; note: str
   linux:   { label: 'Linux',   Icon: Terminal, note: 'AppImage · x64',                      ext: '.AppImage' },
 };
 
+const ALL_PLATFORMS: Platform[] = ['windows', 'mac', 'linux'];
+
 export default function DownloadAppPage() {
-  const [info, setInfo] = useState<LatestInfo | null>(null);
+  const [infos, setInfos] = useState<Record<Platform, LatestInfo | null>>({
+    windows: null, mac: null, linux: null,
+  });
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState<Platform | null>(null);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const [os] = useState<OS>(() => detectOS());
   const base = getServerUrl();
 
   useEffect(() => {
     let alive = true;
-    fetch(`${base}/api/download/latest`)
-      .then((r) => r.json())
-      .then((d: LatestInfo) => { if (alive) setInfo(d); })
-      .catch(() => { if (alive) setInfo({ available: false, version: null, file: null, url: null, size: null }); })
+    // Probe every platform so each tile reflects what's actually published.
+    Promise.all(
+      ALL_PLATFORMS.map((p) =>
+        fetch(`${base}/api/download/latest?platform=${p}`)
+          .then((r) => r.json() as Promise<LatestInfo>)
+          .then((d) => [p, d] as const)
+          .catch(() => [p, { available: false, version: null, file: null, url: null, size: null }] as const),
+      ),
+    )
+      .then((pairs) => {
+        if (!alive) return;
+        const next: Record<Platform, LatestInfo | null> = { windows: null, mac: null, linux: null };
+        for (const [p, d] of pairs) next[p] = d;
+        setInfos(next);
+      })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [base]);
 
-  const downloadUrl = info?.url ? `${base}${info.url}` : null;
-  const version = info?.version || '1.1.4';
-
-  // Only Windows installers are produced today; mac/linux are "coming soon".
-  const isAvailable = (p: Platform): boolean => p === 'windows' && !!downloadUrl;
+  const isAvailable = (p: Platform): boolean => !!infos[p]?.available;
   const detected: Platform = os === 'other' ? 'windows' : os;
   const detectedMeta = OS_META[detected];
+  const detectedInfo = infos[detected];
   const detectedAvailable = isAvailable(detected);
   const DetectedIcon = detectedMeta.Icon;
 
+  // When the detected OS has no build yet, fall back to the first available one.
+  const fallbackPlatform = ALL_PLATFORMS.find(isAvailable) ?? null;
+  const anyAvailable = fallbackPlatform !== null;
+  const shownInfo = detectedInfo?.available ? detectedInfo : (fallbackPlatform ? infos[fallbackPlatform] : null);
+  const version = shownInfo?.version || '1.1.7';
+
+  async function startDownload(platform: Platform) {
+    setDownloading(platform);
+    setDownloadError(null);
+    try {
+      const result = await authorizeInstallerDownload(undefined, platform);
+      if (result.ok) triggerInstallerFileDownload(result.url);
+      else setDownloadError(installerDownloadErrorMessage(result.error));
+    } catch {
+      setDownloadError('Eroare de rețea la pornirea descărcării.');
+    } finally {
+      setDownloading(null);
+    }
+  }
+
   return (
+    <DashboardLayout
+        chrome={
+          <PageChrome
+            actions={(() => {
+              const target = detectedAvailable ? detected : fallbackPlatform;
+              if (loading || !target) return undefined;
+              return (
+                <button
+                  type="button"
+                  onClick={() => startDownload(target)}
+                  disabled={downloading !== null}
+                >
+                  {downloading !== null ? (
+                    <><Loader2 className="h-4 w-4 shrink-0 animate-spin" /><span>Se pregătește…</span></>
+                  ) : (
+                    <><Download className="h-4 w-4 shrink-0" /><span>Descarcă ({OS_META[target].ext})</span></>
+                  )}
+                </button>
+              );
+            })()}
+          />
+        }
+      >
+      <Panel fill scroll padding="none" bodyClassName="!p-0">
     <div className="flex flex-1 flex-col min-h-0 overflow-y-auto">
       <div className="mx-auto w-full max-w-3xl px-6 py-8">
-        {/* Hero */}
-        <div className="mb-7 text-center">
-          <span className="mb-3 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-muted text-accent">
-            <Download className="h-7 w-7" />
-          </span>
-          <h1 className="text-pm-2xl font-semibold text-content-primary">Descarcă aplicația desktop</h1>
-          <p className="mx-auto mt-1.5 max-w-md text-pm-sm text-content-muted">
-            Automatix ca aplicație nativă — pornire rapidă, mereu la îndemână. Ți-am detectat automat sistemul de operare.
-          </p>
-        </div>
-
         {/* Detected platform — primary CTA */}
         <div className="rounded-2xl border border-line bg-surface-primary p-6 shadow-soft">
           <div className="mb-4 flex items-center gap-2">
@@ -93,46 +143,61 @@ export default function DownloadAppPage() {
               <Loader2 className="h-5 w-5 shrink-0 animate-spin" />
               <span className="text-pm-sm">Se verifică versiunea…</span>
             </div>
-          ) : detectedAvailable && downloadUrl ? (
-            <a
-              href={downloadUrl}
-              download
-              className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-accent text-pm-lg font-semibold text-[var(--color-on-accent)] shadow-[var(--elevation-2)] transition-smooth duration-150 hover:bg-accent/95 hover:shadow-[var(--elevation-3)] active:scale-[0.99] focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
+          ) : detectedAvailable ? (
+            <button
+              type="button"
+              onClick={() => startDownload(detected)}
+              disabled={downloading !== null}
+              className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-accent text-pm-lg font-semibold text-[var(--color-on-accent)] shadow-[var(--elevation-2)] transition-smooth duration-150 hover:bg-accent/95 hover:shadow-[var(--elevation-3)] active:scale-[0.99] focus:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:opacity-70"
             >
-              <Download className="h-5 w-5 shrink-0" />
-              <span className="truncate">Descarcă pentru {detectedMeta.label} ({detectedMeta.ext})</span>
-            </a>
+              {downloading !== null
+                ? <><Loader2 className="h-5 w-5 shrink-0 animate-spin" /><span className="truncate">Se pregătește descărcarea…</span></>
+                : <><Download className="h-5 w-5 shrink-0" /><span className="truncate">Descarcă pentru {detectedMeta.label} ({detectedMeta.ext})</span></>}
+            </button>
           ) : (
             <div className="space-y-3">
               <div className="flex items-start gap-3 rounded-xl border-l-2 border-status-amber bg-status-amber/8 px-4 py-3">
                 <Clock className="mt-0.5 h-4 w-4 shrink-0 text-status-amber" />
                 <p className="min-w-0 text-pm-xs text-content-secondary">
-                  Versiunea pentru <strong>{detectedMeta.label}</strong> este în pregătire. Momentan e disponibilă doar varianta pentru Windows.
+                  Versiunea pentru <strong>{detectedMeta.label}</strong> este în pregătire.
+                  {fallbackPlatform && <> Momentan e disponibilă varianta pentru <strong>{OS_META[fallbackPlatform].label}</strong>.</>}
                 </p>
               </div>
-              {downloadUrl && (
-                <a
-                  href={downloadUrl}
-                  download
-                  className="flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-line bg-surface-secondary text-pm-sm font-semibold text-content-primary transition-smooth duration-150 hover:bg-surface-tertiary active:scale-[0.99] focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
+              {fallbackPlatform && (
+                <button
+                  type="button"
+                  onClick={() => startDownload(fallbackPlatform)}
+                  disabled={downloading !== null}
+                  className="flex h-12 w-full items-center justify-center gap-2.5 rounded-xl border border-line bg-surface-secondary text-pm-sm font-semibold text-content-primary transition-smooth duration-150 hover:bg-surface-tertiary active:scale-[0.99] focus:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:opacity-70"
                 >
-                  <Monitor className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Descarcă totuși versiunea Windows (.exe)</span>
-                </a>
+                  <Download className="h-4 w-4 shrink-0" />
+                  <span className="truncate">
+                    {downloading !== null
+                      ? 'Se pregătește descărcarea…'
+                      : `Descarcă totuși versiunea ${OS_META[fallbackPlatform].label} (${OS_META[fallbackPlatform].ext})`}
+                  </span>
+                </button>
               )}
             </div>
           )}
 
-          {!loading && !downloadUrl && (
+          {!loading && !anyAvailable && (
             <div className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-line bg-surface-tertiary/40 px-4 py-3 text-pm-sm text-content-muted">
               <AlertCircle className="h-4 w-4 shrink-0" /> Installer indisponibil momentan. Revino curând.
+            </div>
+          )}
+
+          {downloadError && (
+            <div className="mt-3 flex items-start gap-2 rounded-xl border-l-2 border-status-red bg-status-red/8 px-4 py-3 text-pm-xs text-content-secondary">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-red" />
+              <span>{downloadError}</span>
             </div>
           )}
 
           <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-pm-xs text-content-muted">
             <span className="inline-flex items-center gap-1.5"><Monitor className="h-3.5 w-3.5 shrink-0" /> {detectedMeta.note}</span>
             <span className="tabular-nums">v{version}</span>
-            <span className="tabular-nums">{formatSize(info?.size ?? null)}</span>
+            <span className="tabular-nums">{formatSize(shownInfo?.size ?? null)}</span>
           </div>
         </div>
 
@@ -190,6 +255,8 @@ export default function DownloadAppPage() {
         </div>
       </div>
     </div>
+      </Panel>
+    </DashboardLayout>
   );
 }
 

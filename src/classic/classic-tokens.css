@@ -1,0 +1,1064 @@
+/* ============================================================================
+ * Classic interface theme — VS Code Dark+ / Light+ inspired palette.
+ *
+ * Scoped to html[data-interface="classic"] and .classic-root so V2 redesign
+ * tokens (design-tokens.css under .v2-root) never bleed into the classic shell.
+ *
+ * Light mode: page content uses Light+; titlebar/sidebar/status keep Dark+ via
+ * nested `.dark` wrappers in AppShell (html:not(.dark) .dark chrome block).
+ * ========================================================================== */
+
+/* ---- VS Code Light+ — page content in light theme ------------------------- */
+html[data-interface="classic"]:not(.dark),
+html[data-interface="classic"]:not(.dark) .classic-root {
+  color-scheme: light;
+  accent-color: #0066bf;
+
+  /* Canonical tokens */
+  --accent:        #0066bf;
+  --accent-hover:  #005a9e;
+  --accent-active: #004578;
+  --accent-subtle: rgba(0, 102, 191, 0.12);
+  --accent-muted:  rgba(0, 102, 191, 0.10);
+  --accent-fg:       #ffffff;
+
+  --bg-void:     #e8e8e8;
+  --bg-base:     #ffffff;
+  --bg-surface:  #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-overlay:  #ffffff;
+  --bg-hover:    #e8e8e8;
+
+  --text-primary:   #333333;
+  --text-secondary: #616161;
+  --text-muted:     #8c8c8c;
+  --text-disabled:  #b0b0b0;
+  --text-accent:    #0066bf;
+  --text-danger:    #e51400;
+
+  --border-default: #e5e5e5;
+  --border-subtle:  #ececec;
+  --border-strong:  #c8c8c8;
+  --border-accent:  rgba(0, 102, 191, 0.35);
+
+  --status-success-fg:     #107c10;
+  --status-success-bg:     rgba(16, 124, 16, 0.10);
+  --status-success-border: rgba(16, 124, 16, 0.25);
+  --status-warning-fg:     #bf8803;
+  --status-warning-bg:     rgba(191, 136, 3, 0.12);
+  --status-warning-border: rgba(191, 136, 3, 0.28);
+  --status-error-fg:       #e51400;
+  --status-error-bg:       rgba(229, 20, 0, 0.08);
+  --status-error-border:   rgba(229, 20, 0, 0.22);
+  --status-info-fg:        #0066bf;
+  --status-info-bg:        rgba(0, 102, 191, 0.08);
+  --status-info-border:    rgba(0, 102, 191, 0.22);
+
+  --shadow-0: none;
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.10);
+  --shadow-3: 0 4px 10px rgba(0, 0, 0, 0.12);
+  --shadow-4: 0 6px 16px rgba(0, 0, 0, 0.14);
+  --shadow-accent: 0 1px 3px rgba(0, 0, 0, 0.10), 0 0 0 1px rgba(0, 102, 191, 0.20);
+
+  --gradient-surface: linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
+  --gradient-hero:    linear-gradient(180deg, rgba(0, 102, 191, 0.06) 0%, #f3f3f3 52%, #f3f3f3 100%);
+  --gradient-accent:  linear-gradient(135deg, #0066bf 0%, #004578 100%);
+  --gradient-glow:    radial-gradient(ellipse 90% 60% at 50% -30%, rgba(0, 102, 191, 0.10), transparent 68%);
+  --gradient-shine:   linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, transparent 1.5px);
+  --nav-active-glow:  0 0 0 1px rgba(0, 102, 191, 0.28), 0 2px 10px -3px rgba(0, 102, 191, 0.22);
+
+  --ring-default: 0 0 0 2px #ffffff, 0 0 0 4px rgba(0, 102, 191, 0.45);
+  --ring-error:   0 0 0 2px #ffffff, 0 0 0 4px rgba(229, 20, 0, 0.45);
+  --ring-inset:   inset 0 0 0 2px rgba(0, 102, 191, 0.35);
+
+  --glass-surface-bg:     #ffffff;
+  --glass-surface-border: var(--border-default);
+  --glass-surface-blur:   0px;
+
+  /* Legacy --color-* ladder */
+  --color-accent:        #0066bf;
+  --color-accent-muted:  rgba(0, 102, 191, 0.12);
+  --color-on-accent:     #ffffff;
+  --color-bg-rail:       #e8e8e8;
+  --color-bg-primary:    #ffffff;
+  --color-bg-page:       #f4f5f7;  /* soft grey canvas so white cards lift off it (was flat #fff-on-#fff) */
+  --color-bg-secondary:  #f3f3f3;
+  --color-bg-tertiary:   #e8e8e8;
+  --color-bg-elevated:   #ffffff;
+  --color-text-primary:  #333333;
+  --color-text-secondary:#616161;
+  --color-text-muted:    #8c8c8c;
+  --color-border:        #e5e5e5;
+  --color-border-subtle: #ececec;
+  --color-nav-bg:        #f3f3f3;
+  --color-nav-hover:     #e8e8e8;
+  --color-nav-active-bg: rgba(0, 102, 191, 0.12);
+
+  --shell-bg:      #f3f3f3;
+  --shell-surface: #ffffff;
+  --shell-border:  var(--color-border);
+  --shell-text:    var(--color-text-primary);
+  --shell-muted:   var(--color-text-muted);
+  --shell-accent:  var(--color-accent);
+  --shell-hover:   var(--color-bg-tertiary);
+  --shell-chrome-border: rgba(0, 0, 0, 0.10);
+  --shell-chrome-border-strong: rgba(0, 0, 0, 0.16);
+
+  --status-green:  #107c10;
+  --status-red:    #e51400;
+  --status-amber:  #bf8803;
+  --status-blue:   #0066bf;
+  --status-teal:   #0e7490;
+  --status-purple: #6d28d9;
+
+  --elevation-0: var(--shadow-0);
+  --elevation-1: var(--shadow-1);
+  --elevation-2: var(--shadow-2);
+  --elevation-3: var(--shadow-3);
+  --elevation-4: var(--shadow-4);
+  --ring-soft:   var(--ring-default);
+  --ring-strong: 0 0 0 3px rgba(0, 102, 191, 0.50);
+  --shadow-soft-sm: var(--shadow-1);
+  --shadow-soft:    var(--shadow-2);
+  --shadow-soft-lg: var(--shadow-3);
+  --shadow-inner:   inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  --glow-accent:    0 2px 10px -3px rgba(0, 102, 191, 0.20);
+  --glow-accent-sm: 0 1px 4px -1px rgba(0, 102, 191, 0.14);
+  --glass-bg:     var(--glass-surface-bg);
+  --card-bg:      #ffffff;
+  --glass-border: var(--glass-surface-border);
+  --glass-blur:   0px;
+  --glass-shadow: var(--shadow-1);
+  --highlight-top:  var(--gradient-shine);
+  --highlight-edge: color-mix(in srgb, var(--border-default) 82%, #ffffff 18%);
+  --sheen-top:      rgba(255, 255, 255, 0.40);
+
+  --scrollbar-thumb:       rgba(0, 0, 0, 0.28);
+  --scrollbar-thumb-hover: rgba(0, 102, 191, 0.55);
+  --scrollbar-thumb-active:#0066bf;
+
+  /* Pass 2 — motion & interactive depth */
+  --motion-spring:       cubic-bezier(0.34, 1.56, 0.64, 1);
+  --shadow-interactive:  var(--shadow-2), var(--glow-accent-sm);
+  --accent-pulse:        rgba(0, 102, 191, 0.38);
+  --table-zebra:         color-mix(in srgb, var(--color-bg-secondary) 42%, var(--color-bg-primary) 58%);
+  --ring-focus-strong:   0 0 0 2px var(--color-bg-page), 0 0 0 4px rgba(0, 102, 191, 0.58);
+
+  /* shadcn HSL tokens (classic light) */
+  --background: 0 0% 100%;
+  --foreground: 0 0% 20%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 20%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 20%;
+  --primary: 207 100% 37%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 95%;
+  --secondary-foreground: 0 0% 20%;
+  --muted: 0 0% 95%;
+  --muted-foreground: 0 0% 45%;
+  /* Brand blue (matches --primary) — the app uses bg-accent/text-accent as the
+     brand colour in ~700 places; the old neutral grey washed them all out. */
+  --accent: 207 100% 37%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 4 90% 45%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 90%;
+  --input: 0 0% 90%;
+  --ring: 207 100% 37%;
+}
+
+/* ---- VS Code Dark+ — full dark theme OR chrome in light mode -------------- */
+html[data-interface="classic"].dark,
+html[data-interface="classic"].dark .classic-root,
+html[data-interface="classic"]:not(.dark) .dark {
+  color-scheme: dark;
+  accent-color: #007acc;
+
+  --accent:        #007acc;
+  --accent-hover:  #1a8ad4;
+  --accent-active: #005a9e;
+  --accent-subtle: rgba(0, 122, 204, 0.18);
+  --accent-muted:  rgba(0, 122, 204, 0.14);
+  --accent-fg:       #ffffff;
+
+  --bg-void:     #333333;
+  --bg-base:     #1e1e1e;
+  --bg-surface:  #252526;
+  --bg-elevated: #2d2d30;
+  --bg-overlay:  #2d2d30;
+  --bg-hover:    #2a2d2e;
+
+  --text-primary:   #cccccc;
+  --text-secondary: #9d9d9d;
+  --text-muted:     #717171;
+  --text-disabled:  #5a5a5a;
+  --text-accent:    #3794ff;
+  --text-danger:    #f14c4c;
+
+  --border-default: #3c3c3c;
+  --border-subtle:  #2b2b2b;
+  --border-strong:  #4e4e4e;
+  --border-accent:  rgba(0, 122, 204, 0.40);
+
+  --status-success-fg:     #73c991;
+  --status-success-bg:     rgba(115, 201, 145, 0.12);
+  --status-success-border: rgba(115, 201, 145, 0.28);
+  --status-warning-fg:     #cca700;
+  --status-warning-bg:     rgba(204, 167, 0, 0.12);
+  --status-warning-border: rgba(204, 167, 0, 0.28);
+  --status-error-fg:       #f14c4c;
+  --status-error-bg:       rgba(241, 76, 76, 0.12);
+  --status-error-border:   rgba(241, 76, 76, 0.28);
+  --status-info-fg:        #3794ff;
+  --status-info-bg:        rgba(55, 148, 255, 0.12);
+  --status-info-border:    rgba(55, 148, 255, 0.28);
+
+  --shadow-0: none;
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.30);
+  --shadow-2: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --shadow-3: 0 4px 10px rgba(0, 0, 0, 0.40);
+  --shadow-4: 0 6px 16px rgba(0, 0, 0, 0.45);
+  --shadow-accent: 0 1px 3px rgba(0, 0, 0, 0.30), 0 0 0 1px rgba(0, 122, 204, 0.22);
+
+  --gradient-surface: linear-gradient(180deg, #2a2a2b 0%, #252526 100%);
+  --gradient-hero:    linear-gradient(180deg, rgba(0, 122, 204, 0.10) 0%, #2d2d2d 52%, #2d2d2d 100%);
+  --gradient-accent:  linear-gradient(135deg, #007acc 0%, #005a9e 100%);
+  --gradient-glow:    radial-gradient(ellipse 90% 60% at 50% -30%, rgba(0, 122, 204, 0.14), transparent 68%);
+  --gradient-shine:   linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, transparent 1.5px);
+  --nav-active-glow:  0 0 0 1px rgba(0, 122, 204, 0.32), 0 2px 12px -3px rgba(0, 122, 204, 0.28);
+
+  --ring-default: 0 0 0 2px #1e1e1e, 0 0 0 4px rgba(0, 122, 204, 0.55);
+  --ring-error:   0 0 0 2px #1e1e1e, 0 0 0 4px rgba(241, 76, 76, 0.55);
+  --ring-inset:   inset 0 0 0 2px rgba(0, 122, 204, 0.40);
+
+  --glass-surface-bg:     #252526;
+  --glass-surface-border: var(--border-default);
+  --glass-surface-blur:   0px;
+
+  --color-accent:        #007acc;
+  --color-accent-muted:  rgba(0, 122, 204, 0.18);
+  --color-on-accent:     #ffffff;
+  --color-bg-rail:       #333333;
+  --color-bg-primary:    #252526;
+  --color-bg-page:       #1e1e1e;
+  --color-bg-secondary:  #2d2d2d;
+  --color-bg-tertiary:   #37373d;
+  --color-bg-elevated:   #2d2d30;
+  --color-text-primary:  #cccccc;
+  --color-text-secondary:#9d9d9d;
+  --color-text-muted:    #717171;
+  --color-border:        #3c3c3c;
+  --color-border-subtle: #2b2b2b;
+  --color-nav-bg:        #252526;
+  --color-nav-hover:     #2a2d2e;
+  --color-nav-active-bg: rgba(0, 122, 204, 0.32);  /* stronger so the selected item reads clearly on the dark sidebar (was a near-invisible 0.18) */
+
+  --shell-bg:      #252526;
+  --shell-surface: #2d2d2d;
+  --shell-border:  var(--color-border);
+  --shell-text:    var(--color-text-primary);
+  --shell-muted:   var(--color-text-muted);
+  --shell-accent:  var(--color-accent);
+  --shell-hover:   var(--color-bg-tertiary);
+  --shell-chrome-border: rgba(255, 255, 255, 0.08);
+  --shell-chrome-border-strong: rgba(255, 255, 255, 0.14);
+
+  --status-green:  #73c991;
+  --status-red:    #f14c4c;
+  --status-amber:  #cca700;
+  --status-blue:   #3794ff;
+  --status-teal:   #4ec9b0;
+  --status-purple: #c586c0;
+
+  --elevation-0: var(--shadow-0);
+  --elevation-1: var(--shadow-1);
+  --elevation-2: var(--shadow-2);
+  --elevation-3: var(--shadow-3);
+  --elevation-4: var(--shadow-4);
+  --ring-soft:   var(--ring-default);
+  --ring-strong: 0 0 0 3px rgba(0, 122, 204, 0.55);
+  --shadow-soft-sm: var(--shadow-1);
+  --shadow-soft:    var(--shadow-2);
+  --shadow-soft-lg: var(--shadow-3);
+  --shadow-inner:   inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  --glow-accent:    0 2px 12px -3px rgba(0, 122, 204, 0.28);
+  --glow-accent-sm: 0 1px 5px -1px rgba(0, 122, 204, 0.20);
+  --glass-bg:     var(--glass-surface-bg);
+  --card-bg:      #252526;
+  --glass-border: var(--glass-surface-border);
+  --glass-blur:   0px;
+  --glass-shadow: var(--shadow-1);
+  --highlight-top:  var(--gradient-shine);
+  --highlight-edge: color-mix(in srgb, var(--border-default) 88%, #ffffff 12%);
+  --sheen-top:      rgba(255, 255, 255, 0.05);
+
+  --scrollbar-thumb:       rgba(255, 255, 255, 0.22);
+  --scrollbar-thumb-hover: rgba(0, 122, 204, 0.65);
+  --scrollbar-thumb-active:#007acc;
+
+  --motion-spring:       cubic-bezier(0.34, 1.56, 0.64, 1);
+  --shadow-interactive:  var(--shadow-2), var(--glow-accent-sm);
+  --accent-pulse:        rgba(0, 122, 204, 0.42);
+  --table-zebra:         color-mix(in srgb, var(--color-bg-secondary) 38%, var(--color-bg-primary) 62%);
+  --ring-focus-strong:   0 0 0 2px var(--color-bg-page), 0 0 0 4px rgba(0, 122, 204, 0.62);
+
+  --background: 0 0% 12%;
+  --foreground: 0 0% 80%;
+  --card: 0 0% 15%;
+  --card-foreground: 0 0% 80%;
+  --popover: 0 0% 18%;
+  --popover-foreground: 0 0% 80%;
+  --primary: 204 100% 40%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 18%;
+  --secondary-foreground: 0 0% 80%;
+  --muted: 0 0% 18%;
+  --muted-foreground: 0 0% 55%;
+  /* Brand blue (matches dark --primary) — was a near-invisible neutral grey. */
+  --accent: 204 100% 40%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 72% 58%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 24%;
+  --input: 0 0% 24%;
+  --ring: 204 100% 40%;
+}
+
+/* Classic body canvas — solid VS Code editor background, no redesign mesh */
+html[data-interface="classic"] body {
+  background-color: var(--color-bg-page);
+  background-image: none;
+  color: var(--color-text-primary);
+}
+
+html[data-interface="classic"] :is(.mesh-bg, .app-bg) {
+  background-color: var(--color-bg-page);
+  background-image: none;
+}
+
+html[data-interface="classic"] .classic-root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: var(--color-text-primary);
+}
+
+/* Classic layout — airy section rhythm (comfortable default). */
+html[data-interface="classic"] {
+  --density-gap-section: 24px;
+  --density-gap-card: 24px;
+}
+
+html[data-interface="classic"][data-density="compact"] {
+  --density-gap-section: 20px;
+  --density-gap-card: 20px;
+}
+
+html[data-interface="classic"][data-density="dense"] {
+  --density-gap-section: 16px;
+  --density-gap-card: 16px;
+}
+
+/* Classic scroll — main column scrolls; chrome stays fixed (desktop). */
+@media (min-width: 1024px) {
+  html[data-interface="classic"] .shell-main {
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  html[data-interface="classic"] .shell-page-host {
+    overflow: visible;
+    flex: 1 0 auto;
+    min-height: auto;
+  }
+}
+
+@media (min-width: 1024px) {
+  html[data-interface="classic"] .page-body {
+    padding-bottom: 2.5rem;
+  }
+
+  html[data-interface="classic"] .page-content-grid,
+  html[data-interface="classic"] .page-content-shell {
+    gap: var(--density-gap-card);
+  }
+}
+
+/* Page chrome — subtle hero band (no frosted blur in classic) */
+html[data-interface="classic"] :is(.page-chrome, .pm-page-header) {
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+  background: var(--gradient-hero) !important;
+  border-bottom-color: var(--color-border);
+}
+
+html[data-interface="classic"] .surface-frost {
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+  background: var(--gradient-hero) !important;
+}
+
+/* VS Code surfaces — solid cards with subtle depth (no backdrop-blur) */
+html[data-interface="classic"] :is(
+  .surface-card,
+  .surface-card-elevated,
+  .pm-card,
+  .pm-kpi,
+  .pm-panel,
+  .surface-panel,
+  .ds-card,
+  .ds-glass-card,
+  .surface-glass,
+  .surface-glass-strong,
+  .surface-frost
+) {
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+  background: var(--gradient-surface) !important;
+}
+
+html[data-interface="classic"] :is(
+  .surface-card,
+  .surface-card-elevated,
+  .pm-card,
+  .pm-kpi,
+  .ds-card,
+  .ds-glass-card
+)::before {
+  display: block !important;
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: var(--highlight-top);
+  pointer-events: none;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  opacity: 0.85;
+}
+
+html[data-interface="classic"] :is(.surface-card, .surface-card-elevated, .pm-card, .pm-kpi, .ds-card) {
+  box-shadow: var(--shadow-1);
+  border-color: var(--highlight-edge);
+  transition:
+    transform var(--motion-fast, 160ms) cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow var(--motion-fast, 160ms) cubic-bezier(0.22, 1, 0.36, 1),
+    border-color var(--motion-fast, 160ms) ease;
+}
+
+html[data-interface="classic"] :is(.pm-card, .ds-card, .pm-kpi).bg-gradient-to-br {
+  background-image: none !important;
+}
+
+html[data-interface="classic"] .surface-card-elevated {
+  box-shadow: var(--shadow-2);
+}
+
+@media (hover: hover) {
+  html[data-interface="classic"] :where(.app-surface) :is(.surface-card, .pm-card, .pm-kpi, .ds-card):not(.card-interactive):not(.ds-card--interactive):hover {
+    transform: none;
+    box-shadow: var(--shadow-2);
+    border-color: var(--color-border);
+  }
+
+  html[data-interface="classic"] :where(.app-surface) :is(.surface-card, .pm-card, .pm-kpi, .ds-card).card-interactive:hover,
+  html[data-interface="classic"] :where(.app-surface) :is(.surface-card, .pm-card, .pm-kpi, .ds-card).ds-card--interactive:hover,
+  html[data-interface="classic"] :where(.app-surface) .pm-kpi.ds-card--interactive:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-2), var(--glow-accent-sm);
+    border-color: color-mix(in srgb, var(--color-border) 72%, var(--color-accent) 28%);
+  }
+}
+
+html[data-interface="classic"] :where(.app-surface) :is(.surface-card, .pm-card, .pm-kpi, .ds-card).card-interactive:active,
+html[data-interface="classic"] :where(.app-surface) :is(.surface-card, .pm-card, .pm-kpi, .ds-card).ds-card--interactive:active {
+  transform: translateY(0) scale(0.99);
+  box-shadow: var(--shadow-1);
+  transition-duration: var(--motion-instant, 80ms);
+}
+
+/* Legacy / panel card primitives — same flat surface as .pm-card */
+html[data-interface="classic"] :is(
+  .glass-surface,
+  .glass-elevated,
+  .glass-floating,
+  .pm-panel,
+  .surface-panel
+) {
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+  background: var(--color-bg-primary) !important;
+  box-shadow: var(--shadow-1);
+  border-color: var(--color-border);
+}
+
+@media (hover: hover) {
+  html[data-interface="classic"] :where(.app-surface) :is(.glass-surface, .pm-panel):hover {
+    background-color: var(--color-bg-primary) !important;
+    box-shadow: var(--shadow-2);
+    border-color: var(--color-border);
+  }
+}
+
+/* Tailwind surface utilities on card primitives — one shade only */
+html[data-interface="classic"] :is(
+  .surface-card,
+  .surface-card-elevated,
+  .pm-card,
+  .pm-kpi,
+  .ds-card,
+  .ds-glass-card,
+  .pm-panel,
+  .glass-surface
+)[class*="bg-surface-primary"],
+html[data-interface="classic"] :is(
+  .surface-card,
+  .pm-card,
+  .pm-kpi,
+  .ds-card,
+  .pm-panel,
+  .glass-surface
+)[class*="bg-surface-secondary"],
+html[data-interface="classic"] :is(
+  .surface-card,
+  .pm-card,
+  .pm-kpi,
+  .ds-card,
+  .pm-panel,
+  .glass-surface
+)[class*="bg-surface-tertiary"] {
+  background: var(--color-bg-primary) !important;
+}
+
+/* Card header/footer bands — subtle secondary tint for hierarchy */
+html[data-interface="classic"] :is(.pm-card, .ds-card, .pm-panel, .pm-kpi) > [class*="border-b"][class*="bg-surface"],
+html[data-interface="classic"] :is(.pm-card, .ds-card, .pm-panel) > [class*="border-t"][class*="bg-surface"] {
+  background: color-mix(in srgb, var(--color-bg-secondary) 72%, var(--color-bg-primary) 28%) !important;
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+}
+
+html[data-interface="classic"] .ds-card--selected {
+  background: var(--gradient-surface) !important;
+  background-image: none !important;
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border) 55%) !important;
+  box-shadow: var(--shadow-2), var(--glow-accent-sm);
+}
+
+/* ── User pref: transparent card BODY in LIGHT mode ─────────────────────────
+   Cards/panels in the content area drop their fill so the page shows through.
+   Higher specificity (:not(.dark)) + placed after the white-forcing rules above,
+   so it wins. The card HEADER band is a separate child selector
+   (`> [class*=border-b][class*=bg-surface]`, rule above) and is NOT touched —
+   headers keep their tint. Chrome (sidebar/titlebar) is under .dark → excluded. */
+html[data-interface="classic"]:not(.dark) :where(.app-surface) :is(.surface-card, .surface-card-elevated, .pm-card, .pm-kpi, .ds-card, .ds-glass-card, .pm-panel, .glass-surface)[class*="bg-surface-primary"],
+html[data-interface="classic"]:not(.dark) :where(.app-surface) :is(.surface-card, .pm-card, .pm-kpi, .ds-card, .pm-panel, .glass-surface)[class*="bg-surface-secondary"],
+html[data-interface="classic"]:not(.dark) :where(.app-surface) :is(.surface-card, .pm-card, .pm-kpi, .ds-card, .pm-panel, .glass-surface)[class*="bg-surface-tertiary"],
+html[data-interface="classic"]:not(.dark) :where(.app-surface) :is(.glass-surface, .glass-elevated, .glass-floating, .pm-panel, .surface-panel) {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* Bordered data panels (exclude tab toggles & page chrome) */
+html[data-interface="classic"] :where(.app-surface) [class*="rounded"][class*="border"][class*="bg-surface-secondary"]:not(.inline-flex):not([role="group"]):not([class*="p-1"]):not(.pm-page-header) {
+  background-color: var(--color-bg-primary) !important;
+  background-image: none !important;
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+  box-shadow: var(--shadow-1);
+}
+
+/* Flat bordered tiles without rounded-* (legacy list cards) */
+html[data-interface="classic"] :where(.app-surface) div.border[class*="bg-surface-secondary"]:not(.inline-flex):not([role="group"]):not(.pm-page-header):not([class*="rounded"]) {
+  background-color: var(--color-bg-primary) !important;
+  background-image: none !important;
+}
+
+/* Table chrome inside card surfaces — subtle header band */
+html[data-interface="classic"] :is(.surface-card, .pm-card, .pm-panel) :is(thead, thead tr, thead th) {
+  background-color: color-mix(in srgb, var(--color-bg-secondary) 65%, var(--color-bg-primary) 35%) !important;
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+}
+
+/* Neutralize per-component Tailwind gradient utilities — keep tokenized surface */
+html[data-interface="classic"] :is(
+  .surface-card,
+  .surface-card-elevated,
+  .pm-card,
+  .pm-kpi,
+  .ds-card,
+  .ds-glass-card,
+  .glass-surface,
+  .pm-panel
+)[class*="bg-gradient"],
+html[data-interface="classic"] :is(
+  .surface-card,
+  .pm-card,
+  .pm-kpi,
+  .ds-card,
+  .glass-surface,
+  .pm-panel
+)[class*="from-"],
+html[data-interface="classic"] :is(
+  .surface-card,
+  .pm-card,
+  .pm-kpi,
+  .ds-card,
+  .glass-surface,
+  .pm-panel
+)[class*="via-"],
+html[data-interface="classic"] :is(
+  .surface-card,
+  .pm-kpi,
+  .ds-card,
+  .glass-surface,
+  .pm-panel
+)[class*="to-"] {
+  background: var(--gradient-surface) !important;
+}
+
+/* Inputs / tables — readable borders in light mode */
+html[data-interface="classic"]:not(.dark) input,
+html[data-interface="classic"]:not(.dark) select,
+html[data-interface="classic"]:not(.dark) textarea {
+  background-color: #ffffff;
+  color: #333333;
+  border-color: #e5e5e5;
+}
+
+html[data-interface="classic"]:not(.dark) input::placeholder,
+html[data-interface="classic"]:not(.dark) textarea::placeholder {
+  color: #8c8c8c;
+}
+
+/* Inputs inside the dark chrome (titlebar search, sidebar, status) must NOT pick
+   up the light-mode white input reset above — keep them dark so they match the
+   dark navbar instead of rendering as white boxes. */
+html[data-interface="classic"]:not(.dark) .dark input,
+html[data-interface="classic"]:not(.dark) .dark select,
+html[data-interface="classic"]:not(.dark) .dark textarea {
+  background-color: transparent;
+  color: #e6e6e6;
+  border-color: rgb(255 255 255 / 14%);
+}
+html[data-interface="classic"]:not(.dark) .dark input::placeholder,
+html[data-interface="classic"]:not(.dark) .dark textarea::placeholder {
+  color: rgb(255 255 255 / 45%);
+}
+
+html[data-interface="classic"]:not(.dark) table th {
+  background-color: #f3f3f3;
+  color: #333333;
+}
+
+html[data-interface="classic"]:not(.dark) table td {
+  border-color: #e5e5e5;
+}
+
+@media (prefers-contrast: more) {
+  html[data-interface="classic"]:not(.dark) {
+    --color-border: #999999;
+    --color-text-muted: #555555;
+  }
+  html[data-interface="classic"].dark {
+    --color-border: #8a8a8a;
+    --color-text-muted: #c8c8c8;
+  }
+}
+
+/* Clients master-detail — airy page scroll in classic (detail grows, list keeps inner scroll). */
+@media (min-width: 1024px) {
+  html[data-interface="classic"] .page-content-grid:has(.clients-detail-slot) {
+    grid-auto-rows: auto;
+    align-items: start;
+  }
+
+  html[data-interface="classic"] .clients-detail-slot.card-slot {
+    height: auto;
+    overflow: visible;
+  }
+
+  html[data-interface="classic"] .clients-list-slot.card-slot {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: calc(100dvh - 12rem);
+  }
+}
+
+/* ============================================================================
+ * Classic vitality — desktop depth + micro-interaction (centralized)
+ * No backdrop-blur; token-driven gradients and elevation only.
+ * ========================================================================== */
+
+/* App shell — separate chrome from content canvas */
+html[data-interface="classic"] .shell-root {
+  background: var(--color-bg-page);
+}
+
+html[data-interface="classic"] .shell-app-sidebar {
+  background: var(--color-nav-bg);
+  box-shadow:
+    1px 0 0 var(--shell-chrome-border),
+    6px 0 24px -14px rgba(0, 0, 0, 0.10);
+}
+
+html[data-interface="classic"].dark .shell-app-sidebar,
+html[data-interface="classic"]:not(.dark) .dark .shell-app-sidebar {
+  box-shadow:
+    1px 0 0 var(--shell-chrome-border),
+    8px 0 28px -12px rgba(0, 0, 0, 0.42);
+}
+
+html[data-interface="classic"] .shell-main {
+  background: var(--color-bg-page);
+}
+
+html[data-interface="classic"] .shell-page-host {
+  background: var(--color-bg-page);
+}
+
+/* Sidebar nav — pronounced active / hover states */
+html[data-interface="classic"] .shell-app-sidebar button[class*='bg-accent']:not([class*='bg-accent/']) {
+  box-shadow: var(--nav-active-glow);
+}
+
+html[data-interface="classic"] .shell-app-sidebar button[class*='bg-accent/'] {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 28%, transparent);
+}
+
+@media (hover: hover) {
+  html[data-interface="classic"] .shell-app-sidebar button:not(:disabled):not([class*='bg-accent']):hover {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-border) 80%, var(--color-accent) 20%);
+  }
+}
+
+/* Page chrome icon — accent halo on hero band */
+html[data-interface="classic"] .page-chrome-icon {
+  box-shadow: var(--glow-accent-sm);
+}
+
+/* KPI strip — accent underline animation stays visible */
+html[data-interface="classic"] .pm-kpi .ds-kpi-accent-bar,
+html[data-interface="classic"] .ds-kpi-accent-bar {
+  opacity: 0.85;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 40%, transparent));
+}
+
+/* List row selection + hover — desktop data-grid feel */
+html[data-interface="classic"] :where(.app-surface) tbody tr {
+  transition: background-color var(--motion-fast, 160ms) ease;
+}
+
+@media (hover: hover) {
+  html[data-interface="classic"] :where(.app-surface) tbody tr:hover {
+    background-color: color-mix(in srgb, var(--color-accent) 6%, var(--color-bg-secondary) 94%);
+  }
+}
+
+html[data-interface="classic"] :where(.app-surface) tbody tr[data-selected='true'],
+html[data-interface="classic"] :where(.app-surface) tbody tr.is-selected,
+html[data-interface="classic"] :where(.app-surface) tbody tr[aria-selected='true'] {
+  background-color: color-mix(in srgb, var(--color-accent) 10%, var(--color-bg-secondary) 90%) !important;
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+/* Empty states — keep ambient glow in classic */
+html[data-interface="classic"] .ix-designed-empty-glow {
+  opacity: 0.12;
+}
+
+html[data-interface="classic"] .ix-designed-empty-icon {
+  box-shadow: var(--glow-accent-sm);
+}
+
+/* ============================================================================
+ * Classic vitality pass 2 — deeper desktop feel (token-driven only)
+ * ========================================================================== */
+
+/* Stronger keyboard focus rings */
+html[data-interface="classic"] :where(.app-surface) :is(
+  button, a, input, select, textarea, [role="button"], [tabindex]:not([tabindex="-1"])
+):focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus-strong);
+}
+
+/* Primary button — accent glow on hover */
+@media (hover: hover) {
+  html[data-interface="classic"] .ds-btn--primary:hover:not(:disabled) {
+    box-shadow: var(--shadow-interactive), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  }
+}
+
+html[data-interface="classic"] .ds-btn--loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    color-mix(in srgb, #ffffff 22%, transparent) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* KPI accent stripe — left edge + bottom bar */
+html[data-interface="classic"] .pm-kpi.ds-card--interactive::after,
+html[data-interface="classic"] .pm-kpi.card-interactive::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12%;
+  bottom: 12%;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(180deg, var(--color-accent), color-mix(in srgb, var(--color-accent) 35%, transparent));
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+/* Animated tabs — active tab elevation */
+html[data-interface="classic"] .ds-tab-indicator {
+  transition:
+    left var(--motion-fast, 160ms) var(--motion-spring),
+    width var(--motion-fast, 160ms) var(--motion-spring),
+    box-shadow var(--motion-fast, 160ms) ease;
+  box-shadow: var(--glow-accent-sm);
+}
+
+html[data-interface="classic"] [role="tablist"] [role="tab"][aria-selected="true"] {
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
+
+/* Status badges / dots — subtle pulse for warning & danger */
+html[data-interface="classic"] .ds-status-badge--pulse {
+  animation: classicBadgePulse 2.4s ease-in-out infinite;
+}
+
+@keyframes classicBadgePulse {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50%      { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-pulse) 35%, transparent); }
+}
+
+/* Empty state — richer icon halo */
+html[data-interface="classic"] .ix-designed-empty-glow {
+  opacity: 0.18;
+  background: radial-gradient(circle, var(--accent-pulse) 0%, transparent 68%);
+}
+
+html[data-interface="classic"] .ix-designed-empty-icon {
+  box-shadow: var(--glow-accent-sm), 0 0 0 1px color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+/* Sortable column headers — sort affordance */
+html[data-interface="classic"] .ds-sortable-th:not([aria-sort="none"]):hover,
+html[data-interface="classic"] .ds-sortable-th[aria-sort="ascending"]:hover,
+html[data-interface="classic"] .ds-sortable-th[aria-sort="descending"]:hover {
+  background-color: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-secondary) 92%);
+}
+
+/* Table zebra + selection slide-in */
+html[data-interface="classic"] :where(.app-surface) tbody tr:nth-child(even) {
+  background-color: var(--table-zebra);
+}
+
+html[data-interface="classic"] :where(.app-surface) tbody tr[data-selected='true'],
+html[data-interface="classic"] :where(.app-surface) tbody tr.is-selected,
+html[data-interface="classic"] :where(.app-surface) tbody tr[aria-selected='true'] {
+  animation: classicRowSelect 220ms var(--motion-spring) both;
+}
+
+@keyframes classicRowSelect {
+  from { box-shadow: inset 0 0 0 var(--color-accent); }
+  to   { box-shadow: inset 3px 0 0 var(--color-accent); }
+}
+
+/* List tiles — denser hover targets */
+html[data-interface="classic"] .ix-list-tile {
+  transition:
+    transform var(--motion-fast, 160ms) var(--motion-spring),
+    box-shadow var(--motion-fast, 160ms) ease,
+    border-color var(--motion-fast, 160ms) ease,
+    background-color var(--motion-fast, 160ms) ease;
+}
+
+@media (hover: hover) {
+  html[data-interface="classic"] .ix-list-tile:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-interactive);
+    border-color: color-mix(in srgb, var(--color-border) 70%, var(--color-accent) 30%);
+  }
+}
+
+html[data-interface="classic"] .ix-list-tile:active {
+  transform: translateY(0) scale(0.995);
+  transition-duration: var(--motion-instant, 80ms);
+}
+
+/* Dashboard widgets — entrance + clickable hover */
+html[data-interface="classic"] .dash-widget {
+  animation: polishPanelIn 280ms var(--motion-spring) both;
+}
+
+html[data-interface="classic"] .page-content-grid > .dash-widget:nth-child(1) { animation-delay: 0ms; }
+html[data-interface="classic"] .page-content-grid > .dash-widget:nth-child(2) { animation-delay: 50ms; }
+html[data-interface="classic"] .page-content-grid > .dash-widget:nth-child(3) { animation-delay: 90ms; }
+html[data-interface="classic"] .page-content-grid > .dash-widget:nth-child(4) { animation-delay: 120ms; }
+html[data-interface="classic"] .page-content-grid > .dash-widget:nth-child(5) { animation-delay: 145ms; }
+html[data-interface="classic"] .page-content-grid > .dash-widget:nth-child(6) { animation-delay: 165ms; }
+
+@media (hover: hover) {
+  html[data-interface="classic"] .dash-widget-tile:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-interactive);
+    border-color: color-mix(in srgb, var(--color-accent) 28%, var(--color-border) 72%);
+  }
+}
+
+html[data-interface="classic"] .ds-sparkline.is-animated .ds-spark-line {
+  animation-duration: 680ms;
+  animation-timing-function: var(--motion-spring);
+}
+
+/* Modal / drawer — subtle scale entrance (classic: no blur) */
+html[data-interface="classic"] .page-drawer-host aside[role='dialog'] {
+  animation: classicDrawerIn 260ms var(--motion-spring) both;
+}
+
+@keyframes classicDrawerIn {
+  from { opacity: 0; transform: translateX(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* Shell — sidebar nav icon micro-motion, section rhythm, alert badge pulse */
+html[data-interface="classic"] .shell-nav-icon {
+  transition: transform var(--motion-fast, 160ms) var(--motion-spring);
+}
+
+@media (hover: hover) {
+  html[data-interface="classic"] .shell-app-sidebar button:hover .shell-nav-icon {
+    transform: scale(1.06);
+  }
+
+  html[data-interface="classic"] .shell-app-sidebar button[class*='bg-accent'] .shell-nav-icon,
+  html[data-interface="classic"] .shell-app-sidebar button[class*='text-accent'] .shell-nav-icon {
+    transform: scale(1.04);
+  }
+}
+
+html[data-interface="classic"] .shell-nav-section-label {
+  position: relative;
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.15rem;
+}
+
+html[data-interface="classic"] .shell-nav-section-label::after {
+  content: '';
+  position: absolute;
+  left: 0.25rem;
+  right: 0.25rem;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-accent) 22%, transparent),
+    transparent 72%
+  );
+}
+
+html[data-interface="classic"] .shell-nav-footer-zone {
+  position: relative;
+}
+
+html[data-interface="classic"] .shell-nav-footer-zone::before {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  right: 0.75rem;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-border) 88%, var(--color-accent) 12%) 50%,
+    transparent
+  );
+}
+
+html[data-interface="classic"] .shell-nav-badge {
+  animation: classicBadgePulse 2.2s ease-in-out infinite;
+}
+
+html[data-interface="classic"] .shell-status-dot {
+  position: relative;
+  display: inline-block;
+  height: 0.375rem;
+  width: 0.375rem;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 12%, transparent);
+}
+
+html[data-interface="classic"] .shell-status-dot--live::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 1px solid currentColor;
+  opacity: 0.45;
+  animation: pulse-ring 2.4s ease-out infinite;
+}
+
+html[data-interface="classic"] .shell-status-dot--sync {
+  animation: classicSyncPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes classicSyncPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(0.88); }
+}
+
+html[data-interface="classic"] .shell-status--connected {
+  color: color-mix(in srgb, var(--status-green) 88%, var(--color-text-muted) 12%);
+}
+
+/* KPI / content stagger — respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html[data-interface="classic"] :where(.app-surface) :is(.surface-card, .pm-card, .pm-kpi, .ds-card).card-interactive:hover,
+  html[data-interface="classic"] :where(.app-surface) :is(.surface-card, .pm-card, .pm-kpi, .ds-card).ds-card--interactive:hover {
+    transform: none;
+  }
+
+  html[data-interface="classic"] .shell-app-sidebar button:not(:disabled):active {
+    transform: none;
+  }
+
+  html[data-interface="classic"] .ds-status-badge--pulse,
+  html[data-interface="classic"] .shell-nav-badge,
+  html[data-interface="classic"] .shell-status-dot--live::after,
+  html[data-interface="classic"] .shell-status-dot--sync,
+  html[data-interface="classic"] .dash-widget,
+  html[data-interface="classic"] .page-drawer-host aside[role='dialog'],
+  html[data-interface="classic"] :where(.app-surface) tbody tr[data-selected='true'],
+  html[data-interface="classic"] :where(.app-surface) tbody tr.is-selected,
+  html[data-interface="classic"] :where(.app-surface) tbody tr[aria-selected='true'] {
+    animation: none !important;
+  }
+
+  html[data-interface="classic"] .shell-app-sidebar button:hover .shell-nav-icon {
+    transform: none;
+  }
+
+  html[data-interface="classic"] .ix-list-tile:hover {
+    transform: none;
+  }
+}

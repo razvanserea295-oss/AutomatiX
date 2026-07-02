@@ -8,7 +8,7 @@
 
 
 import { useEffect, useState } from 'react';
-import { Sparkles, X, Loader2 } from 'lucide-react';
+import { Sparkles, X, Loader2 } from '@/icons';
 import { getServerUrl, isServerMode } from '@/config/server';
 
 const SHOWN_KEY = 'automatix_patchnotes_seen_version';

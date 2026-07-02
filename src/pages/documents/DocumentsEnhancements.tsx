@@ -4,7 +4,7 @@
 
 
 import { useMemo, useState } from 'react';
-import { Search, History, Link2, ScanText, Sparkles, FolderArchive, BellRing, Stamp, Plus, Trash2 } from 'lucide-react';
+import { Search, History, Link2, ScanText, Sparkles, FolderArchive, BellRing, Stamp, Plus, Trash2 } from '@/icons';
 import { useLocalStorage, SectionCard } from '@/components/enhancements';
 import Button from '@/components/ui/Button';
 import { toast } from '@/store/toastStore';

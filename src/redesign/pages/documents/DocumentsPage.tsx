@@ -1,39 +1,10 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   FileText, Download, Trash2, Upload, GripVertical, Plus, Pencil, FolderOpen,
   Filter, X, Check, AlertTriangle,
-} from 'lucide-react';
+} from '@/icons';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
 import { useDashboardStore } from '@/store/dashboardStore';
@@ -48,16 +19,13 @@ import { confirmDialog } from '@/components/ConfirmDialog';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout, Panel, CardSlot, PAGE_GRID_12, PANEL_HEAD } from '@/app-ui';
 import FilterBar from '@/redesign/ui/FilterBar';
 import TableFiller from '@/redesign/ui/TableFiller';
-import SortableTh from '@/redesign/ui/SortableTh';
+import SortableTh, { THEAD_STICKY } from '@/redesign/ui/SortableTh';
 import SectionHeader from '@/redesign/ui/SectionHeader';
-import { GlassCard, EmptyState, Skeleton } from '@/redesign/ui';
+import { EmptyState, Skeleton } from '@/redesign/ui';
 import { filterToggleCls } from '@/redesign/ui/filterControls';
-
-
-
-
 
 interface Document {
   id: number;
@@ -87,10 +55,6 @@ interface DocumentsPageProps {
   user: User | null;
 }
 
-
-
-
-
 function formatFileSize(bytes: number): string {
   if (!bytes || bytes < 1024) return `${bytes || 0} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -98,11 +62,6 @@ function formatFileSize(bytes: number): string {
 }
 
 const formatDate = formatDateRo;
-
-
-
-
-
 
 function guessMime(name: string): string {
   const ext = name.split('.').pop()?.toLowerCase() || '';
@@ -130,10 +89,6 @@ function guessMime(name: string): string {
   return map[ext] || 'application/octet-stream';
 }
 
-
-
-
-
 export default function DocumentsPage(_props: DocumentsPageProps) {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [categories, setCategories] = useState<DocCategory[]>([]);
@@ -143,17 +98,14 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
   const [error, setError] = useState<string | null>(null);
   const { isOpen, editingItem, openModal, closeModal, isEditing } = useFormModal();
 
-  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-  
   const [showCatManager, setShowCatManager] = useState(false);
   const [newCatName, setNewCatName] = useState('');
   const [editingCatId, setEditingCatId] = useState<number | null>(null);
   const [editingCatName, setEditingCatName] = useState('');
 
-  
   const dragCatRef = useRef<number | null>(null);
   const dragOverCatRef = useRef<number | null>(null);
 
@@ -179,9 +131,6 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
     updated.splice(toIdx, 0, moved);
     setCategories(updated);
 
-    
-    
-    
     const ids = updated.map(c => c.id);
     apiCommand('update_document_categories_order', { ids })
       .catch(() => {
@@ -231,9 +180,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
         apiCommand<DocCategory[]>('get_document_categories'),
         apiCommand<ProjectLite[]>('get_projects').catch(() => []),
       ]);
-      
-      
-      
+
       const docs: Document[] = (rawDocs || []).map(d => ({
         id: d.id,
         title: d.name ?? d.title ?? '',
@@ -278,12 +225,6 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
     }
   }
 
-
-
-  
-  
-  
-  
   const formFields: FormField[] = [
     { name: 'name', label: 'Titlu', type: 'text', required: true, placeholder: 'Titlu document' },
     { name: 'description', label: 'Descriere', type: 'textarea', required: false, placeholder: 'Descriere document' },
@@ -322,9 +263,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
       },
       hint: 'Conținutul fișierului e încărcat în aplicație (max ~6 MB) ca să poată fi vizualizat.',
     },
-    
-    
-    
+
     {
       name: 'file_path',
       label: 'Cale / nume fisier',
@@ -344,15 +283,11 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
   ];
 
   const handleSubmit = async (data: Record<string, any>) => {
-    
-    
+
     const projectId = data.project_id === '' || data.project_id == null ? null : Number(data.project_id);
 
-    
-    
     const fileName = data.original_name || data.file_path || data.name || 'document';
-    
-    
+
     const payload: Record<string, any> = {
       name: data.name?.trim() || fileName,
       category_id: Number(data.category_id),
@@ -390,21 +325,12 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
     }
   };
 
-  
-
-
-
-
-
-
-
   const handleDownload = async (doc: Document) => {
     try {
       const file = await apiCommand<{
         data: string | null; mime: string | null; filename: string; size: number;
       }>('get_document_file', { id: doc.id });
 
-      
       if (!file.data) {
         if (!doc.file_path) {
           toast.error('Documentul nu are conținut salvat. Re-uploadează-l.');
@@ -417,7 +343,6 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
         return;
       }
 
-      
       const dataPart = file.data.includes(',') ? file.data.split(',')[1] : file.data;
       const mime = file.mime || guessMime(file.filename);
       const bytes = atob(dataPart);
@@ -425,8 +350,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
       for (let i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
       const blob = new Blob([arr], { type: mime });
       const url = URL.createObjectURL(blob);
-      
-      
+
       window.open(url, '_blank', 'noopener');
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch (err) {
@@ -449,8 +373,6 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
     return result;
   }, [documents, selectedCategory, searchQuery]);
 
-  
-  
   type DocSortKey = 'title' | 'category_name' | 'project_name' | 'file_type' | 'file_size' | 'created_at';
   const { sorted: sortedDocuments, sort, toggle } = useSort<Document, DocSortKey>(
     filteredDocuments,
@@ -461,7 +383,6 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
     },
   );
 
-  
   const handleBulkDelete = async () => {
     if (!(await confirmDialog({ title: 'Șterge documentele?', body: `${selectedIds.size} documente vor fi șterse permanent.`, danger: true }))) return;
     try {
@@ -475,46 +396,21 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
     }
   };
 
-  
   if (loading) {
     return (
       <Page fit>
         <Page.Body fit>
-          {}
-          <div className="enter-fade shrink-0 pb-4 border-b border-line/60">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Skeleton width={44} height={44} rounded="lg" />
-                <div className="space-y-2">
-                  <Skeleton width={72} height={10} />
-                  <Skeleton width={150} height={20} />
-                </div>
-              </div>
-              <Skeleton width={300} height={40} rounded="lg" />
-              <Skeleton width={150} height={36} rounded="lg" />
-            </div>
-          </div>
-          {}
-          <div className="enter-fade shrink-0 grid grid-cols-2 md:grid-cols-4 gap-4" style={{ animationDelay: '60ms' }}>
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="surface-card bg-surface-primary rounded-2xl border border-line px-5 py-4 min-h-[96px] space-y-3">
-                <Skeleton width={88} height={10} />
-                <Skeleton width={56} height={26} />
-              </div>
-            ))}
-          </div>
-          {}
-          <div className="enter-fade flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-5" style={{ animationDelay: '120ms' }}>
+          <div className={`${PAGE_GRID_12}`}>
             <div className="xl:col-span-4 min-h-0">
-              <GlassCard size="regular" className="h-full min-h-80" />
+              <Panel fill className="h-full min-h-80" />
             </div>
             <div className="xl:col-span-8 min-h-0">
-              <GlassCard size="regular" className="!p-0 overflow-hidden h-full">
-                <div className="px-5 py-4 border-b border-line/40"><Skeleton height={20} width={160} /></div>
+              <Panel fill className="h-full" bodyClassName="p-0">
+                <div className={PANEL_HEAD}><Skeleton height={20} width={160} /></div>
                 <div className="px-3 py-3 space-y-2">
                   {Array.from({ length: 9 }).map((_, i) => <Skeleton key={i} height={36} />)}
                 </div>
-              </GlassCard>
+              </Panel>
             </div>
           </div>
         </Page.Body>
@@ -522,7 +418,6 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
     );
   }
 
-  
   if (error) {
     return (
       <Page fit>
@@ -544,61 +439,31 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
     );
   }
 
-  
   return (
-    <Page fit>
-      <Page.Body fit>
-
-        {
-
-
-
-}
-        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="h-11 w-11 rounded-2xl bg-accent-muted flex items-center justify-center shrink-0">
-                <FileText className="h-5 w-5 text-accent" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-                <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">Documente</h1>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 lg:ml-auto">
-              <div className="hidden sm:block w-[260px] lg:w-[320px]">
-                <FilterBar search={searchQuery} onSearchChange={setSearchQuery} searchPlaceholder="Caută titlu, descriere, categorie..." />
-              </div>
+    <>
+    <DashboardLayout
+        contentClassName="min-h-0 flex-1 stagger-in"
+        chrome={(
+          <PageChrome
+            actions={
               <Button size="md" onClick={() => openModal()} aria-label="Adaugă document">
                 <Upload className="h-4 w-4" aria-hidden /> Adaugă document
               </Button>
-            </div>
-          </div>
-          {}
-          <div className="sm:hidden mt-3">
-            <FilterBar search={searchQuery} onSearchChange={setSearchQuery} searchPlaceholder="Caută titlu, descriere, categorie..." />
-          </div>
-        </div>
-
-        {
-
-
-}
-        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-5 -mx-1 px-1">
-
-        {
-
-
-}
-        <div className="min-h-[68vh] grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
-
-          {}
-          <aside className="xl:col-span-4 enter-up min-h-0 flex" style={{ animationDelay: '140ms' }}>
-            <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 w-full">
-              {}
-              <div className="shrink-0 flex items-center justify-between gap-2 px-4 py-3 border-b border-line">
-                <h2 className="text-pm-sm font-semibold text-content-primary">Categorii</h2>
+            }
+            toolbar={
+              <FilterBar search={searchQuery} onSearchChange={setSearchQuery} searchPlaceholder="Caută titlu, descriere, categorie..." />
+            }
+          />
+        )}
+    >
+        <div className={`${PAGE_GRID_12} min-h-[68vh] items-stretch`}>
+          <CardSlot size="md" as="aside">
+            <Panel
+              fill
+              scroll
+              className="min-h-0 w-full"
+              title="Categorii"
+              actions={
                 <button
                   type="button"
                   onClick={() => setShowCatManager(!showCatManager)}
@@ -609,9 +474,9 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                 >
                   <Pencil className="h-3 w-3" aria-hidden /> Gestionează
                 </button>
-              </div>
-
-              {}
+              }
+              bodyClassName="p-0 flex flex-col min-h-0"
+            >
               <div className="flex-1 min-h-0 p-3 space-y-2 overflow-y-auto">
                 <button
                   type="button"
@@ -663,10 +528,8 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                 )}
               </div>
 
-              {
-}
               {showCatManager && (
-                <div className="enter-fade shrink-0 border-t border-line bg-surface-secondary/60 p-3 space-y-2 max-h-[40vh] overflow-y-auto">
+                <div className=" shrink-0 border-t border-line bg-surface-secondary/60 p-3 space-y-2 max-h-[40vh] overflow-y-auto">
                   <h3 className="text-pm-2xs font-semibold uppercase tracking-wide text-content-muted">Gestionare categorii</h3>
                   <div className="flex items-center gap-2">
                     <input
@@ -715,25 +578,23 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                   </div>
                 </div>
               )}
-            </GlassCard>
-          </aside>
-
-          {}
-          <section className="xl:col-span-8 enter-up min-w-0 min-h-0 flex" style={{ animationDelay: '200ms' }}>
-            <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 w-full">
-              <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3.5 border-b border-line/40">
-                <h2 className="text-pm-md font-semibold text-content-primary">Documente</h2>
-                <p className="text-pm-xs text-content-muted shrink-0">
-                  {sortedDocuments.length} {sortedDocuments.length === 1 ? 'document' : 'documente'}
-                  {selectedCategory !== null ? ' în categorie' : ''}{searchQuery ? ` pentru „${searchQuery}"` : ''}
-                </p>
-              </div>
+            </Panel>
+          </CardSlot>
+          <CardSlot size="lg" as="section">
+            <Panel
+              fill
+              scroll
+              className="min-h-0 w-full"
+              title="Documente"
+              subtitle={`${sortedDocuments.length} ${sortedDocuments.length === 1 ? 'document' : 'documente'}${selectedCategory !== null ? ' în categorie' : ''}${searchQuery ? ` pentru „${searchQuery}"` : ''}`}
+              bodyClassName="p-0 flex flex-col min-h-0"
+            >
               <div
                 style={{ ['--table-row-height' as never]: '40px' }}
                 className="flex-1 min-h-0 overflow-y-auto overflow-x-auto table-fill px-2 density-compact"
               >
                 <table className="w-full text-left text-pm-sm min-w-[760px]">
-                  <thead className="sticky top-0 z-10 bg-surface-secondary shadow-[inset_0_-1px_0_var(--color-border)]">
+                  <thead className={THEAD_STICKY}>
                     <tr>
                       <th className="px-4 py-3 w-10">
                         <input
@@ -838,14 +699,11 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
                   </tbody>
                 </table>
               </div>
-            </GlassCard>
-          </section>
+            </Panel>
+          </CardSlot>
         </div>
 
-        {
-
-}
-        <section className="enter-up shrink-0" style={{ animationDelay: '260ms' }}>
+        <section className="page-footer-band shrink-0">
           <SectionHeader
             icon={FolderOpen}
             eyebrow="Instrumente"
@@ -857,11 +715,8 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
             file_path: d.file_path, created_at: d.created_at,
           }))} />
         </section>
+    </DashboardLayout>
 
-        </div>{}
-      </Page.Body>
-
-      {}
       {selectedIds.size > 0 && (
         <div className="anim-scale-in fixed bottom-12 left-1/2 -translate-x-1/2 bg-surface-elevated border border-line rounded-xl shadow-[var(--elevation-3)] px-4 py-2.5 flex items-center gap-3 z-30">
           <span className="text-pm-sm text-content-primary font-medium">{selectedIds.size} selectate</span>
@@ -881,7 +736,7 @@ export default function DocumentsPage(_props: DocumentsPageProps) {
         initialData={editingItem || {}}
         submitLabel={isEditing ? 'Actualizează' : 'Adaugă'}
       />
-    </Page>
+    </>
   );
 }
 

@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Download, Monitor, ShieldCheck, Cpu, HardDrive, CheckCircle2, Loader2, AlertCircle, Apple, Terminal } from 'lucide-react';
+import { Download, Monitor, ShieldCheck, Cpu, HardDrive, CheckCircle2, Loader2, AlertCircle, Apple, Terminal } from '@/icons';
 import GearLogo from '@/components/ui/GearLogo';
 import AppBackground from '@/components/ui/AppBackground';
 import { getServerUrl } from '@/config/server';
+import { authorizeInstallerDownload, installerDownloadErrorMessage, triggerInstallerFileDownload } from '@/lib/installerDownload';
+import { getStorage, STORAGE_KEYS } from '@/config/localStorage';
 
 interface LatestInfo {
   available: boolean;
@@ -36,6 +38,9 @@ function formatSize(bytes: number | null): string {
 export default function DownloadPage() {
   const [info, setInfo] = useState<LatestInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [licenseKey, setLicenseKey] = useState('');
   const [os] = useState<OS>(() => detectOS());
   const base = getServerUrl();
 
@@ -51,6 +56,21 @@ export default function DownloadPage() {
 
   const downloadUrl = info?.url ? `${base}${info.url}` : null;
   const version = info?.version || '1.1.4';
+  const hasSession = !!getStorage(STORAGE_KEYS.TOKEN);
+
+  async function startDownload() {
+    setDownloading(true);
+    setDownloadError(null);
+    try {
+      const result = await authorizeInstallerDownload(licenseKey || undefined);
+      if (result.ok) triggerInstallerFileDownload(result.url);
+      else setDownloadError(installerDownloadErrorMessage(result.error));
+    } catch {
+      setDownloadError('Eroare de rețea la pornirea descărcării.');
+    } finally {
+      setDownloading(false);
+    }
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-surface-page text-content-primary">
@@ -91,13 +111,34 @@ export default function DownloadPage() {
                 <span className="text-pm-sm">Se verifică versiunea…</span>
               </div>
             ) : downloadUrl ? (
-              <a
-                href={downloadUrl}
-                className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-accent text-pm-lg font-semibold text-[var(--color-on-accent)] shadow-[var(--elevation-2)] transition-smooth duration-150 hover:bg-accent/95 hover:shadow-[var(--elevation-3)] active:scale-[0.99] focus:outline-none focus-visible:shadow-[var(--ring-soft)]"
-              >
-                <Download className="h-5 w-5 shrink-0" />
-                <span className="truncate">Descarcă pentru Windows (.exe)</span>
-              </a>
+              <div className="flex w-full flex-col gap-3">
+                {!hasSession && (
+                  <textarea
+                    className="w-full rounded-xl border border-line bg-surface-secondary px-3 py-2 text-pm-sm text-content-primary"
+                    rows={2}
+                    spellCheck={false}
+                    placeholder="Cheie de licență (AX1.…)"
+                    value={licenseKey}
+                    onChange={(e) => { setLicenseKey(e.target.value); if (downloadError) setDownloadError(null); }}
+                  />
+                )}
+                <button
+                  type="button"
+                  onClick={startDownload}
+                  disabled={downloading || (!hasSession && !licenseKey.trim())}
+                  className="flex h-14 w-full items-center justify-center gap-3 rounded-xl bg-accent text-pm-lg font-semibold text-[var(--color-on-accent)] shadow-[var(--elevation-2)] transition-smooth duration-150 hover:bg-accent/95 hover:shadow-[var(--elevation-3)] active:scale-[0.99] focus:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:opacity-70"
+                >
+                  {downloading
+                    ? <><Loader2 className="h-5 w-5 shrink-0 animate-spin" /><span className="truncate">Se pregătește descărcarea…</span></>
+                    : <><Download className="h-5 w-5 shrink-0" /><span className="truncate">Descarcă pentru Windows (.exe)</span></>}
+                </button>
+                {downloadError && (
+                  <div className="flex items-start gap-2 rounded-xl border-l-2 border-status-red bg-status-red/8 px-4 py-3 text-pm-xs text-content-secondary">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-status-red" />
+                    <span>{downloadError}</span>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="flex h-14 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface-tertiary/40 text-content-muted">
                 <AlertCircle className="h-5 w-5 shrink-0" />
@@ -133,7 +174,7 @@ export default function DownloadPage() {
         </div>
 
         <p className="mt-10 text-center text-pm-2xs text-content-muted">
-          <span className="tabular-nums">v{version}</span> · Promix Technologies
+          <span className="tabular-nums">v{version}</span> · Automatix Software
         </p>
       </div>
     </div>

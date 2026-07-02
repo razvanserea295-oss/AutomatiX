@@ -34,7 +34,9 @@ if (-not $free) { L "ABORT: port still held, not starting a second instance"; ex
 
 # 2. Start the new server with the public-CORS + proxy env.
 $env:PROMIX_TRUST_PROXY     = '1'
-$env:PROMIX_ALLOWED_ORIGINS = 'https://automatix.online'
+$env:PROMIX_ALLOWED_ORIGINS = 'https://automatix.online,https://www.automatix.online,https://app.automatix.online'
+$env:PROMIX_LANDING_HOSTS   = 'automatix.online,www.automatix.online'
+# $env:PROMIX_LICENSE_GATE  = '1'   # enable once the firm's license is imported
 $env:NODE_OPTIONS           = '--max-old-space-size=8192'
 $p = Start-Process -FilePath 'node' -ArgumentList ('"' + $nodeJs + '"') `
        -WorkingDirectory $root -WindowStyle Hidden `

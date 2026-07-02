@@ -1,39 +1,43 @@
-import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { Router, Switch, Route, useLocation, useRoute } from 'wouter';
+import { useHashLocation } from 'wouter/use-hash-location';
 import { useTransitionLocation } from '@/hooks/useTransitionLocation';
 import PageTransitionDriver from '@/components/shell/PageTransitionDriver';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
-import { applyUiScale } from '@/lib/uiScale';
 import { useLayoutStore } from '@/store/layoutStore';
 import type { User } from '@/core/types';
-import SplashScreen from '@/components/SplashScreen';
-import BootLoader from '@/components/BootLoader';
 import { toast } from '@/store/toastStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import { useUserNotificationsStore } from '@/store/userNotificationsStore';
 import { useUserNotificationsPolling } from '@/hooks/useUserNotificationsPolling';
-import { LayoutDashboard, Factory, FolderKanban, FileText, Package, CircleDollarSign, Bell, ShieldCheck, Wrench, Settings, Building2, Warehouse, ShoppingCart, Truck, Cog, Network, ScrollText, GitBranch, Library, Container, MapPin, ClipboardCheck, Target, MessageCircle, Mail, Hammer, Loader2, Calendar, GitMerge, Inbox, BarChart3, CheckSquare, PackageCheck, Smartphone, GraduationCap, Gauge, Clock } from 'lucide-react';
+import { LayoutDashboard, Factory, FolderKanban, FileText, Package, CircleDollarSign, Bell, ShieldCheck, Wrench, Settings, Building2, Warehouse, ShoppingCart, Truck, Cog, Network, ScrollText, GitBranch, Library, Container, MapPin, ClipboardCheck, Target, MessageCircle, Mail, Hammer, Calendar, GitMerge, Inbox, BarChart3, CheckSquare, PackageCheck, Smartphone, GraduationCap, Gauge, Clock, UserRound, Handshake, Briefcase, DraftingCompass, MessagesSquare, MonitorSmartphone } from '@/icons';
 import AppShell from '@/components/shell/AppShell';
+import { ResponsivePreviewProvider } from '@/redesign/ui/ResponsivePreview';
+import { GlobalProgressBar, NavigationProgress } from '@/redesign/ui/loading';
 import type { SidebarItem } from '@/components/shell/WorkspacePanel';
 import { getServerUrl, setServerUrl } from '@/config/server';
 import LoginPage from '@/pages/LoginPage';
 import MaintenanceScreen from '@/components/MaintenanceScreen';
 import { useMaintenanceStore } from '@/store/maintenanceStore';
+import { lazyWithRetry } from '@/utils/lazyWithRetry';
 
 
 
 import ForcePasswordChangePage from '@/pages/ForcePasswordChangePage';
+import LicenseActivationPage from '@/pages/LicenseActivationPage';
+import LicenseLoginGate from '@/pages/LicenseLoginGate';
 
 
-const DashboardPage           = lazy(() => import('@/redesign/pages/DashboardPage'));
-const ManagerControlPage      = lazy(() => import('@/redesign/pages/ManagerControlPage'));
-const StationDetailPage       = lazy(() => import('@/redesign/pages/stations/StationDetailPage'));
-const PartsTreePage           = lazy(() => import('@/redesign/pages/PartsTreePage'));
-const CustomerPortalPage      = lazy(() => import('@/pages/portal/CustomerPortalPage'));
-const RfqResponsePage         = lazy(() => import('@/pages/portal/RfqResponsePage'));
-const DownloadPage            = lazy(() => import('@/pages/DownloadPage'));
-const LeadDetailPage          = lazy(() => import('@/redesign/pages/sales/LeadDetailPage'));
+const DashboardPage           = lazyWithRetry(() => import('@/redesign/pages/DashboardPage'));
+const ManagerControlPage      = lazyWithRetry(() => import('@/redesign/pages/ManagerControlPage'));
+const StationDetailPage       = lazyWithRetry(() => import('@/redesign/pages/stations/StationDetailPage'));
+const PartsTreePage           = lazyWithRetry(() => import('@/redesign/pages/PartsTreePage'));
+const CustomerPortalPage      = lazyWithRetry(() => import('@/pages/portal/CustomerPortalPage'));
+const RfqResponsePage         = lazyWithRetry(() => import('@/pages/portal/RfqResponsePage'));
+const DownloadPage            = lazyWithRetry(() => import('@/pages/DownloadPage'));
+const QuickSupportGuestPage   = lazyWithRetry(() => import('@/pages/remote/QuickSupportGuestPage'));
+const LeadDetailPage          = lazyWithRetry(() => import('@/redesign/pages/sales/LeadDetailPage'));
 
 
 
@@ -41,19 +45,21 @@ const LeadDetailPage          = lazy(() => import('@/redesign/pages/sales/LeadDe
 // MobileApp removed — the single responsive shell below serves every width.
 
 
-const SalesWorkspace          = lazy(() => import('@/pages/workspace/SalesWorkspace'));
-const EngineeringWorkspace    = lazy(() => import('@/pages/workspace/EngineeringWorkspace'));
-const ProductionWorkspace     = lazy(() => import('@/pages/workspace/ProductionWorkspace'));
-const ProcurementWorkspace    = lazy(() => import('@/pages/workspace/ProcurementWorkspace'));
-const FinanceWorkspace        = lazy(() => import('@/pages/workspace/FinanceWorkspace'));
-const ProjectsContractsWorkspace = lazy(() => import('@/pages/workspace/ProjectsContractsWorkspace'));
-const InstrumenteWorkspace    = lazy(() => import('@/pages/workspace/InstrumenteWorkspace'));
-const SistemWorkspace         = lazy(() => import('@/pages/workspace/SistemWorkspace'));
-const PersonalWorkspace       = lazy(() => import('@/pages/workspace/PersonalWorkspace'));
+const SalesWorkspace          = lazyWithRetry(() => import('@/pages/workspace/SalesWorkspace'));
+const EngineeringWorkspace    = lazyWithRetry(() => import('@/pages/workspace/EngineeringWorkspace'));
+const ProductionWorkspace     = lazyWithRetry(() => import('@/pages/workspace/ProductionWorkspace'));
+const ProcurementWorkspace    = lazyWithRetry(() => import('@/pages/workspace/ProcurementWorkspace'));
+const FinanceWorkspace        = lazyWithRetry(() => import('@/pages/workspace/FinanceWorkspace'));
+const ProjectsContractsWorkspace = lazyWithRetry(() => import('@/pages/workspace/ProjectsContractsWorkspace'));
+const InstrumenteWorkspace    = lazyWithRetry(() => import('@/pages/workspace/InstrumenteWorkspace'));
+const ComunicareWorkspace     = lazyWithRetry(() => import('@/pages/workspace/ComunicareWorkspace'));
+const SistemWorkspace         = lazyWithRetry(() => import('@/pages/workspace/SistemWorkspace'));
+const PersonalWorkspace       = lazyWithRetry(() => import('@/pages/workspace/PersonalWorkspace'));
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ConfirmDialogHost } from '@/components/ConfirmDialog';
 import ToastContainer from '@/components/ui/ToastContainer';
+import ContextDrawer from '@/redesign/ui/ContextDrawer';
 import AdminSetupGate from '@/components/setup/AdminSetupGate';
 import { apiCommand } from '@/api/commands';
 import { normalizeRole, canAccessPage, isPageGated, type AppPage } from '@/lib/access';
@@ -63,6 +69,7 @@ import { getNavGroupsForRole } from '@/lib/roleWorkspace';
 import { useBusinessTypeStore } from '@/store/businessTypeStore';
 import { PAGE_IDS, PAGE_TITLES, type PageId } from '@/config/constants';
 import { WORKSPACE_SUBPAGES, workspaceIdForNav } from '@/config/workspaceNav';
+import { getPageNavMeta, pathToActivePageId, resolveTabId } from '@/config/pageNavMeta';
 import ConnectionBanner from '@/components/shell/ConnectionBanner';
 import { useServerConnection } from '@/hooks/useServerConnection';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -121,39 +128,32 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   [PAGE_IDS.GOODS_RECEIPT]: PackageCheck,
   [PAGE_IDS.TABLET]: Smartphone,
   [PAGE_IDS.TUTORIAL]: GraduationCap,
+  [PAGE_IDS.PRINT]: FileText,
+  [PAGE_IDS.REMOTE_SUPPORT]: MonitorSmartphone,
   [PAGE_IDS.MANAGER_CONTROL]: Gauge,
-  
-  [PAGE_IDS.SALES_WORKSPACE]: Target,
-  [PAGE_IDS.ENGINEERING_WORKSPACE]: GitBranch,
+  [PAGE_IDS.SALES_WORKSPACE]: Handshake,
+  [PAGE_IDS.ENGINEERING_WORKSPACE]: DraftingCompass,
   [PAGE_IDS.PRODUCTION_WORKSPACE]: Factory,
-  [PAGE_IDS.PROCUREMENT_WORKSPACE]: Warehouse,
+  [PAGE_IDS.PROCUREMENT_WORKSPACE]: Truck,
   [PAGE_IDS.FINANCE_WORKSPACE]: CircleDollarSign,
-  [PAGE_IDS.PROJECTS_CONTRACTS_WORKSPACE]: FolderKanban,
-  [PAGE_IDS.INSTRUMENTE_WORKSPACE]: GraduationCap,
-  [PAGE_IDS.PERSONAL_WORKSPACE]: CheckSquare,
+  [PAGE_IDS.PROJECTS_CONTRACTS_WORKSPACE]: Briefcase,
+  [PAGE_IDS.INSTRUMENTE_WORKSPACE]: Wrench,
+  [PAGE_IDS.COMUNICARE_WORKSPACE]: MessagesSquare,
+  [PAGE_IDS.PERSONAL_WORKSPACE]: UserRound,
   [PAGE_IDS.SISTEM_WORKSPACE]: Settings,
 };
-
-
-
-
-
-
-
 const WORKSPACE_DEFAULT_TAB: Record<string, string> = {
   [PAGE_IDS.SALES_WORKSPACE]: 'sales-hub',
-  
-  
   [PAGE_IDS.ENGINEERING_WORKSPACE]: 'fisa-proiectant',
   [PAGE_IDS.PRODUCTION_WORKSPACE]: 'production',
   [PAGE_IDS.PROCUREMENT_WORKSPACE]: 'warehouse',
   [PAGE_IDS.FINANCE_WORKSPACE]: 'finance',
   [PAGE_IDS.PROJECTS_CONTRACTS_WORKSPACE]: 'projects',
-  [PAGE_IDS.INSTRUMENTE_WORKSPACE]: 'tutorial',
+  [PAGE_IDS.INSTRUMENTE_WORKSPACE]: 'birou-control',
+  [PAGE_IDS.COMUNICARE_WORKSPACE]: 'email',
   [PAGE_IDS.PERSONAL_WORKSPACE]: 'tasks',
   [PAGE_IDS.SISTEM_WORKSPACE]: 'users',
 };
-
 function pageIdToPath(pageId: string, opts?: { projectId?: number; stationId?: number }): string {
   if (pageId === PAGE_IDS.DASHBOARD) return '/';
   if (pageId === PAGE_IDS.STATION_DETAIL) {
@@ -167,8 +167,6 @@ function pageIdToPath(pageId: string, opts?: { projectId?: number; stationId?: n
   if (defaultTab) return `/${defaultTab}`;
   return `/${pageId}`;
 }
-
-
 const TAB_TO_WORKSPACE: Record<string, string> = {
   'sales-hub': PAGE_IDS.SALES_WORKSPACE,
   'quotations': PAGE_IDS.SALES_WORKSPACE,
@@ -195,13 +193,18 @@ const TAB_TO_WORKSPACE: Record<string, string> = {
   'finance': PAGE_IDS.FINANCE_WORKSPACE,
   'documents': PAGE_IDS.FINANCE_WORKSPACE,
   'reports': PAGE_IDS.FINANCE_WORKSPACE,
+  'raports': PAGE_IDS.FINANCE_WORKSPACE,
   'projects': PAGE_IDS.PROJECTS_CONTRACTS_WORKSPACE,
   'contracts': PAGE_IDS.PROJECTS_CONTRACTS_WORKSPACE,
   'tutorial': PAGE_IDS.INSTRUMENTE_WORKSPACE,
-  'email': PAGE_IDS.INSTRUMENTE_WORKSPACE,
-  'chat': PAGE_IDS.INSTRUMENTE_WORKSPACE,
-  'alerts': PAGE_IDS.INSTRUMENTE_WORKSPACE,
+  'email': PAGE_IDS.COMUNICARE_WORKSPACE,
+  'chat': PAGE_IDS.COMUNICARE_WORKSPACE,
+  'alerts': PAGE_IDS.COMUNICARE_WORKSPACE,
   'download-app': PAGE_IDS.INSTRUMENTE_WORKSPACE,
+  'print': PAGE_IDS.INSTRUMENTE_WORKSPACE,
+  'remote-support': PAGE_IDS.INSTRUMENTE_WORKSPACE,
+  'licente': PAGE_IDS.INSTRUMENTE_WORKSPACE,
+  'arhiva': PAGE_IDS.INSTRUMENTE_WORKSPACE,
   'tasks': PAGE_IDS.PERSONAL_WORKSPACE,
   'calendar': PAGE_IDS.PERSONAL_WORKSPACE,
   'deplasari': PAGE_IDS.PERSONAL_WORKSPACE,
@@ -217,7 +220,7 @@ function pathToPageId(path: string): string {
   if (/^\/stations\/\d+/.test(path)) return PAGE_IDS.STATION_DETAIL;
   if (/^\/parts-tree\/\d+/.test(path)) return PAGE_IDS.PARTS_TREE;
   
-  const seg = path.split('/').filter(Boolean)[0] ?? '';
+  const seg = resolveTabId(path.split('/').filter(Boolean)[0] ?? '');
   
   return TAB_TO_WORKSPACE[seg] || seg || PAGE_IDS.DASHBOARD;
 }
@@ -241,6 +244,8 @@ function AppShellRouted({
 }: ShellProps) {
   const [location, setLocation] = useLocation();
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const maintenanceMode = useMaintenanceStore((s) => s.mode);
+  const isAdmin = normalizeRole(user.role_name) === 'admin';
 
 
   const businessType = useBusinessTypeStore(s => s.businessType);
@@ -318,6 +323,12 @@ function AppShellRouted({
 
   const currentPage = pathToPageId(location);
 
+  const activeTabId = useMemo(() => {
+    const seg = location.split('/').filter(Boolean)[0] ?? '';
+    const resolvedSeg = resolveTabId(seg);
+    return TAB_TO_WORKSPACE[resolvedSeg] ? resolvedSeg : null;
+  }, [location]);
+
   // Per-page appearance overrides → data-pc-* on <html> for the active page.
   usePageCustomizationApplier(currentPage);
   // Leave card-positioning "edit mode" whenever the route changes.
@@ -325,6 +336,11 @@ function AppShellRouted({
   useEffect(() => { setLayoutEdit(false); }, [currentPage, setLayoutEdit]);
 
   const activeWorkspaceId = currentPage in WORKSPACE_SUBPAGES ? currentPage : null;
+
+  const contextLabel = useMemo(
+    () => getPageNavMeta(pathToActivePageId(location)).pageTitle,
+    [location],
+  );
 
   
   // Mobile version disabled — one responsive shell serves every width (the
@@ -388,7 +404,7 @@ function AppShellRouted({
         onClick: () => navigateTo(id),
         
         
-        badge: id === PAGE_IDS.INSTRUMENTE_WORKSPACE
+        badge: id === PAGE_IDS.COMUNICARE_WORKSPACE
           ? (((notificationCount || 0) + (chatUnread || 0)) || undefined)
           : id === PAGE_IDS.ALERTS ? notificationCount
           : id === PAGE_IDS.CHAT ? (chatUnread || undefined)
@@ -415,8 +431,6 @@ function AppShellRouted({
   }, [user.role_name, user.custom_pages, currentPage, activeWorkspaceId, notificationCount, chatUnread, navigateTo]);
 
   
-  const pageTitle = PAGE_TITLES[currentPage as PageId] ?? currentPage;
-
   const workspaceTabToWorkspace = useMemo(() => {
     const map = new Map<string, string>();
     for (const [workspaceId, tabs] of Object.entries(WORKSPACE_SUBPAGES)) {
@@ -428,28 +442,31 @@ function AppShellRouted({
   }, []);
 
   const renderWorkspaceTab = useCallback((tabId: string) => {
-    const workspaceId = workspaceTabToWorkspace.get(tabId);
+    const resolvedTab = resolveTabId(tabId);
+    const workspaceId = workspaceTabToWorkspace.get(resolvedTab);
     if (!workspaceId) return null;
 
     switch (workspaceId) {
       case PAGE_IDS.SALES_WORKSPACE:
-        return <SalesWorkspace user={user} onNavigate={navigateTo} initialTab={tabId} />;
+        return <SalesWorkspace user={user} onNavigate={navigateTo} initialTab={resolvedTab} />;
       case PAGE_IDS.ENGINEERING_WORKSPACE:
-        return <EngineeringWorkspace user={user} onNavigate={navigateTo} initialTab={tabId} />;
+        return <EngineeringWorkspace user={user} onNavigate={navigateTo} initialTab={resolvedTab} />;
       case PAGE_IDS.PRODUCTION_WORKSPACE:
-        return <ProductionWorkspace user={user} onNavigate={navigateTo} initialTab={tabId} />;
+        return <ProductionWorkspace user={user} onNavigate={navigateTo} initialTab={resolvedTab} />;
       case PAGE_IDS.PROCUREMENT_WORKSPACE:
-        return <ProcurementWorkspace user={user} onNavigate={navigateTo} initialTab={tabId} />;
+        return <ProcurementWorkspace user={user} onNavigate={navigateTo} initialTab={resolvedTab} />;
       case PAGE_IDS.FINANCE_WORKSPACE:
-        return <FinanceWorkspace user={user} onNavigate={navigateTo} initialTab={tabId} />;
+        return <FinanceWorkspace user={user} onNavigate={navigateTo} initialTab={resolvedTab} />;
       case PAGE_IDS.PROJECTS_CONTRACTS_WORKSPACE:
-        return <ProjectsContractsWorkspace user={user} onNavigate={navigateTo} initialTab={tabId} />;
+        return <ProjectsContractsWorkspace user={user} onNavigate={navigateTo} initialTab={resolvedTab} />;
       case PAGE_IDS.INSTRUMENTE_WORKSPACE:
-        return <InstrumenteWorkspace user={user} onNavigate={navigateTo} initialTab={tabId} />;
+        return <InstrumenteWorkspace user={user} onNavigate={navigateTo} initialTab={resolvedTab} />;
+      case PAGE_IDS.COMUNICARE_WORKSPACE:
+        return <ComunicareWorkspace user={user} initialTab={resolvedTab} />;
       case PAGE_IDS.PERSONAL_WORKSPACE:
-        return <PersonalWorkspace user={user} onNavigate={navigateTo} initialTab={tabId} />;
+        return <PersonalWorkspace user={user} onNavigate={navigateTo} initialTab={resolvedTab} />;
       case PAGE_IDS.SISTEM_WORKSPACE:
-        return <SistemWorkspace user={user} onNavigate={navigateTo} initialTab={tabId} currentTheme={theme} onThemeChange={setTheme} />;
+        return <SistemWorkspace user={user} onNavigate={navigateTo} initialTab={resolvedTab} currentTheme={theme} onThemeChange={setTheme} />;
       default:
         return null;
     }
@@ -462,14 +479,27 @@ function AppShellRouted({
   
   return (
     <AppShell
-      title={pageTitle}
+      contextLabel={contextLabel}
       businessType={inferredBusinessType}
       userName={user.full_name || user.username}
       roleName={user.role_name || ''}
       jobTitle={user.job_title || null}
       notificationCount={notificationCount}
+      currentPage={currentPage}
+      activeTabId={activeTabId}
       navbarItems={navbarItems}
       routeKey={currentPage}
+      banners={
+        <>
+          <ConnectionStatusBanner />
+          {maintenanceMode && isAdmin && (
+            <div className="flex items-center justify-center gap-2 bg-status-amber/15 text-status-amber border-b border-status-amber/30 px-4 py-1.5 text-pm-xs font-semibold shrink-0">
+              <Wrench className="h-3.5 w-3.5" />
+              Mod mentenanță activ — doar administratorii au acces. Dezactivează din Setări → Mod mentenanță.
+            </div>
+          )}
+        </>
+      }
       onBack={window.history.length > 1 ? goBack : undefined}
       onSearchNavigate={(hit) => {
         sessionStorage.setItem(`promix_focus_${hit.type}`, String(hit.id));
@@ -488,7 +518,7 @@ function AppShellRouted({
       onLogout={onLogout}
     >
       <ErrorBoundary key={currentPage} scope={`${currentPage || 'dashboard'}`}>
-        <div className="page-vt-root app-surface relative z-10 flex flex-1 flex-col min-h-0 overflow-hidden animate-page-in motion-reduce:animate-none">
+        <div className="shell-page-host page-vt-root app-surface">
           {
 
 }
@@ -513,6 +543,7 @@ function AppShellRouted({
               </Route>
               <Route path="/parts-tree"         >{() => <EngineeringWorkspace user={user} onNavigate={navigateTo} initialTab="parts-tree" />}</Route>
               <Route path="/parts-ordering"     >{() => <EngineeringWorkspace user={user} onNavigate={navigateTo} initialTab="parts-ordering" />}</Route>
+              <Route path="/pieces-ordering"    >{() => <EngineeringWorkspace user={user} onNavigate={navigateTo} initialTab="parts-ordering" />}</Route>
               <Route path="/briefings"          >{() => <EngineeringWorkspace user={user} onNavigate={navigateTo} initialTab="briefings" />}</Route>
               <Route path="/fisa-templates"     >{() => <EngineeringWorkspace user={user} onNavigate={navigateTo} initialTab="fisa-templates" />}</Route>
               <Route path="/materials"          >{() => <ProcurementWorkspace user={user} onNavigate={navigateTo} initialTab="materials" />}</Route>
@@ -520,7 +551,7 @@ function AppShellRouted({
               <Route path="/users"              >{() => <SistemWorkspace user={user} onNavigate={navigateTo} initialTab="users" currentTheme={theme} onThemeChange={setTheme} />}</Route>
               <Route path="/sessions"           >{() => <SistemWorkspace user={user} onNavigate={navigateTo} initialTab="sessions" currentTheme={theme} onThemeChange={setTheme} />}</Route>
               <Route path="/settings"           >{() => <SistemWorkspace user={user} onNavigate={navigateTo} initialTab="settings" currentTheme={theme} onThemeChange={setTheme} />}</Route>
-              <Route path="/alerts"             >{() => <InstrumenteWorkspace user={user} onNavigate={navigateTo} initialTab="alerts" />}</Route>
+              <Route path="/alerts"             >{() => <ComunicareWorkspace user={user} initialTab="alerts" />}</Route>
               <Route path="/clients"            >{() => <SalesWorkspace user={user} onNavigate={navigateTo} initialTab="clients" />}</Route>
               <Route path="/documents"          >{() => <FinanceWorkspace user={user} onNavigate={navigateTo} initialTab="documents" />}</Route>
               <Route path="/suppliers"          >{() => <ProcurementWorkspace user={user} onNavigate={navigateTo} initialTab="furnizori" />}</Route>
@@ -563,14 +594,17 @@ function AppShellRouted({
               <Route path="/three-way-match"    >{() => <ProcurementWorkspace user={user} onNavigate={navigateTo} initialTab="comenzi" />}</Route>
               <Route path="/rfqs"               >{() => <ProcurementWorkspace user={user} onNavigate={navigateTo} initialTab="comenzi" />}</Route>
               <Route path="/tablet"             >{() => <ProductionWorkspace user={user} onNavigate={navigateTo} initialTab="production" />}</Route>
+              <Route path="/raports"            >{() => <FinanceWorkspace user={user} onNavigate={navigateTo} initialTab="reports" />}</Route>
               <Route path="/reports"            >{() => <FinanceWorkspace user={user} onNavigate={navigateTo} initialTab="reports" />}</Route>
               <Route path="/tasks"              >{() => <PersonalWorkspace user={user} onNavigate={navigateTo} initialTab="tasks" />}</Route>
               <Route path="/goods-receipt"      >{() => <ProcurementWorkspace user={user} onNavigate={navigateTo} initialTab="receptii" />}</Route>
-              <Route path="/chat"               >{() => <InstrumenteWorkspace user={user} onNavigate={navigateTo} initialTab="chat" />}</Route>
-              <Route path="/email"              >{() => <InstrumenteWorkspace user={user} onNavigate={navigateTo} initialTab="email" />}</Route>
+              <Route path="/chat"               >{() => <ComunicareWorkspace user={user} initialTab="chat" />}</Route>
+              <Route path="/email"              >{() => <ComunicareWorkspace user={user} initialTab="email" />}</Route>
               <Route path="/maintenance"        >{() => <ProductionWorkspace user={user} onNavigate={navigateTo} initialTab="maintenance" />}</Route>
               <Route path="/tutorial"           >{() => <InstrumenteWorkspace user={user} onNavigate={navigateTo} initialTab="tutorial" />}</Route>
               <Route path="/download-app"       >{() => <InstrumenteWorkspace user={user} onNavigate={navigateTo} initialTab="download-app" />}</Route>
+              <Route path="/print"              >{() => <InstrumenteWorkspace user={user} onNavigate={navigateTo} initialTab="print" />}</Route>
+              <Route path="/remote-support"     >{() => <InstrumenteWorkspace user={user} onNavigate={navigateTo} initialTab="remote-support" />}</Route>
               <Route path="/shared-files"       >{() => <InstrumenteWorkspace user={user} onNavigate={navigateTo} initialTab="shared-files" />}</Route>
               <Route path="/arhiva"             >{() => <InstrumenteWorkspace user={user} onNavigate={navigateTo} initialTab="arhiva" />}</Route>
               {}
@@ -593,9 +627,7 @@ function AppShellRouted({
               Transition morph never reveals the translucent skeleton/glass
               rectangles ("cadrane transparente"). Fades out when `vt-active`
               clears. CSS lives in redesign/theme.css (`.vt-veil`). */}
-          <div className="vt-veil" aria-hidden="true">
-            <Loader2 className="h-6 w-6 animate-spin text-accent" />
-          </div>
+          <div className="vt-veil" aria-hidden="true" />
         </div>
       </ErrorBoundary>
       <KeyboardShortcutsOverlay
@@ -648,16 +680,8 @@ function RestoreLastPath({ children }: { children: React.ReactNode }) {
 void useRoute;
 
 function App() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, requiresLicense } = useAuthStore();
   const { theme, restoreTheme, setTheme } = useThemeStore();
-  const density = useLayoutStore((s) => s.density);
-  
-  
-  
-  
-  
-  
-  
   const localNotifs = useNotificationStore((s) => s.unreadCount);
   const dbUnread = useUserNotificationsStore((s) => s.unread);
   const notificationCount = localNotifs + dbUnread;
@@ -665,8 +689,7 @@ function App() {
   
   
   const maintenanceMode = useMaintenanceStore((s) => s.mode);
-  const maintenanceMessage = useMaintenanceStore((s) => s.message);
-  const maintenanceEta = useMaintenanceStore((s) => s.eta);
+  const maintenanceDetails = useMaintenanceStore((s) => ({ message: s.message, eta: s.eta }));
   const startMaintenancePoll = useMaintenanceStore((s) => s.startPolling);
 
   
@@ -680,15 +703,26 @@ function App() {
     return stop;
   }, [isAuthenticated, startMaintenancePoll]);
 
-  
-  
-  useEffect(() => {
-    document.documentElement.dataset.density = density;
-    applyUiScale({ density });
-  }, [density]);
-  const [booted, setBooted] = useState(false);
-  const [showSplash, setShowSplash] = useState(true);
   const [chatUnread, setChatUnread] = useState(0);
+
+  // Pre-login license gate: ask this instance whether it's gated + unlicensed.
+  // When true, the login screen is replaced by the activation gate so a copy of
+  // the app from any source can't even be logged into without a valid key. Only
+  // ever blocks when the server gate is armed (PROMIX_LICENSE_GATE), so a
+  // deployment with the gate off behaves exactly as before.
+  const [preLicenseRequired, setPreLicenseRequired] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const res = await fetch(`${getServerUrl()}/api/license/tenant-state`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const d = await res.json() as { licensed?: boolean; gate?: boolean };
+        if (alive) setPreLicenseRequired(!!d.gate && !d.licensed);
+      } catch { /* network error → don't block login */ }
+    })();
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => {
     restoreTheme();
@@ -718,7 +752,7 @@ function App() {
         if (serverUrl) {
           let reachable = false;
           try {
-            const res = await fetch(`${serverUrl}/api/health`, { signal: AbortSignal.timeout(1500) });
+            const res = await fetch(`${serverUrl}/api/health`, { signal: AbortSignal.timeout(2500) });
             reachable = res.ok;
           } catch {  }
           if (!reachable) {
@@ -758,7 +792,6 @@ function App() {
         
         await tryAutoLoginFromSavedCreds();
       }
-      setBooted(true);
     }
 
     async function tryAutoLoginFromSavedCreds() {
@@ -792,11 +825,6 @@ function App() {
     return () => { unsubs.forEach((u) => u()); };
   }, [restoreTheme]);
 
-  const handleSplashFinished = useCallback(() => {
-    setShowSplash(false);
-  }, []);
-
-  
   useEffect(() => {
     if (!isAuthenticated) return;
     let iv: ReturnType<typeof setInterval> | null = null;
@@ -815,26 +843,61 @@ function App() {
     return () => { stop(); document.removeEventListener('visibilitychange', onVis); };
   }, [isAuthenticated]);
 
-  
-  
-  
-  
   useEffect(() => {
     if (!isAuthenticated) return;
     let iv: ReturnType<typeof setInterval> | null = null;
-    const tick = () => { apiCommand('email_sync_inbox').catch(() => {}); };
+    let warmup: ReturnType<typeof setTimeout> | null = null;
+    let stopped = false;
+    let inFlight = false;
+    let hasEmailAccount: boolean | null = null;
+    let consecutiveFailures = 0;
+    let pauseUntil = 0;
+    const tick = async () => {
+      if (stopped || inFlight || document.hidden) return;
+      if (Date.now() < pauseUntil) return;
+      inFlight = true;
+      try {
+        if (hasEmailAccount === null) {
+          const acc = await apiCommand<any>('email_get_account');
+          hasEmailAccount = !!acc;
+        }
+        if (!hasEmailAccount) return;
+        await apiCommand('email_sync_inbox');
+        consecutiveFailures = 0;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err ?? '');
+        if (msg.toLowerCase().includes('cont email neconfigurat')) {
+          hasEmailAccount = false;
+        } else {
+          consecutiveFailures += 1;
+          // Repeated IMAP timeouts can pile up and destabilize the backend.
+          // Back off after bursts of failures instead of hammering every 3 min.
+          if (consecutiveFailures >= 3) {
+            pauseUntil = Date.now() + 15 * 60 * 1000;
+            consecutiveFailures = 0;
+          }
+        }
+      } finally {
+        inFlight = false;
+      }
+    };
     const start = () => {
       if (iv) return;
-      
-      
-      iv = setInterval(tick, 3 * 60 * 1000);
-      setTimeout(tick, 30_000);
+      iv = setInterval(() => { void tick(); }, 3 * 60 * 1000);
+      warmup = setTimeout(() => { void tick(); }, 30_000);
     };
-    const stop = () => { if (iv) { clearInterval(iv); iv = null; } };
+    const stop = () => {
+      if (iv) { clearInterval(iv); iv = null; }
+      if (warmup) { clearTimeout(warmup); warmup = null; }
+    };
     if (!document.hidden) start();
     const onVis = () => (document.hidden ? stop() : start());
     document.addEventListener('visibilitychange', onVis);
-    return () => { stop(); document.removeEventListener('visibilitychange', onVis); };
+    return () => {
+      stopped = true;
+      stop();
+      document.removeEventListener('visibilitychange', onVis);
+    };
   }, [isAuthenticated]);
 
   const handleLogin = async (username: string, password: string) => {
@@ -858,32 +921,37 @@ function App() {
   };
 
   
-  if (showSplash) {
-    return <SplashScreen onFinished={handleSplashFinished} />;
-  }
-
-  if (!booted) {
-    return <BootLoader />;
-  }
-
-  
-
-  
-  if (typeof window !== 'undefined' && (window.location.hash.startsWith('#/portal/') || window.location.hash.startsWith('#/rfq/') || window.location.hash.startsWith('#/download'))) {
-    return (
-      <Suspense fallback={<PageFallback />}>
-        <Router>
-          <Switch>
-            <Route path="/portal/:token">{() => <CustomerPortalPage />}</Route>
-            <Route path="/rfq/:token">{() => <RfqResponsePage />}</Route>
-            <Route path="/download">{() => <DownloadPage />}</Route>
-          </Switch>
-        </Router>
-      </Suspense>
-    );
+  if (typeof window !== 'undefined') {
+    const hash = window.location.hash;
+    const isPublicHashRoute =
+      hash.startsWith('#/portal/')
+      || hash.startsWith('#/rfq/')
+      || hash === '#/download'
+      || hash.startsWith('#/download?')
+      || hash.startsWith('#/support/q/');
+    if (isPublicHashRoute) {
+      return (
+        <Suspense fallback={<PageFallback />}>
+          <Router hook={useHashLocation}>
+            <Switch>
+              <Route path="/portal/:token">{() => <CustomerPortalPage />}</Route>
+              <Route path="/rfq/:token">{() => <RfqResponsePage />}</Route>
+              <Route path="/download">{() => <DownloadPage />}</Route>
+              <Route path="/support/q/:code">{() => <QuickSupportGuestPage />}</Route>
+            </Switch>
+          </Router>
+        </Suspense>
+      );
+    }
   }
 
   if (!isAuthenticated || !user) {
+    // License required before login: a gated instance with no valid license
+    // shows the activation gate instead of the login form, so a copy obtained
+    // from any source can't be used until a valid key is entered.
+    if (preLicenseRequired) {
+      return <LicenseLoginGate onActivated={() => setPreLicenseRequired(false)} />;
+    }
     // User-based tenant routing: no firm chooser. The user just logs in; the
     // host broker (/api/auth/login) resolves which firm they belong to from
     // their credentials and the app re-boots through that firm's /t/<slug>.
@@ -894,7 +962,7 @@ function App() {
   
   const isAdmin = normalizeRole(user.role_name) === 'admin';
   if (maintenanceMode && !isAdmin) {
-    return <MaintenanceScreen message={maintenanceMessage} eta={maintenanceEta} />;
+    return <MaintenanceScreen {...maintenanceDetails} />;
   }
 
   
@@ -909,32 +977,36 @@ function App() {
     return <ForcePasswordChangePage username={user.username} onLogout={handleLogout} />;
   }
 
+  // Per-tenant license gate: this firm's instance isn't activated yet. An admin
+  // can paste the license key here; everyone else is told to contact one.
+  if (requiresLicense) {
+    return <LicenseActivationPage isAdmin={isAdmin} onLogout={handleLogout} />;
+  }
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <ConnectionStatusBanner />
-      {maintenanceMode && isAdmin && (
-        <div className="flex items-center justify-center gap-2 bg-status-amber/15 text-status-amber border-b border-status-amber/30 px-4 py-1.5 text-pm-xs font-semibold">
-          <Wrench className="h-3.5 w-3.5" />
-          Mod mentenanță activ — doar administratorii au acces. Dezactivează din Setări → Mod mentenanță.
-        </div>
-      )}
+    <>
+      <GlobalProgressBar />
       <ConfirmDialogHost />
       <ToastContainer />
+      <ContextDrawer />
       <AdminSetupGate isAdmin={isAdmin} />
-      <Router hook={useTransitionLocation}>
-        <RestoreLastPath>
-          <PageTransitionDriver />
-          <AppShellRouted
-            user={user}
-            theme={theme}
-            setTheme={setTheme}
-            notificationCount={notificationCount}
-            chatUnread={chatUnread}
-            onLogout={handleLogout}
-          />
-        </RestoreLastPath>
-      </Router>
-    </div>
+      <ResponsivePreviewProvider>
+        <Router hook={useTransitionLocation}>
+          <RestoreLastPath>
+            <NavigationProgress />
+            <PageTransitionDriver />
+            <AppShellRouted
+              user={user}
+              theme={theme}
+              setTheme={setTheme}
+              notificationCount={notificationCount}
+              chatUnread={chatUnread}
+              onLogout={handleLogout}
+            />
+          </RestoreLastPath>
+        </Router>
+      </ResponsivePreviewProvider>
+    </>
   );
 }
 

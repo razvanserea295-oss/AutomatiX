@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom';
 import {
   Users, Plus, Search, Building2, Mail, Phone, MapPin, Pencil, Trash2,
   FolderKanban, DollarSign, Landmark, Hash, Loader2, X as XIcon, FileText,
-} from 'lucide-react';
+} from '@/icons';
 
 import type { User, Project, Client } from '@/core/types';
 import { cn } from '@/lib/cn';
@@ -18,7 +18,6 @@ import { projectStatus } from '@/lib/statusTokens';
 import type { AnafCompanyInfo } from '@/components/AnafLookupButton';
 import ClientsEnhancements from '@/pages/clients/ClientsEnhancements';
 
-import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
 import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
@@ -28,6 +27,9 @@ import SectionHeader from '@/redesign/ui/SectionHeader';
 import EmptyState from '@/redesign/ui/EmptyState';
 import { filterSearchInputCls, filterSearchIconCls } from '@/redesign/ui/filterControls';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
+import { PageChrome, DashboardLayout, ListPanel, CardSlot, PAGE_GRID_12 } from '@/app-ui';
+import { useDeferredLoading } from '@/redesign/lib/loading';
+import { MasterDetailPageSkeleton } from '@/redesign/ui/loading';
 
 // DB-backed fiscal/banking fields not in the base Client type.
 type ClientRow = Client & {
@@ -192,52 +194,31 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }));
 
-  if (loading && clients.length === 0) {
-    return <div className="flex flex-1 items-center justify-center bg-surface-page"><Loader2 className="h-6 w-6 animate-spin text-content-muted" /></div>;
+  const initialLoad = loading && clients.length === 0;
+  const { showSkeleton, showExtended, elapsedMs, isPending } = useDeferredLoading(initialLoad);
+
+  if (initialLoad && (isPending || !showSkeleton)) {
+    return <div className="ix-loading-reserve flex-1" role="status" aria-busy aria-label="Se încarcă clienții" />;
+  }
+
+  if (initialLoad && showSkeleton) {
+    return (
+      <MasterDetailPageSkeleton
+        showExtended={showExtended}
+        elapsedMs={elapsedMs}
+        label="Se încarcă clienții"
+      />
+    );
   }
 
   const selStats = selected ? statsFor(selected.id) : null;
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="wide" padding="comfortable" className="relative">
-
-        <header className="enter-up shrink-0 flex flex-col gap-4 pb-4 border-b border-line/60 xl:flex-row xl:items-center xl:justify-between" style={{ animationDelay: '0ms' }}>
-          <div className="flex items-center gap-4 min-w-0">
-            <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-              <Users className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              <h1 className="text-pm-lg font-semibold text-content-primary leading-tight truncate">Portofoliu clienți</h1>
-              <p className="mt-0.5 text-pm-sm text-content-muted">Clienți, proiecte asociate și instrumente CRM</p>
-            </div>
-          </div>
-          {!isViewer && (
-            <div className="flex items-center gap-3 shrink-0">
-              <Button size="md" onClick={openCreate}><Plus className="h-4 w-4" /> Adaugă client</Button>
-            </div>
-          )}
-        </header>
-
-        {/* KPI strip — Valoare portofoliu is the hero (and now correct). */}
-        <div className="enter-up shrink-0 grid grid-cols-2 lg:grid-cols-5 gap-4" style={{ animationDelay: '80ms' }}>
-          <KpiCard label="Total clienți" icon={Users} value={metrics.total} />
-          <KpiCard label="Clienți activi" icon={Building2} value={metrics.activeClients} iconColor="text-status-green" />
-          <KpiCard label="Proiecte active" icon={FolderKanban} value={metrics.activeProjects} iconColor="text-status-amber" />
-          <KpiCard hero className="col-span-2 lg:col-span-2" label="Valoare portofoliu" icon={DollarSign} value={money(metrics.portfolio, 'RON')} />
-        </div>
-
-        {/* Master-detail */}
-        <div className="enter-up flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-6" style={{ animationDelay: '160ms' }}>
-
-          {/* List */}
-          <Card padding="none" className="xl:col-span-4 min-w-0 min-h-0 flex flex-col overflow-hidden">
-            <div className="shrink-0 px-4 pt-4 pb-3 border-b border-line/70">
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <h2 className="text-pm-eyebrow font-semibold uppercase tracking-wide text-content-muted">Clienți</h2>
-                <span className="text-pm-2xs text-content-muted tabular-nums px-1.5 py-0.5 rounded-md bg-surface-tertiary">{filtered.length}</span>
-              </div>
-              <div className="relative">
+    <DashboardLayout
+        chrome={(
+          <PageChrome
+            toolbar={(
+              <div className="relative w-full">
                 <Search className={filterSearchIconCls} aria-hidden />
                 <input
                   type="text" value={search} onChange={e => setSearch(e.target.value)}
@@ -245,9 +226,33 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
                   className={`${filterSearchInputCls} !w-full`}
                 />
               </div>
-            </div>
+            )}
+            actions={
+              <Button size="md" onClick={openCreate}>
+                <Plus className="h-4 w-4" /> Client nou
+              </Button>
+            }
+          />
+        )}
+      kpis={
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <KpiCard label="Total clienți" icon={Users} value={metrics.total} />
+          <KpiCard label="Clienți activi" icon={Building2} value={metrics.activeClients} iconColor="text-status-green" />
+          <KpiCard label="Proiecte active" icon={FolderKanban} value={metrics.activeProjects} iconColor="text-status-amber" />
+          <KpiCard hero className="col-span-2 lg:col-span-2" label="Valoare portofoliu" icon={DollarSign} value={money(metrics.portfolio, 'RON')} />
+        </div>
+      }
+      bodyClassName="relative page-body-polish"
+      contentClassName="max-w-[var(--page-max-wide)] mx-auto stagger-in"
+    >
+        <div className={PAGE_GRID_12}>
 
-            <div className="flex-1 min-h-0 overflow-y-auto">
+          <ListPanel
+            size="md"
+            slotClassName="clients-list-slot"
+            title="Clienți"
+            subtitle={`${filtered.length} rezultate`}
+          >
               {filtered.length === 0 ? (
                 <EmptyState icon={Search} title="Niciun client găsit" description="Încearcă alți termeni sau adaugă unul nou." />
               ) : (
@@ -287,19 +292,17 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
                   })}
                 </div>
               )}
-            </div>
-          </Card>
+          </ListPanel>
 
-          {/* Detail */}
-          <div className="xl:col-span-8 min-w-0 min-h-0 overflow-y-auto flex flex-col gap-6 pr-0.5">
+          <CardSlot size="lg" className="clients-detail-slot pr-0.5">
             {!selected ? (
-              <Card padding="lg" className="flex flex-col items-center justify-center min-h-[60vh]">
+              <Card padding="lg" className="flex flex-col items-center justify-center min-h-[40vh]">
                 <EmptyState icon={Users} title="Niciun client selectat" description="Alege un client din listă pentru a-i vedea fișa completă." />
               </Card>
             ) : (
-              <div key={selected.id} className="stagger-in contents">
+              <div key={selected.id} className="stagger-in flex flex-col gap-[var(--density-gap-section)]">
                 {/* Identity */}
-                <Card padding="lg" tone="elevated" vtName={vtName('client', selected.id)} className="min-w-0">
+                <Card padding="lg" vtName={vtName('client', selected.id)} className="min-w-0">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="h-12 w-12 shrink-0 rounded-2xl bg-accent/15 text-accent flex items-center justify-center text-pm-sm font-bold">{initials(selected.name)}</span>
@@ -318,32 +321,30 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
                   </div>
                 </Card>
 
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                  {/* Contact */}
-                  <Card padding="lg" className="min-w-0">
-                    <SectionHeader title="Date de contact" icon={Mail} className="mb-4" />
-                    <dl className="space-y-3">
-                      <DetailRow icon={Mail} label="Email" value={selected.email} href={selected.email ? `mailto:${selected.email}` : undefined} />
-                      <DetailRow icon={Phone} label="Telefon" value={selected.phone} href={selected.phone ? `tel:${selected.phone}` : undefined} />
-                      <DetailRow icon={MapPin} label="Adresă" value={[selected.address, selected.city, selected.county].filter(Boolean).join(', ')} />
-                    </dl>
-                  </Card>
+                {/* Contact */}
+                <Card padding="lg" className="min-w-0">
+                  <SectionHeader title="Date de contact" icon={Mail} className="mb-5" />
+                  <dl className="space-y-4">
+                    <DetailRow icon={Mail} label="Email" value={selected.email} href={selected.email ? `mailto:${selected.email}` : undefined} />
+                    <DetailRow icon={Phone} label="Telefon" value={selected.phone} href={selected.phone ? `tel:${selected.phone}` : undefined} />
+                    <DetailRow icon={MapPin} label="Adresă" value={[selected.address, selected.city, selected.county].filter(Boolean).join(', ')} />
+                  </dl>
+                </Card>
 
-                  {/* Fiscal & banking — data that was collected but never shown before */}
-                  <Card padding="lg" className="min-w-0">
-                    <SectionHeader title="Date fiscale & bancare" icon={Landmark} className="mb-4" />
-                    <dl className="space-y-3">
-                      <DetailRow icon={Hash} label="CUI" value={selected.cui} mono />
-                      <DetailRow icon={FileText} label="Reg. Com." value={selected.reg_com} mono />
-                      <DetailRow icon={Landmark} label="Bancă" value={selected.bank_name} />
-                      <DetailRow icon={Landmark} label="IBAN" value={selected.iban} mono />
-                    </dl>
-                  </Card>
-                </div>
+                {/* Fiscal & banking */}
+                <Card padding="lg" className="min-w-0">
+                  <SectionHeader title="Date fiscale & bancare" icon={Landmark} className="mb-5" />
+                  <dl className="space-y-4">
+                    <DetailRow icon={Hash} label="CUI" value={selected.cui} mono />
+                    <DetailRow icon={FileText} label="Reg. Com." value={selected.reg_com} mono />
+                    <DetailRow icon={Landmark} label="Bancă" value={selected.bank_name} />
+                    <DetailRow icon={Landmark} label="IBAN" value={selected.iban} mono />
+                  </dl>
+                </Card>
 
                 {selected.notes && (
                   <Card padding="lg" className="min-w-0">
-                    <SectionHeader title="Note" icon={FileText} className="mb-3" />
+                    <SectionHeader title="Note" icon={FileText} className="mb-4" />
                     <p className="text-pm-sm text-content-secondary whitespace-pre-wrap leading-relaxed">{selected.notes}</p>
                   </Card>
                 )}
@@ -351,15 +352,15 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
                 {/* Projects */}
                 <Card padding="lg" className="min-w-0">
                   <SectionHeader
-                    title="Proiecte" icon={FolderKanban} className="mb-3"
+                    title="Proiecte" icon={FolderKanban} className="mb-4"
                     meta={selStats ? `${selStats.count} total · ${money(selStats.value, 'RON')}` : undefined}
                   />
                   {selectedProjects.length === 0 ? (
-                    <p className="text-pm-xs text-content-muted">Niciun proiect asociat.</p>
+                    <p className="text-pm-sm text-content-muted">Niciun proiect asociat.</p>
                   ) : (
-                    <ul className="-mx-1">
+                    <ul className="-mx-1 space-y-0.5">
                       {selectedProjects.map(p => (
-                        <li key={p.id} className="flex items-center justify-between gap-3 px-1 py-2 border-b border-line/40 last:border-b-0">
+                        <li key={p.id} className="flex items-center justify-between gap-3 px-1 py-2.5 border-b border-line/40 last:border-b-0">
                           <span className="text-pm-sm text-content-primary truncate min-w-0">{p.name}</span>
                           <span className="flex items-center gap-3 shrink-0">
                             {projectValue(p) > 0 && <span className="text-pm-xs font-medium tabular-nums text-content-secondary">{money(projectValue(p), 'RON')}</span>}
@@ -373,14 +374,13 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
 
                 {/* CRM tools (timeline, scoring, tags, import, communication) */}
                 <Card padding="lg" className="min-w-0">
-                  <SectionHeader title="Instrumente CRM" icon={Users} className="mb-3" />
-                  <ClientsEnhancements clients={clients} />
+                  <SectionHeader title="Instrumente CRM" icon={Users} className="mb-5" />
+                  <ClientsEnhancements clients={clients} embedded />
                 </Card>
               </div>
             )}
-          </div>
+          </CardSlot>
         </div>
-      </Page.Body>
 
       {/* Create / edit client */}
       {dialogOpen && (
@@ -427,7 +427,7 @@ export default function ClientsPage({ user: _user }: { user: User | null }) {
           </div>
         </div>
       )}
-    </Page>
+    </DashboardLayout>
   );
 }
 

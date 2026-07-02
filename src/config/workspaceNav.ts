@@ -17,8 +17,9 @@ import {
   AlertTriangle, Package, Boxes, ShoppingCart, DollarSign, BarChart3,
   GraduationCap, Mail, Bell, Activity, Settings,
   CheckSquare, Calendar, MapPin,
-  LayoutDashboard, MonitorDown,
-} from 'lucide-react';
+  LayoutDashboard, MonitorDown, Printer, KeyRound, MonitorSmartphone,
+  Archive,
+} from '@/icons';
 import { PAGE_IDS } from './constants';
 
 export interface WorkspaceSubpage {
@@ -61,13 +62,19 @@ export const WORKSPACE_SUBPAGES: Record<string, WorkspaceSubpage[]> = {
     { id: 'documents', label: 'Documente', icon: FileText },
     { id: 'reports', label: 'Rapoarte', icon: BarChart3 },
   ],
-  [PAGE_IDS.INSTRUMENTE_WORKSPACE]: [
-    { id: 'birou-control', label: 'Birou de control', icon: LayoutDashboard },
-    { id: 'tutorial', label: 'Tutorial', icon: GraduationCap },
+  [PAGE_IDS.COMUNICARE_WORKSPACE]: [
     { id: 'email', label: 'Email', icon: Mail },
     { id: 'chat', label: 'Mesaje', icon: MessageCircle },
     { id: 'alerts', label: 'Alerte', icon: Bell },
+  ],
+  [PAGE_IDS.INSTRUMENTE_WORKSPACE]: [
+    { id: 'birou-control', label: 'Birou de control', icon: LayoutDashboard },
+    { id: 'tutorial', label: 'Tutorial', icon: GraduationCap },
     { id: 'download-app', label: 'Aplicație desktop', icon: MonitorDown },
+    { id: 'print', label: 'Imprimare', icon: Printer },
+    { id: 'remote-support', label: 'Asistență la distanță', icon: MonitorSmartphone },
+    { id: 'licente', label: 'Licențe', icon: KeyRound },
+    { id: 'arhiva', label: 'Arhivă & update', icon: Archive },
   ],
   [PAGE_IDS.PERSONAL_WORKSPACE]: [
     { id: 'tasks', label: 'Task-uri', icon: CheckSquare },
@@ -95,6 +102,13 @@ export function getWorkspaceSubpages(workspaceId: string | null, role: string): 
   if (!subs) return [];
   if (workspaceId === PAGE_IDS.SISTEM_WORKSPACE && role !== 'admin') {
     return subs.filter((s) => s.id === 'settings');
+  }
+  if (workspaceId === PAGE_IDS.INSTRUMENTE_WORKSPACE) {
+    return subs.filter((s) => {
+      if (s.id === 'arhiva' && role !== 'admin') return false;
+      if (s.id === 'remote-support' && role !== 'admin' && role !== 'manager') return false;
+      return true;
+    });
   }
   return subs;
 }

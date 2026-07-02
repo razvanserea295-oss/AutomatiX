@@ -68,6 +68,11 @@ export function runMigrations(db: Database): void {
   const RENAMED: Record<string, string> = {
     // newFilename : oldFilename  (110_initial_setup collided with 110_briefing_*)
     '122_initial_setup.sql': '110_initial_setup.sql',
+    // 112_contract_drop_draft_status collided with 112_shared_storage_pool.
+    // Renumbered the contract one (a self-contained, dependency-free data
+    // UPDATE) to 130 so shared_storage_pool keeps its #112 slot — it must run
+    // before #127 (127_shared_folders ALTERs the shared_storage_pool table).
+    '130_contract_drop_draft_status.sql': '112_contract_drop_draft_status.sql',
   };
   for (const [newName, oldName] of Object.entries(RENAMED)) {
     if (files.includes(newName) && applied.has(oldName) && !applied.has(newName)) {

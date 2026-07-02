@@ -5,7 +5,7 @@ import {
   Target, Plus, FileText, MapPin, Phone, MessageSquare, Pencil, AlertTriangle,
   ArrowRight, TrendingUp, Users, DollarSign, CalendarClock, Clock, Loader2,
   X as XIcon, CircleCheckBig,
-} from 'lucide-react';
+} from '@/icons';
 
 import type { User } from '@/core/types';
 import { cn } from '@/lib/cn';
@@ -21,16 +21,13 @@ import { ViewerBanner } from '@/components/ViewerBanner';
 import FormModal, { type FormField } from '@/components/FormModal';
 import { useFormModal } from '@/hooks/useFormModal';
 
-import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout, Kpi } from '@/app-ui';
 import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
+import Page from '@/redesign/ui/Page';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import StatusBadge from '@/redesign/ui/StatusBadge';
-import HeroHeader from '@/redesign/ui/HeroHeader';
 import EmptyState from '@/redesign/ui/EmptyState';
-import CardGrid, { type CardGridItem } from '@/redesign/ui/CardGrid';
-import EditLayoutButton from '@/redesign/ui/EditLayoutButton';
 import { filterSelectCls } from '@/redesign/ui/filterControls';
 import { vtName } from '@/redesign/lib/viewTransition';
 
@@ -70,7 +67,6 @@ type Tab = 'pipeline' | 'executie';
 
 export default function SalesHubPage({ user }: { user: User | null }) {
   const isManagerOrAdmin = ['admin', 'manager'].includes((user?.role_name || '').toLowerCase());
-  const userKey = String(user?.id ?? user?.username ?? 'anon');
   const isViewer = useViewerMode('sales-hub');
   const money = useMoney();
   const [, setLocation] = useLocation();
@@ -190,7 +186,7 @@ export default function SalesHubPage({ user }: { user: User | null }) {
     { name: 'contact_phone', label: 'Telefon', type: 'tel', placeholder: '07xx xxx xxx' },
     { name: 'product_interest', label: 'Produs / Interes', type: 'text', required: true, placeholder: 'Stație betoane M60…' },
     { name: 'location', label: 'Locație', type: 'text', placeholder: 'Oraș, județ' },
-    { name: 'estimated_value', label: 'Valoare estimată (EUR)', type: 'number', placeholder: '0' },
+    { name: 'estimated_value', label: 'Valoare estimată (lei)', type: 'number', placeholder: '0' },
     { name: 'status', label: 'Status', type: 'select', options: LEAD_STATUS_OPTIONS.map(s => ({ value: s.value, label: s.label })) },
     { name: 'next_followup_date', label: 'Data următorul followup', type: 'date' },
     { name: 'notes', label: 'Note inițiale', type: 'textarea' },
@@ -210,52 +206,57 @@ export default function SalesHubPage({ user }: { user: User | null }) {
 
   const cardProps = { money, isViewer, onOpen: openLead, onEdit: openLeadEdit, onUpdate: (l: SalesLead) => { setUpdateLead(l); setUpdateText(''); } };
 
-  // ── Top KPI strip (user-reorderable via CardGrid) ──
-  const kpiItems: CardGridItem[] = [
-    {
-      id: 'in-discutie',
-      label: 'În discuție',
-      node: <KpiCard compact label="În discuție"  value={metrics.total}       icon={Users}      iconColor="text-status-blue" />,
-    },
-    {
-      id: 'in-negocieri',
-      label: 'În negocieri',
-      node: <KpiCard compact label="În negocieri" value={metrics.inNegocieri} icon={TrendingUp} iconColor="text-status-amber" />,
-    },
-    {
-      id: 'convertite',
-      label: 'Convertite',
-      node: <KpiCard compact label="Convertite"   value={metrics.converted}   icon={Target}     iconColor="text-status-green" />,
-    },
-    {
-      id: 'valoare-pipeline',
-      label: 'Valoare pipeline',
-      defaultSpan: 2,
-      node: (
-        <KpiCard
-          hero
-          label="Valoare pipeline" icon={DollarSign}
-          value={money(metrics.pipelineValue, 'EUR', 0)}
-        />
-      ),
-    },
-  ];
+  const tabToolbar = (
+    <div className="flex flex-wrap items-center gap-2">
+      <div className="inline-flex items-center gap-0.5 rounded-xl border border-line bg-surface-secondary p-1" role="group" aria-label="Vizualizare vânzări">
+        <button
+          type="button"
+          onClick={() => setTab('pipeline')}
+          aria-pressed={tab === 'pipeline'}
+          className={cn(
+            'h-8 px-3 rounded-lg text-pm-xs font-semibold transition-smooth duration-150',
+            tab === 'pipeline' ? 'bg-accent text-[var(--color-on-accent)] shadow-[var(--elevation-1)]' : 'text-content-muted hover:text-content-primary hover:bg-surface-tertiary',
+          )}
+        >
+          Pipeline
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('executie')}
+          aria-pressed={tab === 'executie'}
+          className={cn(
+            'h-8 px-3 rounded-lg text-pm-xs font-semibold transition-smooth duration-150',
+            tab === 'executie' ? 'bg-accent text-[var(--color-on-accent)] shadow-[var(--elevation-1)]' : 'text-content-muted hover:text-content-primary hover:bg-surface-tertiary',
+          )}
+        >
+          În execuție
+        </button>
+      </div>
+
+      {tab === 'pipeline' && isManagerOrAdmin && leads.length > 0 && (
+        <>
+          <select value={creatorFilter} onChange={e => setCreatorFilter(e.target.value)} className={filterSelectCls(creatorFilter !== '')}>
+            <option value="">Toți utilizatorii</option>
+            {creators.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)} className={filterSelectCls(sortBy !== '')}>
+            <option value="">Sortare: implicită</option>
+            <option value="user">După utilizator</option>
+            <option value="newest">Cele mai noi</option>
+            <option value="oldest">Cele mai vechi</option>
+          </select>
+        </>
+      )}
+    </div>
+  );
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="full" padding="flush" className="!gap-0 overflow-hidden">
-        <ViewerBanner page="sales-hub" />
-
-        <div className="px-6 pt-5 pb-4 shrink-0">
-          <HeroHeader
-            className="enter-up"
-            style={{ animationDelay: '0ms' }}
-            icon={Target}
-            title="Sales Hub"
-            subtitle="Pipeline-ul de discuții cu clienții și proiectele trecute în execuție"
+    <>
+      <DashboardLayout
+        chrome={(
+          <PageChrome
             actions={
               <>
-                <EditLayoutButton />
                 <Button size="md" variant="secondary" onClick={() => setLocation('/quotations')}>
                   <FileText className="h-4 w-4" /> Oferte
                 </Button>
@@ -266,62 +267,36 @@ export default function SalesHubPage({ user }: { user: User | null }) {
                 )}
               </>
             }
-          >
-            {/* In-page view toggle + manager filters */}
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex items-center gap-0.5 rounded-xl border border-line bg-surface-secondary p-1" role="group" aria-label="Secțiune">
-                {([['pipeline', 'Pipeline'], ['executie', 'În execuție']] as Array<[Tab, string]>).map(([id, label]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setTab(id)}
-                    aria-pressed={tab === id}
-                    className={cn(
-                      'h-8 px-3 rounded-lg text-pm-xs font-semibold transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]',
-                      tab === id ? 'bg-accent text-[var(--color-on-accent)] shadow-[var(--elevation-1)]' : 'text-content-muted hover:text-content-primary hover:bg-surface-tertiary',
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-
-              {tab === 'pipeline' && isManagerOrAdmin && leads.length > 0 && (
-                <>
-                  <select value={creatorFilter} onChange={e => setCreatorFilter(e.target.value)} className={filterSelectCls(creatorFilter !== '')}>
-                    <option value="">Toți utilizatorii</option>
-                    {creators.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <select value={sortBy} onChange={e => setSortBy(e.target.value)} className={filterSelectCls(sortBy !== '')}>
-                    <option value="">Sortare: implicită</option>
-                    <option value="user">După utilizator</option>
-                    <option value="newest">Cele mai noi</option>
-                    <option value="oldest">Cele mai vechi</option>
-                  </select>
-                </>
-              )}
-            </div>
-          </HeroHeader>
-        </div>
-
-        {/* KPI strip — Valoare pipeline is the hero (the one figure not visible on the board) */}
-        <div className="px-6 pb-4 shrink-0">
-          <div className="enter-up" style={{ animationDelay: '80ms' }}>
-            <CardGrid region="sales:kpis" userKey={userKey} cols={5} items={kpiItems} />
+            toolbar={tabToolbar}
+          />
+        )}
+      leading={<ViewerBanner page="sales-hub" />}
+        kpis={(
+          <Page.Kpis cols={4}>
+            <Kpi label="În discuție" value={metrics.total} icon={Users} iconColor="text-status-blue" />
+            <Kpi label="În negocieri" value={metrics.inNegocieri} icon={TrendingUp} iconColor="text-status-amber" />
+            <Kpi label="Convertite" value={metrics.converted} icon={Target} iconColor="text-status-green" />
+            <Kpi label="Valoare pipeline" value={money(metrics.pipelineValue, 'EUR', 0)} icon={DollarSign} />
+          </Page.Kpis>
+        )}
+        bodyClassName="overflow-hidden page-body-polish"
+        contentClassName="min-h-0 overflow-hidden flex flex-col stagger-in"
+      >
+        {metrics.stale > 0 && tab === 'pipeline' && (
+          <div className="shrink-0 flex items-center gap-2 rounded-xl border border-status-red/30 bg-status-red/5 px-3 py-2 text-pm-xs text-status-red anim-fade-slide-in">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span className="min-w-0"><strong className="font-semibold">{metrics.stale}</strong> lead-uri fără update de 7+ zile — sunt marcate cu roșu pe carduri.</span>
           </div>
-          {metrics.stale > 0 && tab === 'pipeline' && (
-            <div className="mt-3 flex items-center gap-2 rounded-xl border border-status-red/30 bg-status-red/5 px-3 py-2 text-pm-xs text-status-red anim-fade-slide-in">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              <span className="min-w-0"><strong className="font-semibold">{metrics.stale}</strong> lead-uri fără update de 7+ zile — sunt marcate cu roșu pe carduri.</span>
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Board / list */}
         {loading ? (
-          <div className="flex flex-1 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-content-muted" /></div>
+          <div className="page-loading-shell flex-1" role="status" aria-label="Se încarcă pipeline-ul">
+            <Loader2 className="h-6 w-6 animate-spin text-accent" aria-hidden />
+            <div className="ds-skeleton h-2 w-28" />
+          </div>
         ) : tab === 'pipeline' ? (
-          <div className="flex flex-1 min-h-0 gap-4 px-6 pb-4 overflow-hidden enter-fade">
+          <div className="flex flex-1 min-h-0 gap-4 overflow-hidden">
             {/* Active pipeline stages */}
             <div className="flex flex-1 min-w-0 gap-3 overflow-x-auto overflow-y-hidden scroll-fade-x pb-1">
               {PIPELINE_STAGES.map((stage, i) => {
@@ -378,7 +353,7 @@ export default function SalesHubPage({ user }: { user: User | null }) {
           </div>
         ) : (
           // ── Proiecte în execuție ──
-          <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-5 enter-fade">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {activeProjects.length === 0 ? (
               <Card padding="lg" className="flex items-center justify-center min-h-[40vh]">
                 <EmptyState icon={ArrowRight} title="Niciun proiect în execuție"
@@ -406,7 +381,7 @@ export default function SalesHubPage({ user }: { user: User | null }) {
             )}
           </div>
         )}
-      </Page.Body>
+      </DashboardLayout>
 
       {/* Create lead */}
       <FormModal
@@ -456,10 +431,9 @@ export default function SalesHubPage({ user }: { user: User | null }) {
           </div>
         </div>
       )}
-    </Page>
+    </>
   );
 }
-
 
 // ── Pipeline stage column ──────────────────────────────────────────────────
 function SalesColumn({
@@ -476,7 +450,7 @@ function SalesColumn({
   return (
     <Card
       tone="subtle"
-      className={cn('flex flex-col min-h-0 overflow-hidden transition-colors', isOver && 'ring-2 ring-accent/40 bg-accent/5')}
+      className={cn('flex flex-col min-h-0 transition-colors', isOver && 'ring-2 ring-accent/40 bg-accent/5')}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
@@ -490,7 +464,7 @@ function SalesColumn({
           {count}
         </span>
       </div>
-      <div key={count} className="flex-1 overflow-y-auto p-2 space-y-2 stagger-in">{children}</div>
+      <div key={count} className="flex-1 min-h-0 overflow-y-auto p-2 space-y-3 stagger-in scrollbar-thin">{children}</div>
     </Card>
   );
 }
@@ -516,7 +490,7 @@ function LeadCard({
       onDragStart={onDragStart}
       onClick={() => onOpen(lead.id)}
       className={cn(
-        'vt-morph group cursor-pointer rounded-xl border bg-surface-primary p-3 transition-smooth duration-150 hover:shadow-[var(--elevation-2)] hover:border-accent/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]',
+        'vt-morph group relative cursor-pointer rounded-xl border bg-surface-primary p-3 transition-smooth duration-150 hover:z-10 hover:shadow-[var(--elevation-2)] hover:border-accent/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] motion-reduce:transform-none motion-reduce:transition-none focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]',
         stale ? 'border-status-red/40' : 'border-line',
       )}
       style={{ viewTransitionName: vtName('lead', lead.id) }}

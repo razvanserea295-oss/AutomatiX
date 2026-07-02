@@ -1,34 +1,18 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'wouter';
 import {
   Mail, Phone, MapPin, Trash2, Send, ArrowRight, Paperclip,
   X, Loader2, Image as ImageLucide, Briefcase,
   FileText, Download, File as FileIconLucide, Pencil,
-  CalendarClock, Coins, User as UserIcon, Megaphone, Plus,
-} from 'lucide-react';
+  CalendarClock, Coins, User as UserIcon, Megaphone, Plus, ArrowLeft,
+} from '@/icons';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
 import Page from '@/redesign/ui/Page';
-import PageHeader from '@/redesign/ui/PageHeader';
+import { PageChrome, DashboardLayout } from '@/app-ui';
+import PageLoadingShell from '@/redesign/ui/PageLoadingShell';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import Card, { CardBody, CardHeader } from '@/redesign/ui/Card';
@@ -68,11 +52,6 @@ const LEAD_STATUS_OPTIONS = [
   { value: 'convertit',       label: 'Convertit' },
 ];
 
-
-
-
-
-
 async function compressImage(file: File, maxEdge = 1024, quality = 0.7): Promise<string> {
   const url = URL.createObjectURL(file);
   try {
@@ -100,11 +79,6 @@ async function compressImage(file: File, maxEdge = 1024, quality = 0.7): Promise
   }
 }
 
-
-
-
-
-
 function pickFileIcon(att: { filename: string | null; data: string }): typeof FileIconLucide {
   const name = (att.filename || '').toLowerCase();
   const ext = name.includes('.') ? name.slice(name.lastIndexOf('.') + 1) : '';
@@ -124,10 +98,7 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [noteText, setNoteText] = useState('');
-  
-  
-  
-  
+
   const [updateOpen, setUpdateOpen] = useState(false);
   const [updateText, setUpdateText] = useState('');
   const [savingUpdate, setSavingUpdate] = useState(false);
@@ -155,8 +126,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
 
   useEffect(() => { fetch(); }, [fetch]);
 
-  
-  
   useEffect(() => {
     try {
       if (sessionStorage.getItem('promix_lead_edit') === String(leadId)) {
@@ -166,7 +135,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
     } catch {  }
   }, [leadId]);
 
-  
   const addNote = async () => {
     if (!lead || !noteText.trim()) return;
     try {
@@ -176,10 +144,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Eroare'); }
   };
 
-  
-  
-  
-  
   const saveUpdate = async () => {
     if (!lead || !updateText.trim() || savingUpdate) return;
     setSavingUpdate(true);
@@ -196,7 +160,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
     }
   };
 
-  
   const changeStatus = async (newStatus: string) => {
     if (!lead) return;
     try {
@@ -205,7 +168,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Eroare'); }
   };
 
-  
   const submitEdit = async (data: Record<string, any>) => {
     if (!lead) return;
     const num = data.estimated_value;
@@ -227,13 +189,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
     fetch();
   };
 
-  
-  
-  
-  
-  
-  
-  
   const fileToDataUrl = (file: File): Promise<string> => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -299,7 +254,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
     }
   };
 
-  
   const submitConvert = async (data: Record<string, unknown>) => {
     if (!lead) return;
     const name = String(data.project_name ?? '').trim();
@@ -315,7 +269,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
     }
   };
 
-  
   const deleteLead = async () => {
     if (!lead) return;
     if (!await confirmDialog({ title: 'Șterge discuția?', body: 'Vor dispărea și toate notele și fișierele atașate.', danger: true })) return;
@@ -327,17 +280,21 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
   };
 
   if (loading) {
-    return (
-      <Page fit>
-        <div className="flex flex-1 items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-content-muted" />
-        </div>
-      </Page>
-    );
+    return <PageLoadingShell />;
   }
   if (!lead) {
     return (
-      <Page fit>
+      <DashboardLayout
+        chrome={(
+          <PageChrome
+            secondaryActions={(
+              <Button variant="ghost" size="md" onClick={() => setLocation('/sales-hub')}>
+                <ArrowLeft className="h-4 w-4" /> Înapoi
+              </Button>
+            )}
+          />
+        )}
+      >
         <div className="flex flex-1 items-center justify-center">
           <EmptyState
             icon={Briefcase}
@@ -350,70 +307,69 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
             }
           />
         </div>
-      </Page>
+      </DashboardLayout>
     );
   }
 
   const statusTok = leadStatus(lead.status);
 
-  
-  
-  
-  
   const isImageAttachment = (a: Attachment) =>
     a.kind === 'photo' || a.data?.startsWith('data:image/');
   const images = attachments.filter(isImageAttachment);
   const files  = attachments.filter(a => !isImageAttachment(a));
 
   return (
-    <Page fit>
-      {}
-      <PageHeader
-        title={lead.client_name}
-        subtitle={lead.product_interest || 'Fără produs specificat'}
-        icon={<Briefcase className="h-4 w-4" />}
-        onBack={() => setLocation('/sales-hub')}
-      >
-        <StatusBadge {...statusTok} size="sm" />
-        <Button
-          variant="secondary"
-          size="md"
-          onClick={() => { setUpdateOpen(true); setUpdateText(''); }}
-          className="border-accent/40 bg-accent-muted text-accent hover:bg-accent hover:text-[var(--color-on-accent)]"
-          title="Înregistrează un update / noutate pe lead — resetează avertismentul „fără update”"
-        >
-          <Megaphone className="h-3.5 w-3.5" /> Update
-        </Button>
-        <Button
-          variant="outline"
-          size="md"
-          onClick={() => setEditOpen(true)}
-          className="hover:text-accent hover:border-accent/30"
-          title="Editează detaliile lead-ului"
-        >
-          <Pencil className="h-3.5 w-3.5" /> Editează
-        </Button>
-        {lead.status !== 'convertit' && (
-          <Button size="md" onClick={() => setConvertOpen(true)}>
-            <ArrowRight className="h-3.5 w-3.5" /> Trece în execuție
-          </Button>
+    <DashboardLayout
+        chrome={(
+          <PageChrome
+            secondaryActions={(
+              <Button variant="ghost" size="md" onClick={() => setLocation('/sales-hub')}>
+                <ArrowLeft className="h-4 w-4" /> Înapoi
+              </Button>
+            )}
+            actions={(
+              <>
+                <StatusBadge {...statusTok} size="sm" />
+                <Button
+                  variant="secondary"
+                  size="md"
+                  onClick={() => { setUpdateOpen(true); setUpdateText(''); }}
+                  className="border-accent/40 bg-accent-muted text-accent hover:bg-accent hover:text-[var(--color-on-accent)]"
+                  title="Înregistrează un update / noutate pe lead — resetează avertismentul „fără update”"
+                >
+                  <Megaphone className="h-3.5 w-3.5" /> Update
+                </Button>
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={() => setEditOpen(true)}
+                  className="hover:text-accent hover:border-accent/30"
+                  title="Editează detaliile lead-ului"
+                >
+                  <Pencil className="h-3.5 w-3.5" /> Editează
+                </Button>
+                {lead.status !== 'convertit' && (
+                  <Button size="md" onClick={() => setConvertOpen(true)}>
+                    <ArrowRight className="h-3.5 w-3.5" /> Trece în execuție
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={deleteLead}
+                  className="text-content-muted hover:bg-status-red/10 hover:text-status-red hover:border-status-red/30"
+                  title="Șterge discuția"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Șterge
+                </Button>
+              </>
+            )}
+          />
         )}
-        {
-}
-        <Button
-          variant="outline"
-          size="md"
-          onClick={deleteLead}
-          className="text-content-muted hover:bg-status-red/10 hover:text-status-red hover:border-status-red/30"
-          title="Șterge discuția"
-        >
-          <Trash2 className="h-3.5 w-3.5" /> Șterge
-        </Button>
-      </PageHeader>
+      bodyClassName="relative"
+      contentClassName="max-w-[var(--page-max-wide)] mx-auto w-full"
+    >
 
-      <Page.Body fit maxWidth="wide" padding="comfortable">
-
-        {}
         <Page.Kpis cols={4} className="shrink-0">
           <KpiCard
             label="Status"
@@ -444,13 +400,9 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
         {
 }
         <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pr-0.5">
-
-        {}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
 
           {
-
-
 
 }
           <div key={`main-${lead.id}`} className="lg:col-span-8 space-y-4 stagger-in">
@@ -569,8 +521,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
               )}
             </CardBody>
             </Card>
-
-            {}
             {lead.notes && (
               <Card>
                 <CardBody padding="lg">
@@ -593,8 +543,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
                     </Button>
                   )}
                 />
-
-                {}
                 {updateOpen && (
                   <div className="mb-4 rounded-xl border border-accent/30 bg-accent-muted/40 p-3 anim-pop">
                     <textarea
@@ -630,8 +578,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
                     Niciun update încă — apasă „Înregistrează update” când ai noutăți.
                   </p>
                 ) : (
-                  
-
 
                   <div key={`feed-${lead.id}-${lead.recent_notes.length}`} className="space-y-2 stagger-in">
                     {lead.recent_notes.map(n => (
@@ -644,8 +590,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
                     ))}
                   </div>
                 )}
-
-                {}
                 <div className="flex gap-2 mt-4 pt-4 border-t border-line/40">
                   <input
                     value={noteText}
@@ -665,8 +609,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
           {
 }
           <div key={`rail-${lead.id}`} className="lg:col-span-4 space-y-4 stagger-in">
-
-            {}
             <Card>
               <CardHeader
                 title={
@@ -702,8 +644,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
                 </dl>
               </CardBody>
             </Card>
-
-            {}
             <Card>
               <CardHeader
                 title={
@@ -754,12 +694,9 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
         </div>
 
         </div>{}
-      </Page.Body>
-
-      {}
       {previewImage && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center cursor-pointer p-4 enter-fade" onClick={() => setPreviewImage(null)}>
-          <img src={previewImage} alt="Preview" className="max-w-[90vw] max-h-[90vh] object-contain shadow-2xl enter-scale" onClick={e => e.stopPropagation()} />
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center cursor-pointer p-4" onClick={() => setPreviewImage(null)}>
+          <img src={previewImage} alt="Preview" className="max-w-[90vw] max-h-[90vh] object-contain shadow-2xl" onClick={e => e.stopPropagation()} />
           <button
             onClick={() => setPreviewImage(null)}
             className="absolute top-4 right-4 h-9 w-9 rounded-full bg-surface-primary/20 text-white hover:bg-surface-primary/30 flex items-center justify-center transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
@@ -769,8 +706,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
           </button>
         </div>
       )}
-
-      {}
       <FormModal
         isOpen={editOpen}
         onClose={() => setEditOpen(false)}
@@ -782,7 +717,7 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
           { name: 'contact_email', label: 'Email', type: 'email' },
           { name: 'location', label: 'Locație', type: 'text' },
           { name: 'product_interest', label: 'Produs / interes', type: 'text' },
-          { name: 'estimated_value', label: 'Valoare estimată (EUR)', type: 'number', min: 0 },
+          { name: 'estimated_value', label: 'Valoare estimată (lei)', type: 'number', min: 0 },
           { name: 'next_followup_date', label: 'Următor follow-up', type: 'date' },
         ]}
         initialData={{
@@ -798,8 +733,6 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
         onSubmit={submitEdit}
         submitLabel="Salvează"
       />
-
-      {}
       <FormModal
         isOpen={convertOpen}
         onClose={() => setConvertOpen(false)}
@@ -809,13 +742,9 @@ export default function LeadDetailPage({ user: _user, leadId }: Props) {
         onSubmit={submitConvert}
         submitLabel="Convertește"
       />
-    </Page>
+    </DashboardLayout>
   );
 }
-
-
-
-
 
 function Field({
   label, value, icon: Icon, href,

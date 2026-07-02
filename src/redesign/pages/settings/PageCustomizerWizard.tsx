@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { CSSProperties } from 'react';
-import { X, ArrowLeft, ArrowRight, Check, RotateCcw, Search } from 'lucide-react';
+import { X, ArrowLeft, ArrowRight, Check, RotateCcw, Search } from '@/icons';
 import Segmented from '@/redesign/ui/Segmented';
 import { usePageCustomizationStore, type PageCustom } from '@/store/pageCustomizationStore';
 
@@ -120,7 +120,7 @@ export default function PageCustomizerWizard({ initialPageId, onClose }: Props) 
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 anim-fade-in">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 bg-black/55" onClick={onClose} aria-hidden />
 
       <div role="dialog" aria-modal="true" aria-label="Personalizare pe pagină"
         className="relative z-10 flex h-[min(88vh,720px)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)] anim-scale-in">

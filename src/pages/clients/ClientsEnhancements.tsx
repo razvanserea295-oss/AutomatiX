@@ -4,14 +4,14 @@
 
 
 import { useMemo, useState } from 'react';
-import { Upload, MapPin, History, ShieldAlert, Tags, Mail, Cake, Plus, Trash2 } from 'lucide-react';
+import { Upload, MapPin, History, ShieldAlert, Tags, Mail, Cake, Plus, Trash2 } from '@/icons';
 import { useLocalStorage, SectionCard } from '@/components/enhancements';
 import Button from '@/components/ui/Button';
 import { toast } from '@/store/toastStore';
 import { formatDateRo } from '@/lib/format';
 
 interface ClientLite { id: number; name: string; email?: string | null; address?: string | null; phone?: string | null }
-interface Props { clients: ClientLite[] }
+interface Props { clients: ClientLite[]; embedded?: boolean }
 
 function CsvImportCard() {
   const onFile = async (file: File) => {
@@ -240,20 +240,9 @@ function AnniversariesCard({ clients }: Props) {
   );
 }
 
-export default function ClientsEnhancements({ clients }: Props) {
-  
-  
-  
-  
-  
-  
-  
-  return (
-    <section className="border-t border-line p-3 space-y-3 bg-surface-secondary/40">
-      <header>
-        <p className="text-pm-eyebrow text-content-muted mb-1">Clienți — extra</p>
-        <h2 className="text-pm-md font-semibold text-content-primary">Tools CRM</h2>
-      </header>
+export default function ClientsEnhancements({ clients, embedded = false }: Props) {
+  const cards = (
+    <>
       <TimelineCard clients={clients} />
       <EmailBlastCard clients={clients} />
       <AnniversariesCard clients={clients} />
@@ -261,6 +250,20 @@ export default function ClientsEnhancements({ clients }: Props) {
       <GeoMapCard clients={clients} />
       <CreditScoreCard clients={clients} />
       <TagsCard clients={clients} />
+    </>
+  );
+
+  if (embedded) {
+    return <div className="space-y-[var(--density-gap-section)]">{cards}</div>;
+  }
+
+  return (
+    <section className="border-t border-line p-3 space-y-3 bg-surface-secondary/40">
+      <header>
+        <p className="text-pm-eyebrow text-content-muted mb-1">Clienți — extra</p>
+        <h2 className="text-pm-md font-semibold text-content-primary">Tools CRM</h2>
+      </header>
+      {cards}
     </section>
   );
 }

@@ -1,0 +1,4 @@
+# NEVER commit signing secrets or issued-license records.
+.keys/
+out/
+registry.json

@@ -1,51 +1,8 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { Crown, Flame, AlertTriangle, Clock, ArrowRight, Shield, Loader2, Check, CheckCircle2 } from 'lucide-react';
+import { Flame, AlertTriangle, Clock, ArrowRight, Shield, Loader2, Check, CheckCircle2 } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { useEscClose } from '@/hooks/useEscClose';
 import { useHandoffStore, type ProjectHandoff } from '@/store/handoffStore';
@@ -55,17 +12,15 @@ import type { User } from '@/core/types';
 import ManagerEnhancements from '@/pages/manager/ManagerEnhancements';
 import UserActivityLog from '@/pages/manager/UserActivityLog';
 
-import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout, PAGE_GRID_12 } from '@/app-ui';
 import Card, { CardHeader, CardBody } from '@/redesign/ui/Card';
+import Page from '@/redesign/ui/Page';
 import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import StatusBadge from '@/redesign/ui/StatusBadge';
-import HeroHeader from '@/redesign/ui/HeroHeader';
 import AnimatedTabs from '@/redesign/ui/AnimatedTabs';
 import EmptyState from '@/redesign/ui/EmptyState';
-import CardGrid, { type CardGridItem } from '@/redesign/ui/CardGrid';
-import EditLayoutButton from '@/redesign/ui/EditLayoutButton';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
 
 interface Anomaly {
@@ -81,14 +36,12 @@ interface Anomaly {
   created_at: string;
 }
 
-
 const SEV_COLORS: Record<string, string> = {
   critical: 'bg-status-red/15 text-status-red border-status-red/40',
   high: 'bg-status-amber/15 text-status-amber border-status-amber/40',
   medium: 'bg-status-blue/15 text-status-blue border-status-blue/40',
   low: 'bg-surface-tertiary text-content-muted border-line',
 };
-
 
 const sevTone = (severity: string): StatusTone =>
   severity === 'critical' ? 'danger'
@@ -98,8 +51,8 @@ const sevTone = (severity: string): StatusTone =>
 
 export default function ManagerControlPage({ user }: { user: User | null }) {
   const role = (user?.role_name || '').toLowerCase();
-  const isManager = role === 'admin' || role === 'manager';
-  const userKey = String(user?.id ?? user?.username ?? 'anon');
+  const _isManager = role === 'admin' || role === 'manager';
+  void _isManager;
   const [tab, setTab] = useState<'supervision' | 'activity'>('supervision');
 
   const pending = useHandoffStore(s => s.pending);
@@ -157,8 +110,6 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
     } finally { setActingId(null); }
   };
 
-  
-  
   const openForce = (h: ProjectHandoff) => {
     startMorphTransition(() => flushSync(() => setForcing(h)), { dir: 'forward' });
   };
@@ -177,108 +128,69 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
 
   const overdue = pending.filter(h => new Date(h.sla_due_at).getTime() < Date.now());
 
-  const kpiItems: CardGridItem[] = [
-    {
-      id: 'pending',
-      label: 'Predări pendinte',
-      node: (
-        <KpiCard
-          vtName={vtName('mgr-kpi', 'pending')}
-          label="Predări pendinte"
-          value={pending.length}
-          icon={Clock}
-          iconColor="text-accent"
-        />
-      ),
-    },
-    {
-      id: 'overdue',
-      label: 'Predări blocate >24h',
-      node: (
-        <KpiCard
-          vtName={vtName('mgr-kpi', 'overdue')}
-          label="Predări blocate >24h"
-          value={overdue.length}
-          icon={AlertTriangle}
-          iconColor={overdue.length > 0 ? 'text-status-red' : 'text-content-muted'}
-        />
-      ),
-    },
-    {
-      id: 'urgent',
-      label: 'Predări urgente',
-      node: (
-        <KpiCard
-          vtName={vtName('mgr-kpi', 'urgent')}
-          label="Predări urgente"
-          value={pending.filter(h => h.is_urgent).length}
-          icon={Flame}
-          iconColor={pending.some(h => h.is_urgent) ? 'text-status-amber' : 'text-content-muted'}
-        />
-      ),
-    },
-    {
-      id: 'anomalies',
-      label: 'Anomalii nerezolvate',
-      node: (
-        <KpiCard
-          vtName={vtName('mgr-kpi', 'anomalies')}
-          label="Anomalii nerezolvate"
-          value={anomalies.length}
-          icon={Shield}
-          iconColor={anomalies.some(a => a.severity === 'critical') ? 'text-status-red' : 'text-content-muted'}
-        />
-      ),
-    },
-  ];
+  const kpiStrip = tab === 'supervision' ? (
+    <Page.Kpis cols={4} className="shrink-0">
+      <KpiCard
+        vtName={vtName('mgr-kpi', 'pending')}
+        label="Predări pendinte"
+        value={pending.length}
+        icon={Clock}
+        iconColor="text-accent"
+      />
+      <KpiCard
+        vtName={vtName('mgr-kpi', 'overdue')}
+        label="Predări blocate >24h"
+        value={overdue.length}
+        icon={AlertTriangle}
+        iconColor={overdue.length > 0 ? 'text-status-red' : 'text-content-muted'}
+      />
+      <KpiCard
+        vtName={vtName('mgr-kpi', 'urgent')}
+        label="Predări urgente"
+        value={pending.filter(h => h.is_urgent).length}
+        icon={Flame}
+        iconColor={pending.some(h => h.is_urgent) ? 'text-status-amber' : 'text-content-muted'}
+      />
+      <KpiCard
+        vtName={vtName('mgr-kpi', 'anomalies')}
+        label="Anomalii nerezolvate"
+        value={anomalies.length}
+        icon={Shield}
+        iconColor={anomalies.some(a => a.severity === 'critical') ? 'text-status-red' : 'text-content-muted'}
+      />
+    </Page.Kpis>
+  ) : undefined;
 
   return (
-    <Page fit className="mod-shell">
-      {}
-      <div className="px-7 pt-6 pb-0 shrink-0">
-        <HeroHeader
-          className="enter-up" style={{ animationDelay: '0ms' }}
-          eyebrow="Birou control"
-          icon={Crown}
-          title="Birou de control"
-          subtitle="Supraveghere predări, anomalii și activitatea utilizatorilor"
-          actions={
-            <div className="flex items-center gap-2">
-              {isManager && (
-                <AnimatedTabs
-                  active={tab}
-                  onChange={(id) => setTab(id as 'supervision' | 'activity')}
-                  tabs={[
-                    { id: 'supervision', label: 'Supraveghere' },
-                    { id: 'activity', label: 'Activitate utilizatori' },
-                  ]}
-                />
-              )}
-              {tab === 'supervision' && <Button size="sm" onClick={detectAnomalies}>Rulează detecție</Button>}
-              {tab === 'supervision' && <EditLayoutButton />}
-            </div>
-          }
-        />
-      </div>
-
+    <>
+      <DashboardLayout
+        chrome={(
+          <PageChrome
+            actions={tab === 'supervision' ? (
+              <Button variant="secondary" size="md" onClick={() => void detectAnomalies()}>
+                Detectează anomalii
+              </Button>
+            ) : undefined}
+            toolbar={
+              <AnimatedTabs
+                active={tab}
+                onChange={(id) => setTab(id as 'supervision' | 'activity')}
+                tabs={[
+                  { id: 'supervision', label: 'Supraveghere' },
+                  { id: 'activity', label: 'Activitate' },
+                ]}
+              />
+            }
+          />
+        )}
+      kpis={kpiStrip}
+        bodyClassName="overflow-y-auto"
+        contentClassName="max-w-[var(--page-max-wide)] mx-auto w-full"
+      >
       {tab === 'supervision' && (
-        <Page.Body key="supervision" fit padding="comfortable" maxWidth="wide" className="enter-fade overflow-y-auto">
-          {}
-          <div className="enter-up" style={{ animationDelay: '80ms' }}>
-            <CardGrid
-              region="manager-control:kpis"
-              userKey={userKey}
-              cols={4}
-              className="shrink-0"
-              items={kpiItems}
-            />
-          </div>
-
-          {}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-
-            {}
-            <Card className="xl:col-span-8 enter-up flex flex-col max-h-[55vh]" style={{ animationDelay: '140ms' }}>
+        <>
+          <div className={PAGE_GRID_12}>
+            <Card className="xl:col-span-8 flex flex-col max-h-[55vh]">
               <CardHeader
                 className="shrink-0"
                 title="Predări în supraveghere"
@@ -286,7 +198,6 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
                 actions={<StatusBadge tone="neutral" label={`${pending.length} pendinte`} size="sm" />}
               />
               <CardBody className="flex-1 min-h-0 overflow-y-auto space-y-4">
-                {}
                 {overdue.length > 0 && (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -301,8 +212,6 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
                     </div>
                   </div>
                 )}
-
-                {}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <h3 className="text-pm-2xs font-bold uppercase tracking-wide text-content-secondary">Toate predările pendinte</h3>
@@ -324,9 +233,7 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
                 </div>
               </CardBody>
             </Card>
-
-            {}
-            <Card className="xl:col-span-4 enter-up flex flex-col max-h-[55vh]" style={{ animationDelay: '200ms' }}>
+            <Card className="xl:col-span-4 flex flex-col max-h-[55vh]">
               <CardHeader
                 className="shrink-0"
                 title="Anomalii detectate"
@@ -380,9 +287,7 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
               </CardBody>
             </Card>
           </div>
-
-          {}
-          <div className="shrink-0 enter-up" style={{ animationDelay: '260ms' }}>
+          <div className="shrink-0">
             <ManagerEnhancements
               anomalies={anomalies}
               handoffs={pending}
@@ -392,18 +297,16 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
               }}
             />
           </div>
-        </Page.Body>
+        </>
       )}
 
       {tab === 'activity' && (
-        <div key="activity" className="flex-1 min-h-0 overflow-y-auto enter-up">
-          <UserActivityLog />
-        </div>
+        <UserActivityLog />
       )}
+      </DashboardLayout>
 
-      {}
       {forcing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center surface-glass p-4 anim-fade-in" onClick={() => setForcing(null)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 anim-fade-in" onClick={() => setForcing(null)}>
           <div
             className="bg-surface-elevated rounded-2xl border-2 border-status-red shadow-[var(--elevation-4)] w-full max-w-lg p-6 anim-scale-in vt-morph"
             style={{ viewTransitionName: vtName('handoff', forcing.id) }}
@@ -457,7 +360,7 @@ export default function ManagerControlPage({ user }: { user: User | null }) {
           </div>
         </div>
       )}
-    </Page>
+    </>
   );
 }
 

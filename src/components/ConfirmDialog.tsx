@@ -10,7 +10,7 @@
 
 
 import { useEffect, useState } from 'react';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, X } from '@/icons';
 
 export interface ConfirmOptions {
   title: string;

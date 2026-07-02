@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { X, Keyboard } from 'lucide-react';
+import { X, Keyboard } from '@/icons';
 import { formatKeys } from '@/hooks/useKeyboardShortcuts';
 
 export interface ShortcutEntry {

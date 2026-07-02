@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import {
-  Package, History, Plus,
-  Pencil, Trash2, Search, X as XIcon, Loader2,
-} from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Loader2, History, X as XIcon } from '@/icons';
 
 import type { User } from '@/core/types';
 import { cn } from '@/lib/cn';
@@ -13,13 +10,14 @@ import { useViewerMode } from '@/hooks/useViewerMode';
 import { toast } from '@/store/toastStore';
 import { confirmDialog } from '@/components/ConfirmDialog';
 
-import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
+import { PageChrome, DashboardLayout } from '@/app-ui';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import type { StatusTone } from '@/lib/statusTokens';
 import { filterSearchInputCls, filterSearchIconCls, filterSelectCls } from '@/redesign/ui/filterControls';
+import { THEAD_STICKY } from '@/redesign/ui/SortableTh';
 
 // ── Stock-status helpers (preserved verbatim) ──
 function qtyOf(m: Material): number { return m.quantity ?? m.stock ?? 0; }
@@ -163,49 +161,50 @@ export default function InventoryPage({ user: _user }: { user: User | null }) {
   ];
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="full" padding="flush" className="!gap-0 overflow-hidden">
-
-        {/* Header */}
-        <div className="px-6 pt-5 pb-4 shrink-0 border-b border-line/60">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex items-center gap-4 min-w-0">
-              <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-                <Package className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <h1 className="text-pm-lg font-semibold text-content-primary leading-tight truncate">Inventar</h1>
-                <p className="mt-0.5 text-pm-sm text-content-muted">Catalog de materiale, stocuri, valoare și consumuri</p>
+    <>
+    <DashboardLayout
+        chrome={(
+          <PageChrome
+            actions={
+              <>
+                <Button size="md" variant="secondary" onClick={() => setHistOpen(true)}>
+                  <History className="h-4 w-4" /> Istoric consum
+                </Button>
+                <Button size="md" onClick={openCreate}>
+                  <Plus className="h-4 w-4" /> Material nou
+                </Button>
+              </>
+            }
+            toolbar={
+              <div className="flex flex-wrap items-center gap-2 w-full">
+                <div className="relative flex-1 min-w-[200px] max-w-md">
+                  <Search className={filterSearchIconCls} aria-hidden />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Caută material, categorie..."
+                    className={filterSearchInputCls}
+                  />
+                </div>
+                <select className={filterSelectCls(!!filterCategory)} value={filterCategory} onChange={e => setFilterCategory(e.target.value)}>
+                  <option value="">Toate categoriile</option>
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select className={filterSelectCls(!!filterStatus)} value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                  <option value="">Toate stările</option>
+                  <option value="ok">Stoc OK</option>
+                  <option value="low">Stoc redus</option>
+                  <option value="out">Epuizat</option>
+                </select>
               </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button variant="secondary" size="md" onClick={() => setHistOpen(true)}><History className="h-4 w-4" /> Istoric consumuri</Button>
-              {!isViewer && <Button size="md" onClick={openCreate}><Plus className="h-4 w-4" /> Adaugă material</Button>}
-            </div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="px-6 pt-4 shrink-0 flex flex-wrap items-center gap-2">
-          <div className="group relative grow max-w-sm">
-            <Search className={filterSearchIconCls} aria-hidden />
-            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Denumire, categorie, furnizor…" aria-label="Caută material" className={`${filterSearchInputCls} !w-full`} />
-          </div>
-          <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className={filterSelectCls(filterCategory !== '')}>
-            <option value="">Toate categoriile</option>
-            {categories.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className={filterSelectCls(filterStatus !== '')}>
-            <option value="">Toate statusurile</option>
-            <option value="ok">În stoc</option>
-            <option value="low">Stoc redus</option>
-            <option value="out">Epuizat</option>
-          </select>
-          <span className="ml-auto text-pm-2xs text-content-muted tabular-nums">{data.length} / {materials.length}</span>
-        </div>
-
-        {/* Table */}
-        <div className="flex-1 min-h-0 overflow-auto px-6 py-4">
+            }
+          />
+        )}
+      bodyClassName="overflow-hidden page-body-polish"
+      contentClassName="flex flex-col flex-1 min-h-0 stagger-in"
+      >
+        <div className="flex-1 min-h-0 overflow-auto">
           <Card padding="none" className="min-w-0 overflow-hidden">
             {loading ? (
               <div className="flex min-h-[280px] items-center justify-center py-16 anim-fade-in"><Loader2 className="h-6 w-6 animate-spin text-content-muted" /></div>
@@ -214,7 +213,7 @@ export default function InventoryPage({ user: _user }: { user: User | null }) {
             )}
           </Card>
         </div>
-      </Page.Body>
+    </DashboardLayout>
 
       {/* Create / edit material */}
       {dialogOpen && (
@@ -234,9 +233,8 @@ export default function InventoryPage({ user: _user }: { user: User | null }) {
           <div className="grid grid-cols-2 gap-3">
             <Field label="Cost unitar" required><input type="number" className={inputCls} value={form.unit_cost} onChange={set('unit_cost')} /></Field>
             <Field label="Monedă">
-              <select className={inputCls} value={form.currency} onChange={set('currency')}>
-                <option value="RON">RON</option>
-                <option value="EUR">EUR</option>
+              <select className={inputCls} value="RON" disabled>
+                <option value="RON">RON (lei)</option>
               </select>
             </Field>
           </div>
@@ -263,7 +261,7 @@ export default function InventoryPage({ user: _user }: { user: User | null }) {
           </div>
         </Modal>
       )}
-    </Page>
+    </>
   );
 }
 
@@ -273,7 +271,7 @@ function DataTable<T>({ columns, rows, empty }: { columns: Col<T>[]; rows: T[]; 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left border-collapse">
-        <thead>
+        <thead className={THEAD_STICKY}>
           <tr className="bg-surface-tertiary/40">
             {columns.map(c => (
               <th key={c.key} className={cn('px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.08em] text-content-muted whitespace-nowrap border-b border-line', c.align === 'end' && 'text-right')}>{c.header}</th>

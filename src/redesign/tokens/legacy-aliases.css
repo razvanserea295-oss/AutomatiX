@@ -1,0 +1,170 @@
+/* ============================================================================
+ * Legacy token aliases — maps existing `--color-*` names to canonical tokens.
+ * Keeps Tailwind utilities (`text-content-primary`, `bg-surface-*`) and all
+ * components working while they migrate to the new foundation.
+ * ========================================================================== */
+
+/* V2 / redesign only — classic interface defines its own aliases in classic-tokens.css */
+.v2-root,
+html[data-interface="v2"] {
+  /* Surface ladder */
+  --color-bg-page:       var(--bg-base);
+  --color-bg-primary:    var(--bg-surface);
+  --color-bg-secondary:  var(--bg-surface);
+  --color-bg-tertiary:   var(--bg-hover);
+  --color-bg-elevated:   var(--bg-elevated);
+  --color-bg-rail:       var(--bg-void);
+
+  /* Text */
+  --color-text-primary:   var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted:     var(--text-muted);
+
+  /* Borders */
+  --color-border:        var(--border-default);
+  --color-border-subtle: var(--border-subtle);
+
+  /* Accent */
+  --color-accent:        var(--accent);
+  --color-accent-muted:  color-mix(in srgb, var(--accent-muted) 18%, transparent);
+  --color-on-accent:     var(--accent-fg);
+
+  /* Navigation */
+  --color-nav-bg:        var(--bg-void);
+  --color-nav-hover:     var(--bg-hover);
+  --color-nav-active-bg: var(--accent-subtle);
+
+  /* Shell chrome */
+  --shell-bg:      var(--bg-void);
+  --shell-surface: var(--bg-base);
+  --shell-border:  var(--border-default);
+  --shell-text:    var(--text-primary);
+  --shell-muted:   var(--text-muted);
+  --shell-accent:  var(--accent);
+  --shell-hover:   var(--bg-hover);
+
+  /* Status — legacy names → semantic tokens */
+  --status-green:  var(--status-success-fg);
+  --status-red:    var(--status-error-fg);
+  --status-amber:  var(--status-warning-fg);
+  --status-blue:   var(--status-info-fg);
+  --status-teal:   #4EC9B0;
+  --status-purple: #C586C0;
+
+  /* Elevation ladder → shadow scale */
+  --elevation-0: var(--shadow-0);
+  --elevation-1: var(--shadow-1);
+  --elevation-2: var(--shadow-2);
+  --elevation-3: var(--shadow-3);
+  --elevation-4: var(--shadow-4);
+
+  /* Focus rings */
+  --ring-soft:   var(--ring-default);
+  --ring-strong: 0 0 0 3px color-mix(in srgb, var(--accent) 48%, transparent);
+
+  /* Soft shadow aliases (used by cards / hover) */
+  --shadow-soft-sm: var(--shadow-1);
+  --shadow-soft:    var(--shadow-2);
+  --shadow-soft-lg: var(--shadow-3);
+  --shadow-inner:   inset 0 1px 2px color-mix(in srgb, var(--text-primary) 6%, transparent);
+
+  /* Accent glow */
+  --glow-accent:    var(--shadow-accent);
+  --glow-accent-sm: 0 4px 16px -6px color-mix(in srgb, var(--accent) 28%, transparent);
+
+  /* Glass / card materials */
+  --glass-bg:     var(--glass-surface-bg);
+  --card-bg:      var(--glass-surface-bg);
+  --glass-border: var(--glass-surface-border);
+  --glass-blur:   var(--glass-surface-blur);
+  --glass-shadow: var(--shadow-3);
+
+  /* Surface highlights */
+  --highlight-top:  var(--gradient-shine);
+  --highlight-edge: var(--border-subtle);
+  --sheen-top:      color-mix(in srgb, white 10%, transparent);
+
+  /* Z-index legacy aliases */
+  --z-bg:       var(--z-base-content);
+  --z-surface:  1;
+  --z-overlay:  var(--z-modal-backdrop);
+  --z-dropdown: var(--z-dropdown);
+  --z-modal:    var(--z-modal);
+  --z-toast:    var(--z-toast);
+
+  /* Motion (referenced by polish-pass / theme) */
+  --motion-instant: 80ms;
+  --motion-fast:    160ms;
+  --motion-base:    220ms;
+  --motion-slow:    320ms;
+  --motion-page:    420ms;
+  --motion-ease:    cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-spring:     cubic-bezier(0.34, 1.56, 0.64, 1);
+  --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-apple: cubic-bezier(0.32, 0.72, 0, 1);
+  --blur-frost: var(--blur-lg);
+
+  /* Scrollbar */
+  --scrollbar-size:      8px;
+  --scrollbar-size-thin: 6px;
+  --scrollbar-track:     transparent;
+  --scrollbar-thumb:     color-mix(in srgb, var(--text-muted) 42%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--accent) 72%, var(--text-muted) 28%);
+  --scrollbar-thumb-active: var(--accent);
+  --scrollbar-inset:     2px;
+
+  /* Category palette — theme-stable categorical hues */
+  --cat-red:    #ef4444;
+  --cat-blue:   #3b82f6;
+  --cat-amber:  #f59e0b;
+  --cat-violet: #8b5cf6;
+  --cat-teal:   #14b8a6;
+  --cat-green:  #22c55e;
+  --cat-gray:   #6b7280;
+
+  /* Role colors — neutral grayscale spread */
+  --role-admin-bg:      rgba(0, 0, 0, 0.06);
+  --role-admin-text:    var(--text-primary);
+  --role-manager-bg:    rgba(0, 0, 0, 0.06);
+  --role-manager-text:  var(--text-secondary);
+  --role-marketer-bg:   rgba(0, 0, 0, 0.06);
+  --role-marketer-text: var(--text-muted);
+  --role-proiectant-bg: rgba(0, 0, 0, 0.06);
+  --role-proiectant-text: var(--text-muted);
+  --role-contabil-bg:   rgba(0, 0, 0, 0.06);
+  --role-contabil-text: var(--text-muted);
+  --role-hala-bg:       rgba(0, 0, 0, 0.06);
+  --role-hala-text:     var(--text-muted);
+  --role-admin-solid:      var(--text-primary);
+  --role-manager-solid:    var(--text-secondary);
+  --role-marketer-solid:   var(--text-muted);
+  --role-proiectant-solid: var(--text-muted);
+  --role-contabil-solid:   var(--text-muted);
+  --role-hala-solid:       var(--text-muted);
+}
+
+.v2-root,
+html[data-interface="v2"] {
+  --role-admin-bg:      rgba(255, 255, 255, 0.10);
+  --role-admin-text:    rgba(255, 255, 255, 0.92);
+  --role-manager-bg:    rgba(255, 255, 255, 0.10);
+  --role-manager-text:  rgba(255, 255, 255, 0.80);
+  --role-marketer-bg:   rgba(255, 255, 255, 0.10);
+  --role-marketer-text: rgba(255, 255, 255, 0.64);
+  --role-proiectant-bg: rgba(255, 255, 255, 0.10);
+  --role-proiectant-text: rgba(255, 255, 255, 0.55);
+  --role-contabil-bg:   rgba(255, 255, 255, 0.10);
+  --role-contabil-text: rgba(255, 255, 255, 0.48);
+  --role-hala-bg:       rgba(255, 255, 255, 0.10);
+  --role-hala-text:     rgba(255, 255, 255, 0.38);
+  --role-admin-solid:      rgba(255, 255, 255, 0.92);
+  --role-manager-solid:    rgba(255, 255, 255, 0.80);
+  --role-marketer-solid:   rgba(255, 255, 255, 0.64);
+  --role-proiectant-solid: rgba(255, 255, 255, 0.55);
+  --role-contabil-solid:   rgba(255, 255, 255, 0.48);
+  --role-hala-solid:       rgba(255, 255, 255, 0.38);
+
+  --sheen-top: rgba(255, 255, 255, 0.10);
+  --scrollbar-thumb: color-mix(in srgb, var(--text-muted) 55%, transparent);
+  --scrollbar-thumb-hover: color-mix(in srgb, var(--accent) 65%, white 35%);
+}

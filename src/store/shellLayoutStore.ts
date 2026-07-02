@@ -7,6 +7,8 @@ export interface ShellLayout {
   statusBar:     'on' | 'off';
   titlebar:      'on' | 'off';
   heroMode:      'full' | 'compact' | 'hidden';
+  /** Where each page's title + controls live: lifted into the top navbar, or a classic on-page header band. */
+  pageHeader:    'navbar' | 'classic';
   toastPos:      'bottom-right' | 'top-right' | 'bottom-center';
   sectionGap:    'tight' | 'normal' | 'relaxed';
   cardShadow:    'none' | 'subtle' | 'normal' | 'dramatic';
@@ -18,7 +20,9 @@ export interface ShellLayout {
 
 export type LayoutPresetKey = 'standard' | 'compact' | 'spacious' | 'focus';
 
-type PresetValues = Omit<ShellLayout, 'layoutPreset'>;
+// pageHeader is a standalone preference, not part of the visual presets — choosing
+// a preset must not silently flip the user's classic/navbar choice.
+type PresetValues = Omit<ShellLayout, 'layoutPreset' | 'pageHeader'>;
 
 export const LAYOUT_PRESETS: Record<LayoutPresetKey, PresetValues> = {
   standard: {
@@ -77,6 +81,7 @@ export const LAYOUT_PRESETS: Record<LayoutPresetKey, PresetValues> = {
 
 const DEFAULTS: ShellLayout = {
   layoutPreset: 'standard',
+  pageHeader: 'navbar',
   ...LAYOUT_PRESETS.standard,
 };
 
@@ -100,6 +105,9 @@ export function applyShellLayout(l: ShellLayout): void {
 
   if (l.heroMode === 'full') delete d.hero;
   else d.hero = l.heroMode;
+
+  if (l.pageHeader === 'navbar') delete d.pageHeader;
+  else d.pageHeader = l.pageHeader;
 
   if (l.toastPos === 'bottom-right') delete d.toastPos;
   else d.toastPos = l.toastPos;

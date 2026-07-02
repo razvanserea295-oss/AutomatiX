@@ -1,12 +1,5 @@
-
-
-
-
-
-
-
 import { useRef, useState, useEffect } from 'react';
-import { Camera, Trash2, Loader2 } from 'lucide-react';
+import { Camera, Trash2, Loader2 } from '@/icons';
 import Button from '@/components/ui/Button';
 import Avatar from '@/components/ui/Avatar';
 import { toast } from '@/store/toastStore';

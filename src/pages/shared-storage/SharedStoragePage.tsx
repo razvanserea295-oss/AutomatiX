@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Folder, FolderPlus, Upload, Download, Trash2, FileText, Image, FileJson,
   Search, UploadCloud, ChevronRight,
-} from 'lucide-react';
+} from '@/icons';
 import Page from '@/components/ui/Page';
+import { PageToolbar } from '@/app-ui';
 import Button from '@/components/ui/Button';
 import { sharedStorage, type SharedFile, type SharedFolder } from '@/lib/sharedStorage';
 import { useToastStore } from '@/store/toastStore';
@@ -216,13 +217,9 @@ export default function SharedStoragePage() {
           </div>
         )}
 
-        {/* Header */}
-        <div className="flex items-center justify-between gap-3 p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3 min-w-0">
-            <Folder className="w-5 h-5 shrink-0 text-gray-600 dark:text-gray-400" />
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">Depozitul de fișiere shared</h2>
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="p-4">
+        <PageToolbar
+          toolbar={(
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -233,16 +230,22 @@ export default function SharedStoragePage() {
                 className="pl-10 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
-            <Button variant="secondary" onClick={() => { setCreatingFolder(true); setNewFolderName(''); }}>
-              <FolderPlus className="w-4 h-4 mr-2" />
-              Folder nou
-            </Button>
-            <input ref={fileInputRef} type="file" multiple onChange={handleInputChange} className="hidden" />
-            <Button variant="primary" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
-              <Upload className="w-4 h-4 mr-2" />
-              {uploading ? 'Se încarcă...' : 'Încarcă'}
-            </Button>
-          </div>
+          )}
+          actions={(
+            <>
+              <Button variant="secondary" onClick={() => { setCreatingFolder(true); setNewFolderName(''); }}>
+                <FolderPlus className="w-4 h-4 mr-2" />
+                Folder nou
+              </Button>
+              <input ref={fileInputRef} type="file" multiple onChange={handleInputChange} className="hidden" />
+              <Button variant="primary" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
+                <Upload className="w-4 h-4 mr-2" />
+                {uploading ? 'Se încarcă...' : 'Încarcă'}
+              </Button>
+            </>
+          )}
+        />
+
         </div>
 
         {/* Breadcrumb */}

@@ -1,43 +1,7 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useMemo } from 'react';
-import { AlertTriangle, Info, CheckCircle, Plus, Bell, Loader2, BellOff, Search, X } from 'lucide-react';
+import { AlertTriangle, Info, CheckCircle, Plus, Loader2, BellOff, Search, X } from '@/icons';
 import type { User } from '@/core/types';
 import { useAlertStore } from '@/store/alertStore';
 import FormModal, { type FormField } from '@/components/FormModal';
@@ -47,9 +11,10 @@ import AlertsEnhancements from '@/pages/alerts/AlertsEnhancements';
 import { apiCommand } from '@/api/commands';
 
 import Button from '@/redesign/ui/Button';
-import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout, Panel, ListPanel, CardSlot, PAGE_GRID_12 } from '@/app-ui';
 import KpiCard from '@/redesign/ui/KpiCard';
-import { GlassCard, EmptyState, Skeleton, ErrorState } from '@/redesign/ui';
+import Page from '@/redesign/ui/Page';
+import { EmptyState, Skeleton, ErrorState } from '@/redesign/ui';
 import { filterSearchInputCls, filterSearchIconCls, filterClearInlineBtnCls, filterToggleCls } from '@/redesign/ui/filterControls';
 import { vtName } from '@/redesign/lib/viewTransition';
 
@@ -101,9 +66,6 @@ function formatTimestamp(iso: string): string {
   } catch { return iso; }
 }
 
-
-
-
 const SEVERITY_PILLS: { value: AlertCategory; label: string }[] = [
   { value: 'critical', label: 'Critical' },
   { value: 'warning',  label: 'Warning' },
@@ -123,8 +85,7 @@ export default function AlertsPage({ user }: AlertsPageProps) {
   const acknowledgeAlertStore = useAlertStore(s => s.acknowledgeAlert);
   const [ackingIds, setAckingIds] = useState<Set<number>>(new Set());
   const { isOpen, editingItem, openModal, closeModal, isEditing } = useFormModal();
-  
-  
+
   const [search, setSearch] = useState('');
   const [severityFilter, setSeverityFilter] = useState<AlertCategory | ''>('');
 
@@ -177,15 +138,12 @@ export default function AlertsPage({ user }: AlertsPageProps) {
     }
   };
 
-  
   const counts = useMemo(() => {
     const c = { critical: 0, warning: 0, info: 0, resolved: 0 };
     alerts.forEach(a => { c[getCategory(a)]++; });
     return c;
   }, [alerts]);
 
-  
-  
   const visibleAlerts = useMemo(() => {
     const q = search.trim().toLowerCase();
     return alerts.filter((a) => {
@@ -198,142 +156,119 @@ export default function AlertsPage({ user }: AlertsPageProps) {
   const toggleSeverity = (cat: AlertCategory) =>
     setSeverityFilter((prev) => (prev === cat ? '' : cat));
 
+  const alertHeaderSearch = (
+    <div className="relative group">
+      <Search className={filterSearchIconCls} />
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder="Caută titlu, mesaj..."
+        className={filterSearchInputCls}
+      />
+      {search && (
+        <button
+          type="button"
+          onClick={() => setSearch('')}
+          aria-label="Golește căutarea"
+          className={filterClearInlineBtnCls}
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
+  );
+
+  const alertToolbar = (
+    <div className="flex flex-wrap items-center gap-2">
+      <button onClick={() => setSeverityFilter('')} className={filterToggleCls(severityFilter === '')}>
+        Toate
+      </button>
+      {SEVERITY_PILLS.map((p) => (
+        <button key={p.value} onClick={() => toggleSeverity(p.value)} className={filterToggleCls(severityFilter === p.value)}>
+          {p.label}
+        </button>
+      ))}
+      {alertHeaderSearch}
+    </div>
+  );
+
+  const kpiStrip = (
+    <Page.Kpis cols={4}>
+      <button type="button" onClick={() => toggleSeverity('critical')}
+        className={`text-left rounded-2xl transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'critical' ? 'ring-2 ring-status-red/40' : ''}`}>
+        <KpiCard label="Critical" value={counts.critical} icon={AlertTriangle} iconColor="text-status-red" />
+      </button>
+      <button type="button" onClick={() => toggleSeverity('warning')}
+        className={`text-left rounded-2xl transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'warning' ? 'ring-2 ring-status-amber/40' : ''}`}>
+        <KpiCard label="Warning" value={counts.warning} icon={AlertTriangle} iconColor="text-status-amber" />
+      </button>
+      <button type="button" onClick={() => toggleSeverity('info')}
+        className={`text-left rounded-2xl transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'info' ? 'ring-2 ring-status-blue/40' : ''}`}>
+        <KpiCard label="Info" value={counts.info} icon={Info} iconColor="text-status-blue" />
+      </button>
+      <button type="button" onClick={() => toggleSeverity('resolved')}
+        className={`text-left rounded-2xl transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'resolved' ? 'ring-2 ring-status-green/40' : ''}`}>
+        <KpiCard label="Rezolvate" value={counts.resolved} icon={CheckCircle} iconColor="text-status-green" />
+      </button>
+    </Page.Kpis>
+  );
+
+  const layoutProps = {
+    chrome: (
+      <PageChrome
+        actions={
+          <Button size="md" onClick={() => openModal()}>
+            <Plus className="h-4 w-4" /> Adaugă alertă
+          </Button>
+        }
+        toolbar={alertToolbar}
+      />
+    ),
+    kpis: kpiStrip,
+    contentClassName: 'page-content-grid stagger-in',
+  };
+
   if (loading) {
     return (
-      <Page fit>
-        <Page.Body fit maxWidth="full" padding="comfortable">
-          <GlassCard size="regular">
-            <div className="space-y-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <Skeleton width={36} height={36} rounded="lg" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton width="40%" height={12} />
-                    <Skeleton width="70%" height={10} />
-                  </div>
+      <DashboardLayout {...layoutProps}>
+        <Panel title="Se încarcă" className="flex-1">
+          <div className="space-y-3 p-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton width={36} height={36} rounded="lg" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton width="40%" height={12} />
+                  <Skeleton width="70%" height={10} />
                 </div>
-              ))}
-            </div>
-          </GlassCard>
-        </Page.Body>
-      </Page>
+              </div>
+            ))}
+          </div>
+        </Panel>
+      </DashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <Page fit>
-        <Page.Body fit maxWidth="full" padding="comfortable">
-          <ErrorState title="Eroare la încărcarea alertelor" description={error} onRetry={() => void generateAndFetch()} />
-        </Page.Body>
-      </Page>
+      <DashboardLayout {...layoutProps}>
+        <ErrorState title="Eroare la încărcarea alertelor" description={error} onRetry={() => void generateAndFetch()} />
+      </DashboardLayout>
     );
   }
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="full" padding="comfortable">
+    <>
+    <DashboardLayout {...layoutProps}>
+        <div className={PAGE_GRID_12}>
 
-        {
-
-
-}
-        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
-            {}
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-                <Bell className="h-5 w-5" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-                <h1 className="text-pm-2xl font-semibold text-content-primary truncate leading-tight">Alerte</h1>
-                <p className="text-pm-sm text-content-muted truncate">Notificări despre stocuri critice, deadline-uri depășite și anomalii detectate</p>
-              </div>
-            </div>
-
-            {}
-            <div className="flex flex-wrap items-center gap-2 xl:ml-auto">
-              <div className="relative group">
-                <Search className={filterSearchIconCls} />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Caută titlu, mesaj..."
-                  className={filterSearchInputCls}
-                />
-                {search && (
-                  <button
-                    type="button"
-                    onClick={() => setSearch('')}
-                    aria-label="Golește căutarea"
-                    className={filterClearInlineBtnCls}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => setSeverityFilter('')} className={filterToggleCls(severityFilter === '')}>
-                  Toate
-                </button>
-                {SEVERITY_PILLS.map((p) => (
-                  <button key={p.value} onClick={() => toggleSeverity(p.value)} className={filterToggleCls(severityFilter === p.value)}>
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-
-              <Button size="md" onClick={() => openModal()}>
-                <Plus className="h-4 w-4" /> Adaugă alertă
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {
-
-}
-        <div className="enter-up shrink-0" style={{ animationDelay: '70ms' }}>
-          <Page.Kpis cols={4}>
-            <button type="button" onClick={() => toggleSeverity('critical')}
-              className={`text-left rounded-2xl transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'critical' ? 'ring-2 ring-status-red/40' : ''}`}>
-              <KpiCard label="Critical"  value={counts.critical} icon={AlertTriangle} iconColor="text-status-red" />
-            </button>
-            <button type="button" onClick={() => toggleSeverity('warning')}
-              className={`text-left rounded-2xl transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'warning' ? 'ring-2 ring-status-amber/40' : ''}`}>
-              <KpiCard label="Warning"   value={counts.warning} icon={AlertTriangle} iconColor="text-status-amber" />
-            </button>
-            <button type="button" onClick={() => toggleSeverity('info')}
-              className={`text-left rounded-2xl transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'info' ? 'ring-2 ring-status-blue/40' : ''}`}>
-              <KpiCard label="Info"      value={counts.info} icon={Info} iconColor="text-status-blue" />
-            </button>
-            <button type="button" onClick={() => toggleSeverity('resolved')}
-              className={`text-left rounded-2xl transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${severityFilter === 'resolved' ? 'ring-2 ring-status-green/40' : ''}`}>
-              <KpiCard label="Rezolvate" value={counts.resolved} icon={CheckCircle} iconColor="text-status-green" />
-            </button>
-          </Page.Kpis>
-        </div>
-
-        {
-
-
-
-}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0 enter-up" style={{ animationDelay: '140ms' }}>
-
-          {}
-          <section className="xl:col-span-8 min-w-0 min-h-0 flex flex-col">
-            <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 flex-1">
-              <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3 border-b border-line/50">
-                <span className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted">Alerte active</span>
-                <span className="text-pm-xs text-content-muted shrink-0">
-                  {visibleAlerts.length} {visibleAlerts.length === 1 ? 'alertă' : 'alerte'}
-                  {(search || severityFilter) ? ` din ${alerts.length}` : ''}
-                </span>
-              </div>
-              <div key={`${severityFilter}|${search}`} className="density-compact stagger-in min-h-0 flex-1 overflow-y-auto">
+          <ListPanel
+            size="lg"
+            title="Alerte active"
+            subtitle={`${visibleAlerts.length} ${visibleAlerts.length === 1 ? 'alertă' : 'alerte'}${(search || severityFilter) ? ` din ${alerts.length}` : ''}`}
+            bodyClassName="density-compact stagger-in"
+          >
+              <div key={`${severityFilter}|${search}`}>
                 {alerts.length === 0 ? (
                   <EmptyState
                     icon={BellOff}
@@ -384,18 +319,10 @@ export default function AlertsPage({ user }: AlertsPageProps) {
                   })
                 )}
               </div>
-            </GlassCard>
-          </section>
+          </ListPanel>
 
-          {
-}
-          <aside className="xl:col-span-4 min-h-0 space-y-4 overflow-y-auto">
-            {}
-            <GlassCard size="regular">
-              <p className="text-pm-eyebrow text-accent mb-3 flex items-center gap-2">
-                <span className="inline-block h-px w-3.5 bg-accent/50" aria-hidden />
-                Distribuție severitate
-              </p>
+          <CardSlot size="md" as="aside" className="space-y-4 overflow-y-auto">
+            <Panel title="Distribuție severitate">
               {alerts.length === 0 ? (
                 <p className="text-pm-xs text-content-muted">Nicio alertă înregistrată.</p>
               ) : (
@@ -426,21 +353,17 @@ export default function AlertsPage({ user }: AlertsPageProps) {
                   })}
                 </div>
               )}
-            </GlassCard>
+            </Panel>
 
-            {
-
-}
             <AlertsEnhancements
               alerts={alerts}
               onBulkAck={async (ids) => {
                 await Promise.all(ids.map(id => apiCommand('acknowledge_alert', { id }).catch(() => {})));
               }}
             />
-          </aside>
+          </CardSlot>
         </div>
-
-      </Page.Body>
+    </DashboardLayout>
 
       <FormModal
         isOpen={isOpen}
@@ -451,6 +374,6 @@ export default function AlertsPage({ user }: AlertsPageProps) {
         initialData={editingItem || {}}
         submitLabel={isEditing ? 'Actualizează' : 'Adaugă'}
       />
-    </Page>
+    </>
   );
 }

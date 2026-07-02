@@ -1,0 +1,79 @@
+@import './motion.css';
+@import '../../redesign/tokens/design-tokens.css';
+@import '../../redesign/tokens/utilities.css';
+@import '../../redesign/tokens/density.css';
+@import '../analytics/styles/analytics.css';
+@import './layout.css';
+
+/* shadcn base tokens — V2 only (classic uses classic-tokens.css) */
+.v2-root,
+html[data-interface="v2"] {
+  --background: 224 20% 6%;
+  --foreground: 210 20% 96%;
+  --card: 224 18% 9%;
+  --card-foreground: 210 20% 96%;
+  --popover: 224 18% 9%;
+  --popover-foreground: 210 20% 96%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 224 20% 6%;
+  --secondary: 224 14% 14%;
+  --secondary-foreground: 210 20% 90%;
+  --muted: 224 14% 14%;
+  --muted-foreground: 215 12% 58%;
+  --accent: 224 14% 16%;
+  --accent-foreground: 210 20% 96%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 224 14% 16%;
+  --input: 224 14% 16%;
+  --ring: 217 91% 60%;
+  --radius: 0.5rem;
+  --sidebar-width: var(--density-sidebar-w, 200px);
+  --sidebar-collapsed-width: var(--density-sidebar-collapsed, 48px);
+
+  /* Elevation ladder — dark */
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.25);
+  --elevation-2: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --elevation-3: 0 8px 24px rgba(0, 0, 0, 0.45), 0 4px 8px rgba(0, 0, 0, 0.35);
+  --elevation-4: 0 16px 48px rgba(0, 0, 0, 0.5), 0 8px 16px rgba(0, 0, 0, 0.4);
+  --ring-soft: 0 0 0 3px hsl(217 91% 60% / 0.22);
+  --ring-strong: 0 0 0 3px hsl(217 91% 60% / 0.4);
+
+  color-scheme: dark;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: var(--density-fs-body, 13px);
+  line-height: var(--density-lh-dense, 1.4);
+  min-height: 100vh;
+}
+
+.v2-root * {
+  border-color: hsl(var(--border));
+}
+
+/* Legacy token aliases inside v2 shell */
+.v2-root {
+  --color-bg-primary: hsl(224 18% 9%);
+  --color-bg-secondary: hsl(224 20% 6%);
+  --color-bg-page: hsl(224 20% 6%);
+  --color-bg-tertiary: hsl(224 14% 14%);
+  --color-bg-elevated: hsl(224 18% 11%);
+  --color-text-primary: hsl(210 20% 96%);
+  --color-text-secondary: hsl(215 12% 72%);
+  --color-text-muted: hsl(215 12% 58%);
+  --color-border: hsl(224 14% 16%);
+  --color-border-subtle: hsl(224 14% 12%);
+  --color-accent: hsl(217 91% 60%);
+  --color-accent-muted: hsl(217 91% 60% / 0.15);
+  --color-bg-rail: hsl(224 20% 5%);
+  --color-nav-bg: hsl(224 20% 5%);
+  --color-nav-hover: hsl(224 14% 14%);
+  --color-nav-active-bg: hsl(217 91% 60% / 0.14);
+  --color-nav-active-border: hsl(217 91% 60% / 0.8);
+  --status-green: #34d399;
+  --status-red: #f87171;
+  --status-amber: #fbbf24;
+  --status-blue: #60a5fa;
+  --status-teal: #2dd4bf;
+  --status-purple: #a78bfa;
+}

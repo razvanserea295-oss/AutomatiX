@@ -1,52 +1,16 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { flushSync } from 'react-dom';
-import { Inbox, Send, Globe, Plus, Loader2, X, MessageCircle, CheckCircle2, AlertTriangle, FileText, User as UserIcon, Calendar as CalendarIcon, Reply, RotateCcw, Paperclip, Upload, Download, Trash2, Pencil, FileSpreadsheet, FileImage, FileArchive, FileCode, File as FileIcon, Box, Search } from 'lucide-react';
+import { Inbox, Send, Globe, Plus, Loader2, X, MessageCircle, CheckCircle2, AlertTriangle, FileText, User as UserIcon, Calendar as CalendarIcon, Reply, RotateCcw, Paperclip, Upload, Download, Trash2, Pencil, FileSpreadsheet, FileImage, FileArchive, FileCode, File as FileIcon, Box, Search } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 import { confirmDialog } from '@/redesign/ui/ConfirmDialog';
 import { formatFileSize } from '@/lib/fileUpload';
 import { uploadBriefingFile, BRIEFING_MAX_BYTES } from '@/lib/briefingUpload';
 import { downloadOneBriefingAttachment } from '@/lib/downloadPdf';
-import Page from '@/redesign/ui/Page';
-import { GlassCard, MetricValue, EmptyState } from '@/redesign/ui';
+import { PageChrome, DashboardLayout, Panel, ListPanel, CardSlot, PAGE_GRID_12, LIST_TILE, PANEL_HEAD } from '@/app-ui';
+import { EmptyState } from '@/redesign/ui';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import type { StatusTone } from '@/lib/statusTokens';
 import Button from '@/redesign/ui/Button';
@@ -157,8 +121,7 @@ export default function ProjectBriefingsPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [users, setUsers] = useState<UserRow[]>([]);
-  
-  
+
   const [search, setSearch] = useState('');
   const projects = useProjectStore(s => s.projects);
   const fetchProjects = useProjectStore(s => s.fetchProjects);
@@ -191,7 +154,6 @@ export default function ProjectBriefingsPage() {
     [list, selectedId],
   );
 
-
   const visibleList = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return list;
@@ -207,8 +169,6 @@ export default function ProjectBriefingsPage() {
     if (selectedId === null && visibleList.length > 0) setSelectedId(visibleList[0].id);
   }, [visibleList, selectedId]);
 
-
-
   useEffect(() => {
     if (!selected || !me) return;
     if (selected.assigned_to_user_id !== me.id) return;
@@ -218,8 +178,6 @@ export default function ProjectBriefingsPage() {
       .catch(() => {  });
   }, [selected?.id, selected?.status, selected?.assigned_to_user_id, me?.id]);
 
-  
-  
   const selectBriefing = (id: number) => {
     startMorphTransition(
       () => flushSync(() => { setSelectedId(id); }),
@@ -227,7 +185,6 @@ export default function ProjectBriefingsPage() {
     );
   };
 
-  
   const switchMode = (m: Mode) => {
     startMorphTransition(
       () => flushSync(() => { setMode(m); setSelectedId(null); }),
@@ -236,110 +193,83 @@ export default function ProjectBriefingsPage() {
   };
 
   return (
-    <Page fit>
-      <Page.Body fit>
-
-        {
-
-
-
-}
-        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="h-11 w-11 rounded-2xl bg-accent-muted flex items-center justify-center shrink-0">
-                <MessageCircle className="h-5 w-5 text-accent" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-                <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">Briefing proiectare</h1>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 xl:ml-auto">
-              <div className="relative group">
-                <Search className={filterSearchIconCls} aria-hidden />
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Caută titlu, persoană, proiect..."
-                  className={filterSearchInputCls}
-                />
-                {search && (
-                  <button type="button" onClick={() => setSearch('')} className={filterClearInlineBtnCls} aria-label="Șterge căutarea">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button onClick={() => switchMode('inbox')} className={filterToggleCls(mode === 'inbox')}>
-                  <Inbox className="h-3.5 w-3.5" /> Primite
-                </button>
-                <button onClick={() => switchMode('sent')} className={filterToggleCls(mode === 'sent')}>
-                  <Send className="h-3.5 w-3.5" /> Trimise
-                </button>
-                {isAdmin && (
-                  <button onClick={() => switchMode('all')} className={filterToggleCls(mode === 'all')}>
-                    <Globe className="h-3.5 w-3.5" /> Toate
-                  </button>
-                )}
-              </div>
-
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as Status | 'all')}
-                className={filterSelectCls(statusFilter !== 'all')}>
-                <option value="all">Toate statusurile</option>
-                {(Object.keys(STATUS_LABEL) as Status[]).map(s =>
-                  <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-              </select>
-
+    <DashboardLayout
+        chrome={(
+          <PageChrome
+            actions={(
               <Button size="md" onClick={() => setCreateOpen(true)}>
                 <Plus className="h-4 w-4" /> Briefing nou
               </Button>
-            </div>
+            )}
+            toolbar={(
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative group">
+            <Search className={filterSearchIconCls} aria-hidden />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Caută titlu, persoană, proiect..."
+              className={filterSearchInputCls}
+            />
+            {search && (
+              <button type="button" onClick={() => setSearch('')} className={filterClearInlineBtnCls} aria-label="Șterge căutarea">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => switchMode('inbox')} className={filterToggleCls(mode === 'inbox')}>
+              <Inbox className="h-3.5 w-3.5" /> Primite
+            </button>
+            <button onClick={() => switchMode('sent')} className={filterToggleCls(mode === 'sent')}>
+              <Send className="h-3.5 w-3.5" /> Trimise
+            </button>
+            {isAdmin && (
+              <button onClick={() => switchMode('all')} className={filterToggleCls(mode === 'all')}>
+                <Globe className="h-3.5 w-3.5" /> Toate
+              </button>
+            )}
+          </div>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as Status | 'all')}
+            className={filterSelectCls(statusFilter !== 'all')}>
+            <option value="all">Toate statusurile</option>
+            {(Object.keys(STATUS_LABEL) as Status[]).map(s =>
+              <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+          </select>
         </div>
-
-        {
-
-
-
-}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0">
-
-          {}
-          <section className="xl:col-span-8 enter-up min-w-0 flex flex-col min-h-0" style={{ animationDelay: '140ms' }}>
+            )}
+          />
+        )}
+      bodyClassName="relative"
+      contentClassName="max-w-[var(--page-max-wide)] mx-auto"
+    >
+        <div className={PAGE_GRID_12}>
+          <CardSlot size="lg" as="section">
             {selected ? (
-              <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 flex-1" vtName={vtName('briefing', selected.id)}>
-                <BriefingDetail
-                  briefing={selected}
-                  onChanged={refresh}
-                  me={me}
-                />
-              </GlassCard>
+              <Panel fill scroll className="flex flex-col min-h-0 flex-1" bodyClassName="p-0 flex min-h-0 flex-1">
+                <div className="flex flex-col min-h-0 flex-1 vt-morph" style={{ viewTransitionName: vtName('briefing', selected.id) }}>
+                  <BriefingDetail
+                    briefing={selected}
+                    onChanged={refresh}
+                    me={me}
+                  />
+                </div>
+              </Panel>
             ) : (
-              <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 flex-1">
+              <Panel fill className="flex flex-col min-h-0 flex-1" title="Selectează un briefing">
                 <EmptyState
                   icon={MessageCircle}
                   title="Selectează un briefing"
                   description="Alege un briefing din lista alăturată pentru a-i vedea detaliile, atașamentele și clarificările."
                 />
-              </GlassCard>
+              </Panel>
             )}
-          </section>
-
-          {}
-          <aside className="xl:col-span-4 enter-up flex flex-col min-h-0" style={{ animationDelay: '200ms' }}>
-            <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 flex-1">
-              <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line/40 shrink-0">
-                <h2 className="text-pm-md font-semibold text-content-primary">
-                  {mode === 'inbox' ? 'Primite' : mode === 'sent' ? 'Trimise' : 'Toate'}
-                </h2>
-                <p className="text-pm-xs text-content-muted shrink-0">
-                  {visibleList.length} {visibleList.length === 1 ? 'briefing' : 'briefing-uri'}{search ? ` găsite` : ''}
-                </p>
-              </div>
-              <div className="flex-1 min-h-0 overflow-y-auto">
+          </CardSlot>
+          <ListPanel
+            size="md"
+            title={mode === 'inbox' ? 'Primite' : mode === 'sent' ? 'Trimise' : 'Toate'}
+            subtitle={`${visibleList.length} ${visibleList.length === 1 ? 'briefing' : 'briefing-uri'}${search ? ' găsite' : ''}`}
+          >
                 {loading ? (
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-5 w-5 animate-spin text-content-muted" />
@@ -353,8 +283,7 @@ export default function ProjectBriefingsPage() {
                       : mode === 'inbox' ? 'Niciun briefing pentru tine momentan.' : 'Niciun briefing aici.'}
                   />
                 ) : (
-                  
-                  
+
                   <div key={`${mode}|${statusFilter}|${search}`} className="stagger-in">
                   {visibleList.map(b => (
                   <button
@@ -391,11 +320,8 @@ export default function ProjectBriefingsPage() {
                   ))}
                   </div>
                 )}
-              </div>
-            </GlassCard>
-          </aside>
+          </ListPanel>
         </div>
-      </Page.Body>
 
       {createOpen && (
         <CreateModal
@@ -405,20 +331,15 @@ export default function ProjectBriefingsPage() {
           projects={projects}
         />
       )}
-    </Page>
+    </DashboardLayout>
   );
 }
-
-
-
-
 
 interface BriefingAttachment {
   id: number; briefing_id: number; filename: string | null; mime: string | null;
   size: number; annotation: string | null; created_by_user_id: number | null;
   created_by_name: string | null; created_at: string;
 }
-
 
 function fileKind(name: string | null, mime: string | null): { Icon: typeof FileText; tint: string } {
   const ext = (name || '').split('.').pop()?.toLowerCase() || '';
@@ -438,11 +359,6 @@ function fileKind(name: string | null, mime: string | null): { Icon: typeof File
     return { Icon: FileCode, tint: 'text-status-teal' };
   return { Icon: FileIcon, tint: 'text-content-muted' };
 }
-
-
-
-
-
 
 function BriefingAttachments({ briefingId, me }: { briefingId: number; me: User | null }) {
   const [items, setItems] = useState<BriefingAttachment[]>([]);
@@ -506,12 +422,9 @@ function BriefingAttachments({ briefingId, me }: { briefingId: number; me: User 
   };
 
   return (
-    <GlassCard size="regular" className="space-y-4">
-      {}
+    <Panel padding="md" className="space-y-4">
       <input ref={fileInputRef} type="file" multiple className="hidden" disabled={uploading}
         onChange={(e) => { const f = e.target.files; e.currentTarget.value = ''; void onUpload(f); }} />
-
-      {}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <h3 className="text-pm-sm font-semibold text-content-primary flex items-center gap-2">
           <Paperclip className="h-4 w-4 text-accent" /> Fișiere atașate
@@ -522,8 +435,6 @@ function BriefingAttachments({ briefingId, me }: { briefingId: number; me: User 
           {uploading ? `Se încarcă…${uploadPct != null ? ` ${uploadPct}%` : ''}` : 'Adaugă fișier'}
         </Button>
       </div>
-
-      {}
       <input
         value={note}
         onChange={(e) => setNote(e.target.value)}
@@ -531,8 +442,6 @@ function BriefingAttachments({ briefingId, me }: { briefingId: number; me: User 
         placeholder="Notă aplicată fișierelor pe care le adaugi acum (opțional)"
         className="w-full px-3 py-2 border border-line bg-surface-primary rounded-xl text-pm-xs text-content-primary placeholder:text-content-muted/70 transition-smooth duration-150 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)]"
       />
-
-      {}
       <div
         onClick={triggerPicker}
         onDragOver={(e) => { e.preventDefault(); if (!dragActive) setDragActive(true); }}
@@ -544,8 +453,6 @@ function BriefingAttachments({ briefingId, me }: { briefingId: number; me: User 
         <p className="text-pm-xs text-content-secondary">Trage fișiere aici sau <span className="text-accent font-medium">click pentru a selecta</span></p>
         <p className="text-pm-2xs text-content-muted">Orice tip (PDF, Excel, Word, imagini, CAD, ZIP…) · max 500 MB / fișier</p>
       </div>
-
-      {}
       {items.length === 0 ? (
         <EmptyState
           icon={Paperclip}
@@ -559,7 +466,7 @@ function BriefingAttachments({ briefingId, me }: { briefingId: number; me: User 
             const { Icon, tint } = fileKind(a.filename, a.mime);
             const editing = editingId === a.id;
             return (
-              <GlassCard key={a.id} size="compact" className="group flex flex-col gap-2">
+              <div key={a.id} className={`group ${LIST_TILE} flex flex-col gap-2 p-3`}>
                 <div className="flex items-start gap-2">
                   <Icon className={`h-7 w-7 shrink-0 ${tint}`} strokeWidth={1.5} />
                   <div className="min-w-0 flex-1">
@@ -577,8 +484,6 @@ function BriefingAttachments({ briefingId, me }: { briefingId: number; me: User 
                     )}
                   </div>
                 </div>
-
-                {}
                 {editing ? (
                   <textarea
                     value={editNote}
@@ -601,12 +506,12 @@ function BriefingAttachments({ briefingId, me }: { briefingId: number; me: User 
                       : <span className="text-content-muted/70 inline-flex items-center gap-1"><Pencil className="h-3 w-3" /> Adaugă notă</span>}
                   </button>
                 )}
-              </GlassCard>
+              </div>
             );
           })}
         </div>
       )}
-    </GlassCard>
+    </Panel>
   );
 }
 
@@ -623,8 +528,7 @@ function BriefingDetail({
   const [newQuestion, setNewQuestion] = useState('');
   const [askingBusy, setAskingBusy] = useState(false);
   const [busy, setBusy] = useState(false);
-  
-  
+
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
@@ -670,7 +574,6 @@ function BriefingDetail({
     } finally { setBusy(false); }
   };
 
-  
   const submitReject = () => {
     const r = rejectReason.trim();
     if (!r) return;
@@ -679,7 +582,6 @@ function BriefingDetail({
     advance('rejected', { rejection_reason: r });
   };
 
-  
   const requestCancel = async () => {
     const ok = await confirmDialog({
       title: 'Anulezi briefing-ul?',
@@ -693,7 +595,6 @@ function BriefingDetail({
 
   return (
     <div className="flex flex-col h-full">
-      {}
       <div className="px-6 py-4 border-b border-line bg-surface-secondary shrink-0">
         <div className="flex items-start gap-3 mb-2">
           <h2 className="flex-1 text-pm-lg font-semibold text-content-primary">{briefing.title}</h2>
@@ -712,8 +613,6 @@ function BriefingDetail({
           <span className="ml-auto">{timeAgo(briefing.created_at)}</span>
         </div>
       </div>
-
-      {}
       <div className="flex items-center gap-0 border-b border-line shrink-0">
         <DetailTab active={tab === 'briefing'} onClick={() => setTab('briefing')}>
           <FileText className="h-3.5 w-3.5" /> Briefing
@@ -727,11 +626,9 @@ function BriefingDetail({
           )}
         </DetailTab>
       </div>
-
-      {}
       <div className="flex-1 overflow-y-auto p-6">
         {tab === 'briefing' ? (
-          <div key="tab-briefing" className="enter-up space-y-6 max-w-3xl">
+          <div key="tab-briefing" className=" space-y-6 max-w-3xl">
             <Section title="Scop"                  content={briefing.scope} />
             <Section title="Cerințe tehnice"       content={briefing.technical_requirements} />
             <Section title="Așteptări client"      content={briefing.client_expectations} />
@@ -748,7 +645,7 @@ function BriefingDetail({
             </div>
           </div>
         ) : (
-          <div key="tab-clarifications" className="enter-up max-w-3xl space-y-3">
+          <div key="tab-clarifications" className=" max-w-3xl space-y-3">
             {loadingClar ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-5 w-5 animate-spin text-content-muted" />
@@ -790,8 +687,6 @@ function BriefingDetail({
           </div>
         )}
       </div>
-
-      {}
       <div className="px-6 py-3 border-t border-line bg-surface-secondary shrink-0 flex items-center gap-2 flex-wrap">
         {canManage && briefing.status === 'sent' && (
           <Button size="sm" onClick={() => advance('accepted')} disabled={busy}>
@@ -829,8 +724,6 @@ function BriefingDetail({
           </span>
         )}
       </div>
-
-      {}
       <Modal isOpen={rejectOpen} onClose={() => setRejectOpen(false)} title="Refuză briefing" size="sm">
         <div className="space-y-4">
           <div>
@@ -926,7 +819,7 @@ function ClarificationItem({
       </div>
 
       {clar.status === 'answered' && clar.answer && (
-        <div className="enter-up ml-6 mt-3 pl-3 border-l-2 border-status-green/40">
+        <div className=" ml-6 mt-3 pl-3 border-l-2 border-status-green/40">
           <p className="text-pm-xs text-content-muted">
             <Reply className="h-3 w-3 inline" /> <strong className="text-content-secondary">{clar.answered_by_name}</strong> · {timeAgo(clar.answered_at)}
           </p>
@@ -975,10 +868,6 @@ function ClarificationItem({
   );
 }
 
-
-
-
-
 function CreateModal({
   onClose, onCreated, users, projects,
 }: {
@@ -996,9 +885,7 @@ function CreateModal({
   const [deadline, setDeadline] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [saving, setSaving] = useState(false);
-  
-  
-  
+
   const [files, setFiles] = useState<File[]>([]);
   const [uploadMsg, setUploadMsg] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -1043,9 +930,7 @@ function CreateModal({
         priority,
         status,
       });
-      
-      
-      
+
       const newId = created?.id;
       if (newId && files.length > 0) {
         let ok = 0;
@@ -1072,7 +957,7 @@ function CreateModal({
     <div className="anim-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div className="anim-scale-in bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-4 border-b border-line/70">
+        <div className={`flex items-center justify-between ${PANEL_HEAD}`}>
           <h2 className="text-pm-lg font-semibold text-content-primary">Briefing nou</h2>
           <button onClick={onClose} aria-label="Închide"
             className="p-2 rounded-xl text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-all duration-150 hover:rotate-90 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
@@ -1201,27 +1086,3 @@ function Field({ label, required, children }: { label: string; required?: boolea
     </div>
   );
 }
-
-
-
-
-
-function KpiMini({ icon: Icon, label, value, warn, format }: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string; value: number; warn?: boolean; format?: (n: number) => string;
-}) {
-  return (
-    <GlassCard size="compact" className="flex items-center gap-3.5 !p-5">
-      <span className="h-11 w-11 rounded-xl bg-accent/12 text-accent flex items-center justify-center shrink-0">
-        <Icon className="h-5 w-5" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted truncate">{label}</p>
-        <MetricValue value={value} size="display" warn={warn} format={format} className="mt-0.5 block" />
-      </div>
-    </GlassCard>
-  );
-}
-
-
-void KpiMini;

@@ -1,0 +1,215 @@
+/* ============================================================================
+ * Automatix Design Tokens — canonical visual foundation
+ *
+ * Premium dark-first enterprise SaaS DNA — surface/color tokens scoped to
+ * `.v2-root` / `html[data-interface="v2"]` only. Classic UI uses
+ * `src/classic/classic-tokens.css` (VS Code palette).
+ *
+ * Usage:
+ *   CSS:  color: var(--text-primary); background: var(--bg-surface);
+ *   TW:   bg-canvas-base text-content-primary shadow-ds-2 rounded-ds-md
+ *   Utils: .surface-glass .focus-ring-default .text-tabular-nums .text-ds-lg
+ * ========================================================================== */
+
+/* ---- Typography families --------------------------------------------------- */
+:root {
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif;
+  --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'SF Mono', 'Menlo', ui-monospace, monospace;
+
+  /* Type scale — size / line-height (unitless ratio) / letter-spacing */
+  --text-2xs-size:     0.625rem;
+  --text-2xs-leading:  1.4;
+  --text-2xs-tracking: 0.04em;
+
+  --text-xs-size:      0.75rem;
+  --text-xs-leading:   1.5;
+  --text-xs-tracking:  0.02em;
+
+  --text-sm-size:      0.875rem;
+  --text-sm-leading:   1.5;
+  --text-sm-tracking:  0.01em;
+
+  --text-base-size:    1rem;
+  --text-base-leading: 1.6;
+  --text-base-tracking: 0;
+
+  --text-lg-size:      1.125rem;
+  --text-lg-leading:   1.5;
+  --text-lg-tracking:  -0.01em;
+
+  --text-xl-size:      1.25rem;
+  --text-xl-leading:   1.4;
+  --text-xl-tracking:  -0.02em;
+
+  --text-2xl-size:     1.5rem;
+  --text-2xl-leading:  1.3;
+  --text-2xl-tracking: -0.03em;
+
+  --text-3xl-size:     1.875rem;
+  --text-3xl-leading:  1.2;
+  --text-3xl-tracking: -0.04em;
+
+  --text-4xl-size:     2.25rem;
+  --text-4xl-leading:  1.1;
+  --text-4xl-tracking: -0.05em;
+
+  --text-5xl-size:     3rem;
+  --text-5xl-leading:  1;
+  --text-5xl-tracking: -0.06em;
+
+  /* Composite size shorthand */
+  --text-2xs:  var(--text-2xs-size);
+  --text-xs:   var(--text-xs-size);
+  --text-sm:   var(--text-sm-size);
+  --text-base: var(--text-base-size);
+  --text-lg:   var(--text-lg-size);
+  --text-xl:   var(--text-xl-size);
+  --text-2xl:  var(--text-2xl-size);
+  --text-3xl:  var(--text-3xl-size);
+  --text-4xl:  var(--text-4xl-size);
+  --text-5xl:  var(--text-5xl-size);
+
+  /* Spacing — 4px base grid */
+  --space-1:  0.25rem;   /* 4px */
+  --space-2:  0.5rem;    /* 8px */
+  --space-3:  0.75rem;   /* 12px */
+  --space-4:  1rem;      /* 16px */
+  --space-5:  1.25rem;   /* 20px */
+  --space-6:  1.5rem;    /* 24px */
+  --space-8:  2rem;      /* 32px */
+  --space-10: 2.5rem;    /* 40px */
+  --space-12: 3rem;      /* 48px */
+  --space-16: 4rem;      /* 64px */
+  --space-20: 5rem;      /* 80px */
+  --space-24: 6rem;      /* 96px */
+  --space-32: 8rem;      /* 128px */
+
+  /* Component padding conventions */
+  --pad-compact:     var(--space-2) var(--space-3);   /* 8px v / 12px h */
+  --pad-default:     var(--space-3) var(--space-4);   /* 12px v / 16px h */
+  --pad-comfortable: var(--space-5) var(--space-6);   /* 20px v / 24px h */
+  --pad-spacious:    var(--space-8) var(--space-10);  /* 32px v / 40px h */
+
+  /* Gap scale */
+  --gap-tight:   var(--space-2);  /* 8px */
+  --gap-default: var(--space-4);  /* 16px */
+  --gap-loose:   var(--space-6);  /* 24px */
+  --gap-section: var(--space-8);  /* 32px */
+
+  /* Border radius — enterprise (engineered, small corners) */
+  --radius-sm:   3px;
+  --radius-md:   4px;
+  --radius-lg:   6px;
+  --radius-xl:   8px;
+  --radius-2xl:  12px;
+  --radius-full: 9999px;
+
+  /* Backdrop blur tiers (frosted glass) */
+  --blur-sm: 8px;
+  --blur-md: 16px;
+  --blur-lg: 32px;
+
+  /* Z-index named layers — never use arbitrary z-index values */
+  --z-base-content:    0;
+  --z-sticky-header:   10;
+  --z-dropdown:        50;
+  --z-modal-backdrop:  100;
+  --z-modal:           110;
+  --z-toast:           200;
+  --z-tooltip:         300;
+  --z-command-palette: 400;
+
+  /* Accent scale — SAP Fiori enterprise blue (single disciplined accent) */
+  --accent-50:  #EAF3FC;
+  --accent-100: #CFE4F9;
+  --accent-200: #A3C9EE;
+  --accent-300: #6EA9E3;
+  --accent-400: #2E86D8;
+  --accent-500: #0A6ED1;
+  --accent-600: #0A5CB0;
+  --accent-700: #084E94;
+  --accent-800: #063C71;
+  --accent-900: #052B50;
+
+  --accent:        var(--accent-500);
+  --accent-hover:  var(--accent-400);
+  --accent-active: var(--accent-600);
+  --accent-subtle: var(--accent-900);
+  --accent-muted:  var(--accent-700);
+  --accent-fg:     #FFFFFF;
+}
+
+/* ---- V2 premium dark surfaces — scoped; classic uses classic-tokens.css ---- */
+.v2-root,
+html[data-interface="v2"] {
+  color-scheme: dark;
+  accent-color: var(--accent-500);
+
+  --bg-void:     #080A0F;
+  --bg-base:     #0D1017;
+  --bg-surface:  #131720;
+  --bg-elevated: #1A2030;
+  --bg-overlay:  #212840;
+  --bg-hover:    #1E2434;
+
+  --text-primary:   rgba(255, 255, 255, 0.92);
+  --text-secondary: rgba(255, 255, 255, 0.64);
+  --text-muted:     rgba(255, 255, 255, 0.38);
+  --text-disabled:  rgba(255, 255, 255, 0.22);
+  --text-accent:    var(--accent-400);
+  --text-danger:    var(--status-error-fg);
+
+  --border-default: rgba(255, 255, 255, 0.06);
+  --border-subtle:  rgba(255, 255, 255, 0.03);
+  --border-strong:  rgba(255, 255, 255, 0.12);
+  --border-accent:  color-mix(in srgb, var(--accent-500) 40%, transparent);
+
+  --accent-hover:  var(--accent-400);
+  --accent-active: var(--accent-600);
+  --accent-subtle: var(--accent-900);
+  --accent-muted:  var(--accent-700);
+  --accent-fg:     #FFFFFF;
+
+  --status-success-fg:     #34D399;
+  --status-success-bg:     color-mix(in srgb, var(--status-success-fg) 8%, transparent);
+  --status-success-border: color-mix(in srgb, var(--status-success-fg) 20%, transparent);
+
+  --status-warning-fg:     #FBBF24;
+  --status-warning-bg:     color-mix(in srgb, var(--status-warning-fg) 8%, transparent);
+  --status-warning-border: color-mix(in srgb, var(--status-warning-fg) 20%, transparent);
+
+  --status-error-fg:       #F87171;
+  --status-error-bg:       color-mix(in srgb, var(--status-error-fg) 8%, transparent);
+  --status-error-border:   color-mix(in srgb, var(--status-error-fg) 20%, transparent);
+
+  --status-info-fg:        #60A5FA;
+  --status-info-bg:        color-mix(in srgb, var(--status-info-fg) 8%, transparent);
+  --status-info-border:    color-mix(in srgb, var(--status-info-fg) 20%, transparent);
+
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 6px rgba(0, 0, 0, 0.2);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.25);
+  --shadow-3: 0 4px 16px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.3);
+  --shadow-4: 0 8px 32px rgba(0, 0, 0, 0.6), 0 16px 64px rgba(0, 0, 0, 0.35);
+  --shadow-accent:
+    0 0 0 1px color-mix(in srgb, var(--accent-500) 25%, transparent),
+    0 0 20px color-mix(in srgb, var(--accent-500) 15%, transparent);
+
+  --gradient-surface: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-base) 100%);
+  --gradient-accent:  linear-gradient(135deg, var(--accent-500) 0%, var(--accent-700) 100%);
+  --gradient-glow:    radial-gradient(ellipse 90% 55% at 50% -15%, color-mix(in srgb, var(--accent-500) 15%, transparent), transparent 68%);
+  --gradient-shine:   linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.06) 50%, rgba(255, 255, 255, 0) 100%);
+
+  --ring-default:
+    0 0 0 2px var(--bg-base),
+    0 0 0 4px color-mix(in srgb, var(--accent-500) 60%, transparent);
+  --ring-error:
+    0 0 0 2px var(--bg-base),
+    0 0 0 4px color-mix(in srgb, var(--status-error-fg) 60%, transparent);
+  --ring-inset: inset 0 0 0 2px color-mix(in srgb, var(--accent-500) 40%, transparent);
+
+  --glass-surface-bg:     color-mix(in srgb, var(--bg-overlay) 72%, transparent);
+  --glass-surface-border: var(--border-default);
+  --glass-surface-blur:   var(--blur-md);
+}

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Play, Square, Loader2, Clock } from 'lucide-react';
+import { Play, Square, Loader2, Clock } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 

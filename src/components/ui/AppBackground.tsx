@@ -1,18 +1,2 @@
-
-
-
-
-
-
-
-
-
-
-
-import { memo } from 'react';
-
-function AppBackground() {
-  return <div className="app-bg" aria-hidden />;
-}
-
-export default memo(AppBackground);
+export * from '@/redesign/ui/AppBackground';
+export { default } from '@/redesign/ui/AppBackground';

@@ -13,8 +13,8 @@
 
 
 
-import type { LucideIcon } from 'lucide-react';
-import { Inbox } from 'lucide-react';
+import type { LucideIcon } from '@/icons';
+import { Inbox } from '@/icons';
 import type { ReactNode } from 'react';
 
 interface EmptyStateProps {

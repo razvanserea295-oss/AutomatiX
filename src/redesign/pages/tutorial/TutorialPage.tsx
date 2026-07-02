@@ -37,6 +37,7 @@ import { useState, useMemo } from 'react';
 import { flushSync } from 'react-dom';
 import type { User } from '@/core/types';
 import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout } from '@/app-ui';
 import KpiCard from '@/redesign/ui/KpiCard';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import EmptyState from '@/redesign/ui/EmptyState';
@@ -51,11 +52,7 @@ import {
   Search, BookOpen, Lightbulb, ArrowRight, X, Activity,
   Hammer, MapPin, ListChecks, Gauge, LayoutDashboard, Inbox,
   GitBranch, Library, Truck, AtSign, Crown, Container,
-} from 'lucide-react';
-
-
-
-
+} from '@/icons';
 
 interface TutorialStep {
   icon: React.ComponentType<{ className?: string }>;
@@ -92,10 +89,6 @@ interface TipEntry {
 }
 
 type Tab = 'lifecycle' | 'pages' | 'tips';
-
-
-
-
 
 const LIFECYCLE_SECTIONS: TutorialSection[] = [
   {
@@ -299,10 +292,6 @@ const LIFECYCLE_SECTIONS: TutorialSection[] = [
   },
 ];
 
-
-
-
-
 const PAGES_GUIDE: PageEntry[] = [
   
   { icon: LayoutDashboard, title: 'Dashboard',         desc: 'Privire de ansamblu: KPI, navigare rapidă kanban-style, briefing lunar, predări, alerte. Configurabilă per user din Sistem → Utilizatori.', page: 'dashboard',       group: 'Acasă',    keywords: 'kpi profit venit cost productie alerte briefing inbox' },
@@ -310,52 +299,40 @@ const PAGES_GUIDE: PageEntry[] = [
   { icon: Calendar,        title: 'Calendar',          desc: 'Vizualizare lunară/săptămânală/zilnică a deadline-urilor proiectelor, deplasărilor, evenimentelor.', page: 'calendar',        group: 'Personal', keywords: 'evenimente termene' },
   { icon: MapPin,          title: 'Deplasări',         desc: 'Programări deplasări cu costuri pe categorii, alertă 7 zile pentru completarea costurilor.', page: 'deplasari',       group: 'Personal', keywords: 'travel diurnale transport cazare costuri' },
 
-  
   { icon: Target,          title: 'Sales Hub',         desc: 'Pipeline comercial. Click pe o discuție o deschide într-o pagină dedicată cu poze, note multiple, contact, conversie în proiect.', page: 'sales-hub',       group: 'Vânzări',  keywords: 'lead pipeline discutie client oferta' },
   { icon: FileText,        title: 'Oferte',            desc: 'Generare ofertă tehnico-comercială cu BOM, descărcare PDF, atașare la discuții.', page: 'quotations',      group: 'Vânzări',  keywords: 'oferta pdf bom' },
   { icon: Building2,       title: 'Clienți',           desc: 'Bază de date clienți: CUI (validat ANAF), IBAN, contact, istoric proiecte.', page: 'clients',         group: 'Vânzări',  keywords: 'firme persoane contact cui iban' },
 
-  
   { icon: FolderKanban,    title: 'Proiecte',          desc: 'Lista și detalii proiecte. Editare stadiu, responsabil, deadline, prioritate, blocare.', page: 'projects',        group: 'Proiecte', keywords: 'proiect stadiu kanban responsabil' },
   { icon: ScrollText,      title: 'Contracte',         desc: 'Lifecycle contract: Ciornă → Activ → Amendat → Închis. Legat de proiect.', page: 'contracts',       group: 'Proiecte', keywords: 'contract semnatura status' },
 
-  
   { icon: ClipboardCheck,  title: 'Fișa proiectant',   desc: 'Documentație tehnică obligatorie înainte de intrarea în producție.', page: 'fisa-proiectant', group: 'Proiectare', keywords: 'design specificatii desen' },
   { icon: Network,         title: 'Arbore piese',      desc: 'Structură ierarhică ansamblu/subansamblu/piesă cu stadii proprii. Import DXF/Excel.', page: 'parts-tree',      group: 'Proiectare', keywords: 'piese ansamblu dxf' },
   { icon: Library,         title: 'Biblioteci piese',  desc: 'Catalog reutilizabil de piese standard pentru import rapid în proiecte.', page: 'libraries',       group: 'Proiectare', keywords: 'biblioteca piese reutilizabile' },
 
-  
   { icon: Factory,         title: 'Producție (Kanban)', desc: 'Board vizual cu stadii. Drag-and-drop proiecte/piese. Handoff-uri automate între roluri.', page: 'production',     group: 'Producție', keywords: 'kanban stadii hala' },
   { icon: Wrench,          title: 'Stații',            desc: 'Configurare stații hală: locație, capacitate, asignare piese.', page: 'stations',        group: 'Producție', keywords: 'masini hala echipament' },
   { icon: Hammer,          title: 'Service & Mentenanță', desc: 'Înregistrare intervenții pe piese cu foto before/after, costuri manoperă/piese, status.', page: 'maintenance',     group: 'Producție', keywords: 'service intervenții reparatii' },
 
-  
   { icon: Container,       title: 'Depozit',           desc: 'Inventar fizic: locații, rezervări, mișcări. Alertă rezervări vechi > 7 zile.', page: 'warehouse',       group: 'Aprovizionare', keywords: 'stoc locatii rezervari' },
   { icon: Package,         title: 'Inventar materiale', desc: 'Catalog materiale cu specs, preț, furnizor preferat, stoc curent. Comenzi sugerate sub minim.', page: 'materials',       group: 'Aprovizionare', keywords: 'materiale catalog stoc minim' },
   { icon: Warehouse,       title: 'Furnizori',         desc: 'Bază date furnizori: lead time, prețuri, performanță negociere.', page: 'suppliers',       group: 'Aprovizionare', keywords: 'furnizor vendor lead time' },
   { icon: ShoppingCart,    title: 'Achiziții',         desc: 'Purchase orders către furnizori + urmărire livrare + recepții.', page: 'purchase-orders', group: 'Aprovizionare', keywords: 'comenzi po purchase' },
 
-  
   { icon: CircleDollarSign, title: 'Financiar',        desc: 'Facturi emise/primite, plăți, cashflow, override-uri pe costuri proiect.', page: 'finance',         group: 'Financiar', keywords: 'facturi plati cashflow profit' },
   { icon: FileText,        title: 'Documente',         desc: 'Repository centralizat de documente per proiect cu categorii și upload.', page: 'documents',       group: 'Financiar', keywords: 'pdf word excel arhiva' },
   { icon: BarChart3,       title: 'Rapoarte',          desc: 'Profitabilitate, productivitate, stoc, financiar — agregate pe proiect/lună/an.', page: 'reports',         group: 'Financiar', keywords: 'export raport profitabilitate' },
 
-  
   { icon: GraduationCap,   title: 'Tutorial',          desc: 'Acest ghid: parcurs proiect, listă pagini, sfaturi.', page: 'tutorial',        group: 'Instrumente', keywords: 'help ajutor ghid' },
   { icon: Mail,            title: 'Email',             desc: 'Client IMAP/SMTP integrat. Setări persistente per user (Setări → Email).', page: 'email',           group: 'Instrumente', keywords: 'email imap smtp inbox' },
   { icon: MessageCircle,   title: 'Mesaje (Chat)',     desc: 'Chat intern cu grupuri. Detalii grup (poză, membri, admini) la click pe avatar.', page: 'chat',            group: 'Instrumente', keywords: 'chat mesagerie' },
   { icon: Bell,            title: 'Alerte',            desc: 'Notificări sistem: handoff-uri, deadlines, stoc redus. Cooldown 7 zile pe alerte confirmate.', page: 'alerts',          group: 'Instrumente', keywords: 'notificari alerta acknowledged' },
 
-  
   { icon: Gauge,           title: 'Birou control',     desc: 'Dashboard manager: predări blocate >24h, anomalii AI, forțare tranziții. Vizibil doar admin/manager.', page: 'manager-control', group: 'Sistem',     keywords: 'manager anomalii predari sla' },
   { icon: Users,           title: 'Utilizatori',       desc: 'Gestionare conturi: roluri, permisiuni override, configurare dashboard per user.', page: 'users',           group: 'Sistem',     keywords: 'cont rol permisiuni admin' },
   { icon: Activity,        title: 'Sesiuni',           desc: 'Monitorizare live useri conectați (refresh 5s), istoric login/logout per user, force logout.', page: 'sessions',        group: 'Sistem',     keywords: 'live online conectat ip' },
   { icon: Settings,        title: 'Setări',            desc: 'Aspect (light/dark), notificări, contul meu, email IMAP, date fiscale firmă, server, AI.', page: 'settings',        group: 'Sistem',     keywords: 'preferinte tema' },
 ];
-
-
-
-
 
 const TIPS: TipEntry[] = [
   { icon: Search,            title: 'Căutare globală',         body: 'Apasă Ctrl+K (sau Cmd+K) în orice pagină pentru a căuta proiecte, clienți, materiale, piese, documente instant.' },
@@ -375,10 +352,6 @@ const TIPS: TipEntry[] = [
   { icon: Gauge,             title: 'Personalizare dashboard', body: 'Admin → Sistem → Utilizatori → "Configurare dashboard" pentru a bifa ce widget-uri vede fiecare user pe Dashboard.' },
 ];
 
-
-
-
-
 interface SearchHit {
   kind: 'page' | 'lifecycle' | 'tip';
   title: string;
@@ -395,7 +368,6 @@ function buildSearchIndex(query: string): SearchHit[] {
   const matches = (...txt: (string | undefined)[]) =>
     txt.filter(Boolean).some(t => t!.toLowerCase().includes(q));
 
-  
   for (const p of PAGES_GUIDE) {
     if (matches(p.title, p.desc, p.keywords, p.group)) {
       hits.push({ kind: 'page', title: p.title, body: p.desc, icon: p.icon, page: p.page, meta: p.group });
@@ -418,10 +390,6 @@ function buildSearchIndex(query: string): SearchHit[] {
   }
   return hits;
 }
-
-
-
-
 
 function LifecycleTimeline({ sections, onNavigate }: { sections: TutorialSection[]; onNavigate: (page: string) => void }) {
   const [expanded, setExpanded] = useState<string | null>(sections[0]?.id ?? null);
@@ -462,7 +430,7 @@ function LifecycleTimeline({ sections, onNavigate }: { sections: TutorialSection
             </button>
 
             {isOpen && (
-              <div key={section.id} className="border-t border-line px-5 py-4 bg-surface-primary enter-up">
+              <div key={section.id} className="border-t border-line px-5 py-4 bg-surface-primary">
                 <div className="stagger-in">
                 {section.steps.map((step, idx) => {
                   const StepIcon = step.icon;
@@ -659,16 +627,10 @@ function SearchResults({ hits, query, onNavigate }: { hits: SearchHit[]; query: 
   );
 }
 
-
-
-
-
 interface TutorialPageProps {
   user: User;
   onNavigate?: (pageId: string) => void;
 }
-
-
 
 const NAV_ITEMS: { id: Tab; label: string; desc: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'lifecycle', label: 'Parcurs proiect', desc: 'Ciclul de viață, pas cu pas', icon: PlayCircle },
@@ -685,7 +647,6 @@ export default function TutorialPage({ user, onNavigate }: TutorialPageProps) {
     else window.location.hash = `#/${page}`;
   };
 
-  
   const selectTab = (next: Tab) => {
     if (next === tab) return;
     startMorphTransition(() => flushSync(() => setTab(next)), { dir: 'forward' });
@@ -694,68 +655,50 @@ export default function TutorialPage({ user, onNavigate }: TutorialPageProps) {
   const searching = search.trim().length > 0;
   const hits = useMemo(() => buildSearchIndex(search), [search]);
 
-  
   const stepCount = useMemo(
     () => LIFECYCLE_SECTIONS.reduce((n, s) => n + s.steps.length, 0),
     [],
   );
 
-  const active = NAV_ITEMS.find(n => n.id === tab)!;
-
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="full" padding="comfortable">
-        {/* ── 1. HEADER ROW — identity (left) + global search promoted into the
-               band (right). The old top tab-strip is gone; nav moved to the rail.
-               Bare (no card chrome) + thin bottom separator; pinned shrink-0. */}
-        <div className="shrink-0 flex flex-col gap-4 pb-4 border-b border-line/60 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-              <GraduationCap className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-              <h1 className="text-pm-2xl font-semibold text-content-primary truncate leading-tight">Tutorial Automatix</h1>
-              <p className="text-pm-sm text-content-muted truncate">Ghid complet: pagini, parcurs proiect, sfaturi</p>
-            </div>
-          </div>
-
-          <div className="relative group w-full lg:w-80 shrink-0">
-            <Search className={filterSearchIconCls} />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Caută în tutorial — pagini, pași, sfaturi..."
-              className={`${filterSearchInputCls} !w-full`}
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                title="Șterge"
-                className={filterClearInlineBtnCls}
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
+    <DashboardLayout
+        chrome={(
+          <PageChrome
+            toolbar={(
+              <div className="relative group w-full lg:max-w-md">
+                <Search className={filterSearchIconCls} />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Caută în tutorial — pagini, pași, sfaturi..."
+                  className={`${filterSearchInputCls} !w-full`}
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    title="Șterge"
+                    className={filterClearInlineBtnCls}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             )}
-          </div>
-        </div>
-
-        {}
+          />
+        )}
+      kpis={
         <Page.Kpis cols={3} className="shrink-0">
           <KpiCard label="Pagini ghidate"  value={PAGES_GUIDE.length}        icon={BookOpen}   iconColor="text-accent"       hint="în directorul de pagini" />
           <KpiCard label="Pași parcurs"    value={stepCount}                 icon={PlayCircle} iconColor="text-status-blue"  hint={`${LIFECYCLE_SECTIONS.length} etape de proiect`} />
           <KpiCard label="Sfaturi"         value={TIPS.length}               icon={Lightbulb}  iconColor="text-status-amber" hint="trucuri & scurtături" />
         </Page.Kpis>
-
-        {
-
-}
+      }
+    >
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
-          {}
           <aside className="lg:col-span-4 xl:col-span-3 min-h-0 overflow-y-auto space-y-4 pr-0.5">
-            <div className="rounded-2xl bg-accent/5 border border-accent/15 p-4 enter-up">
+            <div className="rounded-2xl bg-accent/5 border border-accent/15 p-4">
               <div className="flex items-center gap-2 mb-1.5">
                 <PlayCircle className="h-4 w-4 text-accent shrink-0" />
                 <p className="text-pm-base font-semibold text-content-primary truncate">
@@ -769,7 +712,7 @@ export default function TutorialPage({ user, onNavigate }: TutorialPageProps) {
               </p>
             </div>
 
-            <nav className="rounded-2xl border border-line/70 bg-surface-secondary overflow-hidden stagger-in enter-up" style={{ animationDelay: '90ms' }} aria-label="Secțiuni tutorial">
+            <nav className="rounded-2xl border border-line/70 bg-surface-secondary overflow-hidden stagger-in" aria-label="Secțiuni tutorial">
               {NAV_ITEMS.map((item) => {
                 const NavIcon = item.icon;
                 const isActive = !searching && tab === item.id;
@@ -801,7 +744,7 @@ export default function TutorialPage({ user, onNavigate }: TutorialPageProps) {
             </nav>
 
             {searching && (
-              <div className="rounded-2xl border border-line/70 bg-surface-secondary p-4 enter-up">
+              <div className="rounded-2xl border border-line/70 bg-surface-secondary p-4">
                 <div className="self-start mb-2">
                   <StatusBadge tone="accent" label="Căutare activă" dot />
                 </div>
@@ -828,16 +771,6 @@ export default function TutorialPage({ user, onNavigate }: TutorialPageProps) {
                 className="vt-morph"
                 style={{ viewTransitionName: vtName('tutorial-pane', tab) } as React.CSSProperties}
               >
-                <div key={tab} className="flex items-center gap-2 mb-4 enter-fade">
-                  <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0 anim-pop">
-                    <active.icon className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <h2 className="text-pm-lg font-semibold text-content-primary leading-tight truncate">{active.label}</h2>
-                    <p className="text-pm-xs text-content-muted truncate">{active.desc}</p>
-                  </div>
-                </div>
-
                 {tab === 'lifecycle' && (
                   <LifecycleTimeline sections={LIFECYCLE_SECTIONS} onNavigate={handleNavigate} />
                 )}
@@ -853,7 +786,6 @@ export default function TutorialPage({ user, onNavigate }: TutorialPageProps) {
             )}
           </section>
         </div>
-      </Page.Body>
-    </Page>
+    </DashboardLayout>
   );
 }

@@ -4,7 +4,7 @@
 
 
 import { useMemo, useState } from 'react';
-import { Tags, Hand, BarChart3, Upload, FolderTree, History, Download, Plus, Trash2 } from 'lucide-react';
+import { Tags, Hand, BarChart3, Upload, FolderTree, History, Download, Plus, Trash2 } from '@/icons';
 import { useLocalStorage, SectionCard, ExportMenu } from '@/components/enhancements';
 import Button from '@/components/ui/Button';
 import { toast } from '@/store/toastStore';

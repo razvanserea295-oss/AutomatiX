@@ -1,0 +1,200 @@
+/* ============================================================================
+ * Design token utilities — opt-in classes built on the canonical foundation.
+ * Imported by redesign/index.css after design-tokens + legacy-aliases.
+ * ========================================================================== */
+
+/* KPI / metric numerals — consistent digit width, no layout shift */
+.text-tabular-nums,
+.tabular-nums,
+[data-metric] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Display headings */
+.font-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.font-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+
+.font-mono-ds {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Floating glass surfaces — frosted over the layer below */
+.surface-glass {
+  background-color: var(--glass-surface-bg);
+  border: 1px solid var(--glass-surface-border);
+  box-shadow: var(--shadow-2);
+  -webkit-backdrop-filter: saturate(160%) blur(var(--glass-surface-blur));
+          backdrop-filter: saturate(160%) blur(var(--glass-surface-blur));
+}
+
+.surface-glass-sm {
+  background-color: color-mix(in srgb, var(--bg-elevated) 68%, transparent);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-1);
+  -webkit-backdrop-filter: saturate(150%) blur(var(--blur-sm));
+          backdrop-filter: saturate(150%) blur(var(--blur-sm));
+}
+
+.surface-glass-lg {
+  background-color: color-mix(in srgb, var(--bg-overlay) 78%, transparent);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-3);
+  -webkit-backdrop-filter: saturate(180%) blur(var(--blur-lg));
+          backdrop-filter: saturate(180%) blur(var(--blur-lg));
+}
+
+/* Surface elevation tiers */
+.bg-void      { background-color: var(--bg-void); }
+.bg-base      { background-color: var(--bg-base); }
+.bg-surface   { background-color: var(--bg-surface); }
+.bg-elevated  { background-color: var(--bg-elevated); }
+.bg-overlay   { background-color: var(--bg-overlay); }
+
+.bg-gradient-surface { background-image: var(--gradient-surface); }
+.bg-gradient-accent  { background-image: var(--gradient-accent); }
+.bg-gradient-glow    { background-image: var(--gradient-glow); }
+.bg-gradient-shine   { background-image: var(--gradient-shine); }
+
+/* Focus ring utilities — pair with :focus-visible (never :focus alone) */
+.focus-ring-default:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-default);
+}
+
+.focus-ring-error:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-error);
+}
+
+.focus-ring-inset:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-inset);
+}
+
+/* Typography scale utilities */
+.text-ds-2xs {
+  font-size: var(--text-2xs-size);
+  line-height: var(--text-2xs-leading);
+  letter-spacing: var(--text-2xs-tracking);
+}
+.text-ds-xs {
+  font-size: var(--text-xs-size);
+  line-height: var(--text-xs-leading);
+  letter-spacing: var(--text-xs-tracking);
+}
+.text-ds-sm {
+  font-size: var(--text-sm-size);
+  line-height: var(--text-sm-leading);
+  letter-spacing: var(--text-sm-tracking);
+}
+.text-ds-base {
+  font-size: var(--text-base-size);
+  line-height: var(--text-base-leading);
+  letter-spacing: var(--text-base-tracking);
+}
+.text-ds-lg {
+  font-size: var(--text-lg-size);
+  line-height: var(--text-lg-leading);
+  letter-spacing: var(--text-lg-tracking);
+}
+.text-ds-xl {
+  font-size: var(--text-xl-size);
+  line-height: var(--text-xl-leading);
+  letter-spacing: var(--text-xl-tracking);
+}
+.text-ds-2xl {
+  font-size: var(--text-2xl-size);
+  line-height: var(--text-2xl-leading);
+  letter-spacing: var(--text-2xl-tracking);
+}
+.text-ds-3xl {
+  font-size: var(--text-3xl-size);
+  line-height: var(--text-3xl-leading);
+  letter-spacing: var(--text-3xl-tracking);
+}
+.text-ds-4xl {
+  font-size: var(--text-4xl-size);
+  line-height: var(--text-4xl-leading);
+  letter-spacing: var(--text-4xl-tracking);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+.text-ds-5xl {
+  font-size: var(--text-5xl-size);
+  line-height: var(--text-5xl-leading);
+  letter-spacing: var(--text-5xl-tracking);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Semantic text color utilities */
+.text-ds-primary   { color: var(--text-primary); }
+.text-ds-secondary { color: var(--text-secondary); }
+.text-ds-muted     { color: var(--text-muted); }
+.text-ds-disabled  { color: var(--text-disabled); }
+.text-ds-accent    { color: var(--text-accent); }
+.text-ds-danger    { color: var(--text-danger); }
+
+/* Status surfaces */
+.status-success {
+  color: var(--status-success-fg);
+  background-color: var(--status-success-bg);
+  border-color: var(--status-success-border);
+}
+.status-warning {
+  color: var(--status-warning-fg);
+  background-color: var(--status-warning-bg);
+  border-color: var(--status-warning-border);
+}
+.status-error {
+  color: var(--status-error-fg);
+  background-color: var(--status-error-bg);
+  border-color: var(--status-error-border);
+}
+.status-info {
+  color: var(--status-info-fg);
+  background-color: var(--status-info-bg);
+  border-color: var(--status-info-border);
+}
+
+/* Component padding utilities */
+.pad-compact     { padding: var(--pad-compact); }
+.pad-default     { padding: var(--pad-default); }
+.pad-comfortable { padding: var(--pad-comfortable); }
+.pad-spacious    { padding: var(--pad-spacious); }
+
+/* Gap utilities */
+.gap-tight   { gap: var(--gap-tight); }
+.gap-default { gap: var(--gap-default); }
+.gap-loose   { gap: var(--gap-loose); }
+.gap-section { gap: var(--gap-section); }
+
+/* Shadow utilities */
+.shadow-ds-0 { box-shadow: var(--shadow-0); }
+.shadow-ds-1 { box-shadow: var(--shadow-1); }
+.shadow-ds-2 { box-shadow: var(--shadow-2); }
+.shadow-ds-3 { box-shadow: var(--shadow-3); }
+.shadow-ds-4 { box-shadow: var(--shadow-4); }
+.shadow-ds-accent { box-shadow: var(--shadow-accent); }
+
+/* Z-index layer utilities */
+.z-base-content    { z-index: var(--z-base-content); }
+.z-sticky-header   { z-index: var(--z-sticky-header); }
+.z-dropdown        { z-index: var(--z-dropdown); }
+.z-modal-backdrop  { z-index: var(--z-modal-backdrop); }
+.z-modal           { z-index: var(--z-modal); }
+.z-toast           { z-index: var(--z-toast); }
+.z-tooltip         { z-index: var(--z-tooltip); }
+.z-command-palette { z-index: var(--z-command-palette); }

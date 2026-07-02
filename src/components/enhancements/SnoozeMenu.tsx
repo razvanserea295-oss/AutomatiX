@@ -1,4 +1,4 @@
-import { BellOff, Clock } from 'lucide-react';
+import { BellOff, Clock } from '@/icons';
 import Popover from './Popover';
 import Button from '@/components/ui/Button';
 

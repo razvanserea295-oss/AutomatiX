@@ -62,6 +62,15 @@ const api = {
   
   onWindowMaxState: (cb: (maximized: boolean) => void): Unsub =>
     on('window:max-state', cb),
+
+  windowMinimize: (): Promise<{ ok: boolean }> =>
+    ipcRenderer.invoke('window_minimize') as Promise<{ ok: boolean }>,
+  windowToggleMaximize: (): Promise<{ ok: boolean; maximized?: boolean }> =>
+    ipcRenderer.invoke('window_toggle_maximize') as Promise<{ ok: boolean; maximized?: boolean }>,
+  windowClose: (): Promise<{ ok: boolean }> =>
+    ipcRenderer.invoke('window_close') as Promise<{ ok: boolean }>,
+  windowIsMaximized: (): Promise<{ maximized: boolean }> =>
+    ipcRenderer.invoke('window_is_maximized') as Promise<{ maximized: boolean }>,
 };
 
 contextBridge.exposeInMainWorld('electron', api);

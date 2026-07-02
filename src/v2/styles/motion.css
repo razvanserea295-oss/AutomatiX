@@ -1,0 +1,562 @@
+/* ═══════════════════════════════════════════════════════════════
+   V2 Motion System — extends canonical redesign/motion layer
+   Only animates transform + opacity. Respects OS + in-app reduced motion.
+   ═══════════════════════════════════════════════════════════════ */
+
+@import '../../redesign/motion/index.css';
+
+.v2-root {
+  /* Alias canonical duration tokens for v2 consumers */
+  --motion-instant: var(--duration-instant);
+  --motion-fast: var(--duration-snappy);
+  --motion-ui: var(--duration-responsive);
+  --motion-enter: var(--duration-deliberate);
+  --motion-page: var(--duration-deliberate);
+  --motion-ambient: var(--duration-spin-slow);
+
+  /* Easing aliases */
+  --ease-out: var(--ease-out-expo);
+  --ease-spring: var(--spring-bounce-ease);
+  --ease-in: var(--ease-in-expo);
+  --ease-ambient: var(--ease-in-out-expo);
+
+  scroll-behavior: smooth;
+}
+
+/* ─── Keyframes ─────────────────────────────────────────────── */
+
+@keyframes v2-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes v2-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes v2-slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes v2-slide-up-sm {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes v2-slide-up-xs {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes v2-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes v2-scale-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.96); }
+}
+
+@keyframes v2-menu-in {
+  from { opacity: 0; transform: scale(0.95); transform-origin: top; }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes v2-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@keyframes v2-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes v2-pulse-ring {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+@keyframes v2-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes v2-glow-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.65; }
+}
+
+@keyframes v2-badge-pop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes v2-spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes v2-progress-indeterminate {
+  0% { transform: translateX(-100%); width: 30%; }
+  50% { width: 50%; }
+  100% { transform: translateX(350%); width: 30%; }
+}
+
+@keyframes v2-row-exit {
+  to { opacity: 0; transform: translateX(-8px); max-height: 0; padding: 0; margin: 0; }
+}
+
+@keyframes v2-row-enter {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes v2-reveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes v2-kpi-flash {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+@keyframes v2-toast-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes v2-toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(16px); }
+}
+
+@keyframes v2-tooltip-in {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes v2-avatar-ring {
+  from { transform: scale(1); opacity: 0.6; }
+  to { transform: scale(1.12); opacity: 0; }
+}
+
+/* ─── Entrance utilities ────────────────────────────────────── */
+
+.v2-animate-shell {
+  animation: v2-fade-in var(--motion-ui) var(--ease-out) both;
+}
+
+.v2-animate-page {
+  animation: v2-slide-up-xs var(--motion-page) var(--ease-out) both;
+  animation-delay: 80ms;
+}
+
+.v2-animate-kpi {
+  animation: v2-slide-up var(--motion-enter) var(--ease-out) both;
+}
+
+.v2-animate-content {
+  animation: v2-slide-up-xs var(--motion-enter) var(--ease-out) both;
+  animation-delay: 120ms;
+}
+
+.v2-stagger > * {
+  animation: v2-slide-up-sm var(--motion-enter) var(--ease-out) both;
+}
+
+.v2-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.v2-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.v2-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.v2-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.v2-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.v2-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.v2-stagger > *:nth-child(7) { animation-delay: 360ms; }
+.v2-stagger > *:nth-child(8) { animation-delay: 420ms; }
+
+.v2-stagger-rows > tr,
+.v2-stagger-rows > * {
+  animation: v2-slide-up-sm var(--motion-ui) var(--ease-out) both;
+}
+
+.v2-stagger-rows > tr:nth-child(1),
+.v2-stagger-rows > *:nth-child(1) { animation-delay: 0ms; }
+.v2-stagger-rows > tr:nth-child(2),
+.v2-stagger-rows > *:nth-child(2) { animation-delay: 30ms; }
+.v2-stagger-rows > tr:nth-child(3),
+.v2-stagger-rows > *:nth-child(3) { animation-delay: 60ms; }
+.v2-stagger-rows > tr:nth-child(4),
+.v2-stagger-rows > *:nth-child(4) { animation-delay: 90ms; }
+.v2-stagger-rows > tr:nth-child(5),
+.v2-stagger-rows > *:nth-child(5) { animation-delay: 120ms; }
+.v2-stagger-rows > tr:nth-child(6),
+.v2-stagger-rows > *:nth-child(6) { animation-delay: 150ms; }
+.v2-stagger-rows > tr:nth-child(7),
+.v2-stagger-rows > *:nth-child(7) { animation-delay: 180ms; }
+.v2-stagger-rows > tr:nth-child(8),
+.v2-stagger-rows > *:nth-child(8) { animation-delay: 210ms; }
+.v2-stagger-rows > tr:nth-child(9),
+.v2-stagger-rows > *:nth-child(9) { animation-delay: 240ms; }
+.v2-stagger-rows > tr:nth-child(10),
+.v2-stagger-rows > *:nth-child(10) { animation-delay: 270ms; }
+
+.v2-animate-pop {
+  animation: v2-badge-pop var(--motion-ui) var(--ease-spring) both;
+}
+
+.v2-animate-reveal {
+  animation: v2-reveal var(--motion-enter) var(--ease-out) both;
+}
+
+.v2-animate-reveal.is-visible {
+  animation-play-state: running;
+}
+
+/* ─── Interactive: buttons ────────────────────────────────── */
+
+.v2-btn-motion {
+  transition:
+    background-color var(--motion-fast) var(--ease-out),
+    color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out),
+    transform 80ms var(--ease-out),
+    box-shadow var(--motion-ui) var(--ease-out);
+}
+
+.v2-btn-motion:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.v2-btn-motion:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: 80ms;
+}
+
+.v2-btn-motion:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Interactive: cards ────────────────────────────────────── */
+
+.v2-card-interactive {
+  transition:
+    transform var(--motion-ui) var(--ease-out),
+    box-shadow var(--motion-ui) var(--ease-out),
+    border-color var(--motion-ui) var(--ease-out);
+}
+
+.v2-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--elevation-2);
+  will-change: transform;
+}
+
+.v2-card-interactive:active {
+  transform: translateY(0) scale(0.998);
+}
+
+.v2-card-interactive:not(:hover) {
+  will-change: auto;
+}
+
+.v2-card-selected {
+  border-left: 3px solid hsl(var(--primary));
+  animation: v2-fade-in var(--motion-fast) var(--ease-out);
+}
+
+/* ─── Form inputs ───────────────────────────────────────────── */
+
+.v2-input-motion {
+  transition:
+    border-color var(--motion-fast) var(--ease-out),
+    box-shadow var(--motion-fast) var(--ease-out);
+}
+
+.v2-input-motion:focus-visible {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.25);
+}
+
+.v2-input-motion[aria-invalid='true'] {
+  border-color: hsl(var(--destructive));
+  animation: v2-shake 300ms var(--ease-out);
+}
+
+/* ─── Table rows ────────────────────────────────────────────── */
+
+.v2-table-row {
+  transition: background-color 100ms var(--ease-out), transform 80ms var(--ease-out);
+}
+
+.v2-table-row:hover {
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+.v2-table-row:active {
+  transform: scale(0.998);
+}
+
+.v2-table-row-exit {
+  animation: v2-row-exit var(--motion-ui) var(--ease-in) forwards;
+  overflow: hidden;
+}
+
+.v2-table-row-enter {
+  animation: v2-row-enter var(--motion-ui) var(--ease-out) both;
+}
+
+/* ─── Skeleton shimmer ──────────────────────────────────────── */
+
+.v2-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: hsl(var(--muted));
+  border-radius: calc(var(--radius) - 2px);
+}
+
+.v2-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--foreground) / 0.06) 45%,
+    hsl(var(--foreground) / 0.1) 50%,
+    hsl(var(--foreground) / 0.06) 55%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: v2-shimmer 1.8s var(--ease-ambient) infinite;
+}
+
+.v2-skeleton:nth-child(2)::after { animation-delay: 100ms; }
+.v2-skeleton:nth-child(3)::after { animation-delay: 200ms; }
+.v2-skeleton:nth-child(4)::after { animation-delay: 300ms; }
+.v2-skeleton:nth-child(5)::after { animation-delay: 400ms; }
+
+/* ─── Dialog / modal ────────────────────────────────────────── */
+
+.v2-dialog-overlay[data-state='open'] {
+  animation: v2-fade-in 200ms var(--ease-out) forwards;
+}
+
+.v2-dialog-overlay[data-state='closed'] {
+  animation: v2-fade-out 180ms var(--ease-in) forwards;
+}
+
+.v2-dialog-content[data-state='open'] {
+  animation: v2-scale-in 250ms var(--ease-spring) forwards;
+}
+
+.v2-dialog-content[data-state='closed'] {
+  animation: v2-scale-out 180ms var(--ease-in) forwards;
+}
+
+.v2-dialog-stagger > * {
+  animation: v2-slide-up-sm var(--motion-ui) var(--ease-out) both;
+}
+
+.v2-dialog-stagger > *:nth-child(1) { animation-delay: 40ms; }
+.v2-dialog-stagger > *:nth-child(2) { animation-delay: 70ms; }
+.v2-dialog-stagger > *:nth-child(3) { animation-delay: 100ms; }
+.v2-dialog-stagger > *:nth-child(4) { animation-delay: 130ms; }
+.v2-dialog-stagger > *:nth-child(5) { animation-delay: 160ms; }
+
+/* ─── Nav ───────────────────────────────────────────────────── */
+
+.v2-nav-item {
+  position: relative;
+  transition: background-color var(--motion-fast) var(--ease-out), color var(--motion-fast) var(--ease-out);
+}
+
+.v2-nav-indicator {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 60%;
+  border-radius: 0 2px 2px 0;
+  background: hsl(var(--primary));
+  transform: translateY(-50%) scaleY(0);
+  transition: transform var(--motion-ui) var(--ease-spring), top var(--motion-ui) var(--ease-spring), height var(--motion-ui) var(--ease-spring);
+}
+
+.v2-nav-item[data-active='true'] .v2-nav-indicator {
+  transform: translateY(-50%) scaleY(1);
+}
+
+/* ─── Status pulse ──────────────────────────────────────────── */
+
+.v2-status-live {
+  position: relative;
+}
+
+.v2-status-live::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  animation: v2-pulse-ring 2s var(--ease-ambient) infinite;
+  pointer-events: none;
+}
+
+/* ─── Empty state ───────────────────────────────────────────── */
+
+.v2-empty-icon {
+  animation: v2-float var(--motion-ambient) var(--ease-ambient) infinite;
+}
+
+.v2-empty-glow {
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, hsl(var(--primary) / 0.15) 0%, transparent 70%);
+  animation: v2-glow-pulse 3s var(--ease-ambient) infinite;
+  pointer-events: none;
+}
+
+.motion-cta-attention {
+  animation: v2-badge-pop var(--motion-ui) var(--ease-spring) 2s both;
+}
+
+/* ─── Toasts (Sonner) ───────────────────────────────────────── */
+
+.v2-toast {
+  animation: v2-toast-in 200ms var(--ease-out) both;
+}
+
+[data-sonner-toast][data-removed='true'] {
+  animation: v2-toast-out 200ms var(--ease-in) forwards;
+}
+
+/* ─── Tooltips ──────────────────────────────────────────────── */
+
+.v2-tooltip {
+  animation: v2-tooltip-in 120ms var(--ease-out) both;
+}
+
+.v2-tooltip[data-state='closed'] {
+  animation: v2-fade-out 80ms var(--ease-in) forwards;
+}
+
+/* ─── Avatar ────────────────────────────────────────────────── */
+
+.v2-avatar {
+  transition: box-shadow var(--motion-fast) var(--ease-out);
+}
+
+.v2-avatar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5);
+  opacity: 0;
+  transition: opacity var(--motion-fast) var(--ease-out);
+  pointer-events: none;
+}
+
+.v2-avatar:hover::after {
+  opacity: 1;
+  animation: v2-avatar-ring 150ms var(--ease-out) forwards;
+}
+
+.v2-avatar img {
+  transition: opacity var(--motion-ui) var(--ease-out);
+}
+
+/* ─── KPI flash on change ───────────────────────────────────── */
+
+.v2-kpi-flash {
+  animation: v2-kpi-flash 200ms var(--ease-out);
+}
+
+/* ─── Progress bar (viewport top) ───────────────────────────── */
+
+.v2-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 9999;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 150ms var(--ease-out);
+}
+
+.v2-progress-bar[data-active='true'] {
+  opacity: 1;
+}
+
+.v2-progress-bar__fill {
+  height: 100%;
+  background: hsl(var(--primary));
+  transform-origin: left;
+  transition: transform 200ms var(--ease-out);
+}
+
+.v2-progress-bar__fill--indeterminate {
+  animation: v2-progress-indeterminate 1.2s var(--ease-out) infinite;
+}
+
+/* ─── Spinner ───────────────────────────────────────────────── */
+
+.v2-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid hsl(var(--muted-foreground) / 0.25);
+  border-top-color: hsl(var(--primary));
+  border-radius: 50%;
+  animation: spin var(--duration-spin) var(--ease-in-out-expo) infinite;
+}
+
+/* ─── Scrollbar (dark) ──────────────────────────────────────── */
+
+.v2-root ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.v2-root ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.v2-root ::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 4px;
+}
+
+.v2-root ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary) / 0.5);
+}
+
+/* ─── Tab content crossfade ─────────────────────────────────── */
+
+.v2-tab-panel-exit {
+  animation: v2-fade-out 100ms var(--ease-in) forwards;
+}
+
+.v2-tab-panel-enter {
+  animation: v2-slide-up-sm 200ms var(--ease-out) both;
+}
+
+/* ─── Reduced motion ────────────────────────────────────────── */
+/* Canonical overrides → src/redesign/motion/reduced-motion.css */
+
+@media (prefers-reduced-motion: reduce) {
+  .v2-root {
+    scroll-behavior: auto;
+  }
+}

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, type ReactNode } from 'react';
-import { CheckSquare, Square, MinusSquare, X } from 'lucide-react';
+import { CheckSquare, Square, MinusSquare, X } from '@/icons';
 
 export interface BulkAction<T> {
   id: string;

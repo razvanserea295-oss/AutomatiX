@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Loader2 } from 'lucide-react';
+import { Search, Loader2 } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 

@@ -1,7 +1,7 @@
 import { useState, useCallback, memo } from 'react';
 import {
-  LogOut, ChevronRight, PanelLeftClose, PanelLeft,
-} from 'lucide-react';
+  ChevronRight, PanelLeftClose, PanelLeft,
+} from '@/icons';
 import { useLayoutStore } from '@/store/layoutStore';
 
 export interface SidebarItem {
@@ -16,15 +16,12 @@ export interface SidebarItem {
 
 interface WorkspacePanelProps {
   items: SidebarItem[];
-  
   heading?: string;
-  onLogout: () => void;
 }
 
 function WorkspacePanel({
   items,
   heading,
-  onLogout,
 }: WorkspacePanelProps) {
   const collapsed = useLayoutStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useLayoutStore((s) => s.toggleSidebar);
@@ -53,8 +50,8 @@ function WorkspacePanel({
 
   return (
     <nav
-      className="relative flex flex-col shrink-0 bg-surface-nav border-r border-line select-none overflow-hidden"
-      style={{ width: collapsed ? 56 : 220 }}
+      className="shell-workspace-panel relative flex flex-col shrink-0 bg-surface-nav border-r border-line select-none overflow-hidden"
+      data-collapsed={collapsed ? 'true' : 'false'}
     >
       {
 }
@@ -70,7 +67,7 @@ function WorkspacePanel({
           type="button"
           onClick={toggleSidebar}
           className={`h-6 w-6 rounded-lg inline-flex items-center justify-center text-content-muted hover:text-accent hover:bg-surface-nav-hover transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] disabled:opacity-40 ${collapsed ? 'absolute -right-3 top-3 z-20 rounded-full border border-line bg-surface-secondary shadow-[var(--elevation-1)]' : ''}`}
-          aria-label={collapsed ? 'Expand panel' : 'Collapse panel'}
+          aria-label={collapsed ? 'Extinde panoul' : 'Restrânge panoul'}
         >
           {collapsed
             ? <PanelLeft className="h-3 w-3" />
@@ -163,9 +160,9 @@ function WorkspacePanel({
                       {}
                       {hasBadge && (
                         collapsed ? (
-                          <span className="absolute top-0.5 right-1 h-2 w-2 rounded-full bg-status-red anim-scale-in" />
+                          <span className="absolute right-1 top-0.5 h-2 w-2 rounded-full bg-status-red" />
                         ) : (
-                          <span className="inline-flex items-center justify-center rounded-full bg-status-red text-white text-pm-2xs font-bold px-1 h-4 min-w-[16px] tabular-nums anim-scale-in">
+                          <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-status-red px-1 text-pm-2xs font-bold tabular-nums text-white">
                             {item.badge! > 99 ? '99' : item.badge}
                           </span>
                         )
@@ -177,25 +174,6 @@ function WorkspacePanel({
             </div>
           );
         })}
-      </div>
-
-      {
-}
-      <div className="border-t border-line shrink-0 pt-1">
-        {}
-        <button
-          type="button"
-          aria-label="Logout"
-          onClick={onLogout}
-          className={`flex items-center w-full transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] rounded-lg text-content-muted hover:text-status-red ${
-            collapsed
-              ? 'justify-center h-8 mb-1'
-              : 'gap-2.5 h-8 mx-1 mb-1 px-2 hover:bg-status-red/12'
-          }`}
-        >
-          <LogOut className="h-3.5 w-3.5 shrink-0" />
-          {!collapsed && <span className="min-w-0 truncate text-pm-xs">Deconectare</span>}
-        </button>
       </div>
     </nav>
   );

@@ -1,0 +1,142 @@
+/* V2 layout density — zero wasted viewport space */
+
+.v2-root {
+  --v2-topbar-height: var(--density-toolbar-h);
+  --v2-sidebar-header-height: var(--density-toolbar-h);
+  --v2-page-pad-x: var(--density-page-px);
+  --v2-page-pad-y: var(--density-page-py);
+  --v2-page-gap: var(--density-gap-section);
+  --v2-panel-radius: var(--density-card-radius, calc(var(--radius) - 2px));
+  --v2-viewport-h: calc(100dvh - var(--v2-topbar-height));
+}
+
+.v2-page-fill {
+  display: flex;
+  min-height: var(--v2-viewport-h);
+  flex-direction: column;
+  gap: var(--v2-page-gap);
+  padding: var(--v2-page-pad-y) var(--v2-page-pad-x);
+}
+
+.v2-page {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--v2-page-gap);
+  padding: var(--v2-page-pad-y) var(--v2-page-pad-x);
+}
+
+.v2-panel {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--v2-panel-radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+}
+
+.v2-panel-scroll {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.v2-split {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  gap: var(--v2-page-gap);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 1024px) {
+  .v2-split {
+    grid-template-columns: minmax(200px, 240px) minmax(0, 1fr);
+  }
+
+  .v2-split-wide {
+    grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  }
+
+  .v2-split-detail {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  }
+}
+
+.v2-kanban-board {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  gap: var(--density-gap-card);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+}
+
+.v2-kanban-column {
+  display: flex;
+  min-width: 240px;
+  max-height: 100%;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--density-gap-card);
+  overflow-y: auto;
+  border-radius: var(--v2-panel-radius);
+  padding: var(--density-card-p-compact);
+}
+
+/* ─── Card variants ─────────────────────────────────────────── */
+
+/* Hero card — subtle primary gradient top */
+.v2-card-hero {
+  background: linear-gradient(
+    160deg,
+    hsl(217 91% 60% / 0.08) 0%,
+    hsl(var(--card)) 50%
+  );
+  border-color: hsl(217 91% 60% / 0.22);
+}
+
+/* Accent strip — left primary border */
+.v2-card-accent {
+  border-left: 3px solid hsl(var(--primary));
+}
+
+/* Glass panel — elevated frosted surface */
+.v2-panel-glass {
+  background: hsl(var(--card) / 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-color: hsl(var(--border) / 0.6);
+  box-shadow: var(--elevation-2);
+}
+
+/* Chart wrapper — card that contains a recharts chart */
+.v2-chart-card {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  border-radius: var(--v2-panel-radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  padding: var(--density-card-p);
+  gap: var(--density-gap-card);
+}
+
+.v2-chart-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ─── Sticky table header inside scroll container ─────────── */
+.v2-table-sticky thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: hsl(var(--card));
+  box-shadow: 0 1px 0 hsl(var(--border));
+}

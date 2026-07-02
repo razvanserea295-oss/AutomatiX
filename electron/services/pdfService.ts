@@ -232,6 +232,23 @@ async function renderPdf(docDefinition: any, userName?: string): Promise<Buffer>
   return streamToBuffer(doc);
 }
 
+// Render an arbitrary pdfmake document definition to a PDF buffer, reusing the
+// already-registered fonts (DejaVu/Arial → Romanian diacritics). Unlike
+// renderPdf() it adds NO company header/footer — used by the printing feature
+// to turn plain text / images into a clean printable PDF.
+export async function renderRawPdf(docDefinition: any): Promise<Buffer> {
+  const font = ensureFonts();
+  const pdfmake = getPdfmake();
+  const dd = {
+    pageSize: 'A4',
+    pageMargins: [36, 36, 36, 36],
+    defaultStyle: { font, fontSize: 11, color: '#111' },
+    ...docDefinition,
+  };
+  const doc = pdfmake.createPdf(dd);
+  return streamToBuffer(doc);
+}
+
 
 
 

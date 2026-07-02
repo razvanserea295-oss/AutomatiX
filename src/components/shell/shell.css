@@ -1,0 +1,969 @@
+/* Enterprise shell layout — 8px grid, fixed chrome widths. */
+
+:root {
+  --shell-titlebar-h: 34px;
+  --shell-titlebar-h-mobile: 56px;
+  --shell-status-h: 24px;
+  --shell-rail-w: 72px;
+  --shell-app-sidebar-w: 288px;
+  --shell-sidebar-w: 220px;
+  --shell-sidebar-collapsed-w: 56px;
+  --shell-radius-sm: 8px;
+  --shell-radius-md: 10px;
+  --shell-chrome-border: var(--color-border);
+  --shell-chrome-border-strong: var(--border-strong, var(--color-border));
+}
+
+.shell-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--color-bg-page);
+}
+
+.shell-chrome-stack {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Sticky app chrome — the top navbar and bottom status bar stay pinned in any
+   scroll context. The height-locked flex shell already holds them, but
+   position:sticky guarantees it even if a page or embed makes an ancestor
+   scroll. Harmless (no reflow) when the shell is height-locked. */
+.shell-titlebar-host {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  flex-shrink: 0;
+}
+
+.shell-status-host {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+}
+
+/* Radial nav — items spring out from the hub with a staggered fan-out; the hub
+   pops in. Resting transform is var-driven so the entrance keyframe can animate
+   from the centre to each item's final offset. */
+@keyframes radial-item-in {
+  from { transform: translate(-50%, -50%) scale(0.35); opacity: 0; }
+  to   { transform: translate(calc(-50% + var(--rx)), calc(-50% + var(--ry))) scale(1); opacity: 1; }
+}
+.radial-item {
+  transform: translate(calc(-50% + var(--rx)), calc(-50% + var(--ry)));
+  animation: radial-item-in 0.32s cubic-bezier(0.22, 1.2, 0.36, 1) backwards;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.radial-item:active { filter: brightness(1.1); }
+@keyframes radial-hub-in {
+  from { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+.radial-hub { animation: radial-hub-in 0.22s ease-out backwards; }
+@media (prefers-reduced-motion: reduce) {
+  .radial-item, .radial-hub { animation: none; }
+}
+
+/* Desktop app sidebar — flex column host so the aside stretches full chrome height. */
+.shell-sidebar-host {
+  display: none;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-self: stretch;
+  min-height: 0;
+  z-index: 25;
+}
+
+@media (min-width: 1024px) {
+  .shell-sidebar-host {
+    display: flex;
+  }
+}
+
+.shell-rail-host,
+.shell-workspace-host {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  min-height: 0;
+}
+
+.shell-rail:not(.w-0) {
+  width: var(--shell-rail-w);
+  min-width: var(--shell-rail-w);
+  flex-shrink: 0;
+}
+
+.shell-app-sidebar {
+  flex: 1 1 auto;
+  width: var(--shell-app-sidebar-w);
+  min-width: var(--shell-app-sidebar-w);
+  max-width: var(--shell-app-sidebar-w);
+  height: 100%;
+  overflow: hidden;
+}
+
+.shell-app-sidebar[data-collapsed='true'] {
+  width: var(--shell-sidebar-collapsed-w);
+  min-width: var(--shell-sidebar-collapsed-w);
+  max-width: var(--shell-sidebar-collapsed-w);
+}
+
+.shell-app-sidebar[data-variant='contrast'] {
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+}
+
+.shell-app-sidebar[data-variant='contrast'][data-collapsed='true'] {
+  width: 64px;
+  min-width: 64px;
+  max-width: 64px;
+}
+
+.shell-workspace-panel {
+  width: var(--shell-sidebar-w);
+  min-width: var(--shell-sidebar-w);
+  flex-shrink: 0;
+}
+
+.shell-workspace-panel[data-collapsed='true'] {
+  width: var(--shell-sidebar-collapsed-w);
+}
+
+.shell-main {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--color-bg-page);
+  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--color-border) 55%, transparent);
+}
+
+.shell-location-bar {
+  position: relative;
+  z-index: 12;
+}
+
+.mobile-bottom-nav {
+  display: block;
+}
+
+/* Hide legacy rail / workspace chrome on compact viewports — drawer replaces them. */
+@media (max-width: 1023px) {
+  .shell-rail-host,
+  .shell-workspace-host,
+  .shell-sidebar-host {
+    display: none !important;
+  }
+
+  .shell-main {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-bottom-nav {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .shell-status-host {
+    display: none;
+  }
+}
+
+/* Page content sits flush under app chrome — PageToolbar owns the top action band. */
+.shell-page-host {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 1023px) {
+  .shell-page-host {
+    flex: 0 0 auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+}
+
+.shell-titlebar {
+  min-height: var(--shell-titlebar-h-mobile);
+  border-bottom-color: var(--shell-chrome-border);
+}
+
+@media (min-width: 640px) {
+  .shell-titlebar {
+    min-height: var(--shell-titlebar-h);
+  }
+}
+
+.shell-status {
+  height: var(--shell-status-h);
+  min-height: var(--shell-status-h);
+  box-shadow: 0 -1px 0 var(--shell-chrome-border);
+  transition: background-color var(--motion-fast, 160ms) ease;
+}
+
+.shell-status-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.command-palette-surface {
+  transform-origin: top left;
+  border: 1px solid color-mix(in srgb, var(--color-accent, #0078d4) 38%, var(--color-border, #3c3c3c));
+  border-radius: var(--shell-radius-sm);
+  background: var(--color-bg-elevated, #252526);
+  box-shadow: var(--elevation-3);
+}
+
+.command-palette-attached {
+  border-top-left-radius: var(--shell-radius-sm);
+  border-top-right-radius: var(--shell-radius-sm);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  box-shadow: var(--elevation-3);
+}
+
+.command-palette-input-row {
+  min-height: 40px;
+  border-bottom: 1px solid var(--color-border, #3c3c3c);
+  background: var(--color-bg-secondary, #2d2d30);
+}
+
+.command-palette-input {
+  color: var(--color-text-primary, #f5f5f5);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.command-palette-input::placeholder {
+  color: var(--color-text-muted, #a6a6a6);
+  opacity: 1;
+}
+
+.command-palette-list {
+  max-height: min(52vh, calc(100dvh - 7rem));
+}
+
+.command-palette-section {
+  margin-bottom: 2px;
+}
+
+.command-palette-section-label {
+  padding: 8px 12px 4px;
+  color: var(--color-text-muted, #a6a6a6);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 12px;
+  text-transform: uppercase;
+}
+
+.command-palette-row {
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: var(--shell-radius-sm);
+  color: var(--color-text-secondary, #cccccc);
+  transition:
+    background-color var(--motion-fast, 160ms) var(--motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    color var(--motion-fast, 160ms) ease,
+    box-shadow var(--motion-fast, 160ms) ease;
+}
+
+.command-palette-row:hover {
+  background: var(--color-bg-tertiary, #3a3d41);
+}
+
+.command-palette-row:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-soft);
+}
+
+.command-palette-row.is-active {
+  background: var(--color-accent, #0078d4);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%);
+}
+
+.command-palette-row-title {
+  color: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 17px;
+}
+
+.command-palette-row-subtitle {
+  color: color-mix(in srgb, currentColor 72%, transparent);
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.command-palette-row.is-active .command-palette-row-subtitle,
+.command-palette-row.is-active .command-palette-kbd {
+  color: rgb(255 255 255 / 78%);
+}
+
+.command-palette-kbd {
+  border: 1px solid color-mix(in srgb, currentColor 22%, transparent);
+  border-radius: 4px;
+  background: color-mix(in srgb, currentColor 7%, transparent);
+  padding: 1px 5px;
+  color: var(--color-text-muted, #a6a6a6);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+}
+
+.command-palette-footer {
+  min-height: 28px;
+  border-top: 1px solid var(--color-border, #3c3c3c);
+  background: var(--color-bg-secondary, #2d2d30);
+}
+
+.shell-rail-desktop {
+  width: var(--shell-rail-w);
+  min-width: var(--shell-rail-w);
+}
+
+.shell-search-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  padding: 1px 5px;
+  border: 1px solid var(--shell-chrome-border-strong);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+  letter-spacing: 0.02em;
+}
+
+/* Desktop titlebar — single 34px row, vertically centered controls */
+.titlebar-desktop {
+  display: flex;
+  align-items: center;
+  height: var(--shell-titlebar-h);
+  min-height: var(--shell-titlebar-h);
+  padding-left: 4px;
+  padding-right: 0;
+}
+
+.titlebar-left {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 2px;
+}
+
+.titlebar-center {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+}
+
+.titlebar-search-wrap {
+  width: 16rem;
+}
+
+@media (min-width: 768px) {
+  .titlebar-search-wrap {
+    width: 18rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .titlebar-search-wrap {
+    width: 20rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .titlebar-search-wrap {
+    width: 22rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .titlebar-search-wrap {
+    width: 24rem;
+  }
+}
+
+.titlebar-search {
+  display: flex;
+  height: 28px;
+  width: 100%;
+  align-items: center;
+  gap: 6px;
+  border-radius: 6px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  background: rgb(255 255 255 / 4%);
+  padding: 0 8px;
+  color: rgb(255 255 255 / 82%);
+  font-size: 12px;
+  line-height: 1;
+  transition:
+    background-color var(--motion-fast, 160ms) ease,
+    border-color var(--motion-fast, 160ms) ease,
+    box-shadow var(--motion-fast, 160ms) ease;
+}
+
+.titlebar-search:hover {
+  border-color: rgb(255 255 255 / 18%);
+  background: rgb(255 255 255 / 6%);
+}
+
+.titlebar-search:focus-within {
+  border-color: rgb(255 255 255 / 24%);
+  background: rgb(255 255 255 / 8%);
+}
+
+.titlebar-search[data-search-open='true'] {
+  border-color: color-mix(in srgb, var(--color-accent, #0078d4) 70%, transparent);
+  background: rgb(255 255 255 / 8%);
+  box-shadow: var(--elevation-2);
+}
+
+.titlebar-search-input {
+  min-width: 0;
+  flex: 1 1 auto;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+  line-height: 20px;
+  outline: none;
+}
+
+.titlebar-search-input::placeholder {
+  color: rgb(255 255 255 / 42%);
+}
+
+.titlebar-actions {
+  display: flex;
+  flex: 1 1 0;
+  justify-content: flex-end;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+  padding-left: 6px;
+}
+
+/* Sidebar toggle + Proiect nou — always visible in desktop titlebar (sm+). */
+.titlebar-primary-actions {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.titlebar-sidebar-toggle {
+  display: inline-flex;
+}
+
+.titlebar-actions .titlebar-window-controls {
+  align-self: stretch;
+  margin-left: 2px;
+}
+
+.titlebar-icon-btn {
+  position: relative;
+  display: inline-flex;
+  height: 28px;
+  width: 28px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgb(255 255 255 / 72%);
+  transition:
+    background-color var(--motion-fast, 160ms) ease,
+    color var(--motion-fast, 160ms) ease;
+}
+
+.titlebar-icon-btn:hover {
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+}
+
+.titlebar-icon-btn:active {
+  background: rgb(255 255 255 / 12%);
+}
+
+.titlebar-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-soft);
+}
+
+.titlebar-notify-badge {
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  display: flex;
+  height: 13px;
+  min-width: 13px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--color-status-red, #e81123);
+  padding: 0 2px;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px #2d2d2d;
+}
+
+/* Integrated titlebar menu bar (VS Code style) */
+.titlebar-menu-bar {
+  align-items: center;
+  gap: 2px;
+}
+
+.titlebar-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 9px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgb(255 255 255 / 78%);
+  font-size: 12px;
+  line-height: 1;
+  cursor: default;
+  transition: background-color var(--motion-fast, 160ms) ease, color var(--motion-fast, 160ms) ease;
+}
+
+.titlebar-menu-trigger:hover,
+.titlebar-menu-trigger.is-open {
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+}
+
+.titlebar-menu-trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-soft);
+}
+
+/* Per-page actions lifted from PageChrome into the titlebar */
+.titlebar-page-actions {
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  max-width: min(58vw, 760px);
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.titlebar-page-actions::-webkit-scrollbar {
+  display: none;
+}
+
+.titlebar-page-actions-primary,
+.titlebar-page-actions-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.titlebar-page-actions .ds-btn {
+  --ds-btn-height: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 9px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  gap: 5px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  filter: none;
+  transform: none;
+}
+
+.titlebar-page-actions .ds-btn:hover:not(:disabled) {
+  transform: none;
+  filter: none;
+  box-shadow: none;
+}
+
+.titlebar-page-actions .ds-btn:active:not(:disabled) {
+  transform: none;
+  filter: none;
+}
+
+.titlebar-page-actions .ds-btn--primary,
+.titlebar-page-actions .ds-btn--secondary,
+.titlebar-page-actions .ds-btn--outline,
+.titlebar-page-actions .ds-btn--ghost,
+.titlebar-page-actions .ds-btn--danger,
+.titlebar-page-actions .ds-btn--success {
+  background: transparent !important;
+  color: rgb(255 255 255 / 80%);
+  border: none !important;
+  box-shadow: none !important;
+  filter: none;
+}
+
+.titlebar-page-actions .ds-btn--primary:hover:not(:disabled),
+.titlebar-page-actions .ds-btn--secondary:hover:not(:disabled),
+.titlebar-page-actions .ds-btn--outline:hover:not(:disabled),
+.titlebar-page-actions .ds-btn--ghost:hover:not(:disabled),
+.titlebar-page-actions .ds-btn--danger:hover:not(:disabled),
+.titlebar-page-actions .ds-btn--success:hover:not(:disabled) {
+  background: rgb(255 255 255 / 8%) !important;
+  color: #fff;
+}
+
+.titlebar-page-actions .ds-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.titlebar-page-actions button:not(.ds-btn) {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 9px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgb(255 255 255 / 78%);
+  font-size: 12px;
+  line-height: 1;
+  cursor: default;
+  transition: background-color var(--motion-fast, 160ms) ease, color var(--motion-fast, 160ms) ease;
+}
+
+.titlebar-page-actions button:not(.ds-btn):hover {
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+}
+
+.titlebar-page-actions [role="group"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 1px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+}
+
+.titlebar-page-actions [role="group"] button {
+  height: 24px;
+  padding: 0 7px;
+  font-size: 11px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+/* Page toolbar / tabs / filters lifted into the dark navbar. */
+.titlebar-page-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+/* Segmented tab controls (AnimatedTabs / Tabs) on the dark bar. */
+.titlebar-page-actions [role="tablist"] {
+  height: 26px;
+  padding: 2px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+}
+
+.titlebar-page-actions [role="tablist"] [role="tab"] {
+  height: 22px;
+  padding: 0 10px;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: rgb(255 255 255 / 62%);
+}
+
+.titlebar-page-actions [role="tablist"] [role="tab"]:hover {
+  color: rgb(255 255 255 / 85%);
+}
+
+.titlebar-page-actions [role="tablist"] [role="tab"][aria-selected="true"] {
+  color: #fff;
+}
+
+/* Tab pill indicator -> subtle light fill so the active tab reads on dark. */
+.titlebar-page-actions [role="tablist"] .ds-tab-indicator {
+  background: rgb(255 255 255 / 14%) !important;
+  box-shadow: none !important;
+}
+
+/* Inline selects / inputs / switches lifted into the navbar. */
+.titlebar-page-toolbar select,
+.titlebar-page-toolbar input,
+.titlebar-page-actions-secondary select,
+.titlebar-page-actions-secondary input {
+  height: 26px;
+  min-height: 26px;
+  border-radius: 5px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  padding: 0 6px;
+}
+
+/* Keep selects/inputs flush with the bar, but reveal a faint backing on
+   interaction so they stay discoverable without a permanent box. */
+.titlebar-page-toolbar select:hover,
+.titlebar-page-toolbar input:hover,
+.titlebar-page-toolbar select:focus,
+.titlebar-page-toolbar input:focus,
+.titlebar-page-actions-secondary select:hover,
+.titlebar-page-actions-secondary input:hover,
+.titlebar-page-actions-secondary select:focus,
+.titlebar-page-actions-secondary input:focus {
+  background: rgb(255 255 255 / 8%);
+  outline: none;
+}
+
+/* --- Re-fit full-width page toolbars (FilterBar, segmented Tabs) to the slim
+   navbar. They were sized for an on-page header (h-10 controls, w-56 search,
+   flex-wrap, light surfaces), which here causes clipping + a wide empty gap. */
+
+/* Stay on one line — a wrapped second line is clipped by the bar height. */
+.titlebar-page-actions,
+.titlebar-page-actions * {
+  flex-wrap: nowrap !important;
+}
+
+/* Compact, flush search field instead of a 224px transparent void. */
+.titlebar-page-actions input[type="text"],
+.titlebar-page-actions input[type="search"],
+.titlebar-page-actions input:not([type]) {
+  width: 150px !important;
+  min-width: 0 !important;
+  height: 26px !important;
+  padding-left: 26px !important;  /* room for the absolute search icon */
+  padding-right: 22px !important; /* room for the inline clear (x) button */
+}
+
+.titlebar-page-actions select {
+  height: 26px !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Segmented tabs: fit the row, drop the light active box, don't ellipsis-clip. */
+.titlebar-page-actions [role="tab"] {
+  height: 26px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-transform: none;
+}
+
+.titlebar-page-actions [role="tab"] > span {
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+.titlebar-page-actions [role="tab"][aria-selected="true"] {
+  background: rgb(255 255 255 / 12%) !important;
+  color: #fff !important;
+}
+
+.titlebar-page-toolbar select option {
+  color: #1a1a1a;
+}
+
+.titlebar-menu-panel {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  z-index: 80;
+  min-width: 220px;
+  padding: 4px;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 6px;
+  background: #252526;
+  box-shadow: var(--elevation-3);
+}
+
+.titlebar-menu-panel--motion {
+  animation: titlebar-menu-in var(--motion-fast, 160ms) var(--motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+@keyframes titlebar-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.titlebar-menu-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgb(255 255 255 / 88%);
+  font-size: 12px;
+  line-height: 16px;
+  text-align: left;
+  cursor: default;
+  transition: background-color var(--motion-fast, 160ms) ease;
+}
+
+.titlebar-menu-item:hover,
+.titlebar-menu-item.is-focused {
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+}
+
+.titlebar-menu-item:disabled {
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+.titlebar-menu-item:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-soft);
+}
+
+.titlebar-menu-sep {
+  height: 1px;
+  margin: 4px 6px;
+  background: rgb(255 255 255 / 10%);
+}
+
+.titlebar-menu-kbd {
+  flex-shrink: 0;
+  padding: 1px 5px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 4px;
+  background: rgb(255 255 255 / 6%);
+  color: rgb(255 255 255 / 55%);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 14px;
+  letter-spacing: 0.02em;
+}
+
+.titlebar-featured-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  margin: 0 2px;
+  padding: 0 10px;
+  border: 1px solid color-mix(in srgb, var(--color-accent, #0078d4) 55%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-accent, #0078d4) 18%, transparent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    background-color var(--motion-fast, 160ms) ease,
+    border-color var(--motion-fast, 160ms) ease,
+    transform var(--motion-fast, 160ms) ease;
+}
+
+.titlebar-featured-pill:hover {
+  background: color-mix(in srgb, var(--color-accent, #0078d4) 28%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent, #0078d4) 70%, transparent);
+}
+
+.titlebar-featured-pill:active {
+  transform: scale(var(--ixn-press-scale, 0.98));
+}
+
+.titlebar-featured-pill:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titlebar-menu-panel--motion {
+    animation: none;
+  }
+
+  .titlebar-featured-pill:active {
+    transform: none;
+  }
+}
+
+/* Sidebar nav — unified hover / active / focus micro-feedback */
+.shell-app-sidebar button {
+  transition:
+    transform var(--motion-fast, 160ms) var(--motion-ease, cubic-bezier(0.22, 1, 0.36, 1)),
+    background-color var(--motion-fast, 160ms) ease,
+    border-color var(--motion-fast, 160ms) ease,
+    color var(--motion-fast, 160ms) ease,
+    box-shadow var(--motion-fast, 160ms) ease;
+}
+
+.shell-app-sidebar button:not(:disabled):active {
+  transform: scale(var(--ixn-press-scale, 0.98));
+  transition-duration: var(--motion-instant, 80ms);
+}
+
+.shell-app-sidebar button:focus-visible {
+  outline: none;
+  box-shadow: var(--ring-soft);
+}
+
+@media (hover: hover) {
+  .shell-app-sidebar button:not(:disabled):not([class*='bg-accent']):hover {
+    border-color: color-mix(in srgb, var(--color-border) 78%, var(--color-accent) 22%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell-app-sidebar button:not(:disabled):active {
+    transform: none;
+  }
+}

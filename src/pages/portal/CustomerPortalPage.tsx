@@ -1,6 +1,7 @@
+import { PageToolbar } from '@/app-ui';
 import { useState, useEffect } from 'react';
 import { useRoute } from 'wouter';
-import { Loader2, AlertTriangle, FileText, Receipt, Wrench, Package, Calendar, CheckCircle } from 'lucide-react';
+import { Loader2, AlertTriangle, FileText, Receipt, Wrench, Package, Calendar, CheckCircle } from '@/icons';
 import { getServerUrl } from '@/config/server';
 
 interface PortalView {
@@ -105,19 +106,12 @@ export default function CustomerPortalPage() {
 
   return (
     <div className="min-h-screen bg-surface-page">
-      <header className="bg-surface-primary border-b border-line">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-pm-lg font-bold text-content-primary">Portal client</h1>
-            <p className="text-pm-sm text-content-muted">Vizualizare proiect — read-only</p>
-          </div>
-          {data.project.client_name && (
-            <span className="min-w-0 truncate text-pm-md text-content-secondary font-medium">{data.project.client_name}</span>
-          )}
-        </div>
-      </header>
-
       <main className="max-w-5xl mx-auto px-6 py-8 space-y-6">
+        <PageToolbar
+          actions={data.project.client_name ? (
+            <span className="min-w-0 truncate text-pm-md text-content-secondary font-medium">{data.project.client_name}</span>
+          ) : undefined}
+        />
         <section className="bg-surface-primary rounded-2xl shadow-[var(--elevation-1)] border border-line p-6 anim-slide-up">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div className="min-w-0">

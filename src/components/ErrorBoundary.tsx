@@ -1,5 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertCircle, RefreshCw, Home, Copy } from 'lucide-react';
+import { AlertCircle, RefreshCw, Home, Copy } from '@/icons';
 
 interface Props {
   children: ReactNode;

@@ -8,7 +8,7 @@
 
 
 import { useState, useEffect } from 'react';
-import { ClipboardCheck, X, Loader2, FileText, Star } from 'lucide-react';
+import { ClipboardCheck, X, Loader2, FileText, Star } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 

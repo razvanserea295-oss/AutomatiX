@@ -1,27 +1,8 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
-import { Plus, Send, Download, Trash2, Check, X, Loader2, FileText, Eye, ArrowRight, Mail, Upload, Paperclip, Search as SearchIcon, XCircle, ClipboardList, Repeat } from 'lucide-react';
+import { Plus, Send, Download, Trash2, Check, X, Loader2, FileText, Eye, ArrowRight, Mail, Upload, Paperclip, Search as SearchIcon, XCircle, Repeat } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
 import { toast } from '@/store/toastStore';
@@ -34,10 +15,12 @@ import { useMoney } from '@/store/settingsStore';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout, Panel, ListPanel, CardSlot, PAGE_GRID_12, PANEL_HEAD } from '@/app-ui';
 import KpiCard from '@/redesign/ui/KpiCard';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import FilterBar from '@/redesign/ui/FilterBar';
-import { GlassCard, SectionHeader, EmptyState, Skeleton } from '@/redesign/ui';
+import { EmptyState, Skeleton } from '@/redesign/ui';
+import { THEAD_STICKY } from '@/redesign/ui/SortableTh';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
 
 interface QuotationLine {
@@ -86,7 +69,6 @@ interface QuotationAttachment {
   size: number; created_by_name: string | null; created_at: string;
 }
 
-
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -100,7 +82,6 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-
 function formatFileSize(base64Len: number): string {
   if (!base64Len) return '—';
   const bytes = Math.round(base64Len * 0.75);
@@ -108,7 +89,6 @@ function formatFileSize(base64Len: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
-
 
 const MAX_FILE_BYTES = 35 * 1024 * 1024;
 
@@ -130,8 +110,6 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
   const leads = useSalesStore(s => s.leads);
   const fetchLeads = useSalesStore(s => s.fetchLeads);
 
-  
-  
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -186,7 +164,6 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Eroare'); }
   };
 
-  
   const loadAttachments = useCallback(async (quotationId: number) => {
     try {
       const list = await apiCommand<QuotationAttachment[]>('list_quotation_attachments', { quotation_id: quotationId });
@@ -194,7 +171,6 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
     } catch { setAttachments([]); }
   }, []);
 
-  
   useEffect(() => {
     if (selected?.id) void loadAttachments(selected.id);
     else setAttachments([]);
@@ -231,8 +207,6 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
     await downloadOneQuotationAttachment(id);
   };
 
-  
-  
   const selectQuotation = (q: Quotation) => {
     const next = selected?.id === q.id ? null : q;
     startMorphTransition(
@@ -241,7 +215,6 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
     );
   };
 
-  
   const visibleQuotations = useMemo(() => {
     const q = search.trim().toLowerCase();
     return quotations.filter(item => {
@@ -263,63 +236,47 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
     options: Object.entries(STATUS_TONE).map(([value, meta]) => ({ value, label: meta.label })),
   }]), [statusFilter]);
 
-  
   const funnelTotal = useMemo(() => {
     if (!stats) return 0;
     return stats.draft + stats.sent + stats.viewed + stats.accepted + stats.rejected + stats.converted + stats.expired;
   }, [stats]);
 
   return (
-    <Page fit>
-      <Page.Body maxWidth="wide" padding="comfortable" fit>
-
-        {}
-        <div className="shrink-0 flex items-center justify-between gap-4 flex-wrap enter-up pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="h-11 w-11 rounded-2xl bg-accent-muted flex items-center justify-center shrink-0">
-              <ClipboardList className="h-5 w-5 text-accent" />
-            </span>
-            <div className="min-w-0">
-              {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-              <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight">Oferte comerciale</h1>
-              <p className="mt-1 text-pm-sm text-content-muted">Construiește, trimite, urmărește și convertește oferte</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <FilterBar
-              search={search}
-              onSearchChange={setSearch}
-              searchPlaceholder="Caută număr, titlu, client..."
-              filters={statusFilterDef}
-              clearable
-              onClearAll={() => { setSearch(''); setStatusFilter(''); }}
-            />
-            <Button size="md" onClick={() => setShowBuilder(true)}>
-              <Plus className="h-3.5 w-3.5" /> Ofertă nouă
-            </Button>
-          </div>
-        </div>
-
-        {}
-        <div className="shrink-0 enter-up" style={{ animationDelay: '80ms' }}>
-          <Page.Kpis cols={4}>
-            <KpiCard icon={Send}       iconColor="text-status-blue"   label="Trimise"          value={loading ? '—' : (stats?.sent ?? 0)} />
-            <KpiCard icon={Eye}        iconColor="text-status-amber"  label="Vizualizate"      value={loading ? '—' : (stats?.viewed ?? 0)} />
-            <KpiCard icon={Check}      iconColor="text-status-green"  label="Acceptate"        value={loading ? '—' : (stats?.accepted ?? 0)} />
-            <KpiCard icon={ArrowRight} iconColor="text-accent"        label="Valoare pipeline" value={loading ? '—' : money(stats?.pipeline_value ?? 0, 'RON')} />
-          </Page.Kpis>
-        </div>
-
-        {
-
-
-}
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-
-          {}
-          <div className="lg:col-span-8 min-h-0 flex enter-up" style={{ animationDelay: '160ms' }}>
+    <>
+    <DashboardLayout
+        
+        chrome={(
+          <PageChrome
+            actions={
+              <Button size="md" onClick={() => setShowBuilder(true)}>
+                <Plus className="h-4 w-4" /> Ofertă nouă
+              </Button>
+            }
+            toolbar={
+              <FilterBar
+                search={search}
+                onSearchChange={setSearch}
+                searchPlaceholder="Caută număr, titlu, client..."
+                filters={statusFilterDef}
+                clearable
+                onClearAll={() => { setSearch(''); setStatusFilter(''); }}
+              />
+            }
+          />
+        )}
+      kpis={
+        <Page.Kpis cols={4}>
+          <KpiCard icon={Send}       iconColor="text-status-blue"   label="Trimise"          value={loading ? '—' : (stats?.sent ?? 0)} />
+          <KpiCard icon={Eye}        iconColor="text-status-amber"  label="Vizualizate"      value={loading ? '—' : (stats?.viewed ?? 0)} />
+          <KpiCard icon={Check}      iconColor="text-status-green"  label="Acceptate"        value={loading ? '—' : (stats?.accepted ?? 0)} />
+          <KpiCard icon={ArrowRight} iconColor="text-accent"        label="Valoare pipeline" value={loading ? '—' : money(stats?.pipeline_value ?? 0, 'RON')} />
+        </Page.Kpis>
+      }
+    >
+        <div className={PAGE_GRID_12}>
+          <CardSlot size="lg">
             {!selected ? (
-              <GlassCard size="regular" className="!p-0 overflow-hidden flex-1 flex">
+              <Panel fill className="flex-1" title="Nicio ofertă selectată" subtitle="Alege o ofertă din listă sau creează una nouă">
                 <EmptyState
                   icon={FileText}
                   title="Nicio ofertă selectată"
@@ -330,10 +287,10 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
                     </Button>
                   }
                 />
-              </GlassCard>
+              </Panel>
             ) : (
-              <GlassCard size="regular" className="!p-0 overflow-hidden flex-1 flex flex-col min-h-0" vtName={vtName('quotation', selected.id)}>
-                <div className="flex-1 min-h-0 overflow-y-auto">
+              <Panel fill scroll className="min-h-0 flex-1" bodyClassName="p-0">
+                <div className="min-h-0 flex-1 overflow-y-auto" style={{ viewTransitionName: vtName('quotation', selected.id) }}>
                   <QuotationDetail
                     q={selected}
                     attachments={attachments}
@@ -349,20 +306,15 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
                     onClose={() => selectQuotation(selected)}
                   />
                 </div>
-              </GlassCard>
+              </Panel>
             )}
-          </div>
-
-          {}
-          <div className="lg:col-span-4 min-h-0 flex enter-up" style={{ animationDelay: '240ms' }}>
-            <GlassCard size="regular" className="!p-0 overflow-hidden flex-1 flex flex-col min-h-0">
-              <div className="shrink-0 flex items-center justify-between gap-2 px-5 pt-5 pb-3">
-                <span className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted">Oferte</span>
-                <span className="text-pm-2xs text-content-muted">
-                  {visibleQuotations.length}{(search || statusFilter) ? ` / ${quotations.length}` : ''} {quotations.length === 1 ? 'ofertă' : 'oferte'}
-                </span>
-              </div>
-              <div className="density-compact flex-1 min-h-0 overflow-y-auto border-t border-line/40">
+          </CardSlot>
+          <ListPanel
+            size="md"
+            title="Oferte"
+            subtitle={`${visibleQuotations.length}${(search || statusFilter) ? ` / ${quotations.length}` : ''} ${quotations.length === 1 ? 'ofertă' : 'oferte'}`}
+            bodyClassName="density-compact"
+          >
                 {loading ? (
                   <div className="p-4 space-y-2">
                     {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} height={56} />)}
@@ -418,20 +370,10 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
                     })}
                   </div>
                 )}
-              </div>
-            </GlassCard>
-          </div>
+          </ListPanel>
         </div>
-
-        {}
-        <GlassCard size="compact" className="shrink-0 enter-up" style={{ animationDelay: '320ms' }}>
-          <SectionHeader
-            icon={ClipboardList}
-            eyebrow="Pâlnie vânzări"
-            title="Distribuția ofertelor pe status"
-            meta="Toate ofertele din pipeline, grupate după stadiu"
-          />
-          <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-3 stagger-in" key={loading ? 'loading' : 'ready'}>
+        <Panel className="shrink-0" title="Distribuția ofertelor pe status" subtitle="Toate ofertele din pipeline, grupate după stadiu">
+          <div className="grid grid-cols-2 gap-3 stagger-in sm:grid-cols-4 xl:grid-cols-7" key={loading ? 'loading' : 'ready'}>
             <FunnelStat icon={FileText}    label="Ciorne"      value={stats?.draft ?? 0}     total={funnelTotal} tone="neutral" loading={loading} />
             <FunnelStat icon={Send}        label="Trimise"     value={stats?.sent ?? 0}      total={funnelTotal} tone="info"    loading={loading} />
             <FunnelStat icon={Eye}         label="Vizualizate" value={stats?.viewed ?? 0}    total={funnelTotal} tone="warning" loading={loading} />
@@ -440,9 +382,9 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
             <FunnelStat icon={Repeat}      label="Convertite"  value={stats?.converted ?? 0} total={funnelTotal} tone="special" loading={loading} />
             <FunnelStat icon={ArrowRight}  label="Expirate"    value={stats?.expired ?? 0}   total={funnelTotal} tone="neutral" loading={loading} />
           </div>
-        </GlassCard>
+        </Panel>
 
-      </Page.Body>
+    </DashboardLayout>
 
       {showBuilder && (
         <QuotationBuilder
@@ -469,12 +411,9 @@ export default function QuotationsPage({ user: _user }: { user: User | null }) {
           onConverted={(q) => { setShowConvert(false); setSelected(q); fetchAll(); }}
         />
       )}
-    </Page>
+    </>
   );
 }
-
-
-
 
 function FunnelStat({ icon: Icon, label, value, total, tone, loading }: {
   icon: React.ComponentType<{ className?: string }>;
@@ -500,7 +439,6 @@ function FunnelStat({ icon: Icon, label, value, total, tone, loading }: {
       {loading
         ? <Skeleton width={36} height={22} />
         : <p className="text-pm-2xl font-semibold tabular-nums text-content-primary leading-none">{value}</p>}
-      {}
       {!loading && (
         <div className="mt-2 h-1 rounded-full bg-surface-tertiary overflow-hidden" aria-hidden>
           <div className={`anim-bar-grow h-full rounded-full ${toneBar[tone]}`} style={{ width: `${pct}%` }} />
@@ -527,8 +465,7 @@ function QuotationDetail({ q, attachments, uploading, onUploadFiles, onDeleteAtt
   const tone = STATUS_TONE[q.status] || { label: q.status, tone: 'neutral' as const };
   return (
     <div>
-      {}
-      <div className="px-5 py-4 border-b border-line flex items-start justify-between gap-3">
+      <div className={`${PANEL_HEAD} flex items-start justify-between gap-3`}>
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-pm-2xs font-mono text-accent">{q.quotation_number}</span>
@@ -547,8 +484,6 @@ function QuotationDetail({ q, attachments, uploading, onUploadFiles, onDeleteAtt
           <X />
         </IconButton>
       </div>
-
-      {}
       <div className="px-5 py-3 border-b border-line flex flex-wrap gap-2">
         <Button size="sm" variant="outline" onClick={onDownload}>
           <Download className="h-3 w-3" /> PDF
@@ -577,11 +512,7 @@ function QuotationDetail({ q, attachments, uploading, onUploadFiles, onDeleteAtt
           <Trash2 className="h-3 w-3" />
         </Button>
       </div>
-
-      {}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-0">
-
-        {}
         <div className="xl:col-span-2 border-b xl:border-b-0 xl:border-r border-line">
           <header className="flex items-center gap-2.5 px-5 py-2.5 border-b border-line/60">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-surface-tertiary text-content-muted">
@@ -591,7 +522,7 @@ function QuotationDetail({ q, attachments, uploading, onUploadFiles, onDeleteAtt
           </header>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-pm-xs">
-              <thead className="bg-surface-secondary text-content-muted">
+              <thead className={THEAD_STICKY}>
                 <tr>
                   <th className="px-5 py-2 font-bold uppercase tracking-wide text-pm-2xs">Descriere</th>
                   <th className="px-2 py-2 font-bold uppercase tracking-wide text-pm-2xs text-right whitespace-nowrap">Cant.</th>
@@ -615,11 +546,8 @@ function QuotationDetail({ q, attachments, uploading, onUploadFiles, onDeleteAtt
             </table>
           </div>
         </div>
-
-        {}
         <div className="xl:col-span-1">
-          {}
-          <div className="px-5 py-4 border-b border-line text-pm-xs space-y-1.5">
+          <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-line/60 space-y-1.5">
             <Row label="Subtotal" value={`${q.subtotal.toFixed(2)} ${q.currency}`} />
             <Row label={`TVA ${(q.tva_rate * 100).toFixed(0)}%`} value={`${q.tva_amount.toFixed(2)} ${q.currency}`} />
             <div className="border-t border-line pt-1.5 mt-1.5 flex justify-between font-semibold text-content-primary">
@@ -627,9 +555,7 @@ function QuotationDetail({ q, attachments, uploading, onUploadFiles, onDeleteAtt
               <span className="tabular-nums">{q.total.toFixed(2)} {q.currency}</span>
             </div>
           </div>
-
-          {}
-          <div className="px-5 py-4">
+          <div className="px-4 py-3 sm:px-6 sm:py-4 text-pm-xs space-y-1.5">
             <p className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted mb-2">Tracking</p>
             <div className="text-pm-xs space-y-1">
               {q.sent_at && <Row label="Trimisă" value={new Date(q.sent_at).toLocaleString('ro-RO')} icon={<Mail className="h-3 w-3 text-status-blue" />} />}
@@ -885,7 +811,6 @@ function QuotationBuilder({ clients, leads, onClose, onCreated }: {
           <Field label="Monedă">
             <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full border border-line px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
               <option value="RON">RON</option>
-              <option value="EUR">EUR</option>
             </select>
           </Field>
 

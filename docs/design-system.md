@@ -1,3 +1,29 @@
+# Promix Design System
+
+**Canonical visual foundation (v2):** `src/redesign/tokens/design-tokens.css`  
+**Legacy aliases** (`--color-*`, `--elevation-*`): `src/redesign/tokens/legacy-aliases.css`  
+**Utilities** (glass, focus rings, typography): `src/redesign/tokens/utilities.css`  
+**Entry stylesheet:** `src/redesign/index.css` · **Tailwind:** `tailwind.config.js` (`ds-*`, `brand-*`, `canvas-*`)
+
+---
+
+## Token quick reference
+
+| Layer | CSS variable | Tailwind |
+|---|---|---|
+| Deepest bg | `--bg-void` | `bg-canvas-void` / `bg-ds-void` |
+| Page | `--bg-base` | `bg-canvas-base` |
+| Card | `--bg-surface` | `bg-canvas-surface` |
+| Dropdown | `--bg-elevated` | `bg-canvas-elevated` |
+| Tooltip | `--bg-overlay` | `bg-canvas-overlay` |
+| Accent | `--accent` | `bg-brand` / `text-brand` |
+| Focus ring | `--ring-default` | `shadow-ring-default` |
+| Z-index | `--z-modal` etc. | `z-modal` / `z-tooltip` |
+
+Use `tabular-nums` or `text-ds-4xl` for KPI numbers. Frosted floats: `surface-glass`, `surface-glass-lg`.
+
+---
+
 # Promix Design System (Faza 1 — house style)
 
 Limbajul vizual al dashboard-ului redesignat, extras în tokeni + primitive

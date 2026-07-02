@@ -1,0 +1,125 @@
+/* ============================================================================
+ * motion/reduced-motion.css — Accessibility overrides
+ * Functional overlays snap instantly; decorative loops fully disabled.
+ * ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Shimmer — static neutral background */
+  .motion-skeleton::after,
+  .ds-skeleton::after,
+  .v2-skeleton::after {
+    animation: none !important;
+    background: none !important;
+  }
+
+  .motion-skeleton,
+  .ds-skeleton,
+  .v2-skeleton {
+    background: var(--bg-hover, hsl(var(--muted))) !important;
+  }
+
+  /* Decorative loops — fully disabled */
+  .animate-float,
+  .animate-glow-pulse,
+  .anim-float,
+  .anim-glow,
+  .animate-pulse-ring,
+  .animate-attention,
+  .v2-empty-icon,
+  .v2-empty-glow,
+  .v2-status-live::after,
+  .motion-cta-attention {
+    animation: none !important;
+  }
+
+  /* Functional overlays — instant snap, still visible */
+  .animate-modal-backdrop-in,
+  .animate-modal-backdrop-out,
+  .animate-modal-panel-in,
+  .animate-modal-panel-out,
+  .animate-dropdown-in,
+  .animate-dropdown-out,
+  .animate-toast-in-right,
+  .animate-toast-in-left,
+  .animate-toast-out-right,
+  .animate-toast-out-left,
+  .animate-drawer-in-right,
+  .animate-drawer-in-left,
+  .animate-drawer-out-right,
+  .animate-drawer-out-left,
+  .animate-command-panel-in,
+  .animate-command-panel-out,
+  .animate-page-in,
+  .animate-page-out,
+  .motion-page-enter,
+  .motion-page-exit,
+  .motion-modal-backdrop-in,
+  .motion-modal-backdrop-out,
+  .motion-modal-panel-in,
+  .motion-modal-panel-out,
+  .motion-dropdown-in,
+  .motion-dropdown-out,
+  .motion-toast-in,
+  .motion-toast-out,
+  .motion-drawer-in,
+  .motion-drawer-out,
+  .motion-command-in,
+  .motion-command-out,
+  .v2-dialog-overlay[data-state='open'],
+  .v2-dialog-overlay[data-state='closed'],
+  .v2-dialog-content[data-state='open'],
+  .v2-dialog-content[data-state='closed'],
+  .v2-toast,
+  [data-sonner-toast][data-removed='true'] {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .animate-modal-backdrop-out,
+  .animate-command-backdrop-out,
+  .animate-drawer-backdrop-out,
+  .animate-fade-out,
+  .animate-tooltip-out {
+    opacity: 0 !important;
+  }
+}
+
+/* In-app "reduce motion" toggle (Settings → Aspect) */
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-motion='reduced'] .motion-skeleton::after,
+html[data-motion='reduced'] .v2-skeleton::after {
+  animation: none !important;
+  background: none !important;
+}
+
+html[data-motion='reduced'] .animate-float,
+html[data-motion='reduced'] .animate-glow-pulse,
+html[data-motion='reduced'] .animate-pulse-ring,
+html[data-motion='reduced'] .v2-empty-icon,
+html[data-motion='reduced'] .v2-empty-glow,
+html[data-motion='reduced'] .v2-status-live::after {
+  animation: none !important;
+}
+
+html[data-motion='reduced'] .v2-root {
+  scroll-behavior: auto;
+}

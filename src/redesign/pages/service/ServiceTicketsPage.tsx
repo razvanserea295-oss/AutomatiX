@@ -1,37 +1,8 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
-import { Wrench, Plus, Loader2, X, MessageSquare, Package, Send, Clock, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Wrench, Plus, Loader2, X, MessageSquare, Package, Send, Clock, AlertTriangle, CheckCircle2 } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
 import { toast } from '@/store/toastStore';
@@ -40,10 +11,11 @@ import { useClientStore } from '@/store/clientStore';
 
 import Button from '@/redesign/ui/Button';
 import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout, Panel, ListPanel, CardSlot, PAGE_GRID_12 } from '@/app-ui';
 import KpiCard from '@/redesign/ui/KpiCard';
 import FilterBar from '@/redesign/ui/FilterBar';
 import StatusBadge from '@/redesign/ui/StatusBadge';
-import { GlassCard, MetricValue, EmptyState, Skeleton } from '@/redesign/ui';
+import { EmptyState, Skeleton } from '@/redesign/ui';
 import { filterToggleCls } from '@/redesign/ui/filterControls';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
 
@@ -97,7 +69,6 @@ const STATUS_BADGE_TONE: Record<TicketStatus, 'info' | 'warning' | 'special' | '
   cancelled: 'neutral',
 };
 
-
 const SEVERITY_BAR: Record<Severity, { pct: number; cls: string }> = {
   critical: { pct: 100, cls: 'bg-status-red' },
   high:     { pct: 75,  cls: 'bg-status-amber' },
@@ -114,8 +85,7 @@ export default function ServiceTicketsPage({ user: _user }: { user: User | null 
   const [filter, setFilter] = useState<'open' | 'all' | 'overdue'>('open');
   const [stations, setStations] = useState<Station[]>([]);
   const [users, setUsers] = useState<UserItem[]>([]);
-  
-  
+
   const [search, setSearch] = useState('');
   const clients = useClientStore(s => s.clients);
   const fetchClients = useClientStore(s => s.fetchClients);
@@ -147,7 +117,6 @@ export default function ServiceTicketsPage({ user: _user }: { user: User | null 
     } catch {  }
   }, []);
 
-  
   const visibleTickets = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return tickets;
@@ -160,8 +129,6 @@ export default function ServiceTicketsPage({ user: _user }: { user: User | null 
     );
   }, [tickets, search]);
 
-  
-  
   const selectTicket = (t: Ticket) => {
     startMorphTransition(
       () => flushSync(() => { setSelected(t); }),
@@ -171,87 +138,66 @@ export default function ServiceTicketsPage({ user: _user }: { user: User | null 
   };
 
   return (
-    <Page fit>
-      <Page.Body fit>
-
-        {/* Header */}
-        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-                <Wrench className="h-5 w-5" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-                <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">Tichete service</h1>
-                <p className="text-pm-sm text-content-muted">Tichete de mentenanță și SLA pe stații</p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 xl:ml-auto">
-              <div className="w-full sm:w-auto">
-                <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="Caută tichet, stație, client..." />
-              </div>
-              <div className="flex items-center gap-2">
-                {(['open', 'overdue', 'all'] as const).map(f => (
-                  <button key={f} onClick={() => setFilter(f)} className={filterToggleCls(filter === f)}>
-                    {f === 'open' ? 'Deschise' : f === 'overdue' ? 'Overdue' : 'Toate'}
-                  </button>
-                ))}
-              </div>
+    <>
+    <DashboardLayout
+        
+        chrome={(
+          <PageChrome
+            actions={
               <Button size="md" onClick={() => setShowCreate(true)} className="group">
                 <Plus className="h-4 w-4 transition-transform duration-200 group-hover:rotate-90 motion-reduce:transform-none" /> Tichet nou
               </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* KPIs */}
-        {stats && (
-          <div className="enter-up shrink-0" style={{ animationDelay: '70ms' }}>
-            <Page.Kpis cols={4}>
-              <KpiCard label="Deschise"       value={stats.open}              icon={Wrench}        iconColor="text-accent" />
-              <KpiCard label="În lucru"       value={stats.in_progress}       icon={Clock}         iconColor="text-status-amber" />
-              <KpiCard label="Overdue SLA"    value={stats.overdue}           icon={AlertTriangle} iconColor="text-status-red" hint={stats.overdue > 0 ? 'necesită atenție' : 'sub control'} />
-              <KpiCard label="Rezolvate (7z)" value={stats.resolved_this_week} icon={CheckCircle2}  iconColor="text-status-green" />
-            </Page.Kpis>
-          </div>
+            }
+            toolbar={
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="w-full sm:w-auto">
+                  <FilterBar search={search} onSearchChange={setSearch} searchPlaceholder="Caută tichet, stație, client..." />
+                </div>
+                <div className="flex items-center gap-2">
+                  {(['open', 'overdue', 'all'] as const).map(f => (
+                    <button key={f} onClick={() => setFilter(f)} className={filterToggleCls(filter === f)}>
+                      {f === 'open' ? 'Deschise' : f === 'overdue' ? 'Overdue' : 'Toate'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            }
+          />
         )}
+      kpis={stats ? (
+        <Page.Kpis cols={4}>
+          <KpiCard label="Deschise"       value={stats.open}              icon={Wrench}        iconColor="text-accent" />
+          <KpiCard label="În lucru"       value={stats.in_progress}       icon={Clock}         iconColor="text-status-amber" />
+          <KpiCard label="Overdue SLA"    value={stats.overdue}           icon={AlertTriangle} iconColor="text-status-red" hint={stats.overdue > 0 ? 'necesită atenție' : 'sub control'} />
+          <KpiCard label="Rezolvate (7z)" value={stats.resolved_this_week} icon={CheckCircle2}  iconColor="text-status-green" />
+        </Page.Kpis>
+      ) : undefined}
+    >
+        <div className={PAGE_GRID_12}>
 
-        {/* Master-detail */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0">
-
-          {/* Detail pane */}
-          <aside className="xl:col-span-5 enter-up min-h-0 flex" style={{ animationDelay: '140ms' }}>
+          <CardSlot size="md" as="aside">
             {!selected ? (
-              <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 w-full">
-                <div className="flex flex-1 flex-col items-center justify-center text-center py-20 px-6">
-                  <span className="h-12 w-12 rounded-2xl bg-accent-muted/60 flex items-center justify-center mb-3">
+              <Panel fill className="w-full" title="Selectează un tichet" subtitle="din lista alăturată pentru detalii">
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-accent-muted/60">
                     <Wrench className="h-6 w-6 text-content-muted/60" aria-hidden />
                   </span>
-                  <p className="text-pm-sm font-medium text-content-secondary">Selectează un tichet</p>
-                  <p className="text-pm-xs text-content-muted mt-1">din lista alăturată pentru detalii</p>
                 </div>
-              </GlassCard>
+              </Panel>
             ) : (
-              <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 w-full overflow-y-auto" vtName={vtName('ticket', selected.id)}>
-                <div key={selected.id} className="enter-fade">
+              <Panel fill scroll className="w-full" bodyClassName="p-0">
+                <div key={selected.id} className="min-h-0 flex-1 overflow-y-auto scrollbar-thin" style={{ viewTransitionName: vtName('ticket', selected.id) }}>
                   <TicketDetail ticket={selected} users={users} onUpdate={(t) => { setSelected(t); fetch(); }} />
                 </div>
-              </GlassCard>
+              </Panel>
             )}
-          </aside>
+          </CardSlot>
 
-          {/* List pane */}
-          <section className="xl:col-span-7 enter-up min-w-0 min-h-0 flex" style={{ animationDelay: '200ms' }}>
-            <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 w-full">
-              <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-4 border-b border-line/40">
-                <h2 className="text-pm-md font-semibold text-content-primary">Tichete service</h2>
-                <p className="text-pm-xs text-content-muted shrink-0">
-                  {visibleTickets.length} {visibleTickets.length === 1 ? 'tichet' : 'tichete'}{search ? ` găsite pentru „${search}"` : ''}
-                </p>
-              </div>
-              <div className="flex-1 min-h-0 overflow-y-auto">
+          <ListPanel
+            size="lg"
+            title="Tichete service"
+            subtitle={`${visibleTickets.length} ${visibleTickets.length === 1 ? 'tichet' : 'tichete'}${search ? ` găsite pentru „${search}"` : ''}`}
+          >
                 {loading ? (
                   <div className="anim-fade-in">
                     {Array.from({ length: 6 }).map((_, i) => (
@@ -308,11 +254,9 @@ export default function ServiceTicketsPage({ user: _user }: { user: User | null 
                     ))}
                   </div>
                 )}
-              </div>
-            </GlassCard>
-          </section>
+          </ListPanel>
         </div>
-      </Page.Body>
+    </DashboardLayout>
 
       {showCreate && (
         <CreateTicketModal
@@ -321,31 +265,9 @@ export default function ServiceTicketsPage({ user: _user }: { user: User | null 
           onCreated={(t) => { setShowCreate(false); setSelected(t); fetch(); }}
         />
       )}
-    </Page>
+    </>
   );
 }
-
-
-
-function KpiMini({ icon: Icon, label, value, warn }: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string; value: number; warn?: boolean;
-}) {
-  return (
-    <GlassCard size="compact" className="flex items-center gap-3 !p-5">
-      <span className="h-11 w-11 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-        <Icon className="h-5 w-5" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted truncate">{label}</p>
-        <MetricValue value={value} size="display" warn={warn} className="mt-0.5 block" />
-      </div>
-    </GlassCard>
-  );
-}
-
-
-void KpiMini;
 
 function TicketDetail({ ticket, users, onUpdate }: {
   ticket: Ticket; users: UserItem[];
@@ -449,8 +371,6 @@ function TicketDetail({ ticket, users, onUpdate }: {
           <p className="text-pm-xs text-content-secondary mt-2 whitespace-pre-wrap bg-surface-primary border border-line rounded-lg p-2">{ticket.description}</p>
         )}
       </div>
-
-      {}
       <div className="grid grid-cols-2 border-b border-line">
         <Field label="Status" className="border-r border-b border-line p-3">
           <select value={ticket.status} onChange={e => setStatus(e.target.value as TicketStatus)} disabled={busy} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors">
@@ -476,23 +396,18 @@ function TicketDetail({ ticket, users, onUpdate }: {
             onBlur={e => setLabor(Number(e.target.value))} className="w-full border border-line/70 bg-surface-secondary/40 px-2.5 py-1.5 rounded text-pm-xs text-content-primary focus:outline-none focus:ring-1 focus:ring-accent/60 transition-colors" />
         </Field>
       </div>
-
-      {}
       <div className="bg-surface-secondary border-b border-line px-4 py-2 text-pm-xs">
         <div className="flex items-center justify-between mb-2">
           <span className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">Costuri</span>
           <select value={ticket.currency || 'RON'} onChange={e => setTicketCurrency(e.target.value)} disabled={busy}
             className="border border-line/70 bg-surface-secondary/40 px-2 py-1 text-pm-2xs rounded-lg transition-smooth duration-150 cursor-pointer hover:border-content-muted/50 focus:outline-none focus:border-accent focus-visible:shadow-[var(--ring-soft)] focus:shadow-[var(--ring-soft)] disabled:pointer-events-none disabled:opacity-50">
             <option value="RON">RON</option>
-            <option value="EUR">EUR</option>
           </select>
         </div>
         <div className="flex justify-between"><span>Manoperă:</span><span className="tabular-nums">{money(ticket.cost_labor, ticket.currency, 2)}</span></div>
         <div className="flex justify-between"><span>Piese:</span><span className="tabular-nums">{money(ticket.cost_parts, ticket.currency, 2)}</span></div>
         <div className="flex justify-between font-semibold border-t border-line mt-1 pt-1"><span>Total:</span><span className="tabular-nums">{money(ticket.cost_total, ticket.currency, 2)}</span></div>
       </div>
-
-      {}
       <div className="border-b border-line px-4 py-3">
         <h4 className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted mb-2 flex items-center gap-1">
           <Package className="h-3 w-3" /> Piese consumate
@@ -513,8 +428,6 @@ function TicketDetail({ ticket, users, onUpdate }: {
           <button onClick={addPart} aria-label="Adaugă piesă" title="Adaugă piesă" className="col-span-1 inline-flex items-center justify-center rounded-lg bg-accent text-[var(--color-on-accent)] p-1 text-pm-xs transition-smooth duration-150 hover:bg-accent/90 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"><Plus className="h-3 w-3" /></button>
         </div>
       </div>
-
-      {}
       <div className="px-4 py-3">
         <h4 className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted mb-2 flex items-center gap-1">
           <MessageSquare className="h-3 w-3" /> Comentarii

@@ -19,30 +19,37 @@ export const MOBILE_HTML = `<!DOCTYPE html>
      chrome, page, card, and elevated surfaces. Mirrors the desktop dark
      theme. */
   :root {
-    --rail:         #000000;
-    --chrome:       #0E0E0E;
-    --bg:           #262626;
-    --surface:      #303030;
-    --surface-2:    #3D3D3D;
-    --elevated:     #484848;
-    --line:         #3F3F3F;
-    --line-soft:    #262626;
-    --accent:       #FBBF24;
-    --accent-soft:  rgba(251, 191, 36, 0.18);
-    --accent-hi:    #FCD34D;
-    --on-accent:    #1A1500;
-    --text:         #ECECEC;
-    --text-muted:   #ADADAD;
-    --text-faint:   #707070;
-    --red:          #ef4444;
-    --amber:        #f59e0b;
-    --blue:         #9CA3AF;
-    --green:        #22c55e;
-    /* Tight, professional radii */
-    --r-sm: 6px;
-    --r-md: 8px;
-    --r-lg: 10px;
-    --r-xl: 14px;
+    /* Neumorphic (soft UI) — ONE base tone; depth comes from dual shadows, not
+       borders. Light source top-left. Text stays high-contrast for legibility. */
+    --bg:           #2a2d33;
+    --rail:         #2a2d33;
+    --chrome:       #2a2d33;
+    --surface:      #2a2d33;
+    --surface-2:    #2a2d33;
+    --elevated:     #2a2d33;
+    --line:         rgba(255,255,255,0.05);
+    --line-soft:    rgba(255,255,255,0.04);
+    --accent:       #4d86ff;
+    --accent-soft:  rgba(77,134,255,0.16);
+    --accent-hi:    #74a3ff;
+    --on-accent:    #ffffff;
+    --text:         #e9ebf0;
+    --text-muted:   #9aa1ad;
+    --text-faint:   #6b7280;
+    --red:          #ff6b6b;
+    --amber:        #f5b14c;
+    --blue:         #74a3ff;
+    --green:        #4ade80;
+    /* Neumorphic shadow system (dark) */
+    --nm-out:    6px 6px 14px rgba(0,0,0,0.50), -5px -5px 12px rgba(255,255,255,0.030);
+    --nm-out-sm: 4px 4px 9px rgba(0,0,0,0.45),  -3px -3px 7px rgba(255,255,255,0.028);
+    --nm-in:     inset 3px 3px 7px rgba(0,0,0,0.55), inset -3px -3px 7px rgba(255,255,255,0.028);
+    --nm-in-sm:  inset 2px 2px 5px rgba(0,0,0,0.50), inset -2px -2px 5px rgba(255,255,255,0.025);
+    /* Soft, generous radii */
+    --r-sm: 12px;
+    --r-md: 16px;
+    --r-lg: 20px;
+    --r-xl: 24px;
   }
   *, *::before, *::after { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -192,6 +199,80 @@ export const MOBILE_HTML = `<!DOCTYPE html>
 
   .loading { text-align: center; color: var(--text-muted); padding: 40px 0; font-size: 14px; }
   .footer-meta { text-align: center; color: var(--text-faint); font-size: 11px; margin-top: 16px; }
+
+  /* ─── Neumorphic (soft UI) overrides ─────────────────────────────────────
+     Single base tone; depth via dual soft shadows. No borders. */
+  header.appbar {
+    background: var(--bg); border-bottom: none; backdrop-filter: none;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.30);
+  }
+  header.appbar .brand { font-weight: 800; letter-spacing: 0.06em; }
+  header.appbar button.refresh,
+  header.appbar button.logout {
+    background: var(--bg); border: none; box-shadow: var(--nm-out-sm);
+    padding: 8px 12px; border-radius: var(--r-sm);
+    transition: box-shadow .12s ease;
+  }
+  header.appbar button.refresh:active,
+  header.appbar button.logout:active { background: var(--bg); box-shadow: var(--nm-in-sm); }
+
+  /* Login */
+  .login-card {
+    background: var(--bg); border: none; border-radius: var(--r-xl);
+    padding: 30px 26px; box-shadow: var(--nm-out);
+  }
+  .login-card h1 { font-size: 24px; font-weight: 800; }
+  label { font-weight: 600; }
+  input[type=text], input[type=password] {
+    background: var(--bg); border: none; border-radius: var(--r-sm);
+    padding: 13px 15px; box-shadow: var(--nm-in);
+    transition: box-shadow .15s ease;
+  }
+  input:focus { outline: none; border-color: transparent; box-shadow: var(--nm-in), 0 0 0 2px var(--accent-soft); }
+  button.primary {
+    margin-top: 20px; padding: 14px; background: var(--bg); color: var(--accent-hi);
+    border: none; border-radius: var(--r-md); font-weight: 700;
+    box-shadow: var(--nm-out); transition: box-shadow .12s ease, color .12s ease;
+  }
+  button.primary:active { background: var(--bg); color: var(--accent); box-shadow: var(--nm-in); }
+  .err { border: none; box-shadow: var(--nm-in-sm); background: transparent; }
+
+  /* Dashboard cards — raised */
+  section.block {
+    background: var(--bg); border: none; border-radius: var(--r-lg);
+    padding: 16px; margin-bottom: 14px; box-shadow: var(--nm-out);
+  }
+  section.block h2 { margin-bottom: 14px; font-weight: 800; letter-spacing: 0.14em; }
+  section.block h2 .count {
+    background: var(--bg); border: none; box-shadow: var(--nm-in-sm);
+    padding: 2px 10px;
+  }
+
+  /* KPI tiles — inset wells */
+  .kpis { gap: 12px; }
+  .kpi {
+    background: var(--bg); border: none; border-radius: var(--r-md);
+    padding: 13px 14px; box-shadow: var(--nm-in-sm);
+  }
+  .kpi .lbl { font-weight: 800; }
+  .kpi .val { font-size: 24px; font-weight: 700; margin-top: 5px; }
+
+  /* Lists — soft dividers, generous rows */
+  ul.list li { padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+  .row1 .ttl { font-weight: 600; }
+  .row2 { margin-top: 3px; }
+
+  /* Status chips — soft inset */
+  .tag { box-shadow: var(--nm-in-sm); padding: 3px 11px; }
+  .tag.red    { background: transparent; color: var(--red); }
+  .tag.amber  { background: transparent; color: var(--amber); }
+  .tag.blue   { background: transparent; color: var(--blue); }
+  .tag.green  { background: transparent; color: var(--green); }
+  .tag.gray   { background: transparent; color: var(--text-muted); }
+  .pill {
+    background: var(--bg); color: var(--accent-hi); border-radius: 8px;
+    padding: 2px 9px; box-shadow: var(--nm-in-sm);
+  }
 </style>
 </head>
 <body>

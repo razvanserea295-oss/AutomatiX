@@ -1,42 +1,11 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   TrendingUp, TrendingDown, DollarSign, Percent, Loader2, Plus,
   FileText, Receipt, BarChart3, CreditCard, Check, X,
   AlertTriangle, Download,
-} from 'lucide-react';
+} from '@/icons';
 import { downloadInvoicePdf } from '@/lib/downloadPdf';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
@@ -51,8 +20,10 @@ import { invoiceStatus } from '@/lib/statusTokens';
 import { useSort } from '@/hooks/useSort';
 import CenteredDialog from '@/components/ui/CenteredDialog';
 
-import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout, CardSlot, PAGE_GRID_12, PANEL_HEAD } from '@/app-ui';
+import { PAGE_GAP } from '@/redesign/layout/constants';
 import Card from '@/redesign/ui/Card';
+import Page from '@/redesign/ui/Page';
 import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
@@ -61,14 +32,7 @@ import SectionHeader from '@/redesign/ui/SectionHeader';
 import EmptyState from '@/redesign/ui/EmptyState';
 import SortableTh, { THEAD_STICKY } from '@/redesign/ui/SortableTh';
 import AnimatedTabs from '@/redesign/ui/AnimatedTabs';
-import CardGrid, { type CardGridItem } from '@/redesign/ui/CardGrid';
-import EditLayoutButton from '@/redesign/ui/EditLayoutButton';
-import { useAuthStore } from '@/store/authStore';
 import { vtName } from '@/redesign/lib/viewTransition';
-
-
-
-
 
 interface FinanceOverview {
   projects_count: number;
@@ -92,8 +56,7 @@ interface ProjectFinanceRow {
   actual_profit: number;
   margin_percent: number;
   risk_level: string;
-  
-  
+
   is_finalized: boolean;
 }
 
@@ -122,8 +85,6 @@ interface ProjectExpense {
   date: string;
 }
 
-
-
 const categoryLabels: Record<string, string> = {
   manopera: 'Manopera',
   transport: 'Transport',
@@ -140,17 +101,11 @@ const categoryLabels: Record<string, string> = {
 
 type Tab = 'overview' | 'invoices' | 'expenses';
 
-
-
-
-
 export default function FinancePage({ user: _user }: { user: User | null }) {
   const [tab, setTab] = useState<Tab>('overview');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [createNonce, setCreateNonce] = useState(0);
 
-  
-  
-  
   const tabs: { id: Tab; label: string; icon: typeof FileText }[] = [
     { id: 'overview', label: 'Prezentare', icon: DollarSign },
     { id: 'invoices', label: 'Facturi', icon: FileText },
@@ -158,57 +113,38 @@ export default function FinancePage({ user: _user }: { user: User | null }) {
   ];
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="wide" padding="comfortable" className="relative">
-        {}
-        <div
-          className="enter-up shrink-0 pb-4 border-b border-line/60 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between"
-          style={{ animationDelay: '0ms' }}
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-              <DollarSign className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-              <h1 className="text-pm-2xl font-semibold text-content-primary truncate leading-tight">Financiar</h1>
-              <p className="mt-0.5 text-pm-sm text-content-muted truncate">
-                Venituri, costuri, facturi, cheltuieli și rapoarte de profitabilitate
-              </p>
-            </div>
-          </div>
-          <div className="shrink-0 flex items-center gap-3">
-            <div className="overflow-x-auto">
+    <DashboardLayout
+        chrome={(
+          <PageChrome
+            actions={tab !== 'overview' ? (
+              <Button size="md" onClick={() => setCreateNonce((n) => n + 1)}>
+                <Plus className="h-4 w-4" />
+                {tab === 'invoices' ? 'Factura noua' : 'Cheltuiala noua'}
+              </Button>
+            ) : undefined}
+            toolbar={
               <AnimatedTabs
                 active={tab}
                 onChange={(id) => setTab(id as Tab)}
                 tabs={tabs.map(t => ({ id: t.id, label: t.label, icon: t.icon }))}
               />
-            </div>
-            <EditLayoutButton />
-          </div>
-        </div>
-
-        {}
-        {}
-        <div key={tab} className="enter-up min-w-0 flex flex-1 flex-col min-h-0" style={{ animationDelay: '120ms' }}>
-          {tab === 'overview' && <OverviewTab key={refreshKey} />}
-          {tab === 'invoices' && <InvoicesTab onDataChange={() => setRefreshKey(k => k + 1)} />}
-          {tab === 'expenses' && <ExpensesTab onDataChange={() => setRefreshKey(k => k + 1)} />}
-        </div>
-      </Page.Body>
-    </Page>
+            }
+          />
+        )}
+      bodyClassName="relative page-body-polish"
+      contentClassName="max-w-[var(--page-max-wide)] mx-auto stagger-in"
+    >
+      <div key={tab} className="min-w-0 flex flex-1 flex-col min-h-0">
+        {tab === 'overview' && <OverviewTab key={refreshKey} />}
+        {tab === 'invoices' && <InvoicesTab createNonce={createNonce} onDataChange={() => setRefreshKey(k => k + 1)} />}
+        {tab === 'expenses' && <ExpensesTab createNonce={createNonce} onDataChange={() => setRefreshKey(k => k + 1)} />}
+      </div>
+    </DashboardLayout>
   );
 }
 
-
-
-
-
 function OverviewTab() {
   const money = useMoney();
-  const user = useAuthStore(s => s.user);
-  const userKey = String(user?.id ?? user?.username ?? 'anon');
   const [overview, setOverview] = useState<FinanceOverview | null>(null);
   const [projects, setProjects] = useState<ProjectFinanceRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -268,83 +204,49 @@ function OverviewTab() {
   const costsKnown = (overview?.total_actual_cost ?? 0) > 0;
   const lockedHint = 'Disponibil la finalizare';
 
-  const kpiItems: CardGridItem[] = overview ? [
-    {
-      id: 'revenue',
-      label: 'Venituri',
-      node: (
-        <KpiCard
-          vtName={vtName('fin-kpi', 'revenue')}
-          label="Venituri" icon={TrendingUp}
-          value={money(overview.total_actual_revenue, 'RON')}
-        />
-      ),
-    },
-    {
-      id: 'cost',
-      label: 'Costuri',
-      node: (
-        <KpiCard
-          vtName={vtName('fin-kpi', 'cost')}
-          label="Costuri" icon={TrendingDown} iconColor="text-status-red"
-          value={money(overview.total_actual_cost, 'RON')}
-        />
-      ),
-    },
-    {
-      id: 'profit',
-      label: 'Profit',
-      node: (
-        <KpiCard
-          vtName={vtName('fin-kpi', 'profit')}
-          label="Profit" icon={DollarSign}
-          iconColor={costsKnown ? (overview.total_actual_profit >= 0 ? 'text-status-green' : 'text-status-red') : undefined}
-          value={costsKnown ? money(overview.total_actual_profit, 'RON') : '—'}
-          muted={!costsKnown}
-          hint={costsKnown ? undefined : lockedHint}
-        />
-      ),
-    },
-    {
-      id: 'margin',
-      label: 'Marja',
-      node: (
-        <KpiCard
-          vtName={vtName('fin-kpi', 'margin')}
-          label="Marja" icon={Percent} iconColor={costsKnown ? 'text-status-blue' : undefined}
-          value={costsKnown ? `${(overview.avg_margin_percent || 0).toFixed(1)}%` : '—'}
-          muted={!costsKnown}
-          hint={costsKnown ? undefined : lockedHint}
-        />
-      ),
-    },
-  ] : [];
+  const kpiStrip = overview ? (
+    <Page.Kpis cols={4} className="stagger-in shrink-0">
+      <KpiCard
+        vtName={vtName('fin-kpi', 'revenue')}
+        label="Venituri" icon={TrendingUp}
+        value={money(overview.total_actual_revenue, 'RON')}
+      />
+      <KpiCard
+        vtName={vtName('fin-kpi', 'cost')}
+        label="Costuri" icon={TrendingDown} iconColor="text-status-red"
+        value={money(overview.total_actual_cost, 'RON')}
+      />
+      <KpiCard
+        vtName={vtName('fin-kpi', 'profit')}
+        label="Profit" icon={DollarSign}
+        iconColor={costsKnown ? (overview.total_actual_profit >= 0 ? 'text-status-green' : 'text-status-red') : undefined}
+        value={costsKnown ? money(overview.total_actual_profit, 'RON') : '—'}
+        muted={!costsKnown}
+        hint={costsKnown ? undefined : lockedHint}
+      />
+      <KpiCard
+        vtName={vtName('fin-kpi', 'margin')}
+        label="Marja" icon={Percent} iconColor={costsKnown ? 'text-status-blue' : undefined}
+        value={costsKnown ? `${(overview.avg_margin_percent || 0).toFixed(1)}%` : '—'}
+        muted={!costsKnown}
+        hint={costsKnown ? undefined : lockedHint}
+      />
+    </Page.Kpis>
+  ) : (
+    <div className="stagger-in shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <KpiCard key={i} label="" value="" loading />
+      ))}
+    </div>
+  );
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 gap-4">
-      {}
-      {overview ? (
-        <CardGrid
-          region="finance:kpis"
-          userKey={userKey}
-          cols={4}
-          items={kpiItems}
-          className="stagger-in shrink-0"
-        />
-      ) : (
-        <div className="stagger-in shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <KpiCard key={i} label="" value="" loading />
-          ))}
-        </div>
-      )}
-
-      {}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0">
-
-        {}
-        <Card padding="none" className={`flex flex-col min-h-0 ${hasRail ? 'xl:col-span-8 min-w-0' : 'xl:col-span-12 min-w-0'}`}>
-          <div className="px-5 py-4 border-b border-line/70 shrink-0">
+    <div className={`flex flex-1 flex-col min-h-0 ${PAGE_GAP}`}>
+      {kpiStrip}
+      <div className={PAGE_GRID_12}>
+        <CardSlot size={hasRail ? 'lg' : 'xl'} as="div">
+        <Card padding="none" className="flex flex-col min-h-0 min-w-0">
+          <div className={`${PANEL_HEAD} shrink-0`}>
             <SectionHeader
               title="Proiecte — profitabilitate"
               icon={BarChart3}
@@ -369,8 +271,7 @@ function OverviewTab() {
                     <EmptyState icon={BarChart3} title="Niciun proiect" description="Nu există proiecte cu date financiare." />
                   </td></tr>
                 ) : projects.map((p) => {
-                  
-                  
+
                   const locked = !p.is_finalized;
                   const lockCell = (
                     <td className="px-3 py-2 text-xs tabular-nums text-content-muted/60 border-b border-line/60 text-right italic" title="Disponibil la finalizare">—</td>
@@ -420,15 +321,13 @@ function OverviewTab() {
             </table>
           </div>
         </Card>
-
-        {}
+        </CardSlot>
         {hasRail && (
+          <CardSlot size="md" as="div" className="flex flex-col gap-4 min-h-0 overflow-y-auto">
           <div
             key={`rail-${hasReceivables}-${hasFlagged}-${!!compliance}`}
-            className="stagger-in xl:col-span-4 min-w-0 flex flex-col gap-4 min-h-0 overflow-y-auto"
+            className="stagger-in flex flex-col gap-4 min-h-0"
           >
-
-            {}
             {hasReceivables && (
               <Card padding="lg" className="min-w-0">
                 <h3 className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted mb-3">Vechime creante</h3>
@@ -450,8 +349,6 @@ function OverviewTab() {
                 </div>
               </Card>
             )}
-
-            {}
             {hasFlagged && (
               <Card padding="lg" tone="flat" className="min-w-0 !border-status-amber/30 bg-status-amber/5">
                 <h3 className="text-pm-xs font-semibold text-status-amber flex items-center gap-1.5 mb-2.5">
@@ -467,8 +364,6 @@ function OverviewTab() {
                 </div>
               </Card>
             )}
-
-            {}
             {compliance && (
               <Card padding="lg" className="min-w-0">
                 <h3 className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted mb-3">Conformitate</h3>
@@ -493,10 +388,9 @@ function OverviewTab() {
               </Card>
             )}
           </div>
+          </CardSlot>
         )}
       </div>
-
-      {}
       {costEdit && (
         <CenteredDialog
           isOpen={true}
@@ -530,17 +424,17 @@ function OverviewTab() {
   );
 }
 
-
-
-
-
 type InvoiceSortKey = 'invoice_number' | 'project_name' | 'client_name' | 'total' | 'paid_amount' | 'remaining' | 'status' | 'due_date';
 
-function InvoicesTab({ onDataChange }: { onDataChange?: () => void }) {
+function InvoicesTab({ createNonce = 0, onDataChange }: { createNonce?: number; onDataChange?: () => void }) {
   const money = useMoney();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const { isOpen, openModal, closeModal } = useFormModal();
+
+  useEffect(() => {
+    if (createNonce > 0) openModal();
+  }, [createNonce, openModal]);
 
   const { sorted: sortedInvoices, sort, toggle } = useSort<Invoice, InvoiceSortKey>(
     invoices,
@@ -556,8 +450,7 @@ function InvoicesTab({ onDataChange }: { onDataChange?: () => void }) {
   const fullClients = useClientStore(s => s.clients);
   const fetchClientsStore = useClientStore(s => s.fetchClients);
   const clients = useMemo(() => fullClients.map(c => ({ id: c.id, name: c.name })), [fullClients]);
-  
-  
+
   const [payingInvoice, setPayingInvoice] = useState<Invoice | null>(null);
 
   const fetchInvoices = useCallback(() => {
@@ -639,22 +532,14 @@ function InvoicesTab({ onDataChange }: { onDataChange?: () => void }) {
   return (
     <div className="flex flex-1 flex-col min-h-0 gap-4">
       <Card padding="none" className="min-w-0 flex flex-col min-h-0 flex-1">
-        {}
-        <div className="px-5 py-4 border-b border-line/70 shrink-0">
+        <div className={`${PANEL_HEAD} shrink-0`}>
           <SectionHeader
             title="Facturi"
             icon={FileText}
             meta={`${invoices.length} ${invoices.length === 1 ? 'factură' : 'facturi'}`}
             className="mb-0"
-            actions={
-              <Button size="sm" onClick={() => openModal()}>
-                <Plus className="h-3.5 w-3.5" /> Factura noua
-              </Button>
-            }
           />
         </div>
-
-        {}
         <div className="overflow-auto min-h-0 flex-1">
           <table className="table-density w-full text-left border-collapse min-w-[960px]">
             <thead className={THEAD_STICKY}>
@@ -747,16 +632,16 @@ function InvoicesTab({ onDataChange }: { onDataChange?: () => void }) {
   );
 }
 
-
-
-
-
-function ExpensesTab({ onDataChange }: { onDataChange?: () => void }) {
+function ExpensesTab({ createNonce = 0, onDataChange }: { createNonce?: number; onDataChange?: () => void }) {
   const money = useMoney();
   const eurRate = useEurRate();
   const [expenses, setExpenses] = useState<ProjectExpense[]>([]);
   const [loading, setLoading] = useState(true);
   const { isOpen, openModal, closeModal } = useFormModal();
+
+  useEffect(() => {
+    if (createNonce > 0) openModal();
+  }, [createNonce, openModal]);
   const fullProjects = useProjectStore(s => s.projects);
   const fetchProjectsStore = useProjectStore(s => s.fetchProjects);
   const projects = useMemo(() => fullProjects.map(p => ({ id: p.id, name: p.name })), [fullProjects]);
@@ -797,9 +682,6 @@ function ExpensesTab({ onDataChange }: { onDataChange?: () => void }) {
     onDataChange?.();
   };
 
-  
-  
-  
   const categoryTotals = expenses.reduce<Record<string, number>>((acc, e) => {
     const ron = (e.currency || 'RON').toUpperCase() === 'EUR' ? e.amount * eurRate : e.amount;
     acc[e.category] = (acc[e.category] || 0) + ron;
@@ -809,13 +691,11 @@ function ExpensesTab({ onDataChange }: { onDataChange?: () => void }) {
   const topCategories = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
   return (
-    <div className="flex flex-1 flex-col min-h-0 gap-4">
-      {}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0">
-
-        {}
+    <>
+    <div className={PAGE_GRID_12}>
         {totalExpenses > 0 && (
-          <Card padding="lg" className="xl:col-span-4 min-w-0 min-h-0 overflow-y-auto">
+          <CardSlot size="md" as="div" className="min-h-0 overflow-y-auto">
+          <Card padding="lg" className="min-w-0 min-h-0">
             <h3 className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted mb-3">Top categorii</h3>
             <div key={`cats-${topCategories.length}`} className="stagger-in space-y-2.5">
               {topCategories.map(([cat, amount]) => {
@@ -837,21 +717,16 @@ function ExpensesTab({ onDataChange }: { onDataChange?: () => void }) {
               })}
             </div>
           </Card>
+          </CardSlot>
         )}
-
-        {}
-        <Card padding="none" className={`flex flex-col min-h-0 ${totalExpenses > 0 ? 'xl:col-span-8 min-w-0' : 'xl:col-span-12 min-w-0'}`}>
-          <div className="px-5 py-4 border-b border-line/70 shrink-0">
+        <CardSlot size={totalExpenses > 0 ? 'lg' : 'xl'} as="div">
+        <Card padding="none" className="flex flex-col min-h-0 min-w-0">
+          <div className={`${PANEL_HEAD} shrink-0`}>
             <SectionHeader
               title="Cheltuieli pe proiecte"
               icon={Receipt}
               meta={`${expenses.length} ${expenses.length === 1 ? 'înregistrare' : 'înregistrări'}`}
               className="mb-0"
-              actions={
-                <Button size="sm" onClick={() => openModal()}>
-                  <Plus className="h-3.5 w-3.5" /> Cheltuiala noua
-                </Button>
-              }
             />
           </div>
           <div className="overflow-auto min-h-0 flex-1">
@@ -885,10 +760,11 @@ function ExpensesTab({ onDataChange }: { onDataChange?: () => void }) {
             </table>
           </div>
         </Card>
+        </CardSlot>
       </div>
 
       <FormModal isOpen={isOpen} onClose={closeModal} title="Cheltuiala noua" fields={expenseFields} onSubmit={handleCreateExpense} submitLabel="Adaugă" />
-    </div>
+    </>
   );
 }
 

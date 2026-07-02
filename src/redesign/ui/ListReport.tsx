@@ -18,12 +18,11 @@
 
 import { useMemo, useState, type ReactNode } from 'react';
 import Page, { PageBody } from '@/redesign/ui/Page';
-import PageHeader from '@/redesign/ui/PageHeader';
 import FilterBar from '@/redesign/ui/FilterBar';
 import SortableTh, { Th, THEAD_STICKY } from '@/redesign/ui/SortableTh';
 import { useSort } from '@/hooks/useSort';
 import { SelectAllCheckbox, RowCheckbox } from '@/components/BulkSelection';
-import { Loader2, Inbox } from 'lucide-react';
+import { Loader2, Inbox } from '@/icons';
 
 export interface ListColumn<T> {
   
@@ -83,12 +82,12 @@ interface ListReportProps<T> {
 }
 
 export default function ListReport<T>({
-  title, subtitle, icon, actions,
+  title: _title, subtitle: _subtitle, icon: _icon, actions,
   rows, columns, rowKey, onRowClick,
   loading = false,
   searchKeys, searchPlaceholder = 'Caută...', filters,
   emptyMessage = 'Nicio înregistrare.',
-  embedded = false, headerless = false,
+  embedded = false, headerless: _headerless = false,
   selection, rowClassName, footer,
 }: ListReportProps<T>) {
   const [search, setSearch] = useState('');
@@ -109,11 +108,7 @@ export default function ListReport<T>({
 
   const inner = (
     <>
-      {!headerless && (
-        <PageHeader title={title} subtitle={subtitle} icon={icon}>{actions}</PageHeader>
-      )}
-
-      {(showFilterBar || (headerless && actions)) && (
+      {(showFilterBar || actions) && (
         <div className="flex items-center gap-2 flex-wrap">
           {showFilterBar && (
             <FilterBar
@@ -125,7 +120,7 @@ export default function ListReport<T>({
               onClearAll={() => { setSearch(''); filters?.forEach(f => f.onChange('')); }}
             />
           )}
-          {headerless && actions && <div className="ml-auto">{actions}</div>}
+          {actions && <div className={showFilterBar ? 'ml-auto' : 'w-full flex justify-end'}>{actions}</div>}
         </div>
       )}
 
@@ -162,16 +157,16 @@ export default function ListReport<T>({
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={columns.length + (selection ? 1 : 0)} className="px-4 py-14 text-center text-content-muted">
-                      <span className="anim-fade-in inline-flex">
+                    <td colSpan={columns.length + (selection ? 1 : 0)} className="text-center text-content-muted">
+                      <span className="anim-fade-in flex min-h-[40vh] items-center justify-center">
                         <Loader2 className="h-5 w-5 animate-spin text-accent" />
                       </span>
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={columns.length + (selection ? 1 : 0)} className="px-4 py-14 text-center text-content-muted">
-                      <span className="anim-fade-in inline-flex flex-col items-center">
+                    <td colSpan={columns.length + (selection ? 1 : 0)} className="text-center text-content-muted">
+                      <span className="anim-fade-in flex min-h-[40vh] flex-col items-center justify-center">
                         <Inbox className="h-8 w-8 mb-2 opacity-40" />
                         <p className="text-pm-sm">{emptyMessage}</p>
                       </span>

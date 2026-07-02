@@ -11,7 +11,7 @@
 
 
 
-import { ShieldOff, ArrowLeft } from 'lucide-react';
+import { ShieldOff, ArrowLeft } from '@/icons';
 
 interface Props {
   

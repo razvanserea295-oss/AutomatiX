@@ -13,22 +13,39 @@ import { User, LoginResponse, AppError } from '@/core/types';
 import { STORAGE_KEYS, getStorageJson, setStorageJson, setStorage, removeStorage } from '@/config/localStorage';
 import { logger } from '@/core/logger';
 import { apiCommand, isSessionExpired } from '@/api/commands';
-import { isBrowserWeb } from '@/config/server';
+import { isCloudClient, getServerUrl, getServerOrigin } from '@/config/server';
 import { addSessionExpiredListener } from '@/store/sessionEvents';
+import { addLicenseRequiredListener } from '@/store/licenseEvents';
+
+// Persisted across reloads so the activation screen survives a refresh and the
+// first paint after a tenant-routed reload is correct (no dashboard flash).
+const LICENSE_REQUIRED_KEY = 'promix_requires_license';
+function readLicenseRequired(): boolean {
+  try { return typeof window !== 'undefined' && localStorage.getItem(LICENSE_REQUIRED_KEY) === '1'; }
+  catch { return false; }
+}
+function writeLicenseRequired(v: boolean): void {
+  try {
+    if (v) localStorage.setItem(LICENSE_REQUIRED_KEY, '1');
+    else localStorage.removeItem(LICENSE_REQUIRED_KEY);
+  } catch { /* ignore */ }
+}
 
 /**
- * User-based tenant routing. In a browser tab we don't ask the user to pick a
- * firm — we POST credentials to the host broker (`/api/auth/login` on the bare
- * origin), which finds the firm the user belongs to and returns its slug plus
- * the already-issued session. Desktop builds talk to one configured server, so
- * they keep using the plain `login` command.
+ * User-based tenant routing. A cloud client (browser tab OR a desktop pointed at
+ * the remote cloud) doesn't ask the user to pick a firm — it POSTs credentials
+ * to the host broker (`/api/auth/login`), which finds the firm the user belongs
+ * to and returns its slug plus the already-issued session. A classic desktop
+ * pointed at a single localhost/LAN server uses the plain `login` command.
  */
-type BrokerLogin = (LoginResponse | { requires_2fa: true; challenge: string }) & { tenant_slug?: string };
+type BrokerLogin = (LoginResponse | { requires_2fa: true; challenge: string }) & { tenant_slug?: string; requires_license?: boolean };
 async function resolveLogin(username: string, password: string): Promise<BrokerLogin> {
-  if (!isBrowserWeb()) {
+  if (!isCloudClient()) {
     return apiCommand<BrokerLogin>('login', { request: { username, password } });
   }
-  const res = await fetch(`${window.location.origin}/api/auth/login`, {
+  // Broker lives at the SERVER origin — for the web that's window.location.origin,
+  // for a cloud desktop that's the configured cloud base (NOT the tauri:// origin).
+  const res = await fetch(`${getServerOrigin()}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password }),
@@ -52,12 +69,18 @@ interface AuthState {
   isLoadingSession: boolean;
   sessionError: Error | null;
 
-  
+
   pending2FAChallenge: string | null;
 
-  
+  // Per-tenant license gate: true → this firm's instance needs activation, the
+  // app shows the activation screen instead of the shell.
+  requiresLicense: boolean;
+
+
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
+  clearLicenseRequirement: () => void;
+  refreshLicenseState: () => Promise<void>;
 
   
   
@@ -84,8 +107,9 @@ export const useAuthStore = create<AuthState>()(
     isLoadingSession: false,
     sessionError: null,
     pending2FAChallenge: null,
+    requiresLicense: readLicenseRequired(),
 
-    
+
     
     
 
@@ -107,6 +131,26 @@ export const useAuthStore = create<AuthState>()(
       }
     },
 
+    clearLicenseRequirement: () => {
+      writeLicenseRequired(false);
+      set({ requiresLicense: false });
+    },
+
+    // Ask the firm's instance whether it's licensed. Only forces activation when
+    // the server gate is actually armed (gate=true), so a deployment with the
+    // gate off behaves exactly as before. Desktop builds skip this (gated locally).
+    refreshLicenseState: async () => {
+      if (!isCloudClient()) return;
+      try {
+        const res = await fetch(`${getServerUrl()}/api/license/tenant-state`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const d = await res.json() as { licensed?: boolean; gate?: boolean };
+        const need = !!d.gate && !d.licensed;
+        writeLicenseRequired(need);
+        set({ requiresLicense: need });
+      } catch { /* keep current state on network error */ }
+    },
+
     
     
     
@@ -121,7 +165,7 @@ export const useAuthStore = create<AuthState>()(
         // Empty/absent slug = bare origin (single-tenant / desktop) — leave the
         // stored slug untouched in that case.
         const resolvedSlug = response.tenant_slug;
-        if (isBrowserWeb() && resolvedSlug) setStorage(STORAGE_KEYS.TENANT_SLUG, resolvedSlug);
+        if (isCloudClient() && resolvedSlug) setStorage(STORAGE_KEYS.TENANT_SLUG, resolvedSlug);
 
 
 
@@ -136,7 +180,11 @@ export const useAuthStore = create<AuthState>()(
         }
 
         const { token, user } = response as LoginResponse;
-
+        // Broker tells us up front if this firm's instance still needs a license
+        // (only when the gate is armed). If so, show the activation screen in
+        // place — do NOT reload (the activation page uses this token to import).
+        const requiresLicense = !!(response as { requires_license?: boolean }).requires_license;
+        writeLicenseRequired(requiresLicense);
 
         set({
           token,
@@ -145,6 +193,7 @@ export const useAuthStore = create<AuthState>()(
           isLoadingSession: false,
           sessionError: null,
           pending2FAChallenge: null,
+          requiresLicense,
         });
 
 
@@ -154,8 +203,8 @@ export const useAuthStore = create<AuthState>()(
         logger.info('User logged in', { userId: user.id, username: user.username });
         // When the firm was just resolved, reload so the whole app re-boots
         // through /t/<slug>: business_type, navigation and workspaces all
-        // reflect the resolved firm.
-        if (isBrowserWeb() && resolvedSlug) { window.location.reload(); }
+        // reflect the resolved firm. Skip the reload while activation is pending.
+        if (isCloudClient() && resolvedSlug && !requiresLicense) { window.location.reload(); }
         return { requires2FA: false };
       } catch (error) {
         const err = AppError.fromUnknown(error, 'Login failed');
@@ -192,7 +241,7 @@ export const useAuthStore = create<AuthState>()(
         logger.info('User completed 2FA', { userId: user.id, username: user.username });
         // Reload so the app re-boots through the firm's /t/<slug> (the slug was
         // persisted during the login step that issued this 2FA challenge).
-        if (isBrowserWeb() && (window.localStorage.getItem(STORAGE_KEYS.TENANT_SLUG) || '').trim()) {
+        if (isCloudClient() && (window.localStorage.getItem(STORAGE_KEYS.TENANT_SLUG) || '').trim()) {
           window.location.reload();
         }
       } catch (error) {
@@ -221,15 +270,17 @@ export const useAuthStore = create<AuthState>()(
           token: null,
           isAuthenticated: false,
           sessionError: null,
+          requiresLicense: false,
         });
 
 
         removeStorage(STORAGE_KEYS.TOKEN);
         removeStorage(STORAGE_KEYS.USER);
+        writeLicenseRequired(false);
         // Drop the resolved firm so the NEXT login re-resolves from scratch via
         // the broker — a different user can log into a different firm on the
         // same browser without a stale slug pinning them to the old one.
-        if (isBrowserWeb()) removeStorage(STORAGE_KEYS.TENANT_SLUG);
+        if (isCloudClient()) removeStorage(STORAGE_KEYS.TENANT_SLUG);
 
         logger.info('User logged out');
       }
@@ -304,7 +355,10 @@ export const useAuthStore = create<AuthState>()(
           return false;
         }
 
-        
+        // Resolve the firm's license state BEFORE first paint so an unlicensed
+        // tenant lands straight on the activation screen (no dashboard flash).
+        await get().refreshLicenseState();
+
         set({
           token: storedToken,
           user: storedUser,
@@ -344,11 +398,20 @@ if (typeof window !== 'undefined') {
       isAuthenticated: false,
       sessionError: new Error('Session expired'),
       pending2FAChallenge: null,
+      requiresLicense: false,
     });
 
     removeStorage(STORAGE_KEYS.TOKEN);
     removeStorage(STORAGE_KEYS.USER);
+    writeLicenseRequired(false);
     logger.info('Session expired, clearing stored authentication');
+  });
+
+  // Any command blocked by the per-tenant license gate (HTTP 402) flips the app
+  // into the activation screen — a safety net for paths the broker hint missed.
+  addLicenseRequiredListener(() => {
+    writeLicenseRequired(true);
+    useAuthStore.setState({ requiresLicense: true });
   });
 }
 

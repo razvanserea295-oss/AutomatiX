@@ -7,25 +7,80 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import Root from './Root'
 import TauriUpdater from './components/TauriUpdater'
-// Redesign flip: monochrome / Apple-style token system replaces the old theme.
-// Same CSS-variable names → the existing app (incl. the old navbar + sidebar)
-// re-skins automatically. Revert these two lines to './index.css' +
-// './styles/theme.css' to restore the previous look.
+// Shared Tailwind + redesign utilities. Theme tokens are scoped:
+//   V2 → design-tokens.css under .v2-root / html[data-interface="v2"]
+//   Classic (default) → src/classic/classic-tokens.css (VS Code palette)
 import './redesign/index.css'
 import './redesign/theme.css'
+import './redesign/polish-pass.css'
+import './classic/classic-tokens.css'
+import './components/shell/shell.css'
+import '@/v2/styles/globals.css'
+import './redesign/enterprise.css' // Stage 0 enterprise flatten — must win the cascade (last)
 import { applyTheme, readPersistedTheme } from './store/themeStore'
 import { applyAccent, readPersistedAccent } from './store/accentStore'
 import { applyMotion, readPersistedMotion } from './store/motionStore'
 import { applyCardTransparency, readPersistedCardTransparency } from './store/cardTransparencyStore'
 import { applyNavSync, readPersistedNavSync } from './store/navSyncStore'
 import { applyShellLayout, readPersistedShellLayout } from './store/shellLayoutStore'
-import { applyUiScale } from './lib/uiScale'
+import { applyLayoutMode, readPersistedLayoutMode } from './store/layoutModeStore'
+import { applyDensity } from './lib/density'
 import { initPageTransitions } from './lib/pageTransitions'
 import { initPerfTier } from './lib/perfTier'
 import { isDesktopRuntime } from './lib/runtime'
+import { applyInterfaceMode, getInterfaceMode } from './v2/lib/interfaceMode'
+import { installClientErrorReporter } from './lib/clientErrorReporter'
+
+// Capture uncaught errors / unhandled rejections app-wide and forward them to
+// the server log. Installed before anything else so early failures are caught.
+installClientErrorReporter()
+
+const CHUNK_RELOAD_KEY = 'promix:chunk-reload-attempted'
+let chunkReloadAttemptedInMemory = false
+
+function isDynamicImportChunkError(reason: unknown): boolean {
+  const parts: string[] = []
+  if (typeof reason === 'string') parts.push(reason)
+  if (reason instanceof Error) {
+    parts.push(reason.name)
+    parts.push(reason.message)
+  }
+  const text = parts.join(' ').toLowerCase()
+  return (
+    text.includes('failed to fetch dynamically imported module') ||
+    text.includes('importing a module script failed') ||
+    text.includes('error loading dynamically imported module') ||
+    text.includes('chunkloaderror') ||
+    text.includes('loading chunk')
+  )
+}
+
+function shouldAttemptChunkReload(): boolean {
+  try {
+    if (sessionStorage.getItem(CHUNK_RELOAD_KEY) === '1') return false
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, '1')
+    return true
+  } catch {
+    if (chunkReloadAttemptedInMemory) return false
+    chunkReloadAttemptedInMemory = true
+    return true
+  }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    if (!isDynamicImportChunkError(event.reason)) return
+    if (!shouldAttemptChunkReload()) return
+    event.preventDefault()
+    window.location.reload()
+  })
+}
 
 // Mark the new UI active (harmless marker any conditional CSS can key off).
 document.documentElement.dataset.ui = 'new';
+
+// Interface mode BEFORE theme so classic vs v2 token scopes apply on first paint.
+applyInterfaceMode(getInterfaceMode());
 
 // Apply persisted theme BEFORE React mounts so the first paint matches the
 // user's saved preference. Otherwise dark↔light hydration would flash.
@@ -36,7 +91,8 @@ applyMotion(readPersistedMotion());
 applyCardTransparency(readPersistedCardTransparency());
 applyNavSync(readPersistedNavSync());
 applyShellLayout(readPersistedShellLayout());
-applyUiScale(); // root font-size from density + text-scale combined
+applyLayoutMode(readPersistedLayoutMode()); // tiled (default) vs flat sheet
+applyDensity(); // data-density + root font-size before first paint
 
 // Resolve the device performance tier before first paint so the heavy effects
 // (backdrop blur, ambient orbs, page transitions) render at the right cost
@@ -75,14 +131,16 @@ if (import.meta.env.DEV) {
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    {/* Root selects the presentation layer: SaaS (<App/>, default & unchanged) or
-        the SAP Fiori tree (<FioriApp/>) when promix_ui_mode / ?ui=fiori is set. */}
+    {/* Root always mounts the Modern SaaS app (<App/>). */}
     <Root />
     {/* Desktop-only auto-update toast — renders null outside the Tauri shell. */}
     <TauriUpdater />
   </React.StrictMode>,
 )
 
-// Dismiss boot screen once React has mounted. The 800 ms floor keeps the
-// splash visible long enough on fast LAN connections (prevents a flash).
-setTimeout(() => window.dispatchEvent(new Event('app:ready')), 800)
+// Dismiss boot screen once React has mounted (no minimum splash delay).
+window.dispatchEvent(new Event('app:ready'))
+
+// Desktop thin-client: auto-reload when the server ships a new frontend build.
+// No-op in browser tabs (gated to the desktop shell's User-Agent).
+void import('./lib/desktopAutoReload').then((m) => m.startDesktopAutoReload())

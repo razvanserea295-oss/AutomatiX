@@ -109,6 +109,17 @@
   --status-teal:   #0E7490;
   --status-purple: #6D28D9;
 
+  /* Category palette — constant vibrant hues for categorical data (calendar event
+     types, dots, etc.). NOT semantic status; intentionally theme-stable (never
+     remapped per theme, unlike --status-* which de-saturate in some themes). */
+  --cat-red:    #ef4444;
+  --cat-blue:   #3b82f6;
+  --cat-amber:  #f59e0b;
+  --cat-violet: #8b5cf6;
+  --cat-teal:   #14b8a6;
+  --cat-green:  #22c55e;
+  --cat-gray:   #6b7280;
+
   /* Role colors — light mode (badge bg / text pairs) */
   --role-admin-bg:      rgba(190, 24, 93, 0.10);
   --role-admin-text:    #BE185D;
@@ -179,6 +190,14 @@
   --motion-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
 
+  /* Micro-interaction tokens — shared app-wide for hover / press / focus */
+  --ixn-duration: var(--motion-fast);
+  --ixn-ease: var(--motion-ease);
+  --ixn-lift: -1px;
+  --ixn-press-scale: 0.98;
+  --ixn-border-hover: color-mix(in srgb, var(--color-border) 84%, var(--color-accent) 16%);
+  --ixn-surface-hover: color-mix(in srgb, var(--color-bg-tertiary) 42%, transparent);
+
   /* Inter first (bundled), then the system stack — on macOS this gracefully
      falls back to SF Pro, on Win11 to Segoe UI Variable, so the app always
      matches the host OS if our webfont ever fails to load. */
@@ -187,6 +206,11 @@
      Arial/Helvetica fallback keeps SAP's letterform metrics. */
   --font-display: '72', '72full', Arial, Helvetica, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', 'Menlo', ui-monospace, monospace;
+
+  /* Shell chrome — shared with shell.css; keep in sync for calc() in TSX/CSS. */
+  --shell-titlebar-h: 34px;
+  --shell-titlebar-h-mobile: 56px;
+  --shell-status-h: 24px;
 }
 
 .dark {
@@ -394,30 +418,52 @@
     opacity: 0;
   }
 
-  /* Interactive card — lift on hover, press on active. Opt-in helper for any
-     clickable card that should read as "premium" (dashboard widgets, list
-     items, settings tiles). Keep stateless cards without this class. */
+  /* Table rows — quick highlight on hover (ERP data grids). */
+  tbody tr {
+    transition: background-color var(--ixn-duration) var(--ixn-ease);
+  }
+  @media (hover: hover) {
+    tbody tr:hover {
+      background-color: var(--ixn-surface-hover);
+    }
+  }
+
+  /* Interactive card — lift on hover, press on active. Opt-in for clickable
+     surfaces (dashboard widgets, list tiles). Stateless cards skip this. */
   .card-interactive {
     cursor: pointer;
     transition:
-      transform var(--motion-fast) var(--motion-ease),
-      box-shadow var(--motion-fast) var(--motion-ease),
-      border-color var(--motion-fast) var(--motion-ease);
+      transform var(--ixn-duration) var(--ixn-ease),
+      box-shadow var(--ixn-duration) var(--ixn-ease),
+      border-color var(--ixn-duration) var(--ixn-ease);
   }
-  .card-interactive:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-soft-lg);
-    border-color: var(--color-accent-muted);
+  @media (hover: hover) {
+    .card-interactive:hover {
+      transform: translateY(var(--ixn-lift));
+      box-shadow: var(--elevation-2);
+      border-color: var(--ixn-border-hover);
+    }
   }
   .card-interactive:active {
-    transform: translateY(0);
-    box-shadow: var(--shadow-soft);
+    transform: translateY(0) scale(var(--ixn-press-scale));
+    box-shadow: var(--elevation-1);
+    transition-duration: var(--motion-instant);
   }
 
   /* Keyboard-focused interactive card */
   .card-interactive:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: var(--ring-soft);
+  }
+
+  /* Text links inside page content — subtle color shift, no underline jump */
+  .app-surface a:not([class*='btn']):not([class*='button']):not([role='button']) {
+    transition: color var(--ixn-duration) var(--ixn-ease);
+  }
+  @media (hover: hover) {
+    .app-surface a:not([class*='btn']):not([class*='button']):not([role='button']):hover {
+      color: var(--color-accent);
+    }
   }
 
   /* Inner-scroll containers with subtle gradient masks at the edges —
@@ -496,22 +542,63 @@
     background-color: color-mix(in srgb, var(--color-bg-elevated) 74%, transparent);
   }
 
-  /* Subtle premium hover lift — same target as `.card-interactive` but
-     without the cursor + bold border swap. Use on info tiles. */
+  /* Subtle premium hover lift — info tiles without pointer cursor. */
   .surface-lift {
     transition:
-      transform var(--motion-fast) var(--motion-ease),
-      box-shadow var(--motion-fast) var(--motion-ease);
+      transform var(--ixn-duration) var(--ixn-ease),
+      box-shadow var(--ixn-duration) var(--ixn-ease),
+      border-color var(--ixn-duration) var(--ixn-ease);
   }
-  .surface-lift:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--elevation-2);
+  @media (hover: hover) {
+    .surface-lift:hover {
+      transform: translateY(var(--ixn-lift));
+      box-shadow: var(--elevation-2);
+      border-color: var(--ixn-border-hover);
+    }
   }
 
-  /* Refined focus state — soft amber halo, no hard outline. */
+  /* Coherent micro-interaction primitives — buttons, icon controls, nav items */
+  .ixn-base {
+    transition:
+      transform var(--ixn-duration) var(--ixn-ease),
+      box-shadow var(--ixn-duration) var(--ixn-ease),
+      border-color var(--ixn-duration) var(--ixn-ease),
+      background-color var(--ixn-duration) var(--ixn-ease),
+      color var(--ixn-duration) var(--ixn-ease),
+      filter var(--ixn-duration) var(--ixn-ease);
+  }
+  .ixn-press:active:not(:disabled) {
+    transform: scale(var(--ixn-press-scale));
+    transition-duration: var(--motion-instant);
+  }
+  .ixn-focus:focus-visible {
+    outline: none;
+    box-shadow: var(--ring-soft);
+  }
+  .ixn-border-hover {
+    transition: border-color var(--ixn-duration) var(--ixn-ease);
+  }
+  @media (hover: hover) {
+    .ixn-border-hover:hover {
+      border-color: var(--ixn-border-hover);
+    }
+  }
+
+  /* Refined focus state — soft brand halo, no hard outline. */
   .focus-ring-soft:focus-visible {
     outline: none;
     box-shadow: var(--ring-soft);
+  }
+
+  /* Clickable list / table rows (opt-in via class on <tr> or row wrapper) */
+  .row-interactive {
+    cursor: pointer;
+    transition: background-color var(--ixn-duration) var(--ixn-ease);
+  }
+  @media (hover: hover) {
+    .row-interactive:hover {
+      background-color: var(--ixn-surface-hover);
+    }
   }
 
   /* Primary button shine — adds a 1px highlight along the top edge of
@@ -722,73 +809,18 @@
     linear-gradient(155deg, #080c1a 0%, #0c1228 45%, #0f162e 100%);
   color: #e8edf4;
 }
-.boot-loader-orb {
-  position: absolute;
-  top: -20%;
-  left: -10%;
-  width: 70rem;
-  height: 70rem;
-  border-radius: 999px;
-  background: radial-gradient(circle at center, rgba(45, 91, 227, 0.35), transparent 60%);
-  filter: blur(90px);
-  opacity: 0.45;
-  pointer-events: none;
-  will-change: transform;
-  animation: aurora-drift-1 18s ease-in-out infinite alternate;
-}
-
-/* Concentric ripple rings expanding outward from the gear */
-.boot-ring {
-  position: absolute;
-  inset: 0;
-  border: 1px solid rgba(77, 134, 255, 0.35);
-  border-radius: 999px;
-  opacity: 0;
-  animation: boot-ring-pulse 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
-}
-.boot-ring-1 { animation-delay: 0s; }
-.boot-ring-2 { animation-delay: 0.9s; }
-.boot-ring-3 { animation-delay: 1.8s; }
-
-@keyframes boot-ring-pulse {
-  0%   { transform: scale(0.6); opacity: 0; border-color: rgba(77, 134, 255, 0.55); }
-  20%  { opacity: 0.8; }
-  100% { transform: scale(1.75); opacity: 0; border-color: rgba(77, 134, 255, 0); }
-}
-
-/* Soft breathing halo right under the gear */
+.boot-loader-orb,
+.boot-ring,
 .boot-gear-halo {
-  position: absolute;
-  inset: 18%;
-  border-radius: 999px;
-  background: radial-gradient(circle, rgba(45, 91, 227, 0.55), transparent 70%);
-  filter: blur(18px);
-  animation: boot-halo-breathe 3.2s ease-in-out infinite;
-}
-@keyframes boot-halo-breathe {
-  0%, 100% { opacity: 0.5; transform: scale(0.94); }
-  50%      { opacity: 0.95; transform: scale(1.08); }
+  display: none;
 }
 
-/* Gear itself — slow rotation, soft drop shadow. The breathing halo under it
-   handles the scale "bob", so we keep a single transform here to avoid
-   animation collisions. */
 .boot-gear {
-  animation: boot-gear-spin 8s linear infinite;
   filter: drop-shadow(0 4px 16px rgba(45, 91, 227, 0.50));
 }
-@keyframes boot-gear-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
 
-/* Indeterminate progress track — sweeps across the bar */
 .boot-progress {
-  animation: boot-progress-sweep 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-@keyframes boot-progress-sweep {
-  0%   { transform: translateX(-120%); }
-  100% { transform: translateX(360%);  }
+  transform: none;
 }
 
 /* Skeleton shimmer — left-to-right gradient sweep across placeholder blocks. */
@@ -843,6 +875,15 @@
     scroll-behavior: auto !important;
   }
   .app-circuit-bg::before { animation: none; }
+  .card-interactive:hover,
+  .card-interactive:active,
+  .surface-lift:hover,
+  .ixn-press:active,
+  .pm-card:hover,
+  .pm-kpi:hover,
+  .pm-panel:hover {
+    transform: none !important;
+  }
 }
 
 /* ============================================================================
@@ -881,26 +922,4 @@
   ::-webkit-scrollbar-thumb { background: CanvasText; }
 }
 
-/* ============================================================================
- * Density: "compact" mode shaves vertical padding from row-heavy surfaces
- * (tables, the top nav) so power users can fit ~25% more on screen. Driven by
- * `data-density` on <html>, which is mirrored from the layoutStore.
- * Tables opt in via the `.table-density` class; we don't blanket-target every
- * <td> on the page since many cards / detail panels also use td-styled grids
- * for layout and shouldn't compress.
- * ==========================================================================*/
-:root[data-density="compact"] .table-density thead th,
-:root[data-density="compact"] .table-density tbody td {
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-:root[data-density="compact"] .table-density tbody td {
-  font-size: 11px;
-  line-height: 14px;
-}
-:root[data-density="compact"] .nav-density {
-  height: 32px;
-}
-:root[data-density="compact"] .nav-density button {
-  height: 32px !important;
-}
+/* Density: see redesign/tokens/density.css */

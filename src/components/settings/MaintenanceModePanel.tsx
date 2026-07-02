@@ -7,7 +7,7 @@
 
 
 import { useEffect, useState } from 'react';
-import { Wrench, Loader2, ShieldCheck } from 'lucide-react';
+import { Wrench, Loader2, ShieldCheck } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { confirmDialog } from '@/components/ConfirmDialog';
 import { toast } from '@/store/toastStore';

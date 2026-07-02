@@ -14,11 +14,12 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = join(__dirname, '..', 'build', 'icon.png');
-const S = 256;
+const S = 1024;        // 1024² so macOS/electron-builder (needs ≥512) is happy
+const F = S / 256;     // scale factor from the original 256-unit design
 
 
-const ACCENT_TOP = [13, 148, 136];   
-const ACCENT_BOT = [45, 212, 191];   
+const ACCENT_TOP = [22, 48, 122];    // #16307A navy
+const ACCENT_BOT = [22, 199, 255];   // #16C7FF cyan
 const WHITE = [255, 255, 255];
 
 const lerp = (a, b, t) => Math.round(a + (b - a) * t);
@@ -42,20 +43,45 @@ function roundedRectCoverage(px, py, x0, y0, x1, y1, r) {
 }
 
 
-const APEX = [128, 66];
-const LEGL = [82, 190];
-const LEGR = [174, 190];
-const BAR_A = [101, 150];
-const BAR_B = [155, 150];
-const STROKE_HW = 9; 
+// New Automatix mark: a hexagon enclosing three connected nodes, mapped from
+// the 0..100 design space into the 256px canvas (centre 128, scale 1.7).
+const MAP = 1.7 * F;
+const C = S / 2;
+const m = (x, y) => [C + (x - 50) * MAP, C + (y - 50) * MAP];
+const HEX = [m(50, 8), m(86.4, 29), m(86.4, 71), m(50, 92), m(13.6, 71), m(13.6, 29)];
+const LINK = [m(29, 50), m(71, 50)];
+const RING_C = m(29, 50), RING_R = 7 * MAP;
+const DOT2_C = m(50, 50), DOT2_R = 4.5 * MAP;
+const DOT3_C = m(71, 50), DOT3_R = 6 * MAP;
+const HEX_HW = (7 * MAP) / 2;
+const LINK_HW = (5 * MAP) / 2;
+const RING_HW = (5 * MAP) / 2;
 
+function strokeCoverage(px, py, pts, hw, closed) {
+  let d = Infinity;
+  const last = pts.length - (closed ? 0 : 1);
+  for (let i = 0; i < last; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    d = Math.min(d, distToSeg(px, py, a[0], a[1], b[0], b[1]));
+  }
+  return Math.max(0, Math.min(1, hw - d + 0.5));
+}
+function ringCoverage(px, py, c, R, hw) {
+  const d = Math.hypot(px - c[0], py - c[1]);
+  return Math.max(0, Math.min(1, hw - Math.abs(d - R) + 0.5));
+}
+function dotCoverage(px, py, c, R) {
+  const d = Math.hypot(px - c[0], py - c[1]);
+  return Math.max(0, Math.min(1, R - d + 0.5));
+}
 function glyphCoverage(px, py) {
-  const d = Math.min(
-    distToSeg(px, py, APEX[0], APEX[1], LEGL[0], LEGL[1]),
-    distToSeg(px, py, APEX[0], APEX[1], LEGR[0], LEGR[1]),
-    distToSeg(px, py, BAR_A[0], BAR_A[1], BAR_B[0], BAR_B[1]),
+  return Math.max(
+    strokeCoverage(px, py, HEX, HEX_HW, true),
+    strokeCoverage(px, py, LINK, LINK_HW, false),
+    ringCoverage(px, py, RING_C, RING_R, RING_HW),
+    dotCoverage(px, py, DOT2_C, DOT2_R),
+    dotCoverage(px, py, DOT3_C, DOT3_R),
   );
-  return Math.max(0, Math.min(1, STROKE_HW - d + 0.5));
 }
 
 
@@ -64,7 +90,7 @@ let o = 0;
 for (let y = 0; y < S; y++) {
   raw[o++] = 0; 
   for (let x = 0; x < S; x++) {
-    const tileA = roundedRectCoverage(x, y, 12, 12, S - 12, S - 12, 52);
+    const tileA = roundedRectCoverage(x, y, 12 * F, 12 * F, S - 12 * F, S - 12 * F, 52 * F);
     const g = y / S;
     let r = lerp(ACCENT_TOP[0], ACCENT_BOT[0], g);
     let gg = lerp(ACCENT_TOP[1], ACCENT_BOT[1], g);

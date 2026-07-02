@@ -5,8 +5,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Geist', '-apple-system', 'BlinkMacSystemFont', 'SF Pro Text', 'Segoe UI Variable', 'Segoe UI', 'system-ui', 'sans-serif'],
-        mono: ['Geist Mono', 'JetBrains Mono', 'SF Mono', 'Menlo', 'ui-monospace', 'monospace'],
+        sans: ['var(--font-body)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI Variable', 'Segoe UI', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI Variable', 'Segoe UI', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-mono)', 'JetBrains Mono', 'SF Mono', 'Menlo', 'ui-monospace', 'monospace'],
       },
       // Promix typography scale — use these instead of arbitrary text-[10px]/[11px].
       // Pairs each size with a sensible line-height so vertical rhythm stays consistent.
@@ -26,11 +27,73 @@ export default {
         // counters. Tracking is tight to read as "engineered display".
         'pm-3xl': ['2rem', { lineHeight: '2.25rem', letterSpacing: '-0.02em' }],      // 32/36
         'pm-eyebrow': ['0.625rem', { lineHeight: '0.875rem', letterSpacing: '0.16em', fontWeight: '700' }], // 10/14
+        /* Canonical design-token scale */
+        'ds-2xs': ['var(--text-2xs-size)', { lineHeight: 'var(--text-2xs-leading)', letterSpacing: 'var(--text-2xs-tracking)' }],
+        'ds-xs':  ['var(--text-xs-size)',  { lineHeight: 'var(--text-xs-leading)',  letterSpacing: 'var(--text-xs-tracking)' }],
+        'ds-sm':  ['var(--text-sm-size)',  { lineHeight: 'var(--text-sm-leading)',  letterSpacing: 'var(--text-sm-tracking)' }],
+        'ds-base':['var(--text-base-size)',{ lineHeight: 'var(--text-base-leading)',letterSpacing: 'var(--text-base-tracking)'}],
+        'ds-lg':  ['var(--text-lg-size)',  { lineHeight: 'var(--text-lg-leading)',  letterSpacing: 'var(--text-lg-tracking)' }],
+        'ds-xl':  ['var(--text-xl-size)',  { lineHeight: 'var(--text-xl-leading)',  letterSpacing: 'var(--text-xl-tracking)' }],
+        'ds-2xl': ['var(--text-2xl-size)', { lineHeight: 'var(--text-2xl-leading)', letterSpacing: 'var(--text-2xl-tracking)'}],
+        'ds-3xl': ['var(--text-3xl-size)', { lineHeight: 'var(--text-3xl-leading)', letterSpacing: 'var(--text-3xl-tracking)'}],
+        'ds-4xl': ['var(--text-4xl-size)', { lineHeight: 'var(--text-4xl-leading)', letterSpacing: 'var(--text-4xl-tracking)'}],
+        'ds-5xl': ['var(--text-5xl-size)', { lineHeight: 'var(--text-5xl-leading)', letterSpacing: 'var(--text-5xl-tracking)'}],
+      },
+      spacing: {
+        'ds-1':  'var(--space-1)',
+        'ds-2':  'var(--space-2)',
+        'ds-3':  'var(--space-3)',
+        'ds-4':  'var(--space-4)',
+        'ds-5':  'var(--space-5)',
+        'ds-6':  'var(--space-6)',
+        'ds-8':  'var(--space-8)',
+        'ds-10': 'var(--space-10)',
+        'ds-12': 'var(--space-12)',
+        'ds-16': 'var(--space-16)',
+        'ds-20': 'var(--space-20)',
+        'ds-24': 'var(--space-24)',
+        'ds-32': 'var(--space-32)',
+      },
+      gap: {
+        'ds-tight':   'var(--gap-tight)',
+        'ds-default': 'var(--gap-default)',
+        'ds-loose':   'var(--gap-loose)',
+        'ds-section': 'var(--gap-section)',
       },
       colors: {
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
+        },
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
+        },
         accent: {
-          DEFAULT: 'var(--color-accent)',
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
           muted: 'var(--color-accent-muted)',
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
         },
         surface: {
           rail: 'var(--color-bg-rail)',
@@ -42,15 +105,78 @@ export default {
           nav: 'var(--color-nav-bg)',
           'nav-hover': 'var(--color-nav-hover)',
           'nav-active': 'var(--color-nav-active-bg)',
+          /* Canonical canvas ladder */
+          void: 'var(--bg-void)',
+          base: 'var(--bg-base)',
+          canvas: 'var(--bg-base)',
+          panel: 'var(--bg-surface)',
+          overlay: 'var(--bg-overlay)',
+        },
+        canvas: {
+          void: 'var(--bg-void)',
+          base: 'var(--bg-base)',
+          surface: 'var(--bg-surface)',
+          elevated: 'var(--bg-elevated)',
+          overlay: 'var(--bg-overlay)',
+          hover: 'var(--bg-hover)',
+        },
+        brand: {
+          DEFAULT: 'var(--accent)',
+          hover: 'var(--accent-hover)',
+          active: 'var(--accent-active)',
+          subtle: 'var(--accent-subtle)',
+          muted: 'var(--accent-muted)',
+          fg: 'var(--accent-fg)',
+          50: 'var(--accent-50)',
+          100: 'var(--accent-100)',
+          200: 'var(--accent-200)',
+          300: 'var(--accent-300)',
+          400: 'var(--accent-400)',
+          500: 'var(--accent-500)',
+          600: 'var(--accent-600)',
+          700: 'var(--accent-700)',
+          800: 'var(--accent-800)',
+          900: 'var(--accent-900)',
         },
         content: {
           primary: 'var(--color-text-primary)',
           secondary: 'var(--color-text-secondary)',
           muted: 'var(--color-text-muted)',
+          disabled: 'var(--text-disabled)',
+          accent: 'var(--text-accent)',
+          danger: 'var(--text-danger)',
+        },
+        ds: {
+          void: 'var(--bg-void)',
+          base: 'var(--bg-base)',
+          surface: 'var(--bg-surface)',
+          elevated: 'var(--bg-elevated)',
+          overlay: 'var(--bg-overlay)',
+          hover: 'var(--bg-hover)',
+        },
+        accentScale: {
+          50: 'var(--accent-50)',
+          100: 'var(--accent-100)',
+          200: 'var(--accent-200)',
+          300: 'var(--accent-300)',
+          400: 'var(--accent-400)',
+          500: 'var(--accent-500)',
+          600: 'var(--accent-600)',
+          700: 'var(--accent-700)',
+          800: 'var(--accent-800)',
+          900: 'var(--accent-900)',
+          DEFAULT: 'var(--accent)',
+          hover: 'var(--accent-hover)',
+          active: 'var(--accent-active)',
+          subtle: 'var(--accent-subtle)',
+          muted: 'var(--accent-muted)',
+          fg: 'var(--accent-fg)',
         },
         line: {
           DEFAULT: 'var(--color-border)',
           subtle: 'var(--color-border-subtle)',
+          strong: 'var(--border-strong)',
+          accent: 'var(--border-accent)',
         },
         /* Legacy shell-* aliases — existing components still use these */
         shell: {
@@ -69,30 +195,40 @@ export default {
           blue:   'var(--status-blue)',
           teal:   'var(--status-teal)',
           purple: 'var(--status-purple)',
+          success: {
+            fg: 'var(--status-success-fg)',
+            DEFAULT: 'var(--status-success-bg)',
+            border: 'var(--status-success-border)',
+          },
+          warning: {
+            fg: 'var(--status-warning-fg)',
+            DEFAULT: 'var(--status-warning-bg)',
+            border: 'var(--status-warning-border)',
+          },
+          error: {
+            fg: 'var(--status-error-fg)',
+            DEFAULT: 'var(--status-error-bg)',
+            border: 'var(--status-error-border)',
+          },
+          info: {
+            fg: 'var(--status-info-fg)',
+            DEFAULT: 'var(--status-info-bg)',
+            border: 'var(--status-info-border)',
+          },
         },
       },
-      // NOTE: the previous `spacing` override pinned 0.5/1/2/3/4/6/8 to px.
-      // Those values are *identical* to Tailwind's default rem scale
-      // (0.25/0.5/0.75/1/1.5/2rem …) but in px they stopped responding to the
-      // browser's root font-size. Removed so the default rem scale applies —
-      // zero visual change at the 16px default, but spacing now scales for
-      // low-vision users (WCAG 1.4.4). Re-add here only for *non-default* steps.
-      // Fiori-tuned: tight, engineered radius. Smaller = more industrial,
-      // matches SAP's "serious tool" aesthetic. Pill shapes still use
-      // `rounded-full`. Adjusting these CASCADES through every component
-      // that uses standard `rounded-*` classes.
-      // Apple-soft radii — matches the login's large, gentle corners.
       borderRadius: {
         none: '0px',
-        sm: '5px',
-        DEFAULT: '6px',
-        md: '6px',
-        lg: '8px',
-        xl: '10px',
-        '2xl': '12px',
-        'pm-sm': '5px',
-        'pm-md': '7px',
-        'pm-lg': '9px',
+        sm: 'var(--radius-sm)',
+        DEFAULT: 'var(--radius-md)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
+        '2xl': 'var(--radius-2xl)',
+        full: 'var(--radius-full)',
+        'pm-sm': 'var(--radius-sm)',
+        'pm-md': 'var(--radius-md)',
+        'pm-lg': 'var(--radius-lg)',
       },
       boxShadow: {
         // Multi-layer soft shadows (Soft UI Evolution — softer than flat, clearer than pure neumorphism)
@@ -110,52 +246,188 @@ export default {
         'e2': 'var(--elevation-2)',
         'e3': 'var(--elevation-3)',
         'e4': 'var(--elevation-4)',
+        'ds-0': 'var(--shadow-0)',
+        'ds-1': 'var(--shadow-1)',
+        'ds-2': 'var(--shadow-2)',
+        'ds-3': 'var(--shadow-3)',
+        'ds-4': 'var(--shadow-4)',
+        'ds-accent': 'var(--shadow-accent)',
         // Soft turquoise focus halo — matches `--ring-soft`.
         'ring-soft': 'var(--ring-soft)',
         'ring-strong': 'var(--ring-strong)',
+        'ring-default': 'var(--ring-default)',
+        'ring-error': 'var(--ring-error)',
+        'ring-inset': 'var(--ring-inset)',
+      },
+      zIndex: {
+        'base-content': 'var(--z-base-content)',
+        'sticky-header': 'var(--z-sticky-header)',
+        dropdown: 'var(--z-dropdown)',
+        'modal-backdrop': 'var(--z-modal-backdrop)',
+        modal: 'var(--z-modal)',
+        toast: 'var(--z-toast)',
+        tooltip: 'var(--z-tooltip)',
+        'command-palette': 'var(--z-command-palette)',
+      },
+      blur: {
+        'ds-sm': 'var(--blur-sm)',
+        'ds-md': 'var(--blur-md)',
+        'ds-lg': 'var(--blur-lg)',
       },
       // Tablet vertical viewport — useful for the production-floor tablet
       // layouts. Below `sm` (640px) but above mobile.
       screens: {
         xs: '480px',
       },
-      animation: {
-        'page-in':         'pageIn 420ms cubic-bezier(0.16, 1, 0.3, 1) forwards',
-        'slide-in-right':  'slideInRight 220ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
-        'slide-up':        'slideUp 280ms cubic-bezier(0.2, 0, 0, 1) forwards',
-        'scale-in':        'scaleIn 200ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
-        'fade-in':         'fadeIn 200ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
-        'pulse-dot':       'pulseDot 1.6s ease-in-out infinite',
-        'progress-sweep':  'progressSweep 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite',
-      },
       transitionDuration: {
-        DEFAULT: '220ms',
+        DEFAULT: '280ms',
+        instant: 'var(--duration-instant)',
+        snappy: 'var(--duration-snappy)',
+        responsive: 'var(--duration-responsive)',
+        deliberate: 'var(--duration-deliberate)',
+        cinematic: 'var(--duration-cinematic)',
       },
       transitionTimingFunction: {
-        soft:        'cubic-bezier(0.22, 1, 0.36, 1)',
-        spring:      'cubic-bezier(0.34, 1.56, 0.64, 1)',
-        emphasized:  'cubic-bezier(0.2, 0, 0, 1)',
+        soft:        'var(--ease-out-expo)',
+        spring:      'var(--spring-bounce-ease)',
+        emphasized:  'var(--ease-in-out-expo)',
+        'out-expo':  'var(--ease-out-expo)',
+        'in-expo':   'var(--ease-in-expo)',
+        'in-out-expo': 'var(--ease-in-out-expo)',
+        'spring-soft': 'var(--spring-soft-ease)',
+        'spring-snappy': 'var(--spring-snappy-ease)',
+      },
+      animation: {
+        'page-in':         'page-in var(--duration-page-in) var(--ease-out-expo) both',
+        'page-out':        'page-out var(--duration-page-out) var(--ease-in-expo) forwards',
+        'slide-in-right':  'slide-right var(--duration-responsive) var(--ease-out-expo) forwards',
+        'slide-up':        'slide-up var(--duration-responsive) var(--ease-out-expo) forwards',
+        'scale-in':        'scale-in var(--duration-snappy) var(--spring-bounce-ease) forwards',
+        'scale-in-bounce': 'scale-in-bounce var(--duration-command-in) var(--spring-bounce-ease) forwards',
+        'fade-in':         'fade-in var(--duration-snappy) var(--ease-out-expo) forwards',
+        'fade-out':        'fade-out var(--duration-snappy) var(--ease-in-expo) forwards',
+        'modal-in':        'modal-panel-in var(--duration-modal-panel-in) var(--spring-soft-ease) forwards',
+        'modal-out':       'modal-panel-out var(--duration-modal-panel-out) var(--ease-in-expo) forwards',
+        'dropdown-in':     'dropdown-in var(--duration-dropdown-in) var(--ease-out-expo) forwards',
+        'dropdown-out':    'dropdown-out var(--duration-dropdown-out) var(--ease-in-expo) forwards',
+        'toast-in':        'toast-in-right var(--spring-snappy-duration) var(--spring-snappy-ease) both',
+        'toast-out':       'toast-out-right var(--duration-toast-out) var(--ease-in-expo) forwards',
+        'spin':            'spin var(--duration-spin) var(--ease-out-expo) infinite',
+        'spin-slow':       'spin-slow var(--duration-spin-slow) var(--ease-in-out-expo) infinite',
+        'shimmer':         'shimmer 1.8s var(--ease-in-out-expo) infinite',
+        'pulse-ring':      'pulse-ring 2s var(--ease-out-expo) infinite',
+        'float':           'float var(--duration-spin-slow) var(--ease-in-out-expo) infinite',
+        'attention':       'attention 600ms var(--ease-in-out-expo)',
+        'count-up':        'count-up var(--duration-responsive) var(--ease-out-expo) both',
+        'pulse-dot':       'pulseDot 1.6s var(--ease-in-out-expo) infinite',
+        'progress-sweep':  'progress-indeterminate 1.4s var(--ease-in-out-expo) infinite',
       },
       keyframes: {
         pageIn: {
-          '0%':   { opacity: '0', transform: 'translateY(24px) scale(0.985)' },
-          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
-        },
-        slideInRight: {
-          '0%':   { transform: 'translateX(100%)' },
-          '100%': { transform: 'translateX(0)' },
-        },
-        slideUp: {
-          '0%':   { opacity: '0', transform: 'translateY(16px)' },
+          '0%':   { opacity: '0', transform: 'translateY(12px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        'page-in': {
+          from: { opacity: '0', transform: 'translateY(12px)' },
+          to:   { opacity: '1', transform: 'translateY(0)' },
+        },
+        'page-out': {
+          from: { opacity: '1', transform: 'translateY(0)' },
+          to:   { opacity: '0', transform: 'translateY(-6px)' },
+        },
+        slideInRight: {
+          '0%':   { opacity: '0', transform: 'translateX(12px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        'slide-right': {
+          from: { opacity: '0', transform: 'translateX(12px)' },
+          to:   { opacity: '1', transform: 'translateX(0)' },
+        },
+        slideUp: {
+          '0%':   { opacity: '0', transform: 'translateY(12px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'slide-up': {
+          from: { opacity: '0', transform: 'translateY(12px)' },
+          to:   { opacity: '1', transform: 'translateY(0)' },
+        },
         scaleIn: {
-          '0%':   { opacity: '0', transform: 'scale(0.96) translateY(4px)' },
-          '100%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+          '0%':   { opacity: '0', transform: 'scale(0.92)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'scale-in': {
+          from: { opacity: '0', transform: 'scale(0.92)' },
+          to:   { opacity: '1', transform: 'scale(1)' },
+        },
+        'scale-in-bounce': {
+          from: { opacity: '0', transform: 'scale(0.5)' },
+          '70%': { transform: 'scale(1.12)' },
+          to:   { opacity: '1', transform: 'scale(1)' },
         },
         fadeIn: {
           '0%':   { opacity: '0' },
           '100%': { opacity: '1' },
+        },
+        'fade-in': {
+          from: { opacity: '0' },
+          to:   { opacity: '1' },
+        },
+        'fade-out': {
+          from: { opacity: '1' },
+          to:   { opacity: '0' },
+        },
+        'modal-panel-in': {
+          from: { opacity: '0', transform: 'scale(0.94)' },
+          to:   { opacity: '1', transform: 'scale(1)' },
+        },
+        'modal-panel-out': {
+          from: { opacity: '1', transform: 'scale(1)' },
+          to:   { opacity: '0', transform: 'scale(0.94)' },
+        },
+        'dropdown-in': {
+          from: { opacity: '0', transform: 'scaleY(0.9)' },
+          to:   { opacity: '1', transform: 'scaleY(1)' },
+        },
+        'dropdown-out': {
+          from: { opacity: '1', transform: 'scaleY(1)' },
+          to:   { opacity: '0', transform: 'scaleY(0.9)' },
+        },
+        'toast-in-right': {
+          from: { opacity: '0', transform: 'translateX(32px)' },
+          to:   { opacity: '1', transform: 'translateX(0)' },
+        },
+        'toast-out-right': {
+          from: { opacity: '1', transform: 'translateX(0)' },
+          to:   { opacity: '0', transform: 'translateX(20px)' },
+        },
+        spin: {
+          to: { transform: 'rotate(360deg)' },
+        },
+        'spin-slow': {
+          to: { transform: 'rotate(360deg)' },
+        },
+        shimmer: {
+          '0%':   { backgroundPosition: '-400px 0' },
+          '100%': { backgroundPosition: '400px 0' },
+        },
+        'pulse-ring': {
+          '0%':   { transform: 'scale(1)', opacity: '0.6' },
+          '100%': { transform: 'scale(2.2)', opacity: '0' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%':      { transform: 'translateY(-6px)' },
+        },
+        attention: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '20%':      { transform: 'scale(1.08)' },
+          '40%':      { transform: 'scale(0.96)' },
+          '60%':      { transform: 'scale(1.04)' },
+          '80%':      { transform: 'scale(0.98)' },
+        },
+        'count-up': {
+          from: { opacity: '0', transform: 'translateY(8px) scale(0.9)' },
+          to:   { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
         pulseDot: {
           '0%, 100%': { transform: 'scale(1)',    opacity: '1' },
@@ -164,6 +436,11 @@ export default {
         progressSweep: {
           '0%':   { transform: 'translateX(-120%)' },
           '100%': { transform: 'translateX(360%)' },
+        },
+        'progress-indeterminate': {
+          '0%':   { left: '-35%', width: '35%' },
+          '60%':  { left: '100%', width: '90%' },
+          '100%': { left: '100%', width: '90%' },
         },
       },
     },

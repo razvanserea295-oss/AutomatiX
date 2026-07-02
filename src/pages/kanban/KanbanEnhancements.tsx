@@ -7,7 +7,7 @@
 import { useMemo, useState } from 'react';
 import {
   Layers, Filter, Activity, Archive, Settings2, AlertCircle, ChevronDown, ChevronUp,
-} from 'lucide-react';
+} from '@/icons';
 import { useLocalStorage, SectionCard, QuickFilterChips } from '@/components/enhancements';
 import Button from '@/components/ui/Button';
 

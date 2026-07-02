@@ -37,7 +37,7 @@ function arg(name, fallback) {
 const conf = JSON.parse(fs.readFileSync(path.join(root, 'src-tauri', 'tauri.conf.json'), 'utf-8'));
 const version = conf.version;
 const notes = arg('--notes', `Automatix ${version}`);
-const urlBase = (process.env.PROMIX_UPDATE_URL_BASE || 'https://automatix.online/api/update').replace(/\/+$/, '');
+const urlBase = (process.env.PROMIX_UPDATE_URL_BASE || 'https://app.automatix.online/api/update').replace(/\/+$/, '');
 const outDir = process.env.PROMIX_UPDATES_DIR || path.join(root, 'updates');
 
 const nsisDir = path.join(root, 'src-tauri', 'target', 'release', 'bundle', 'nsis');

@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   GitCompareArrows, FileSpreadsheet, Layers, Clock, Copy, MessageSquarePlus, FileArchive,
   ChevronDown, ChevronUp, Plus, Trash2,
-} from 'lucide-react';
+} from '@/icons';
 import { useLocalStorage, SectionCard, ExportMenu } from '@/components/enhancements';
 import Button from '@/components/ui/Button';
 import { toast } from '@/store/toastStore';

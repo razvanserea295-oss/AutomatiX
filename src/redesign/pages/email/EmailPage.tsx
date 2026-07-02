@@ -1,50 +1,8 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
-import { Mail, Inbox, Send as SendIcon, FileText, Trash2, RefreshCw, Star, Paperclip, ChevronLeft, Loader2, PenSquare, X, Settings as SettingsIcon, Wrench, Search } from 'lucide-react';
+import { Mail, Inbox, Send as SendIcon, FileText, Trash2, RefreshCw, Star, Paperclip, ChevronLeft, Loader2, PenSquare, X, Settings as SettingsIcon, Wrench, Search } from '@/icons';
 import { Link } from 'wouter';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
@@ -52,9 +10,10 @@ import type { User } from '@/core/types';
 import EmptyState from '@/redesign/ui/EmptyState';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
-import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
+import { filterSearchInputCls, filterSearchIconCls } from '@/redesign/ui/filterControls';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
+import { PageChrome, DashboardLayout, CardSlot, PAGE_GRID_12 } from '@/app-ui';
 import EmailEnhancements from '@/pages/email/EmailEnhancements';
 
 interface EmailMsg { id: number; thread_id: number | null; from_address: string; from_name: string | null; subject: string; snippet: string; date: string; is_read: boolean; is_starred: boolean; has_attachments: boolean; folder: string; }
@@ -88,17 +47,11 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
   const [replyTo, setReplyTo] = useState<EmailFull | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  
-  
-  
-  
-  
+
   const [showTools, setShowTools] = useState(false);
-  
-  
+
   const [search, setSearch] = useState('');
-  
-  
+
   const [composeSeed, setComposeSeed] = useState<{ subject?: string; body?: string } | null>(null);
 
   const loadAccount = useCallback(() => {
@@ -170,7 +123,6 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
     loadFolders();
   };
 
-  
   if (noAccount) {
     return (
       <div className="flex flex-1 items-center justify-center bg-surface-page">
@@ -191,19 +143,8 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
     );
   }
 
-  
   const activeLabel = folderLabels[currentFolder] || currentFolder;
 
-  
-  const lastSyncLabel = (() => {
-    if (!account?.last_sync_at) return null;
-    const t = new Date(account.last_sync_at);
-    return isNaN(t.getTime())
-      ? account.last_sync_at
-      : t.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
-  })();
-
-  
   const q = search.trim().toLowerCase();
   const visibleMessages = q
     ? messages.filter(m =>
@@ -213,76 +154,32 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
     : messages;
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="full" padding="comfortable">
-
-        {
-
-
-}
-        <div className="enter-up shrink-0 pb-4 border-b border-line/60">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-                <Mail className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-                <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">
-                  {account?.email_address || 'Email'}
-                </h1>
-              </div>
-            </div>
-
-            <div className="relative flex-1 min-w-0 lg:max-w-md lg:mx-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-content-muted pointer-events-none" />
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Caută în mesaje (expeditor, subiect, conținut)…"
-                className="w-full h-9 border border-line bg-surface-primary rounded-xl pl-9 pr-3 text-pm-sm text-content-primary placeholder:text-content-muted focus:outline-none focus-visible:outline-none focus:border-accent focus:shadow-[var(--ring-soft)] transition-smooth duration-150"
-              />
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              {lastSyncLabel && (
-                <span className="hidden xl:inline text-pm-2xs text-content-muted tabular-nums whitespace-nowrap">
-                  Ultima: {lastSyncLabel}
-                </span>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSync}
-                disabled={syncing}
-                title="Sincronizează IMAP"
-              >
+    <DashboardLayout
+        chrome={(
+          <PageChrome
+            actions={
+              <Button size="md" variant="outline" onClick={() => void handleSync()} disabled={syncing}>
                 <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} />
-                {syncing ? 'Se sincronizeaza...' : 'Sync'}
+                Sincronizează
               </Button>
-              <Button
-                variant={showTools ? 'secondary' : 'outline'}
-                size="sm"
-                onClick={() => { setShowTools(v => !v); setSelected(null); setComposing(false); }}
-                title="Template-uri, programare, mail merge, reguli, semnături"
-              >
-                <Wrench className="h-4 w-4" /> Email tools
-              </Button>
-              <Button size="sm" onClick={() => { setComposing(true); setReplyTo(null); setShowTools(false); }}>
-                <PenSquare className="h-4 w-4" /> Compune
-              </Button>
-            </div>
-          </div>
+            }
+            toolbar={
+        <div className="relative flex-1 min-w-[200px] max-w-md">
+          <Search className={filterSearchIconCls} aria-hidden />
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Caută în mesaje..."
+            className={filterSearchInputCls}
+          />
         </div>
-
-        {
-
-
-}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 enter-up flex-1 min-h-0" style={{ animationDelay: '70ms' }}>
-
-          {}
-          <aside className="xl:col-span-2 min-h-0 xl:h-full">
+            }
+          />
+        )}
+      >
+        <div className={PAGE_GRID_12}>
+          <CardSlot size="xs" as="aside">
             <Card padding="none" className="overflow-hidden flex flex-col xl:h-full min-h-0">
               <div className="shrink-0 px-4 py-3 border-b border-line/70">
                 <p className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Foldere</p>
@@ -303,10 +200,8 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
                 })}
               </nav>
             </Card>
-          </aside>
-
-          {}
-          <section className="xl:col-span-4 min-w-0 min-h-0 xl:h-full">
+          </CardSlot>
+          <CardSlot size="md" as="section">
             <Card padding="none" className="overflow-hidden flex flex-col xl:h-full min-h-0">
               <div className="shrink-0 px-4 py-3 border-b border-line/70 flex items-center justify-between gap-2">
                 <span className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted truncate">
@@ -367,17 +262,15 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
                 </div>
               )}
             </Card>
-          </section>
-
-          {}
-          <section className="xl:col-span-6 min-w-0 min-h-0 xl:h-full">
+          </CardSlot>
+          <CardSlot size="half" as="section">
             <Card padding="none" className="overflow-hidden min-h-[56vh] xl:min-h-0 xl:h-full flex flex-col">
               {composing ? (
-                <div key="compose" className="enter-fade flex flex-col h-full min-h-0">
+                <div key="compose" className=" flex flex-col h-full min-h-0">
                 <ComposeView onClose={() => { setComposing(false); setReplyTo(null); setComposeSeed(null); }} onSent={handleSendComplete} replyTo={replyTo} seed={composeSeed} />
                 </div>
               ) : showTools ? (
-                <div key="tools" className="enter-fade flex flex-col h-full overflow-hidden">
+                <div key="tools" className=" flex flex-col h-full overflow-hidden">
                   <div className="shrink-0 px-4 py-3 border-b border-line bg-surface-secondary flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Wrench className="h-4 w-4 text-accent" />
@@ -402,13 +295,13 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
                   </div>
                 </div>
               ) : selected ? (
-                <div key={`mail-${selected.id}`} className="enter-up flex-1 min-h-0 flex flex-col motion-reduce:animate-none">
+                <div key={`mail-${selected.id}`} className=" flex-1 min-h-0 flex flex-col motion-reduce:animate-none">
                 <EmailView email={selected} onTrash={() => handleTrash(selected.id)}
                   onReply={() => { setReplyTo(selected); setComposing(true); }}
                   onBack={() => setSelected(null)} />
                 </div>
               ) : (
-                <div key="empty" className="enter-fade flex-1 flex flex-col items-center justify-center text-content-muted px-6 py-16">
+                <div key="empty" className=" flex-1 flex flex-col items-center justify-center text-content-muted px-6 py-16">
                   <Mail className="h-12 w-12 mb-3 opacity-25" />
                   <p className="text-pm-md text-content-secondary">Selectează un email</p>
                   <p className="text-pm-xs mt-1 text-content-muted text-center max-w-xs">
@@ -418,15 +311,11 @@ export default function EmailPage({ user: _user }: { user: User | null }) {
                 </div>
               )}
             </Card>
-          </section>
+          </CardSlot>
         </div>
-      </Page.Body>
-    </Page>
+    </DashboardLayout>
   );
 }
-
-
-
 
 function EmailView({ email, onTrash, onReply, onBack }: { email: EmailFull; onTrash: () => void; onReply: () => void; onBack: () => void; }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -458,7 +347,6 @@ function EmailView({ email, onTrash, onReply, onBack }: { email: EmailFull; onTr
 
   return (
     <div className="flex flex-col h-full overflow-hidden vt-morph" style={{ viewTransitionName: vtName('email', email.id) }}>
-      {}
       <div className="p-4 border-b border-line shrink-0 bg-surface-secondary">
         <div className="flex items-center gap-2 mb-2">
           <IconButton size="sm" intent="primary" onClick={onBack} className="lg:hidden" aria-label="Înapoi la listă" title="Înapoi la listă"><ChevronLeft /></IconButton>
@@ -473,8 +361,6 @@ function EmailView({ email, onTrash, onReply, onBack }: { email: EmailFull; onTr
           <span className="ml-2 tabular-nums shrink-0">{email.date?.slice(0, 16)}</span>
         </div>
       </div>
-
-      {}
       <div className="flex-1 overflow-hidden min-h-0 bg-surface-primary">
         {email.body_html ? (
           <iframe ref={iframeRef} className="w-full h-full border-0" sandbox="allow-same-origin" title="Email body" />
@@ -482,8 +368,6 @@ function EmailView({ email, onTrash, onReply, onBack }: { email: EmailFull; onTr
           <div className="p-4 overflow-y-auto h-full"><pre className="text-pm-md text-content-primary whitespace-pre-wrap font-sans">{email.body_text || '(continut gol)'}</pre></div>
         )}
       </div>
-
-      {}
       {email.attachments.length > 0 && (
         <div className="p-3 border-t border-line shrink-0 bg-surface-secondary">
           <p className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-2">Atasamente ({email.attachments.length})</p>
@@ -503,9 +387,6 @@ function EmailView({ email, onTrash, onReply, onBack }: { email: EmailFull; onTr
     </div>
   );
 }
-
-
-
 
 function ComposeView({ onClose, onSent, replyTo, seed }: { onClose: () => void; onSent: () => void; replyTo: EmailFull | null; seed?: { subject?: string; body?: string } | null; }) {
   const [to, setTo] = useState(replyTo ? replyTo.from_address : '');
@@ -555,7 +436,6 @@ function ComposeView({ onClose, onSent, replyTo, seed }: { onClose: () => void; 
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {}
       <div className="shrink-0 px-4 py-3 border-b border-line flex items-center justify-between bg-surface-secondary">
         <div className="flex items-center gap-2">
           <PenSquare className="h-4 w-4 text-accent" />
@@ -609,8 +489,6 @@ function ComposeView({ onClose, onSent, replyTo, seed }: { onClose: () => void; 
           )}
         </div>
       </div>
-
-      {}
       <div className="shrink-0 px-5 py-3 border-t border-line bg-surface-secondary flex items-center gap-2">
         <Button size="sm" onClick={handleSend} disabled={sending}>
           <SendIcon className="h-4 w-4" /> {sending ? 'Se trimite...' : 'Trimite'}

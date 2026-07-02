@@ -1,72 +1,8 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { List, type RowComponentProps } from 'react-window';
-import { ChevronRight, Search, FolderTree, FileBox, Upload, FolderUp, Loader2, ChevronsUpDown, Plus, Wand2, Tags, Download, Boxes, X, Trash2 } from 'lucide-react';
+import { ChevronRight, Search, FileBox, Upload, FolderUp, Loader2, ChevronsUpDown, Plus, Wand2, Tags, Download, Boxes, X, Trash2 } from '@/icons';
 import SupplierCodesModal from '@/pages/parts-tree/SupplierCodesModal';
 import { useAuthStore } from '@/store/authStore';
 import type { User } from '@/core/types';
@@ -85,13 +21,11 @@ import { toast } from '@/store/toastStore';
 import { confirmDialog } from '@/components/ConfirmDialog';
 import PartsTreeEnhancements from '@/pages/parts-tree/PartsTreeEnhancements';
 
-
-import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
-import HeroHeader from '@/redesign/ui/HeroHeader';
 import EmptyState from '@/redesign/ui/EmptyState';
+import { PageChrome, DashboardLayout } from '@/app-ui';
 import {
   filterSearchInputCls,
   filterSearchIconCls,
@@ -111,10 +45,6 @@ const PIECE_CATEGORIES = [
   { value: 'altele', label: 'Altele' },
 ];
 
-
-
-
-
 type NodeRole = 'root' | 'semi' | 'branch' | 'branchLeaf' | 'leaf';
 
 const ROLE_COLORS: Record<NodeRole, string> = {
@@ -125,14 +55,6 @@ const ROLE_COLORS: Record<NodeRole, string> = {
   leaf: '#6B7280',
 };
 
-const LEGEND: { role: NodeRole; label: string }[] = [
-  { role: 'root', label: 'Principal' },
-  { role: 'semi', label: 'Semi-principal' },
-  { role: 'branch', label: 'Sub + ramuri' },
-  { role: 'branchLeaf', label: 'Sub + frunze' },
-  { role: 'leaf', label: 'Cap de linie' },
-];
-
 function getRole(node: PartTreeNode, depth: number): NodeRole {
   if (depth === 0) return 'root';
   if (depth === 1 && node.children.length > 0) return 'semi';
@@ -140,27 +62,6 @@ function getRole(node: PartTreeNode, depth: number): NodeRole {
   if (node.children.every(c => c.children.length === 0)) return 'branchLeaf';
   return 'branch';
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 const UPLOAD_CHUNK_SIZE = 4 * 1024 * 1024; 
 
@@ -179,8 +80,6 @@ async function uploadFileChunked(opts: {
   crypto.getRandomValues(sessionBytes);
   const session = Array.from(sessionBytes, b => b.toString(16).padStart(2, '0')).join('');
 
-  
-  
   const relB64 = btoa(unescape(encodeURIComponent(relPath)));
 
   let serverPath = '';
@@ -216,42 +115,17 @@ async function uploadFileChunked(opts: {
   return serverPath;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 function pruneToAssemblies(nodes: PartTreeNode[]): PartTreeNode[] {
   const out: PartTreeNode[] = [];
   for (const node of nodes) {
     const filteredChildren = pruneToAssemblies(node.children);
     const isAssembly = node.file_type === 'assembly';
-    
-    
+
     if (!isAssembly && filteredChildren.length === 0) continue;
     out.push({ ...node, children: filteredChildren });
   }
   return out;
 }
-
-
-
-
 
 interface TreeRow {
   id: string;
@@ -286,31 +160,20 @@ function flattenTree(
   return rows;
 }
 
-
-
-
-
 const ROW_H = 30;
 const INDENT = 22;
 const CIRCLE_R = 5;
-
-
-
-
 
 interface RowData {
   rows: TreeRow[];
   selectedId: string | null;
   collapsed: Set<string>;
   searchQuery: string;
-  
-  
-  
+
   animKey: number;
   onRowClick: (row: TreeRow) => void;
   onToggleCollapse: (id: string) => void;
 }
-
 
 function TreeRowItemBase({
   index, style,
@@ -321,10 +184,6 @@ function TreeRowItemBase({
   const isSelected = selectedId === row.id;
   const isCollapsed = collapsed.has(row.id);
   const indent = row.depth * INDENT + 12;
-  
-  
-  
-  
 
   const nameEl = useMemo(() => {
     const q = searchQuery.trim();
@@ -336,14 +195,12 @@ function TreeRowItemBase({
     );
   }, [row.node.name, searchQuery]);
 
-  
-  
   const enterDelay = index < 12 ? Math.min(index * 28, 315) : 0;
   return (
     <div
       key={`${animKey}-${row.id}`}
       style={{ ...style, paddingLeft: indent, animationDelay: `${enterDelay}ms` }}
-      className={`flex items-center cursor-pointer transition-colors enter-fade ${isSelected ? 'bg-accent/10' : 'hover:bg-surface-tertiary/50'}`}
+      className={`flex items-center cursor-pointer transition-colors ${isSelected ? 'bg-accent/10' : 'hover:bg-surface-tertiary/50'}`}
       onClick={() => onRowClick(row)}
     >
       <div className="relative flex items-center" style={{ width: INDENT }}>
@@ -390,8 +247,6 @@ function TreeRowItemBase({
       <span className={`text-pm-xs truncate flex-1 min-w-0 ${isSelected ? 'text-content-primary font-semibold' : 'text-content-primary font-medium'}`}>
         {nameEl}
       </span>
-
-      {}
       {row.node.supplier_code && (
         <span
           className="ml-1 text-pm-2xs px-1.5 py-0.5 rounded-md font-mono font-bold text-white bg-status-amber shrink-0"
@@ -412,13 +267,7 @@ function TreeRowItemBase({
   );
 }
 
-
-
 const TreeRowItem = TreeRowItemBase;
-
-
-
-
 
 interface PartsTreePageProps { user: User; initialProjectId?: number | null; }
 
@@ -434,18 +283,14 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
   const [importing, setImporting] = useState(false);
   const [folderPath, setFolderPath] = useState('');
   const [showFolderInput, setShowFolderInput] = useState(false);
-  
-  
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [status, setStatus] = useState<{ type: 'ok' | 'err'; msg: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [viewingPiece, setViewingPiece] = useState<ProjectPiece | null>(null);
   const [viewingBreadcrumb, setViewingBreadcrumb] = useState<string[]>([]);
   const [codesModalOpen, setCodesModalOpen] = useState(false);
-  
-  
-  
-  
+
   const [assemblyOnly, setAssemblyOnly] = useState<boolean>(() => {
     try { return localStorage.getItem('promix_tree_assembly_only') === '1'; }
     catch { return false; }
@@ -462,11 +307,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
   const [stages, setStages] = useState<Stage[]>([]);
   const { isOpen: addOpen, openModal: openAddModal, closeModal: closeAddModal } = useFormModal();
 
-  
-  
-  
-  
-  
   const [uploadProgress, setUploadProgress] = useState<{
     current: number;
     total: number;
@@ -478,15 +318,12 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
 
   useEffect(() => { void fetchProjects(); }, [fetchProjects]);
 
-  
   useEffect(() => {
     if (!selectedProject) { setStages([]); return; }
     apiCommand<Stage[]>('get_project_stages_custom', { project_id: selectedProject })
       .then(setStages).catch(() => setStages([]));
   }, [selectedProject]);
 
-  
-  
   useEffect(() => {
     if (!selectedProject) return;
     fetchPiecesStore(selectedProject).then((ps) => {
@@ -528,10 +365,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
   }, [selectedProject]);
   useEffect(loadTree, [loadTree]);
 
-  
-  
-  
-  
   useEffect(() => {
     if (selectedProject) loadTree();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -539,10 +372,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
 
   const totalParts = useMemo(() => countTotal(treeData), [treeData]);
 
-  
-  
-  
-  
   const visibleTree = useMemo(
     () => assemblyOnly ? pruneToAssemblies(treeData) : treeData,
     [treeData, assemblyOnly],
@@ -551,7 +380,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
 
   const rows = useMemo(() => flattenTree(visibleTree, collapsed), [visibleTree, collapsed]);
 
-  
   const [debouncedSearch, setDebouncedSearch] = useState('');
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchQuery), 120);
@@ -564,8 +392,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     return rows.filter(r => r.node.name.toLowerCase().includes(q) || r.node.file_name.toLowerCase().includes(q));
   }, [rows, debouncedSearch]);
 
-  
-
   const toggleCollapse = useCallback((id: string) => {
     setCollapsed(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
   }, []);
@@ -575,9 +401,7 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     const collect = (nodes: PartTreeNode[], pfx: string) => {
       nodes.forEach((n, i) => { const id = `${pfx}-${i}`; if (n.children.length > 0) { ids.add(id); collect(n.children, id); } });
     };
-    
-    
-    
+
     visibleTree.forEach((r, ri) => collect(r.children, `r-${ri}`));
     setCollapsed(ids);
   }, [visibleTree]);
@@ -594,7 +418,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     void fetchPiecesStore(selectedProject, true);
   }, [selectedProject, fetchPiecesStore]);
 
-  
   const doImport = useCallback(async (tree: PartTreeNode[]) => {
     if (!selectedProject || tree.length === 0) return;
     setImporting(true); setStatus(null);
@@ -608,16 +431,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
       setStatus({ type: 'err', msg: err instanceof Error ? err.message : 'Eroare la import' });
     } finally { setImporting(false); }
   }, [selectedProject, loadTree, reloadPieces]);
-
-  
-
-
-
-
-
-
-
-
 
   const handleDownloadZip = useCallback(() => {
     if (!selectedProject) return;
@@ -634,9 +447,7 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     const url = `${base}/api/parts-tree/${selectedProject}/download.zip?token=${encodeURIComponent(token)}`;
     const a = document.createElement('a');
     a.href = url;
-    
-    
-    
+
     a.download = '';
     a.rel = 'noopener';
     document.body.appendChild(a);
@@ -661,9 +472,7 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
         }
       } catch { setShowFolderInput(true); }
     } else {
-      
-      
-      
+
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
         fileInputRef.current.click();
@@ -672,25 +481,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
       }
     }
   }, [selectedProject, doImport]);
-
-  
-
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
 
   const buildTreeFromFiles = useCallback((files: FileList, pathMap?: Map<string, string>): PartTreeNode[] => {
     type Mut = Omit<PartTreeNode, 'children'> & { childrenMap: Map<string, Mut> };
@@ -701,7 +491,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
       const parts = rel.split('/');
       let current = root;
 
-      
       for (let i = 0; i < parts.length - 1; i++) {
         const dirName = parts[i];
         let node = current.get(dirName);
@@ -716,9 +505,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
         current = node.childrenMap;
       }
 
-      
-      
-      
       const fileName = parts[parts.length - 1];
       const ext = fileName.split('.').pop()?.toLowerCase() || '';
       const serverPath = pathMap?.get(rel);
@@ -743,34 +529,11 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     return toArray(root);
   }, []);
 
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const handleBrowserFolderPicked = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selectedProject) return;
     const all = e.target.files;
     if (!all || all.length === 0) return;
 
-    
-    
-    
-    
     const SKIP_NAMES = /^(thumbs\.db|desktop\.ini|\.ds_store|ehthumbs\.db)$/i;
     const files: File[] = [];
     for (const f of Array.from(all)) {
@@ -798,9 +561,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
       bytesDone: 0, bytesTotal: totalBytes, startedAt: Date.now(),
     });
 
-    
-    
-    
     const pathMap = new Map<string, string>();
     let bytesDoneAcrossFiles = 0;
 
@@ -825,9 +585,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
         setUploadProgress(p => p ? { ...p, bytesDone: bytesDoneAcrossFiles } : p);
       }
 
-      
-      
-      
       const tree = buildTreeFromFiles(all, pathMap);
       if (tree.length === 0) {
         setStatus({ type: 'err', msg: 'Niciun fișier găsit în selecție' });
@@ -871,7 +628,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
 
   const [sorting, setSorting] = useState(false);
 
-  
   const CATEGORY_PRIORITY = ['structura', 'buncar', 'siloz', 'mixer', 'transportor', 'automatizare', 'altele'];
   const catRank = (c: string): number => {
     const idx = CATEGORY_PRIORITY.indexOf((c || '').toLowerCase());
@@ -892,9 +648,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
       .map(p => p.id);
   }, []);
 
-  
-  
-  
   const cleanupName = (raw: string): string => {
     let s = (raw || '').trim();
     s = s.replace(/\.(sldprt|sldasm|step|stp|iges|igs|dxf|dwg|stl|obj|prt|par)$/i, '');
@@ -906,9 +659,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     return s || raw;
   };
 
-  
-  
-  
   const persistOrder = useCallback(async (
     orderedIds: number[],
     renames?: Record<number, string>,
@@ -946,22 +696,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     }
   }, [selectedProject, pieces, ruleBasedOrder, persistOrder]);
 
-  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   const handleWipeTree = useCallback(async () => {
     if (!selectedProject) return;
     const proj = projects.find(p => p.id === selectedProject);
@@ -987,7 +721,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     }
   }, [selectedProject, projects, totalParts, loadTree]);
 
-  
   const handleRowClick = useCallback((row: TreeRow) => {
     setSelectedId(row.id);
     const match = pieces.find(p => p.name === row.node.name || p.source_file_name === row.node.file_name);
@@ -1005,10 +738,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     }
   }, [pieces, treeData, projects, selectedProject]);
 
-  
-  
-  
-  
   const treeAnimKey = useMemo(
     () => `${debouncedSearch}|${assemblyOnly ? 1 : 0}|${selectedProject ?? 0}|${visibleTotal}`,
     [debouncedSearch, assemblyOnly, selectedProject, visibleTotal],
@@ -1019,7 +748,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     return h;
   }, [treeAnimKey]);
 
-  
   const rowData = useMemo<RowData>(() => ({
     rows: filteredRows,
     selectedId,
@@ -1030,7 +758,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
     onToggleCollapse: toggleCollapse,
   }), [filteredRows, selectedId, collapsed, debouncedSearch, animKeyNum, handleRowClick, toggleCollapse]);
 
-  
   if (viewingPiece) {
     return (
       <PieceDetailView
@@ -1046,160 +773,119 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
   }
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="full" padding="comfortable">
+    <DashboardLayout
 
-        {}
-        <HeroHeader
-          className="enter-up"
-          style={{ animationDelay: '0ms' }}
-          eyebrow="Proiectare"
-          icon={FolderTree}
-          title="Arbore piese"
-          subtitle="Structura CAD a proiectului — ansambluri, subansambluri și componente"
-          actions={
-            <div className="flex flex-wrap items-center gap-2 justify-end">
-              <select
-                value={selectedProject ?? ''}
-                onChange={e => setSelectedProject(Number(e.target.value) || null)}
-                className={filterSelectCls(selectedProject != null)}
-              >
-                <option value="">Selectează proiect...</option>
-                {projects.map(p => <option key={p.id} value={p.id}>{p.name} — {p.client_name}</option>)}
-              </select>
-              <Button variant="outline" size="md" onClick={() => setCodesModalOpen(true)} title="Coduri furnizor — legenda">
-                <Tags className="h-3.5 w-3.5" /> Coduri
-              </Button>
-              {selectedProject && (
+        chrome={(
+          <PageChrome
+            toolbar={
+              <>
+                <select
+                  value={selectedProject ?? ''}
+                  onChange={e => setSelectedProject(Number(e.target.value) || null)}
+                  className={filterSelectCls(selectedProject != null)}
+                >
+                  <option value="">Selectează proiect...</option>
+                  {projects.map(p => <option key={p.id} value={p.id}>{p.name} — {p.client_name}</option>)}
+                </select>
+                <div className="relative group">
+                  <Search className={filterSearchIconCls} />
+                  <input
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Caută piesa..."
+                    className={filterSearchInputCls}
+                  />
+                </div>
+                <button onClick={collapsed.size > 0 ? expandAll : collapseAll} className={filterToggleCls(false)}>
+                  <ChevronsUpDown className="h-3.5 w-3.5" /> {collapsed.size > 0 ? 'Expandeaza' : 'Restringe'}
+                </button>
+                <button
+                  onClick={() => setAssemblyOnly(v => !v)}
+                  title={assemblyOnly
+                    ? 'Acum vezi doar ansambluri (.SLDASM). Click pentru tot arborele.'
+                    : 'Ascunde piesele individuale (.SLDPRT) — vezi doar ansamblurile.'}
+                  className={filterToggleCls(assemblyOnly)}
+                >
+                  <Boxes className="h-3.5 w-3.5" /> {assemblyOnly ? 'Doar ansambluri' : 'Toate fișierele'}
+                </button>
+              </>
+            }
+            secondaryActions={
+              <>
+                <Button variant="outline" size="md" onClick={() => setCodesModalOpen(true)} title="Coduri furnizor — legenda">
+                  <Tags className="h-3.5 w-3.5" /> Coduri
+                </Button>
+                {selectedProject && (
+                  <>
+                    <Button variant="outline" size="md" onClick={handlePickFolder} disabled={importing}>
+                      <FolderUp className="h-3.5 w-3.5" /> Import
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="md"
+                      onClick={handleDownloadZip}
+                      disabled={totalParts === 0 || importing}
+                      title="Descarcă arborele întreg ca ZIP — util pentru predarea proiectului la alt proiectant"
+                    >
+                      <Download className="h-3.5 w-3.5" /> ZIP
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="md"
+                      onClick={requestSort}
+                      disabled={sorting || pieces.length === 0}
+                      title="Sortează și redenumește piesele după reguli"
+                    >
+                      {sorting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
+                      Sortează
+                    </Button>
+                    {totalParts > 0 && (
+                      <Button
+                        variant="outline"
+                        size="md"
+                        onClick={handleWipeTree}
+                        disabled={importing}
+                        title="Șterge toate piesele importate din arbore. Confirmare cerută înainte. Piesele adăugate manual rămân."
+                        className="border-status-red/40 text-status-red hover:bg-status-red/10"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Șterge arbore
+                      </Button>
+                    )}
+                  </>
+                )}
+              </>
+            }
+            actions={
+              selectedProject ? (
                 <Button size="md" onClick={() => openAddModal()} disabled={stages.length === 0}>
                   <Plus className="h-3.5 w-3.5" /> Adaugă piesa
                 </Button>
-              )}
-            </div>
-          }
+              ) : undefined
+            }
+          />
+        )}
+    >
+        {/* Hidden folder picker input — wired to fileInputRef / handleBrowserFolderPicked */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          // @ts-expect-error: webkitdirectory is non-standard but works in Chrome/Edge/Firefox
+          webkitdirectory=""
+          directory=""
+          className="hidden"
+          onChange={handleBrowserFolderPicked}
         />
 
         {
 }
-        <Card padding="md" tone="elevated" className="shrink-0 enter-up" style={{ animationDelay: '120ms' }}>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative group">
-              <Search className={filterSearchIconCls} />
-              <input
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Caută piesa..."
-                className={filterSearchInputCls}
-              />
-            </div>
-
-            <button onClick={collapsed.size > 0 ? expandAll : collapseAll} className={filterToggleCls(false)}>
-              <ChevronsUpDown className="h-3.5 w-3.5" /> {collapsed.size > 0 ? 'Expandeaza' : 'Restringe'}
-            </button>
-
-            {
-
-}
-            <button
-              onClick={() => setAssemblyOnly(v => !v)}
-              title={assemblyOnly
-                ? 'Acum vezi doar ansambluri (.SLDASM). Click pentru tot arborele.'
-                : 'Ascunde piesele individuale (.SLDPRT) — vezi doar ansamblurile.'}
-              className={filterToggleCls(assemblyOnly)}
-            >
-              <Boxes className="h-3.5 w-3.5" /> {assemblyOnly ? 'Doar ansambluri' : 'Toate fișierele'}
-            </button>
-
-            <div className="flex-1" />
-
-            <div className="flex flex-wrap items-center gap-2 justify-end">
-              {selectedProject && (
-                <>
-                  <Button variant="outline" size="sm" onClick={handlePickFolder} disabled={importing}>
-                    <FolderUp className="h-3.5 w-3.5" /> Import
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownloadZip}
-                    disabled={totalParts === 0 || importing}
-                    title="Descarcă arborele întreg ca ZIP — util pentru predarea proiectului la alt proiectant"
-                  >
-                    <Download className="h-3.5 w-3.5" /> ZIP
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={requestSort}
-                    disabled={sorting || pieces.length === 0}
-                    title="Sortează și redenumește piesele după reguli"
-                  >
-                    {sorting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Wand2 className="h-3.5 w-3.5" />}
-                    Sortează
-                  </Button>
-                  {totalParts > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleWipeTree}
-                      disabled={importing}
-                      title="Șterge toate piesele importate din arbore. Confirmare cerută înainte. Piesele adăugate manual rămân."
-                      className="border-status-red/40 text-status-red hover:bg-status-red/10"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" /> Șterge arbore
-                    </Button>
-                  )}
-                  {
-
-
-}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    // @ts-expect-error: webkitdirectory is non-standard but works in Chrome/Edge/Firefox
-                    webkitdirectory=""
-                    directory=""
-                    className="hidden"
-                    onChange={handleBrowserFolderPicked}
-                  />
-                </>
-              )}
-              <span className="text-pm-2xs text-content-muted tabular-nums pl-1" title={
-                assemblyOnly
-                  ? `${filteredRows.length} vizibile · ${visibleTotal} ansambluri din ${totalParts} total`
-                  : `${filteredRows.length} vizibile din ${totalParts} total`
-              }>
-                {importing
-                  ? 'Se importă...'
-                  : assemblyOnly
-                    ? `${filteredRows.length}/${visibleTotal} · ${totalParts} total`
-                    : `${filteredRows.length}/${totalParts}`}
-              </span>
-            </div>
-          </div>
-
-          {}
-          <div className="mt-3 pt-3 border-t border-line/60 flex flex-wrap items-center gap-3 stagger-in">
-            {LEGEND.map(l => (
-              <span key={l.role} className="flex items-center gap-1.5 text-pm-2xs text-content-muted">
-                <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: ROLE_COLORS[l.role] }} />
-                {l.label}
-              </span>
-            ))}
-          </div>
-        </Card>
-
-        {
-}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 enter-up" style={{ animationDelay: '160ms' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0">
 
           {
 }
           <div className="lg:col-span-3 min-w-0 min-h-0" key={selectedId ?? 'empty'}>
             {selectedNode ? (
-              <Card padding="none" tone="elevated" className="overflow-hidden flex flex-col h-full min-h-0 enter-up">
-                {}
+              <Card padding="none" className="overflow-hidden flex flex-col h-full min-h-0">
                 <div className="shrink-0 border-b border-line px-4 py-3 flex items-center gap-2">
                   <span className="h-3.5 w-3.5 shrink-0 rounded-sm" style={{ backgroundColor: catColor(selectedNode.category) }} />
                   <span className="font-medium text-pm-sm text-content-primary truncate flex-1 min-w-0">{selectedNode.name}</span>
@@ -1212,13 +898,10 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
                     <X />
                   </IconButton>
                 </div>
-                {}
                 <div className="flex-1 min-h-0 overflow-y-auto">
-                  {}
                   <div className="border-b border-line px-4 py-2">
                     <span className="text-pm-2xs font-semibold uppercase tracking-wide text-content-muted">Detalii</span>
                   </div>
-                  {}
                   <div className="flex flex-col">
                     {[
                       ['Categorie', selectedNode.category],
@@ -1259,10 +942,9 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
           {
 }
           <div className="lg:col-span-9 min-w-0 min-h-0">
-            <Card padding="none" tone="elevated" className="overflow-hidden flex flex-col h-full min-h-0">
+            <Card padding="none" className="overflow-hidden flex flex-col h-full min-h-0">
 
               {
-
 
 }
               {uploadProgress && (() => {
@@ -1273,7 +955,7 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
                 const etaSec = mbps > 0 ? Math.floor(((bytesTotal - bytesDone) / 1024 / 1024) / mbps) : 0;
                 const etaLabel = etaSec > 60 ? `${Math.floor(etaSec / 60)}m ${etaSec % 60}s` : `${etaSec}s`;
                 return (
-                  <div className="shrink-0 border-b border-line bg-accent/5 px-4 py-2.5 enter-up">
+                  <div className="shrink-0 border-b border-line bg-accent/5 px-4 py-2.5">
                     <div className="flex items-center gap-2 mb-1.5">
                       <Loader2 className="h-3.5 w-3.5 animate-spin text-accent shrink-0" />
                       <span className="text-pm-xs font-semibold text-content-primary">
@@ -1295,8 +977,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
                   </div>
                 );
               })()}
-
-              {}
               {showFolderInput && (
                 <div className="shrink-0 flex gap-2 items-center px-5 py-2 border-b border-line bg-surface-secondary">
                   <input value={folderPath} onChange={e => setFolderPath(e.target.value)} placeholder="C:\Proiecte\Piese"
@@ -1309,10 +989,8 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
                   </Button>
                 </div>
               )}
-
-              {}
               {status && (
-                <div className={`shrink-0 border-b border-line px-4 py-2 text-pm-xs enter-up ${status.type === 'ok' ? 'bg-status-green/10 text-status-green' : 'bg-status-red/10 text-status-red'}`}>
+                <div className={`shrink-0 border-b border-line px-4 py-2 text-pm-xs ${status.type === 'ok' ? 'bg-status-green/10 text-status-green' : 'bg-status-red/10 text-status-red'}`}>
                   {status.msg}
                 </div>
               )}
@@ -1363,9 +1041,8 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
 
         {
 
-
 }
-        <Card padding="none" tone="elevated" className="shrink-0 overflow-y-auto max-h-[40vh] enter-up" style={{ animationDelay: '200ms' }}>
+        <Card padding="none" className="shrink-0 overflow-y-auto max-h-[40vh]">
           <PartsTreeEnhancements
             projectId={selectedProject}
             pieces={pieces.map(p => ({
@@ -1380,8 +1057,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
             }))}
           />
         </Card>
-
-      </Page.Body>
 
       <FormModal
         isOpen={addOpen}
@@ -1419,6 +1094,6 @@ export default function PartsTreePage({ initialProjectId }: PartsTreePageProps) 
         isAdmin={isAdmin}
         onChanged={() => {  }}
       />
-    </Page>
+    </DashboardLayout>
   );
 }

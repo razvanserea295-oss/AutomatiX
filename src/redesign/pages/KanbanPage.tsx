@@ -1,43 +1,11 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
-  CalendarClock, Loader2,
-  MessageSquare, Timer, Package, Hash, Factory, CircleCheckBig, Pencil,
-} from 'lucide-react';
+  CalendarClock,
+  MessageSquare, Timer, Package, Hash, CircleCheckBig, Pencil,
+} from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { PieceTimerButton } from '@/components/TimeTrackerPill';
 import { ViewerBanner } from '@/components/ViewerBanner';
@@ -53,29 +21,20 @@ import { usePieceStore, usePiecesForProject } from '@/store/pieceStore';
 import { pieceStatus } from '@/lib/statusTokens';
 import KanbanEnhancements from '@/pages/kanban/KanbanEnhancements';
 
-
-import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout } from '@/app-ui';
 import Card from '@/redesign/ui/Card';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import IconButton from '@/redesign/ui/IconButton';
-import HeroHeader from '@/redesign/ui/HeroHeader';
 import EmptyState from '@/redesign/ui/EmptyState';
+import PageLoadingShell from '@/redesign/ui/PageLoadingShell';
 import { filterSelectCls } from '@/redesign/ui/filterControls';
 import { vtName } from '@/redesign/lib/viewTransition';
 import { useCountUp } from '@/hooks/useCountUp';
-
-
-
-
 
 interface PieceColumn {
   stage: { id: number; name: string; order_index: number };
   pieces: ProjectPiece[];
 }
-
-
-
-
 
 const STAGE_COLORS = [
   'var(--status-blue)',
@@ -96,10 +55,6 @@ const PRIORITY_STYLE: Record<string, { label: string }> = {
   mica:     { label: 'Mica'   },
   low:      { label: 'Mica'   },
 };
-
-
-
-
 
 function isDeadlineClose(deadline: string): boolean {
   if (!deadline) return false;
@@ -126,9 +81,6 @@ function initials(name: string): string {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]).join('').toUpperCase();
 }
 
-
-
-
 function isCompletedStage(name: string): boolean {
   return /finaliz|complet|livr|terminat|gata|done|închis|inchis/i.test(name || '');
 }
@@ -140,10 +92,6 @@ function sentenceCase(s: string): string {
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
 
-
-
-
-
 interface KanbanPageProps {
   user: User | null;
   onNavigate?: (page: string, opts?: { projectId?: number }) => void;
@@ -152,7 +100,6 @@ interface KanbanPageProps {
 export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps) {
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
-  
   const projectsList = useProjectStore(s => s.projects);
   const columns = useProjectStore(s => s.productionBoard);
   const loadingBoard = useProjectStore(s => s.loadingBoard);
@@ -162,9 +109,6 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
 
   const [filterClient, setFilterClient] = useState('');
 
-  
-  
-  
   const piecesFromStore = usePiecesForProject(selectedProjectId);
   const fetchPieces = usePieceStore(s => s.fetchPieces);
   const movePieceToStageStore = usePieceStore(s => s.movePieceToStage);
@@ -174,19 +118,13 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
   const dragItem = useRef<{ id: number; fromStageId: number } | null>(null);
   const [dragOverStage, setDragOverStage] = useState<number | null>(null);
 
-  
   useEffect(() => {
     void fetchProjects();
     void fetchProductionBoard();
   }, [fetchProjects, fetchProductionBoard]);
 
-  
   const loading = loadingBoard && columns.length === 0;
 
-  
-  
-  
-  
   const reloadStages = useCallback(async (projectId: number) => {
     setLoadingPieces(true);
     try {
@@ -217,7 +155,6 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
     void fetchPieces(selectedProjectId);
   }, [selectedProjectId, reloadStages, fetchPieces]);
 
-  
   const pieceCols: PieceColumn[] = useMemo(() => {
     const byStage = new Map<number, ProjectPiece[]>();
     for (const p of piecesFromStore) {
@@ -228,7 +165,6 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
     return mergedStages.map(s => ({ stage: s, pieces: byStage.get(s.id) ?? [] }));
   }, [piecesFromStore, mergedStages]);
 
-  
   const uniqueClients = useMemo(() => {
     const names = new Set<string>();
     for (const col of columns) for (const p of col.projects) if (p.client_name) names.add(p.client_name);
@@ -243,9 +179,6 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
     }));
   }, [columns, filterClient]);
 
-  
-  
-  
   const handleProjectDrop = async (e: React.DragEvent, toStageId: number) => {
     e.preventDefault();
     setDragOverStage(null);
@@ -265,10 +198,6 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
     }
   };
 
-  
-  
-  
-  
   const handlePieceDrop = async (e: React.DragEvent, toStageId: number) => {
     e.preventDefault();
     setDragOverStage(null);
@@ -297,11 +226,8 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
   };
   const handleDragLeave = () => setDragOverStage(null);
 
-  
   const isPiecesMode = selectedProjectId !== null;
   const showLoading = isPiecesMode ? loadingPieces : loading;
-
-
 
   const toolbar = (
     <div className="flex flex-wrap items-center gap-2">
@@ -343,39 +269,14 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
   );
 
   return (
-    
-    
-    
-    
-    
-    <Page fit>
-      <Page.Body
-        fit
-        maxWidth="full"
-        padding="flush"
-        className="!gap-0 overflow-hidden"
-      >
-        <ViewerBanner page="production" />
-
-        {}
-        <div className="px-6 pt-5 pb-4 shrink-0">
-          <HeroHeader
-            className="enter-up"
-            style={{ animationDelay: '0ms' }}
-            eyebrow="Producție"
-            icon={Factory}
-            title="Producție"
-            subtitle="Kanban de proiecte și piese pe etapele de producție"
-          >
-            {toolbar}
-          </HeroHeader>
-        </div>
-
-        {}
+    <DashboardLayout
+        chrome={<PageChrome toolbar={toolbar} />}
+      leading={<ViewerBanner page="production" />}
+      bodyClassName="overflow-hidden page-body-polish"
+      contentClassName="min-h-0 overflow-hidden flex flex-col stagger-in"
+    >
         {showLoading ? (
-          <div className="flex flex-1 items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-content-muted" />
-          </div>
+          <PageLoadingShell label="Se încarcă producția" />
         ) : isPiecesMode ? (
           <PiecesBoard
             key={`pieces-${selectedProjectId}`}
@@ -403,16 +304,13 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
             onDrop={handleProjectDrop}
             onProjectClick={(projectId) => onNavigate?.('parts-tree', { projectId })}
             onProjectEdit={(projectId) => {
-              
-              
+
               sessionStorage.setItem('promix_focus_project', String(projectId));
               sessionStorage.setItem('promix_focus_project_action', 'edit');
               onNavigate?.('projects', { projectId });
             }}
           />
         )}
-
-        {}
         <KanbanEnhancements
           scope={isPiecesMode ? 'pieces' : 'projects'}
           stages={
@@ -445,17 +343,9 @@ export default function KanbanPage({ user: _user, onNavigate }: KanbanPageProps)
             if (typeof fc === 'string') setFilterClient(fc);
           }}
         />
-      </Page.Body>
-    </Page>
+    </DashboardLayout>
   );
 }
-
-
-
-
-
-
-
 
 function StageColumn({
   name, count, color, isOver, narrow, onDragOver, onDragLeave, onDrop, children,
@@ -476,7 +366,7 @@ function StageColumn({
     <Card
       tone="subtle"
       className={cn(
-        'flex flex-col min-h-0 overflow-hidden transition-smooth duration-150',
+        'flex flex-col min-h-0 transition-smooth duration-150',
         narrow ? 'w-full' : 'min-w-[280px] flex-1',
         isOver && 'ring-2 ring-accent/40 bg-accent/5',
       )}
@@ -493,19 +383,12 @@ function StageColumn({
           {animCount}
         </span>
       </div>
-      <div key={count} className="flex-1 overflow-y-auto p-3 space-y-2 stagger-in">
+      <div key={count} className="flex-1 min-h-0 overflow-y-auto p-3 space-y-3 stagger-in scrollbar-thin">
         {children}
       </div>
     </Card>
   );
 }
-
-
-
-
-
-
-
 
 function ProjectsBoard({
   columns, dragOverStage, onDragStart, onDragOver, onDragLeave, onDrop, onProjectClick, onProjectEdit,
@@ -521,8 +404,7 @@ function ProjectsBoard({
 }) {
   const activeCols = columns.filter(c => !isCompletedStage(c.stage.name));
   const doneCols = columns.filter(c => isCompletedStage(c.stage.name));
-  
-  
+
   const active = doneCols.length === 0 ? columns : activeCols;
 
   const renderCol = (col: BoardColumn, i: number, narrow: boolean) => {
@@ -564,13 +446,10 @@ function ProjectsBoard({
   };
 
   return (
-    <div className="flex flex-1 min-h-0 gap-4 px-6 pb-4 overflow-hidden enter-fade">
-      {}
+    <div className="flex flex-1 min-h-0 gap-4 px-6 pb-4 overflow-hidden">
       <div className="flex flex-1 min-w-0 gap-3 overflow-x-auto overflow-y-hidden scroll-fade-x pb-1">
         {active.map((col, i) => renderCol(col, i, false))}
       </div>
-
-      {}
       {doneCols.length > 0 && (
         <aside className="flex w-[300px] shrink-0 flex-col min-h-0 gap-3 overflow-y-auto border-l border-line/60 pl-4 ml-1 pb-1">
           <div className="flex items-center gap-2 px-1 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">
@@ -598,10 +477,9 @@ function ProjectCard({ project, onDragStart, onClick, onEdit }: { project: Board
       draggable
       onDragStart={onDragStart}
       onClick={onClick}
-      className="vt-morph group cursor-pointer rounded-xl border border-line bg-surface-primary p-3 transition-smooth duration-150 hover:shadow-[var(--elevation-2)] hover:border-accent/40 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] motion-reduce:transform-none motion-reduce:transition-none active:cursor-grabbing active:translate-y-0"
+      className="vt-morph group relative cursor-pointer rounded-xl border border-line bg-surface-primary p-3 transition-smooth duration-150 hover:z-10 hover:shadow-[var(--elevation-2)] hover:border-accent/40 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] motion-reduce:transform-none motion-reduce:transition-none active:cursor-grabbing active:translate-y-0"
       style={{ viewTransitionName: vtName('project', project.id) }}
     >
-      {}
       <div className="flex items-start gap-2">
         <div className="flex-1 min-w-0">
           <p className="text-pm-sm font-medium text-content-primary truncate">{project.name}</p>
@@ -637,15 +515,11 @@ function ProjectCard({ project, onDragStart, onClick, onEdit }: { project: Board
           />
         )}
       </div>
-
-      {}
       {project.estimated_value > 0 && (
         <div className="mt-2 text-pm-xs font-semibold text-content-primary tabular-nums">
           {money(project.estimated_value, 'EUR')}
         </div>
       )}
-
-      {}
       <div className="mt-2 flex items-center gap-3 text-pm-2xs text-content-muted">
         {project.comment_count > 0 && (
           <span className="inline-flex items-center gap-1">
@@ -682,12 +556,6 @@ function ProjectCard({ project, onDragStart, onClick, onEdit }: { project: Board
     </div>
   );
 }
-
-
-
-
-
-
 
 function PiecesBoard({
   columns, dragOverStage, onDragStart, onDragOver, onDragLeave, onDrop, onPieceClick,
@@ -756,13 +624,10 @@ function PiecesBoard({
   };
 
   return (
-    <div className="flex flex-1 min-h-0 gap-4 px-6 pb-4 overflow-hidden enter-fade">
-      {}
+    <div className="flex flex-1 min-h-0 gap-4 px-6 pb-4 overflow-hidden">
       <div className="flex flex-1 min-w-0 gap-3 overflow-x-auto overflow-y-hidden scroll-fade-x pb-1">
         {active.map((col, i) => renderCol(col, i, false))}
       </div>
-
-      {}
       {doneCols.length > 0 && (
         <aside className="flex w-[280px] shrink-0 flex-col min-h-0 gap-3 overflow-y-auto border-l border-line/60 pl-4 ml-1 pb-1">
           <div className="flex items-center gap-2 px-1 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">
@@ -786,7 +651,7 @@ function PieceCard({ piece, onDragStart, onClick }: { piece: ProjectPiece; onDra
       draggable
       onDragStart={onDragStart}
       onClick={onClick}
-      className="vt-morph cursor-pointer rounded-xl border border-line bg-surface-primary p-3 transition-smooth duration-150 hover:shadow-[var(--elevation-2)] hover:border-accent/40 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] motion-reduce:transform-none motion-reduce:transition-none active:cursor-grabbing active:translate-y-0"
+      className="vt-morph relative cursor-pointer rounded-xl border border-line bg-surface-primary p-3 transition-smooth duration-150 hover:z-10 hover:shadow-[var(--elevation-2)] hover:border-accent/40 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] motion-reduce:transform-none motion-reduce:transition-none active:cursor-grabbing active:translate-y-0"
       style={{ viewTransitionName: vtName('piece', piece.id) }}
     >
       <div className="flex items-start gap-2">
@@ -806,8 +671,6 @@ function PieceCard({ piece, onDragStart, onClick }: { piece: ProjectPiece; onDra
           <StatusBadge {...pieceStatus(piece.status)} size="xs" uppercase />
         </div>
       </div>
-
-      {}
       <div className="mt-2 flex items-center gap-2">
         <div className="flex-1 h-1.5 rounded-full bg-line overflow-hidden">
           <div

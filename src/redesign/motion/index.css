@@ -1,0 +1,10 @@
+/* ============================================================================
+ * motion/index.css — Canonical motion layer entry point
+ * Import after design-tokens.css so accent vars resolve.
+ * ========================================================================== */
+
+@import './tokens.css';
+@import './keyframes.css';
+@import './stagger.css';
+@import './components.css';
+@import './reduced-motion.css';

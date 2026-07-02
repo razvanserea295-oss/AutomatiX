@@ -1,22 +1,37 @@
 # Desktop installers
 
-The Windows installer produced by `npm run dist:electron:win` is published here as:
+The desktop installers are published here, one file per platform. The server
+serves the newest matching file for each platform:
 
-```
-Automatix-Setup-<version>.exe
-```
+| Platform | Filename pattern                      | Built by                                         |
+|----------|---------------------------------------|--------------------------------------------------|
+| Windows  | `Automatix-Setup-<version>.exe`       | `npm run dist:electron:win`                      |
+| macOS    | `Automatix-<version>-<arch>.dmg`      | electron-builder `--mac` (run on macOS)          |
+| Linux    | `Automatix-<version>-<arch>.AppImage` | electron-builder `--linux`                       |
 
-The server serves the newest matching file via:
+`<arch>` is e.g. `arm64`, `x64`, or `x86_64`.
+
+The server endpoints:
 
 - `GET /download` → redirects to the in-app download page (`#/download`)
-- `GET /api/download/latest` → `{ available, version, file, url, size }`
-- `GET /downloads/Automatix-Setup-<version>.exe` → streams the installer as an attachment
+- `GET /api/download/latest?platform=windows|mac|linux` → `{ available, platform, version, file, url, size }`
+  (omitting `platform` defaults to Windows)
+- `GET /downloads/<installer-file>` → streams the installer as an attachment
+  (requires a one-time `?dlt=` grant from `/api/download/authorize` or a valid session)
 
-`npm run dist:electron:win` writes the installer to `dist-installer/`. Copy (or
-symlink) the produced `Automatix-Setup-<version>.exe` into this folder to publish it:
+## Publishing a build
 
-```powershell
-Copy-Item "dist-installer/Automatix-Setup-*.exe" "public/downloads/"
+electron-builder writes installers to `dist-installer/`. Copy the produced file
+into this folder to publish it:
+
+```bash
+# Windows
+cp dist-installer/Automatix-Setup-*.exe       public/downloads/
+# macOS
+cp dist-installer/Automatix-*-*.dmg           public/downloads/
+# Linux
+cp dist-installer/Automatix-*-*.AppImage      public/downloads/
 ```
 
-> Files in this folder (except this README) are git-ignored — they are large build artifacts.
+> Files in this folder (except this README) are git-ignored — they are large
+> build artifacts.

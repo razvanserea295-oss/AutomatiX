@@ -21,6 +21,9 @@ export const STORAGE_KEYS = {
 
 
   TEXT_SCALE: 'promix_text_scale',
+
+  /** UI density mode: comfortable | compact | dense */
+  UI_DENSITY: 'ui-density',
   
   
   LAST_PAGE: 'promix_last_page',
@@ -47,6 +50,10 @@ export const STORAGE_KEYS = {
   NAV_SYNC: 'promix_nav_sync',
   SHELL_LAYOUT: 'promix_shell_layout',
   PAGE_CUSTOM: 'promix_page_custom',
+  LAYOUT_MODE: 'promix_layout_mode',
+
+  AI_SERVICE_URL: 'promix_ai_service_url',
+  AI_SERVICE_TOKEN: 'promix_ai_token',
 } as const;
 
 

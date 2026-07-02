@@ -3,7 +3,7 @@ import {
   ArrowLeft, CheckCircle2, Save, Loader2,
   MessageSquare, FileText, Wrench, Package, Truck, Settings,
   Paintbrush, ChevronDown,
-} from 'lucide-react';
+} from '@/icons';
 import { apiCommand } from '@/api/commands';
 import type { ProjectPiece, ProductionTracking, TrackingPhase } from '@/types/piece';
 import { parseProductionTracking, stringifyProductionTracking } from '@/types/piece';

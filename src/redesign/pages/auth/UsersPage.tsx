@@ -1,35 +1,8 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useCallback } from 'react';
 import { flushSync } from 'react-dom';
-import { Pencil, Trash2, Plus, Shield, Loader2, LayoutDashboard, Users, UserCheck, KeyRound, X } from 'lucide-react';
+import { Pencil, Trash2, Plus, Shield, Users, UserCheck, KeyRound, X } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import SaveButton from '@/components/ui/SaveButton';
 import { useSaveAction } from '@/hooks/useSaveAction';
@@ -41,12 +14,15 @@ import { useAuthStore } from '@/store/authStore';
 import { confirmDialog } from '@/components/ConfirmDialog';
 
 import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout, Panel, ListPanel, CardSlot, PAGE_GRID_12 } from '@/app-ui';
 import KpiCard from '@/redesign/ui/KpiCard';
 import FilterBar from '@/redesign/ui/FilterBar';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import IconButton from '@/redesign/ui/IconButton';
 import Button from '@/redesign/ui/Button';
-import { GlassCard, EmptyState } from '@/redesign/ui';
+import { EmptyState } from '@/redesign/ui';
+import { useDeferredLoading } from '@/redesign/lib/loading';
+import { TablePageSkeleton } from '@/redesign/ui/loading';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
 
 interface Role { id: number; name: string; description: string; }
@@ -65,51 +41,41 @@ const ROLE_COLORS: Record<string, string> = {
   hala:       '[background:var(--role-hala-bg)] [color:var(--role-hala-text)]',
 };
 
-
-
 const ALL_PAGES: { id: string; label: string; group: string }[] = [
   
   { id: 'tasks',           label: 'Task-uri',          group: 'Personal' },
   { id: 'calendar',        label: 'Calendar',          group: 'Personal' },
   { id: 'deplasari',       label: 'Deplasări',         group: 'Personal' },
 
-  
   { id: 'sales-hub',       label: 'Sales Hub',         group: 'Vanzari' },
   { id: 'quotations',      label: 'Oferte',            group: 'Vanzari' },
   { id: 'clients',         label: 'Clienți',           group: 'Vanzari' },
 
-  
   { id: 'projects',        label: 'Proiecte',          group: 'Proiecte' },
   { id: 'contracts',       label: 'Contracte',         group: 'Proiecte' },
 
-  
   { id: 'fisa-proiectant', label: 'Fișa Proiectant',   group: 'Proiectare' },
   { id: 'parts-tree',      label: 'Arbore Piese',      group: 'Proiectare' },
   { id: 'libraries',       label: 'Biblioteci Piese',  group: 'Proiectare' },
 
-  
   { id: 'production',      label: 'Producție (Kanban)', group: 'Productie' },
   { id: 'stations',        label: 'Stații',            group: 'Productie' },
   { id: 'maintenance',     label: 'Service & Mentenanță', group: 'Productie' },
 
-  
   { id: 'warehouse',       label: 'Depozit',           group: 'Aprovizionare' },
   { id: 'materials',       label: 'Inventar materiale', group: 'Aprovizionare' },
   { id: 'suppliers',       label: 'Furnizori',         group: 'Aprovizionare' },
   { id: 'purchase-orders', label: 'Achiziții',         group: 'Aprovizionare' },
 
-  
   { id: 'finance',         label: 'Financiar',         group: 'Financiar' },
   { id: 'documents',       label: 'Documente',         group: 'Financiar' },
   { id: 'reports',         label: 'Rapoarte',          group: 'Financiar' },
 
-  
   { id: 'tutorial',        label: 'Tutorial',          group: 'Instrumente' },
   { id: 'email',           label: 'Email',             group: 'Instrumente' },
   { id: 'chat',            label: 'Mesaje (Chat)',     group: 'Instrumente' },
   { id: 'alerts',          label: 'Alerte',            group: 'Instrumente' },
 
-  
   { id: 'manager-control', label: 'Birou control',     group: 'Sistem' },
 ];
 
@@ -135,8 +101,7 @@ export default function UsersPage(_props: { user: User | null }) {
   const [dashboardWidgets, setDashboardWidgets] = useState<Record<DashboardWidgetId, boolean>>(
     () => parseDashboardConfig(null),
   );
-  
-  
+
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const { isOpen, editingItem, openModal, closeModal, isEditing } = useFormModal();
@@ -165,14 +130,10 @@ export default function UsersPage(_props: { user: User | null }) {
         setCustomPages(typeof parsed === 'object' && parsed ? parsed : {});
       }
     } catch { setCustomPages({}); }
-    
-    
+
     setDashboardWidgets(parseDashboardConfig(u.dashboard_config));
   };
 
-  
-  
-  
   const pickUser = (u: User) => {
     startMorphTransition(
       () => flushSync(() => selectUser(u)),
@@ -197,9 +158,7 @@ export default function UsersPage(_props: { user: User | null }) {
         
         delete next[pageId];
       } else {
-        
-        
-        
+
         next[pageId] = level;
       }
       return next;
@@ -240,8 +199,7 @@ export default function UsersPage(_props: { user: User | null }) {
     setUsers(updated);
     const refreshed = updated.find(u => u.id === selected.id);
     if (refreshed) selectUser(refreshed);
-    
-    
+
     const currentUser = useAuthStore.getState().user;
     if (currentUser && selected.id === currentUser.id) {
       const updatedSelf = updated.find(u => u.id === currentUser.id);
@@ -289,9 +247,22 @@ export default function UsersPage(_props: { user: User | null }) {
     if (selected?.id === id) setSelected(null);
   };
 
-  if (loading) return <div className="flex flex-1 items-center justify-center bg-surface-page"><Loader2 className="h-6 w-6 animate-spin text-content-muted" /></div>;
+  const { showSkeleton, showExtended, elapsedMs, isPending } = useDeferredLoading(loading);
 
-  
+  if (loading && (isPending || !showSkeleton)) {
+    return <div className="ix-loading-reserve flex-1" role="status" aria-busy aria-label="Se încarcă utilizatorii" />;
+  }
+
+  if (loading && showSkeleton) {
+    return (
+      <TablePageSkeleton
+        showExtended={showExtended}
+        elapsedMs={elapsedMs}
+        label="Se încarcă utilizatorii"
+      />
+    );
+  }
+
   const q = search.trim().toLowerCase();
   const visibleUsers = users.filter(u => {
     if (roleFilter && u.role_name !== roleFilter) return false;
@@ -307,100 +278,50 @@ export default function UsersPage(_props: { user: User | null }) {
   const visibleWidgetCount = Object.values(dashboardWidgets).filter(Boolean).length;
 
   return (
-    <Page fit>
-      <Page.Body fit padding="comfortable" maxWidth="full">
-
-        {
-
-
-}
-        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-                <Users className="h-5 w-5 text-accent" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-                <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">Utilizatori</h1>
-                <p className="text-pm-sm text-content-muted mt-0.5">Conturi, roluri și acces pe pagini</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 lg:ml-auto">
-              <div className="hidden sm:block">
-                <FilterBar
-                  search={search}
-                  onSearchChange={setSearch}
-                  searchPlaceholder="Caută nume, username, email..."
-                  filters={[{
-                    key: 'role',
-                    label: 'Toate rolurile',
-                    value: roleFilter,
-                    onChange: setRoleFilter,
-                    options: roles
-                      .filter(r => !r.description?.startsWith('[DEZACTIVAT]'))
-                      .map(r => ({ value: r.name, label: ROLE_LABELS[r.name] || r.name })),
-                  }]}
-                  clearable
-                />
-              </div>
-              <Button variant="primary" onClick={() => openModal()} className="shrink-0">
-                <Plus className="h-4 w-4" /> Adaugă utilizator
+    <>
+    <DashboardLayout
+        chrome={(
+          <PageChrome
+            actions={
+              <Button size="md" onClick={() => openModal()}>
+                <Plus className="h-4 w-4" /> Utilizator nou
               </Button>
-            </div>
-          </div>
-          {}
-          <div className="sm:hidden mt-3">
-            <FilterBar
-              search={search}
-              onSearchChange={setSearch}
-              searchPlaceholder="Caută utilizator..."
-              filters={[{
-                key: 'role',
-                label: 'Toate rolurile',
-                value: roleFilter,
-                onChange: setRoleFilter,
-                options: roles
-                  .filter(r => !r.description?.startsWith('[DEZACTIVAT]'))
-                  .map(r => ({ value: r.name, label: ROLE_LABELS[r.name] || r.name })),
-              }]}
-              clearable
-            />
-          </div>
-        </div>
+            }
+            toolbar={(
+              <FilterBar
+                search={search}
+                onSearchChange={setSearch}
+                searchPlaceholder="Caută nume, email, rol..."
+                filters={[{
+                  key: 'role',
+                  label: 'Rol',
+                  options: [{ value: '', label: 'Toate' }, ...roles.map(r => ({ value: r.name, label: r.name }))],
+                  value: roleFilter,
+                  onChange: setRoleFilter,
+                }]}
+              />
+            )}
+          />
+        )}
+      kpis={
+        <Page.Kpis cols={4}>
+          <KpiCard label="Total utilizatori" value={users.length}                                       icon={Users}     iconColor="text-accent" />
+          <KpiCard label="Admini"            value={users.filter(u => u.role_name === 'admin').length}  icon={Shield}    iconColor="text-status-red" />
+          <KpiCard label="Manageri"          value={users.filter(u => u.role_name === 'manager').length} icon={UserCheck} iconColor="text-status-blue" />
+          <KpiCard label="Roluri"            value={roles.length}                                       icon={KeyRound}  iconColor="text-status-teal" />
+        </Page.Kpis>
+      }
+      
+    >
+        <div className={PAGE_GRID_12}>
 
-        {
-
-}
-        <div className="enter-up shrink-0" style={{ animationDelay: '70ms' }}>
-          <Page.Kpis cols={4}>
-            <KpiCard label="Total utilizatori" value={users.length}                                       icon={Users}     iconColor="text-accent" />
-            <KpiCard label="Admini"            value={users.filter(u => u.role_name === 'admin').length}  icon={Shield}    iconColor="text-status-red" />
-            <KpiCard label="Manageri"          value={users.filter(u => u.role_name === 'manager').length} icon={UserCheck} iconColor="text-status-blue" />
-            <KpiCard label="Roluri"            value={roles.length}                                       icon={KeyRound}  iconColor="text-status-teal" />
-          </Page.Kpis>
-        </div>
-
-        {
-
-
-}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 flex-1 min-h-0">
-
-          {
-}
-          <aside className="xl:col-span-4 enter-up min-h-0 flex" style={{ animationDelay: '140ms' }}>
-            <GlassCard size="regular" className="!p-0 overflow-hidden flex flex-col min-h-0 w-full">
-              <div className="shrink-0 px-4 py-3 border-b border-line/70 flex items-center justify-between">
-                <h2 className="text-pm-2xs font-semibold uppercase tracking-wide text-content-muted">
-                  {visibleUsers.length} {visibleUsers.length === 1 ? 'Utilizator' : 'Utilizatori'}
-                </h2>
-                {(q || roleFilter) && (
-                  <span className="text-pm-2xs text-content-muted">din {users.length}</span>
-                )}
-              </div>
-              <div key={`${q}|${roleFilter}`} className="flex-1 min-h-0 overflow-y-auto stagger-in">
+          <ListPanel
+            size="md"
+            title={`${visibleUsers.length} ${visibleUsers.length === 1 ? 'Utilizator' : 'Utilizatori'}`}
+            subtitle={(q || roleFilter) ? `din ${users.length}` : undefined}
+            bodyClassName="stagger-in"
+          >
+              <div key={`${q}|${roleFilter}`}>
                 {visibleUsers.length === 0 ? (
                   <EmptyState
                     icon={Users}
@@ -432,28 +353,23 @@ export default function UsersPage(_props: { user: User | null }) {
                   ))
                 )}
               </div>
-            </GlassCard>
-          </aside>
+          </ListPanel>
 
-          {
-}
-          <section className="xl:col-span-8 enter-up min-w-0 min-h-0 overflow-y-auto" style={{ animationDelay: '200ms' }}>
+          <CardSlot size="lg" as="section" className="overflow-y-auto">
             {!selected ? (
-              <GlassCard size="regular" className="!p-0 overflow-hidden">
-                <div className="flex flex-col items-center justify-center text-center py-24 px-6">
-                  <span className="h-14 w-14 rounded-2xl bg-accent-muted/60 flex items-center justify-center mb-3">
+              <Panel title="Selectează un utilizator" subtitle="din lista alăturată pentru a edita acces și dashboard">
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <span className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-muted/60">
                     <Shield className="h-7 w-7 text-content-muted/60" aria-hidden />
                   </span>
-                  <p className="text-pm-md font-semibold text-content-secondary">Selectează un utilizator</p>
-                  <p className="text-pm-xs text-content-muted mt-1">din lista alăturată pentru a edita acces și dashboard</p>
+                  <p className="text-pm-sm text-content-muted">Niciun utilizator selectat</p>
                 </div>
-              </GlassCard>
+              </Panel>
             ) : (
               <div className="space-y-4">
 
-                {
-}
-                <GlassCard size="regular" className="!p-0 overflow-hidden vt-morph" vtName={vtName('user', selected.id)}>
+                <Panel>
+                  <div className="vt-morph" style={{ viewTransitionName: vtName('user', selected.id) }}>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5">
                     <div className="flex items-center gap-4 min-w-0">
                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-pm-md font-bold text-surface-primary shrink-0 ${ROLE_AVATAR_BG[selected.role_name] || '[background:var(--role-hala-solid)]'}`}>
@@ -485,31 +401,24 @@ export default function UsersPage(_props: { user: User | null }) {
                       </IconButton>
                     </div>
                   </div>
-                  <div className="px-6 py-3 border-t border-line/70 bg-surface-secondary/40">
+                  <div className="border-t border-line/70 bg-surface-secondary/40 px-6 py-3">
                     <p className="text-pm-xs text-content-muted">Rolul determina ce pagini vede implicit. Folosește panourile de mai jos pentru a adăuga/scoate pagini individuale și a configura dashboardul.</p>
                   </div>
-                </GlassCard>
+                  </div>
+                </Panel>
 
-                {
-
-
-}
-                <div key={selected.id} className="grid grid-cols-1 xl:grid-cols-12 gap-5 enter-up">
-
-                  {}
-                  <GlassCard size="regular" className="xl:col-span-7 !p-0 overflow-hidden">
-                    <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line/70">
-                      <h4 className="text-pm-sm font-semibold uppercase tracking-wide text-content-muted flex items-center gap-2 min-w-0 truncate">
-                        <Shield className="h-4 w-4 text-accent shrink-0" /> Acces pagini (override)
-                      </h4>
-                      <SaveButton onClick={savePages} state={saveState} label="Salvează permisiuni" />
-                    </div>
-                    <div className="px-5 py-4">
+                <div key={selected.id} className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+                  <Panel
+                    fill
+                    scroll
+                    className="xl:col-span-7"
+                    title="Acces pagini (override)"
+                    actions={<SaveButton onClick={savePages} state={saveState} label="Salvează permisiuni" />}
+                    bodyClassName="px-4 py-4 sm:px-6 sm:py-5"
+                  >
                       <p className="text-pm-sm text-content-muted mb-3">
                         Bifeaza paginile la care userul are acces. Daca nicio pagina nu e bifata, se folosesc setarile implicite ale rolului.
                       </p>
-
-                      {}
                       {['Personal', 'Vanzari', 'Proiecte', 'Proiectare', 'Productie', 'Aprovizionare', 'Financiar', 'Instrumente', 'Sistem'].map(group => {
                         const groupPages = ALL_PAGES.filter(p => p.group === group);
                         return (
@@ -517,10 +426,7 @@ export default function UsersPage(_props: { user: User | null }) {
                             <p className="text-pm-2xs font-extrabold uppercase tracking-[0.2em] text-content-muted py-1 mb-2">{group}</p>
                             <div>
                               {groupPages.map(page => {
-                                
-                                
-                                
-                                
+
                                 const stored = customPages[page.id];
                                 const level = stored === undefined ? 'inherit' : stored;
                                 return (
@@ -545,21 +451,16 @@ export default function UsersPage(_props: { user: User | null }) {
                           </div>
                         );
                       })}
-                    </div>
-                  </GlassCard>
+                  </Panel>
 
-                  {
-
-
-}
-                  <GlassCard size="regular" className="xl:col-span-5 !p-0 overflow-hidden">
-                    <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line/70">
-                      <h4 className="text-pm-sm font-semibold uppercase tracking-wide text-content-muted flex items-center gap-2 min-w-0 truncate">
-                        <LayoutDashboard className="h-4 w-4 text-accent shrink-0" /> Configurare dashboard
-                      </h4>
-                      <SaveButton onClick={saveDashboardConfig} state={dashSaveState} label="Salvează dashboard" />
-                    </div>
-                    <div className="px-5 py-4">
+                  <Panel
+                    fill
+                    scroll
+                    className="xl:col-span-5"
+                    title="Configurare dashboard"
+                    actions={<SaveButton onClick={saveDashboardConfig} state={dashSaveState} label="Salvează dashboard" />}
+                    bodyClassName="px-4 py-4 sm:px-6 sm:py-5"
+                  >
                       <p className="text-pm-sm text-content-muted mb-3">
                         Bifează ce widget-uri vede acest utilizator când deschide Dashboard. Cele debifate sunt ascunse complet.
                       </p>
@@ -590,24 +491,20 @@ export default function UsersPage(_props: { user: User | null }) {
                           );
                         })}
                       </ul>
-                    </div>
-                  </GlassCard>
+                  </Panel>
                 </div>
 
-                {
-
-}
               </div>
             )}
-          </section>
+          </CardSlot>
         </div>
-      </Page.Body>
+    </DashboardLayout>
 
       <FormModal isOpen={isOpen} onClose={closeModal}
         title={isEditing ? 'Editează utilizator' : 'Adaugă utilizator'}
         fields={formFields} onSubmit={handleSubmit}
         initialData={editingItem || {}} submitLabel={isEditing ? 'Actualizează' : 'Adaugă'} />
-    </Page>
+    </>
   );
 }
 

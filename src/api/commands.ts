@@ -8,6 +8,7 @@ import { CommandError, AppError } from '@/core/types';
 import { STORAGE_KEYS, getStorage } from '@/config/localStorage';
 import { getServerUrl } from '@/config/server';
 import { notifySessionExpired } from '@/store/sessionEvents';
+import { notifyLicenseRequired } from '@/store/licenseEvents';
 import { isElectronRuntime, isTauriRuntime } from '@/lib/runtime';
 
 
@@ -160,6 +161,11 @@ export async function apiCommand<T>(
         
         if (res.status === 401 && command !== 'login') {
           notifySessionExpired();
+        }
+        // Per-tenant license gate: the firm's instance isn't activated. Surface
+        // it so the app can route to the activation screen instead of erroring.
+        if (res.status === 402 && (errBody as { requires_license?: boolean }).requires_license) {
+          notifyLicenseRequired();
         }
         throw AppError.fromCommand(cmdError);
       }

@@ -1,19 +1,11 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
-import { Factory, Wrench, AlertTriangle } from 'lucide-react';
 import type { User } from '@/core/types';
-import Page from '@/components/ui/Page';
-import WorkspaceTabs, { type WorkspaceTab } from '@/components/ui/WorkspaceTabs';
+import WorkspaceShell from './WorkspaceShell';
 import WorkspaceSkeleton from '@/redesign/ui/WorkspaceSkeleton';
 
 const KanbanPage = lazy(() => import('@/redesign/pages/KanbanPage'));
 const MaintenancePage = lazy(() => import('@/redesign/pages/maintenance/MaintenancePage'));
 const ServiceTicketsPage = lazy(() => import('@/redesign/pages/service/ServiceTicketsPage'));
-
-const TABS: WorkspaceTab[] = [
-  { id: 'production',      label: 'Producție', icon: Factory,       prefetch: () => import('@/redesign/pages/KanbanPage') },
-  { id: 'maintenance',     label: 'Service',   icon: Wrench,        prefetch: () => import('@/redesign/pages/maintenance/MaintenancePage') },
-  { id: 'service-tickets', label: 'Tichete',   icon: AlertTriangle, prefetch: () => import('@/redesign/pages/service/ServiceTicketsPage') },
-];
 
 interface Props {
   user: User | null;
@@ -34,15 +26,8 @@ export default function ProductionWorkspace({ user, onNavigate, initialTab }: Pr
     }
   }, [initialTab]);
 
-  const handleTabChange = (t: string) => {
-    setVisited(prev => { const s = new Set(prev); s.add(t); return s; });
-    setTab(t);
-    onNavigate(t);
-  };
-
   return (
-    <Page fit layout="row">
-      <WorkspaceTabs tabs={TABS} active={tab} onChange={handleTabChange} />
+    <WorkspaceShell>
       <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
         <div className={tab === 'production' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
           <Suspense fallback={<WorkspaceSkeleton />}>
@@ -60,6 +45,6 @@ export default function ProductionWorkspace({ user, onNavigate, initialTab }: Pr
           </Suspense>
         </div>
       </div>
-    </Page>
+    </WorkspaceShell>
   );
 }

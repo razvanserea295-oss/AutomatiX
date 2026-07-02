@@ -21,6 +21,7 @@ import { app, BrowserWindow, Menu, ipcMain, shell, nativeImage, dialog, screen }
 import * as path from 'path';
 import * as fs from 'fs';
 import * as http from 'http';
+import * as https from 'https';
 import * as net from 'net';
 
 
@@ -38,7 +39,15 @@ const MIN_H = 720;
 const isDev = !app.isPackaged && process.env.ELECTRON_RENDERER_URL != null;
 
 
-const START_SERVER = process.env.ELECTRON_START_SERVER === '1'
+// Thin-client mode: when PROMIX_REMOTE_URL points at a central Automatix server,
+// the app loads that server's UI directly (no local server) and auto-reloads the
+// window whenever the server's frontend version changes — so frontend deploys
+// reach desktop clients with no app rebuild.
+const REMOTE_URL = (process.env.PROMIX_REMOTE_URL || '').trim().replace(/\/+$/, '');
+
+const START_SERVER = REMOTE_URL
+  ? false
+  : process.env.ELECTRON_START_SERVER === '1'
   ? true
   : process.env.ELECTRON_START_SERVER === '0'
     ? false
@@ -215,64 +224,54 @@ function splashHtml(): string {
     color:#E6EDF3; -webkit-app-region: drag;
     display:flex; align-items:center; justify-content:center;
   }
-  .stage {
+  .card {
     position:relative; width:100vw; height:100vh; overflow:hidden;
-    border-radius:16px;
-    background: radial-gradient(140% 120% at 50% -10%, #232C34 0%, #1A2127 55%, #141A1F 100%);
+    border-radius:14px;
+    background: radial-gradient(120% 110% at 50% 0%, #1E2730 0%, #141A1F 72%);
     border:1px solid rgba(255,255,255,.08);
-    box-shadow: 0 24px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.05);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    gap:22px;
+    box-shadow: 0 18px 44px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.05);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:13px;
   }
-  .orb { position:absolute; border-radius:50%; filter:blur(60px); opacity:.5; animation: float 14s ease-in-out infinite; }
-  .orb.a { width:300px; height:300px; top:-120px; left:-90px; background:var(--accent); opacity:.32; }
-  .orb.b { width:240px; height:240px; bottom:-110px; right:-70px; background:#1B90FF; opacity:.22; animation-delay:-5s; }
-  .orb.c { width:180px; height:180px; top:40%; left:55%; background:#A78BFA; opacity:.16; animation-delay:-9s; }
-  .grid { position:absolute; inset:0; opacity:.05;
-    background-image: linear-gradient(rgba(255,255,255,.4) 1px, transparent 1px),
-                      linear-gradient(90deg, rgba(255,255,255,.4) 1px, transparent 1px);
-    background-size: 28px 28px; }
-  .brand { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:10px; }
-  .logo {
-    width:64px; height:64px; border-radius:18px; display:grid; place-items:center;
-    background: linear-gradient(150deg, rgba(45,212,191,.22), rgba(27,144,255,.14));
-    border:1px solid rgba(45,212,191,.35);
-    box-shadow: 0 0 28px rgba(45,212,191,.30), inset 0 1px 0 rgba(255,255,255,.10);
-    font-size:30px; font-weight:700; letter-spacing:-1px; color:#fff;
-  }
-  .title { font-size:30px; font-weight:700; letter-spacing:-.02em;
-    background:linear-gradient(180deg,#fff,#AEBAC4); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
-  .sub { font-size:12px; color:#8B97A2; letter-spacing:.02em; }
-  .footer { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:12px; }
-  .spinner { width:26px; height:26px; border-radius:50%;
-    border:2.5px solid rgba(255,255,255,.12); border-top-color:var(--accent);
-    animation: spin .8s linear infinite; }
-  .status { font-size:12px; color:#A7B2BC; min-height:16px; transition:opacity .25s ease; letter-spacing:.01em; }
-  .ver { position:absolute; bottom:12px; right:14px; z-index:2; font-size:10px; color:#5C6873; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  @keyframes float { 0%,100%{transform:translate(0,0)} 50%{transform:translate(18px,-14px)} }
-  body { opacity:0; animation: appear .4s ease forwards; }
+  .top-accent { position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg,#16307A 0%,#4D86FF 50%,#16307A 100%); }
+  .logo { width:46px; height:46px; display:block; }
+  .logo .hex { stroke-dasharray:300; stroke-dashoffset:300; animation: draw .9s ease forwards; }
+  .logo .nd { opacity:0; transform-box:fill-box; transform-origin:center; }
+  .logo .n1 { animation: pop .35s ease forwards .8s; }
+  .logo .n2 { animation: pop .35s ease forwards .95s; }
+  .logo .n3 { animation: pop .35s ease forwards 1.1s; }
+  @keyframes draw { to { stroke-dashoffset:0; } }
+  @keyframes pop { 0%{opacity:0;transform:scale(.3)} 60%{opacity:1;transform:scale(1.2)} 100%{opacity:1;transform:scale(1)} }
+  .title { font-size:18px; font-weight:600; letter-spacing:-.01em; color:#ECECEC; }
+  .bar { position:relative; width:140px; height:3px; border-radius:3px; background:rgba(255,255,255,.10); overflow:hidden; }
+  .bar::after { content:''; position:absolute; left:-45%; top:0; height:100%; width:45%; border-radius:3px;
+    background:linear-gradient(90deg,transparent,#4D86FF,transparent); animation: slide 1.1s ease-in-out infinite; }
+  @keyframes slide { to { left:100%; } }
+  .status { font-size:10px; color:#8B97A2; letter-spacing:.10em; text-transform:uppercase;
+    min-height:13px; transition:opacity .25s ease; }
+  body { opacity:0; animation: appear .35s ease forwards; }
   @keyframes appear { to { opacity:1; } }
   @media (prefers-reduced-motion: reduce) {
-    .orb,.spinner,body { animation:none !important; }
-    body { opacity:1; }
-    .spinner { border-top-color:var(--accent); }
+    .bar::after, body, .logo .hex, .logo .nd { animation:none !important; }
+    body { opacity:1; } .logo .hex { stroke-dashoffset:0; } .logo .nd { opacity:1; }
   }
 </style></head>
 <body>
-  <div class="stage">
-    <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
-    <div class="grid"></div>
-    <div class="brand">
-      <div class="logo">A</div>
-      <div class="title">Automatix</div>
-      <div class="sub">Management industrial integrat</div>
-    </div>
-    <div class="footer">
-      <div class="spinner"></div>
-      <div class="status" id="status">Pornesc aplicația…</div>
-    </div>
-    <div class="ver">Promix Technologies</div>
+  <div class="card">
+    <div class="top-accent"></div>
+    <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#5B9CFF"/><stop offset=".55" stop-color="#3FB0FF"/><stop offset="1" stop-color="#27D3FF"/>
+      </linearGradient></defs>
+      <path class="hex" d="M50 8 L86.4 29 L86.4 71 L50 92 L13.6 71 L13.6 29 Z" stroke="url(#sg)" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+      <path d="M29 50 H71" stroke="url(#sg)" stroke-width="5" stroke-linecap="round"/>
+      <circle class="nd n1" cx="29" cy="50" r="7" stroke="url(#sg)" stroke-width="5" fill="none"/>
+      <circle class="nd n2" cx="50" cy="50" r="4.5" fill="url(#sg)"/>
+      <circle class="nd n3" cx="71" cy="50" r="6" fill="url(#sg)"/>
+    </svg>
+    <div class="title">Automatix</div>
+    <div class="bar"></div>
+    <div class="status" id="status">Se încarcă…</div>
   </div>
   <script>
     window.__setStatus = function (t) {
@@ -287,8 +286,8 @@ function splashHtml(): string {
 
 function createSplash(): BrowserWindow {
   const win = new BrowserWindow({
-    width: 480,
-    height: 340,
+    width: 340,
+    height: 200,
     frame: false,
     transparent: true,
     resizable: false,
@@ -316,6 +315,7 @@ function setSplashStatus(text: string): void {
 
 function createMainWindow(): BrowserWindow {
   const state = loadWindowState();
+  const customTitleBar = process.platform === 'win32' || process.platform === 'linux';
   const win = new BrowserWindow({
     width: state.width,
     height: state.height,
@@ -325,8 +325,9 @@ function createMainWindow(): BrowserWindow {
     minHeight: MIN_H,
     show: false,
     backgroundColor: WINDOW_BG,
-    autoHideMenuBar: false,
+    autoHideMenuBar: customTitleBar,
     title: 'automatiX',
+    ...(customTitleBar ? { frame: false } : {}),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -406,7 +407,7 @@ function buildMenu(): void {
               type: 'info',
               title: 'Despre automatiX',
               message: 'automatiX',
-              detail: `Versiune ${app.getVersion()}\nPromix Technologies\n\nManagement industrial integrat.`,
+              detail: `Versiune ${app.getVersion()}\nAutomatix Software\n\nManagement industrial integrat.`,
               buttons: ['OK'],
             });
           },
@@ -422,6 +423,27 @@ function buildMenu(): void {
 
 
 ipcMain.handle('window_set_title_bar_theme', () => ({ ok: true }));
+
+ipcMain.handle('window_minimize', () => {
+  mainWindow?.minimize();
+  return { ok: true };
+});
+
+ipcMain.handle('window_toggle_maximize', () => {
+  if (!mainWindow) return { ok: false, maximized: false };
+  if (mainWindow.isMaximized()) mainWindow.unmaximize();
+  else mainWindow.maximize();
+  return { ok: true, maximized: mainWindow.isMaximized() };
+});
+
+ipcMain.handle('window_close', () => {
+  mainWindow?.close();
+  return { ok: true };
+});
+
+ipcMain.handle('window_is_maximized', () => ({
+  maximized: mainWindow?.isMaximized() ?? false,
+}));
 
 
 
@@ -474,6 +496,39 @@ process.on('unhandledRejection', (e) => notifyServerCrash(e));
 
 
 
+/**
+ * Poll the server's /api/health version; when it changes (a new frontend was
+ * deployed), reload the window so desktop clients pick up frontend updates with
+ * no app rebuild. Active in thin-client (REMOTE_URL) and connect-to-server modes.
+ */
+function watchFrontendVersion(win: BrowserWindow, baseUrl: string): void {
+  if (!baseUrl) return;
+  let known: string | null = null;
+  const lib = baseUrl.startsWith('https') ? https : http;
+  const check = (): void => {
+    if (win.isDestroyed()) return;
+    const req = lib.get(`${baseUrl}/api/health`, (res) => {
+      let body = '';
+      res.on('data', (c) => (body += c));
+      res.on('end', () => {
+        try {
+          const v = (JSON.parse(body) as { version?: string }).version;
+          if (!v) return;
+          if (known && v !== known && !win.isDestroyed()) {
+            win.webContents.reload();
+          }
+          known = v;
+        } catch { /* ignore */ }
+      });
+    });
+    req.on('error', () => { /* server momentarily unreachable */ });
+    req.setTimeout(5000, () => req.destroy());
+  };
+  check();
+  const timer = setInterval(check, 60_000);
+  win.on('closed', () => clearInterval(timer));
+}
+
 async function boot(): Promise<void> {
   const bootStart = Date.now();
   splashWindow = createSplash();
@@ -483,8 +538,13 @@ async function boot(): Promise<void> {
       setSplashStatus('Conectare la baza de date…');
       await startInProcessServer();
       setSplashStatus('Încărcare module…');
+    } else if (REMOTE_URL) {
+      // Thin client → load the central server's UI directly.
+      serverUrl = REMOTE_URL;
+      setSplashStatus('Conectare la server…');
+      await waitForServer(serverUrl).catch(() => {  });
     } else {
-      
+
       serverPort = parseInt(process.env.PROMIX_PORT || '3500', 10);
       serverUrl = `http://127.0.0.1:${serverPort}`;
       setSplashStatus('Conectare la server…');
@@ -493,6 +553,9 @@ async function boot(): Promise<void> {
 
     setSplashStatus('Pregătire interfață…');
     mainWindow = createMainWindow();
+
+    // Auto-reload the UI when the server ships a new frontend version.
+    if (!isDev) watchFrontendVersion(mainWindow, serverUrl);
 
     mainWindow.webContents.once('did-finish-load', async () => {
       setSplashStatus('Gata');

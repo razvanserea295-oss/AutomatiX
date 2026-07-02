@@ -258,6 +258,17 @@ export class DeplasariService {
     
     if (newStatus === 'in_deplasare') costsCompletedAt = null;
 
+    // Revert din 'finalizat' → curăță cheltuielile auto-exportate în Financiar și
+    // marker-ul exported_expense_id, ca o re-finalizare (după modificarea
+    // costurilor) să re-posteze valorile corecte în loc să lase cele vechi
+    // (audit inheritance #3). Nota auto conține „deplasarea #<id> ·" (spațiul +
+    // punctul median delimitează id-ul, deci #5 nu prinde #50).
+    const revertedFromFinal = current.status === 'finalizat' && newStatus !== 'finalizat';
+    if (revertedFromFinal && current.exported_expense_id != null) {
+      try { db.run('DELETE FROM project_expenses WHERE notes LIKE ?', [`%deplasarea #${req.id} ·%`]); }
+      catch (e) { console.error('[deplasari] cleanup auto-expenses on revert failed:', e); }
+    }
+
     
     const additionalSerialized = req.additional_persons !== undefined
       ? serializeAdditionalPersons(req.additional_persons)
@@ -299,6 +310,10 @@ export class DeplasariService {
         req.id,
       ],
     );
+
+    if (revertedFromFinal) {
+      db.run('UPDATE deplasari SET exported_expense_id = NULL WHERE id = ?', [req.id]);
+    }
 
     
     
@@ -556,6 +571,41 @@ export class DeplasariService {
 
 
 
+
+  /**
+   * Auto-close the travel window: any trip still flagged `in_deplasare` whose
+   * `return_date` has already passed is moved to `intors` (returned). Mirrors the
+   * manual "marchează întors" action so a forgotten trip doesn't linger as active.
+   *
+   * `date(return_date) < date('now')` is deliberately *strictly* in the past — a
+   * trip due back today is only flipped the following day, so we never mark
+   * someone returned while they may still be travelling on the return date.
+   *
+   * Returns the ids that were flipped (empty when nothing changed) so the caller
+   * can decide whether to persist. Once a trip is `intors`, the existing
+   * cost-completion reminder (findOverdueCostCompletion) takes over.
+   */
+  static autoMarkReturned(db: Database): number[] {
+    const stmt = db.prepare(
+      `SELECT id FROM deplasari
+        WHERE status = 'in_deplasare'
+          AND return_date IS NOT NULL AND TRIM(return_date) <> ''
+          AND date(return_date) < date('now')`,
+    );
+    const ids: number[] = [];
+    while (stmt.step()) ids.push(stmt.get()[0] as number);
+    stmt.free();
+    if (ids.length === 0) return [];
+
+    db.run(
+      `UPDATE deplasari
+          SET status = 'intors', updated_at = datetime('now')
+        WHERE status = 'in_deplasare'
+          AND return_date IS NOT NULL AND TRIM(return_date) <> ''
+          AND date(return_date) < date('now')`,
+    );
+    return ids;
+  }
 
   static findOverdueCostCompletion(db: Database): Array<{
     id: number; person_name: string; destination: string;

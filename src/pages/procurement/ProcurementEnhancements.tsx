@@ -4,7 +4,7 @@
 
 
 import { useMemo, useState } from 'react';
-import { TrendingUp, ShoppingCart, GitCompareArrows, ShieldCheck, Clock4, History, Layers, Plus, Trash2 } from 'lucide-react';
+import { TrendingUp, ShoppingCart, GitCompareArrows, ShieldCheck, Clock4, History, Layers, Plus, Trash2 } from '@/icons';
 import { useLocalStorage, SectionCard } from '@/components/enhancements';
 import Button from '@/components/ui/Button';
 import { toast } from '@/store/toastStore';

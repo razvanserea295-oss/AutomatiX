@@ -449,7 +449,6 @@ export class FinanceService {
     let total_actual_cost = 0;
     let total_estimated_profit = 0;
     let total_actual_profit = 0;
-    let margin_sum = 0;
     let projects_at_risk = 0;
 
     for (const row of rows) {
@@ -459,7 +458,6 @@ export class FinanceService {
       total_actual_cost += row.total_cost;
       total_estimated_profit += row.estimated_profit;
       total_actual_profit += row.actual_profit;
-      margin_sum += row.margin_percent;
       if (row.risk_level !== 'low') {
         projects_at_risk++;
       }
@@ -473,7 +471,9 @@ export class FinanceService {
       total_actual_cost,
       total_estimated_profit,
       total_actual_profit,
-      avg_margin_percent: projects_count > 0 ? margin_sum / projects_count : 0,
+      // Marjă ponderată pe venit (profit total / venit total), nu media aritmetică
+      // a marjelor pe proiect — altfel un proiect mic cu marjă mare denatura KPI-ul.
+      avg_margin_percent: total_actual_revenue > 0 ? (total_actual_profit / total_actual_revenue) * 100 : 0,
       projects_at_risk,
     };
   }
@@ -1116,7 +1116,8 @@ export class FinanceService {
 
     const settings = FinanceService.getCompanySettings(db);
     const currency = req.currency ?? settings.default_currency ?? 'RON';
-    const tva_rate = typeof settings.tva_rate === 'number' ? settings.tva_rate : 0.21;
+    const tvaRaw = typeof settings.tva_rate === 'number' ? settings.tva_rate : 0.21;
+    const tva_rate = tvaRaw > 1 ? tvaRaw / 100 : tvaRaw; // acceptă 0.19 sau 19
     const inv_type = req.invoice_type ?? 'emisa';
 
     const numStmt = db.prepare('SELECT COALESCE(MAX(id), 0) + 1 FROM finance_invoices');
@@ -1126,9 +1127,10 @@ export class FinanceService {
     const year = (req.issue_date || '').slice(0, 4);
     const invoice_number = `AUTOMATIX-${year}-${String(nextNum).padStart(4, '0')}`;
 
-    const subtotal = req.lines.reduce((s, l) => s + l.quantity * l.unit_price, 0);
-    const tva_amount = subtotal * tva_rate;
-    const total = subtotal + tva_amount;
+    // Rotunjire la nivel de linie + total, ca să nu se acumuleze drift de subcent.
+    const subtotal = roundMoney(req.lines.reduce((s, l) => s + roundMoney(l.quantity * l.unit_price), 0));
+    const tva_amount = roundMoney(subtotal * tva_rate);
+    const total = roundMoney(subtotal + tva_amount);
 
     db.run(
       `INSERT INTO finance_invoices

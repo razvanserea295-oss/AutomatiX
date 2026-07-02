@@ -28,12 +28,12 @@ export function formatCurrencyRon(value: number, maximumFractionDigits = 0): str
 
 export function formatMoney(
   value: number,
-  currency: string | null | undefined = 'RON',
+  _currency?: string | null | undefined,
   maximumFractionDigits?: number,
 ): string {
-  return (currency || 'RON').toUpperCase() === 'EUR'
-    ? formatCurrencyEur(value || 0, maximumFractionDigits ?? 2)
-    : formatCurrencyRon(value || 0, maximumFractionDigits ?? 0);
+  // EUR a fost retras — totul e în lei (RON). Argumentul `currency` e păstrat
+  // pentru compatibilitate cu apelurile existente, dar e ignorat: mereu RON.
+  return formatCurrencyRon(value || 0, maximumFractionDigits ?? 0);
 }
 
 
@@ -44,18 +44,13 @@ export function formatMoney(
 
 export function convertMoney(
   value: number,
-  from: string | null | undefined,
-  to: string | null | undefined,
-  eurRate: number,
+  _from?: string | null | undefined,
+  _to?: string | null | undefined,
+  _eurRate?: number,
 ): number {
-  const f = (from || 'RON').toUpperCase();
-  const t = (to || 'RON').toUpperCase();
-  const v = Number.isFinite(value) ? value : 0;
-  if (f === t) return v;
-  if (!eurRate || eurRate <= 0) return v;
-  if (f === 'EUR' && t === 'RON') return v * eurRate;
-  if (f === 'RON' && t === 'EUR') return v / eurRate;
-  return v;
+  // EUR a fost retras — nu mai există conversie inter-valutară. Toate valorile
+  // sunt deja în lei (migrarea 134 a convertit datele istorice). Identitate.
+  return Number.isFinite(value) ? value : 0;
 }
 
 

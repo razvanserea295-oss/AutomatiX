@@ -20,7 +20,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   Megaphone, AlertTriangle, AlertOctagon, Trash2, Send, Loader2, Plus, X, RefreshCw,
-} from 'lucide-react';
+} from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 import { confirmDialog } from '@/components/ConfirmDialog';

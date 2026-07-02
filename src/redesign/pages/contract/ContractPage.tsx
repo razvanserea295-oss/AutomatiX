@@ -1,28 +1,8 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
-import { FileText, Plus, Save, History, Edit2, Loader2, ScrollText, Download, Upload, Paperclip, Trash2 } from 'lucide-react';
+import { FileText, Plus, Save, History, Edit2, Loader2, ScrollText, Download, Upload, Paperclip, Trash2 } from '@/icons';
 import { downloadContractAttachments, downloadOneContractAttachment } from '@/lib/downloadPdf';
 import { cn } from '@/lib/cn';
 import { apiCommand } from '@/api/commands';
@@ -34,17 +14,16 @@ import { toast } from '@/store/toastStore';
 import { contractStatus } from '@/lib/statusTokens';
 import { useMoney } from '@/store/settingsStore';
 
-import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout, Panel, PANEL_HEAD } from '@/app-ui';
 import Card, { CardBody } from '@/redesign/ui/Card';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import FilterBar from '@/redesign/ui/FilterBar';
 import StatusBadge, { statusBorderClass } from '@/redesign/ui/StatusBadge';
-import { HeroHeader, GlassCard, MetricValue, SectionHeader, EmptyState } from '@/redesign/ui';
+import { MetricValue, SectionHeader, EmptyState } from '@/redesign/ui';
 import { confirmDialog } from '@/redesign/ui/ConfirmDialog';
 import FormModal from '@/redesign/ui/FormModal';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
-
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -59,7 +38,6 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
-
 function formatFileSize(base64Len: number): string {
   if (!base64Len) return '—';
   const bytes = Math.round(base64Len * 0.75);
@@ -67,7 +45,6 @@ function formatFileSize(base64Len: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
-
 
 const MAX_FILE_BYTES = 35 * 1024 * 1024;
 
@@ -83,8 +60,6 @@ interface ContractAttachment {
   id: number; filename: string | null; mime: string | null;
   size: number; created_by_name: string | null; created_at: string;
 }
-
-
 
 const CONTRACT_STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: 'active',  label: 'Activ' },
@@ -104,18 +79,12 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
   const [showCreate, setShowCreate] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  
-  
-  
+
   const [revisingContractId, setRevisingContractId] = useState<number | null>(null);
   
   const [attachments, setAttachments] = useState<ContractAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
 
-  
-  
-  
-  
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
@@ -137,7 +106,6 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
     void fetchClientsStore();
   }, [fetchContracts, fetchProjects, fetchClientsStore]);
 
-  
   const uploadFilesToContract = async (contractId: number, files: File[]): Promise<number> => {
     let count = 0;
     for (const f of files) {
@@ -158,8 +126,9 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
     const files = (fd.getAll('contract_files') as unknown as File[]).filter(f => f instanceof File && f.size > 0);
     setUploading(true);
     try {
+      const rawProject = fd.get('project_id');
       const c = await apiCommand<Contract>('create_contract', {
-        project_id: Number(fd.get('project_id')),
+        project_id: rawProject ? Number(rawProject) : undefined,
         title: fd.get('title') as string,
         client_id: Number(fd.get('client_id')),
         delivered_product: fd.get('delivered_product') as string || null,
@@ -180,7 +149,6 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
     finally { setUploading(false); }
   };
 
-  
   const handleUploadMore = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!selected) return;
     const files = Array.from(e.target.files || []);
@@ -268,21 +236,16 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
   };
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="full" padding="comfortable">
-        {}
-        <HeroHeader
-          className="enter-up" style={{ animationDelay: '0ms' }}
-          eyebrow="Proiecte & Contracte"
-          icon={ScrollText}
-          title="Contracte"
-          subtitle="Contracte, termeni, revizii și documentele semnate"
-          actions={
-            <Button size="sm" onClick={() => startMorphTransition(() => flushSync(() => setShowCreate(true)), { dir: 'forward' })}>
-              <Plus className="h-3.5 w-3.5" /> Contract nou
-            </Button>
-          }
-        >
+    <>
+      <DashboardLayout
+        chrome={(
+          <PageChrome
+            actions={
+              <Button size="md" onClick={() => startMorphTransition(() => flushSync(() => setShowCreate(true)), { dir: 'forward' })}>
+                <Plus className="h-4 w-4" /> Contract nou
+              </Button>
+            }
+            toolbar={(
           <FilterBar
             search={search}
             onSearchChange={setSearch}
@@ -297,17 +260,22 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
               options: CONTRACT_STATUS_OPTIONS,
             }]}
           />
-        </HeroHeader>
+            )}
+          />
+        )}
+        bodyClassName="relative"
+        contentClassName="max-w-[var(--page-max-wide)] mx-auto"
+      >
+        <div className="page-content-grid stagger-in grid flex-1 min-h-0 grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6">
 
-        {}
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 enter-up" style={{ animationDelay: '160ms' }}>
-
-          {}
-          <Card className="lg:col-span-4 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-line/70">
-              <h2 className="text-pm-sm font-semibold text-content-primary">Contracte</h2>
-              <span className="text-pm-2xs tabular-nums text-content-muted">{visibleContracts.length}/{contracts.length}</span>
-            </div>
+          <Panel
+            fill
+            scroll
+            className="lg:col-span-4 min-h-0"
+            title="Contracte"
+            subtitle={`${visibleContracts.length}/${contracts.length}`}
+            bodyClassName="p-0"
+          >
             <div className="flex-1 min-h-0 overflow-y-auto">
               {loading ? (
                 <div className="flex justify-center pt-8">
@@ -345,14 +313,11 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
                 </div>
               )}
             </div>
-          </Card>
+          </Panel>
 
-          {}
-          {
-}
           <div
             key={showCreate ? 'create' : selected ? `c${selected.id}` : 'empty'}
-            className="lg:col-span-8 min-w-0 min-h-0 overflow-y-auto enter-up"
+            className="lg:col-span-8 min-w-0 min-h-0 overflow-y-auto"
           >
             {!selected && !showCreate ? (
               <Card>
@@ -365,7 +330,7 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
             ) : showCreate ? (
               
               <Card>
-                <div className="flex items-center gap-3 px-5 py-4 border-b border-line/70">
+                <div className={`flex items-center gap-3 ${PANEL_HEAD}`}>
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-accent-muted text-accent shrink-0">
                     <Plus className="h-4 w-4" />
                   </span>
@@ -381,12 +346,13 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Proiect *</label>
-                        <select name="project_id" required
+                        <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Proiect</label>
+                        <select name="project_id"
                           className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]">
-                          <option value="">Selectează...</option>
+                          <option value="">➕ Creează proiect automat (din titlu)</option>
                           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
+                        <p className="text-pm-2xs text-content-muted mt-1">Lasă gol și se creează automat un proiect pentru acest contract.</p>
                       </div>
                       <div>
                         <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Client *</label>
@@ -405,7 +371,7 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Pret vanzare (EUR)</label>
+                        <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Preț vânzare (lei)</label>
                         <input name="sale_price" type="number" step="0.01"
                           className="w-full rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary tabular-nums transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]" />
                       </div>
@@ -416,7 +382,6 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
                           placeholder="ex: 90 zile" />
                       </div>
                     </div>
-                    {}
                     <div>
                       <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Contract (fișier) — orice format</label>
                       <input name="contract_files" type="file" multiple
@@ -435,9 +400,8 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
               </Card>
             ) : selected && (
               <div className="space-y-4">
-                {}
-                <GlassCard size="regular" vtName={vtName('contract', selected.id)} className="!p-0">
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 px-6 py-5">
+                <Panel padding="none" className="!p-0">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 px-6 py-5 vt-morph" style={{ viewTransitionName: vtName('contract', selected.id) }}>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-pm-xs font-mono text-accent">{selected.contract_code}</span>
@@ -466,18 +430,13 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
                       </Button>
                     </div>
                   </div>
-                  {}
                   <div className="border-t border-line/70 px-6 py-4 flex items-baseline gap-3">
                     <span className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Pret vanzare</span>
                     <MetricValue value={selected.sale_price || 0} size="regular" format={(n) => money(n, 'EUR')} />
                   </div>
-                </GlassCard>
+                </Panel>
 
-                {}
-                {
-}
                 <div key={`sub-${selected.id}`} className="stagger-in grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
-                  {}
                   <Card>
                     <SectionHeader icon={FileText} title="Detalii contract" className="!mb-0 px-5 pt-4" />
                     <CardBody>
@@ -491,18 +450,16 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
                         ].map(f => (
                           <div key={f.key} className="rounded-xl border border-line/70 bg-surface-secondary/40 p-3">
                             <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">{f.label}</label>
-                            {
-}
                             {editing ? (
                               <input key="edit" value={f.value || ''} onChange={e => setSelected({...selected, [f.key]: f.key === 'sale_price' ? Number(e.target.value) : e.target.value} as Contract)}
-                                className="enter-fade w-full rounded-lg border border-line bg-surface-primary px-2 py-1 text-pm-xs text-content-primary transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]" />
+                                className=" w-full rounded-lg border border-line bg-surface-primary px-2 py-1 text-pm-xs text-content-primary transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]" />
                             ) : (
-                              <p key="read" className={`enter-fade text-pm-xs text-content-primary ${f.key === 'sale_price' ? 'tabular-nums' : ''}`}>{f.value || '—'}</p>
+                              <p key="read" className={` text-pm-xs text-content-primary ${f.key === 'sale_price' ? 'tabular-nums' : ''}`}>{f.value || '—'}</p>
                             )}
                           </div>
                         ))}
                         {editing && (
-                          <div className="enter-fade rounded-xl border border-line/70 bg-surface-secondary/40 p-3">
+                          <div className=" rounded-xl border border-line/70 bg-surface-secondary/40 p-3">
                             <label className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted mb-1.5 block">Status</label>
                             <select value={selected.status} onChange={e => setSelected({...selected, status: e.target.value})}
                               className="w-full rounded-lg border border-line bg-surface-primary px-2 py-1 text-pm-xs text-content-primary transition-smooth duration-150 focus-visible:outline-none focus-visible:border-accent/60 focus-visible:shadow-[var(--ring-soft)]">
@@ -518,7 +475,7 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
 
 }
                   <Card>
-                    <div className="flex items-center gap-3 px-5 py-4 border-b border-line/70">
+                    <div className={`flex items-center gap-3 ${PANEL_HEAD}`}>
                       <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-accent-muted text-accent shrink-0">
                         <Paperclip className="h-4 w-4" />
                       </span>
@@ -567,8 +524,8 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
               </div>
             )}
           </div>
-        </div>{}
-      </Page.Body>
+        </div>
+      </DashboardLayout>
 
       <FormModal
         isOpen={revisingContractId !== null}
@@ -583,29 +540,6 @@ export default function ContractPage({ user: _user }: { user: User | null }) {
         onSubmit={submitRevision}
         submitLabel="Creează revizuire"
       />
-    </Page>
+    </>
   );
 }
-
-
-
-
-
-
-function KpiMini({ icon: Icon, label, value, warn, format }: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string; value: number; warn?: boolean; format?: (n: number) => string;
-}) {
-  return (
-    <GlassCard size="compact" className="flex items-center gap-3.5 !p-5">
-      <span className="h-11 w-11 rounded-xl bg-accent/12 text-accent flex items-center justify-center shrink-0">
-        <Icon className="h-5 w-5" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted truncate">{label}</p>
-        <MetricValue value={value} size="display" warn={warn} format={format} className="mt-0.5 block" />
-      </div>
-    </GlassCard>
-  );
-}
-void KpiMini;

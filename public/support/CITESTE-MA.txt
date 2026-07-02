@@ -1,0 +1,8 @@
+Promix QuickSupport
+===================
+
+1. Extrageți TOATE fișierele din acest zip în același folder.
+2. Rulați Promix-QuickSupport.exe (lângă RustDesk2.toml).
+3. Comunicați tehnicianului ID-ul și parola afișate.
+
+Nu mutați doar exe-ul fără RustDesk2.toml — fără config nu vă conectați la serverul Promix.

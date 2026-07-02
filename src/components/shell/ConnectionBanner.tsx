@@ -1,4 +1,4 @@
-import { WifiOff, Loader2 } from 'lucide-react';
+import { WifiOff, Loader2 } from '@/icons';
 
 export type ConnectionState = 'online' | 'reconnecting' | 'offline' | 'local';
 
@@ -25,7 +25,7 @@ export default function ConnectionBanner({ state, serverUrl, retryInSec, onRetry
     <div
       role="status"
       aria-live="polite"
-      className={`anim-slide-up relative flex items-center justify-between gap-3 border-b px-4 py-1.5 text-pm-xs font-medium ${bg} ${border} ${text}`}
+      className={`relative flex items-center justify-between gap-3 border-b px-4 py-2 text-pm-xs font-medium ${bg} ${border} ${text}`}
     >
       {}
       <div className="flex min-w-0 items-center gap-2">
@@ -36,7 +36,7 @@ export default function ConnectionBanner({ state, serverUrl, retryInSec, onRetry
           {isReconnecting ? 'Reconectare la server' : 'Server inaccesibil'}
           <span className="ml-1 font-mono opacity-70">— {serverUrl}</span>
           {retryInSec != null && retryInSec > 0 && (
-            <span className="ml-2 opacity-70 tabular-nums">(retry in {retryInSec}s)</span>
+            <span className="ml-2 tabular-nums opacity-70">(reîncercare în {retryInSec}s)</span>
           )}
         </span>
       </div>
@@ -44,7 +44,7 @@ export default function ConnectionBanner({ state, serverUrl, retryInSec, onRetry
         <button
           type="button"
           onClick={onRetryNow}
-          className="shrink-0 rounded-lg px-3 py-1 text-pm-2xs font-semibold uppercase tracking-wider transition-smooth duration-150 hover:bg-surface-tertiary focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] active:scale-95"
+          className="shrink-0 rounded-lg px-3 py-1 text-pm-2xs font-semibold uppercase tracking-wider transition-smooth duration-150 hover:bg-surface-tertiary focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
         >
           Reîncearcă
         </button>

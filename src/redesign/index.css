@@ -1,13 +1,18 @@
 /* ============================================================================
- * redesign/index.css — Promix Automatix · NEW "Ultra-modern monochrome" system.
+ * redesign/index.css — Promix Automatix · premium dark enterprise SaaS.
  *
- * Pure black + pure white. Neutral gray ramp (NO blue / slate tint, NO indigo).
- * Accent = black (light) / white (dark). Light-first, airy, soft diffuse
- * shadows (not glass), Inter display face. Dark mode = true blacks.
- *
- * Same CSS-variable NAMES as before, so every primitive (and Tailwind's
- * var-driven classes) keeps working — only the values changed.
+ * Color tokens are SCOPED: V2 uses design-tokens.css (.v2-root / html[data-interface="v2"]);
+ * classic UI uses src/classic/classic-tokens.css (VS Code palette). This file owns
+ * fonts, Tailwind layers, and app-specific data-* overrides.
  * ==========================================================================*/
+
+@import './tokens/design-tokens.css';
+@import './motion/index.css';
+@import './tokens/legacy-aliases.css';
+@import './tokens/utilities.css';
+@import './tokens/density.css';
+@import './ui/loading/loading.css';
+@import './ui/components.css';
 
 /* ---- Fonts (bundled, offline) -------------------------------------------- */
 @font-face {
@@ -33,219 +38,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================================================
- * Tokens — LIGHT (default). Monochrome: white surfaces, black accent, neutral
- * gray text/borders. The only hues are the 3 essential status semantics
- * (green/red/amber); info/progress/special are neutral grays (no blue).
- * ==========================================================================*/
+/* Root color-scheme hint (canonical tokens live in tokens/design-tokens.css) */
 :root {
   color-scheme: light dark;
-  accent-color: #2D5BE3;
-
-  /* Brand / accent — Automatix blue */
-  --color-accent:        #2D5BE3;
-  --color-accent-muted:  rgba(45, 91, 227, 0.10);
-  --color-on-accent:     #FFFFFF;
-
-  /* Surface ladder — neutral whites/grays */
-  --color-bg-rail:       #EFEFEF;                 /* StatusBar */
-  --color-bg-primary:    rgba(255, 255, 255, 0.72); /* Card / panel — semi-transparent */
-  --color-bg-page:       #F5F5F5;                 /* Page canvas — whisper gray */
-  --color-bg-secondary:  #FAFAFA;                 /* Subtle panel / header strip */
-  --color-bg-tertiary:   #ECECEC;                 /* hover / raised */
-  --color-bg-elevated:   #FFFFFF;                 /* dropdown / popover */
-
-  /* Text — neutral gray ramp (no blue) */
-  --color-text-primary:  #111111;
-  --color-text-secondary:#555555;
-  --color-text-muted:    #8A8A8A;
-
-  /* Borders — neutral hairlines */
-  --color-border:        #E4E4E4;
-  --color-border-subtle: #EFEFEF;
-
-  /* Side navigation */
-  --color-nav-bg:        #FFFFFF;
-  --color-nav-hover:     #F2F2F2;
-  --color-nav-active-bg: rgba(45, 91, 227, 0.10);
-
-  /* Shell bar — light (new shell drops the forced-dark wrapper) */
-  --shell-bg:      #FFFFFF;
-  --shell-surface: #FFFFFF;
-  --shell-border:  var(--color-border);
-  --shell-text:    var(--color-text-primary);
-  --shell-muted:   var(--color-text-muted);
-  --shell-accent:  var(--color-accent);
-  --shell-hover:   var(--color-bg-tertiary);
-
-  /* Status — essential semantics keep hue (no blue); info/progress/special neutral */
-  --status-green:  #16A34A;
-  --status-red:    #DC2626;
-  --status-amber:  #B45309;   /* deep amber/bronze — enterprise, not bright yellow */
-  --status-blue:   #525252;   /* info → mid gray */
-  --status-teal:   #2D2D2D;   /* progress → near-black */
-  --status-purple: #7A7A7A;   /* special → light gray */
-
-  /* Role colors — neutral grayscale spread (no blue/indigo/magenta) */
-  --role-admin-bg:      rgba(0,0,0,0.06);  --role-admin-text:    #111111;
-  --role-manager-bg:    rgba(0,0,0,0.06);  --role-manager-text:  #3A3A3A;
-  --role-marketer-bg:   rgba(0,0,0,0.06);  --role-marketer-text: #555555;
-  --role-proiectant-bg: rgba(0,0,0,0.06);  --role-proiectant-text:#6E6E6E;
-  --role-contabil-bg:   rgba(0,0,0,0.06);  --role-contabil-text: #888888;
-  --role-hala-bg:       rgba(0,0,0,0.06);  --role-hala-text:     #A0A0A0;
-  --role-admin-solid:      #111111;
-  --role-manager-solid:    #3A3A3A;
-  --role-marketer-solid:   #555555;
-  --role-proiectant-solid: #6E6E6E;
-  --role-contabil-solid:   #888888;
-  --role-hala-solid:       #A0A0A0;
-
-  /* Soft diffuse shadows — pure neutral (no blue tint) */
-  --shadow-soft-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-soft:    0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
-  --shadow-soft-lg: 0 8px 24px -4px rgba(0, 0, 0, 0.10), 0 4px 8px -2px rgba(0, 0, 0, 0.06);
-  --shadow-inner:   inset 0 1px 2px rgba(0, 0, 0, 0.05);
-
-  --elevation-0: none;
-  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
-  --elevation-2: 0 2px 4px rgba(0, 0, 0, 0.04), 0 6px 16px -4px rgba(0, 0, 0, 0.10);
-  --elevation-3: 0 4px 8px -2px rgba(0, 0, 0, 0.06), 0 12px 28px -6px rgba(0, 0, 0, 0.12);
-  --elevation-4: 0 8px 16px -4px rgba(0, 0, 0, 0.08), 0 24px 48px -12px rgba(0, 0, 0, 0.18);
-
-  --highlight-top: linear-gradient(180deg, rgba(255,255,255,0.6) 0%, transparent 1.5px);
-  --highlight-edge: rgba(0, 0, 0, 0.04);
-  --sheen-top: rgba(255, 255, 255, 0.55);   /* inset top sheen on frosted surfaces */
-
-  /* Focus ring — soft accent halo, Apple-style (4px, accent-muted) */
-  --ring-soft:   0 0 0 4px var(--color-accent-muted);
-  --ring-strong: 0 0 0 3px rgba(45, 91, 227, 0.40);
-
-  --glow-accent:    0 6px 20px -8px rgba(45, 91, 227, 0.30);
-  --glow-accent-sm: 0 2px 10px -3px rgba(45, 91, 227, 0.22);
-
-  /* Adaptive glass — floating UI surfaces over the preserved mesh background.
-     Frosted enough to stay readable on any background colour; the depth shadow
-     makes panels feel like they hover above the wallpaper. */
-  /* Cards — slightly translucent so the subtle page mesh shows through */
-  --glass-bg: rgba(255, 255, 255, 0.72);
-  --card-bg:  rgba(255, 255, 255, 0.72);
-  --glass-border: var(--color-border);
-  --glass-blur: 0px;
-  --glass-shadow: 0 10px 34px -8px rgba(0, 0, 0, 0.16), 0 2px 8px -2px rgba(0, 0, 0, 0.08);
-
-  /* Radius — tighter / enterprise (less rounded corners) */
-  --radius-sm:  4px;
-  --radius-md:  6px;
-  --radius-lg:  8px;
-  --radius-xl:  10px;
-  --radius-2xl: 14px;
-
-  /* Motion ladder */
-  --motion-instant: 80ms;
-  --motion-fast: 160ms;
-  --motion-base: 220ms;
-  --motion-slow: 320ms;
-  --motion-page: 420ms;
-  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --motion-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --motion-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
-  --ease-apple: cubic-bezier(0.32, 0.72, 0, 1);   /* the login's signature ease */
-  --blur-frost: 22px;                              /* macOS vibrancy blur radius */
-
-  /* Type — Inter display, JetBrains Mono tabular */
-  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Segoe UI Variable', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', 'Menlo', ui-monospace, monospace;
-}
-
-/* ============================================================================
- * Tokens — DARK (toggle). True blacks: pure-black canvas, near-black cards,
- * white accent. Same neutral ramp inverted.
- * ==========================================================================*/
-.dark {
-  color-scheme: dark;
-
-  /* ── Visual Studio Code "Dark Modern" palette ──────────────────────────────
-     Surfaces follow VS Code: chrome #181818, editor canvas #1F1F1F, panels
-     #252526, hover #37373D. Accent = VS Code focus/button blue #0078D4. */
-  accent-color:          #0078D4;
-  --color-accent:        #0078D4;                 /* VS Code button/focus blue */
-  --color-accent-muted:  rgba(0, 120, 212, 0.18);
-  --color-on-accent:     #FFFFFF;                 /* white text on the blue button */
-
-  --color-bg-rail:       #181818;                 /* StatusBar — VS Code chrome */
-  --color-bg-primary:    #252526;                 /* Card / panel — VS Code sideBar (solid) */
-  --color-bg-page:       #1F1F1F;                 /* Page canvas — VS Code editor.background */
-  --color-bg-secondary:  #2D2D2D;                 /* Subtle panel */
-  --color-bg-tertiary:   #37373D;                 /* hover / raised — VS Code list selection */
-  --color-bg-elevated:   #2D2D30;                 /* dropdown / popover — VS Code editorWidget */
-
-  --color-text-primary:  #D4D4D4;                 /* VS Code editor.foreground */
-  --color-text-secondary:#9D9D9D;                 /* VS Code descriptionForeground */
-  --color-text-muted:    #717171;                 /* VS Code disabledForeground */
-
-  --color-border:        #3C3C3C;                 /* VS Code input/separator */
-  --color-border-subtle: #2B2B2B;                 /* VS Code panel.border */
-
-  --color-nav-bg:        #181818;                 /* VS Code sideBar / titleBar */
-  --color-nav-hover:     #2A2D2E;                 /* VS Code list.hoverBackground */
-  --color-nav-active-bg: rgba(0, 120, 212, 0.18);
-
-  --shell-bg:      #181818;
-  --shell-surface: var(--color-bg-secondary);
-  --shell-border:  var(--color-border);
-  --shell-text:    var(--color-text-primary);
-  --shell-muted:   var(--color-text-muted);
-  --shell-accent:  var(--color-accent);
-  --shell-hover:   var(--color-bg-tertiary);
-
-  /* Status — VS Code editor/terminal token palette (real colors, not greys) */
-  --status-green:  #73C991;   /* VS Code testing-passed green */
-  --status-red:    #F14C4C;   /* VS Code error red */
-  --status-amber:  #CCA700;   /* VS Code editorWarning amber */
-  --status-blue:   #3794FF;   /* VS Code link / info blue */
-  --status-teal:   #4EC9B0;   /* VS Code types teal */
-  --status-purple: #C586C0;   /* VS Code keyword purple */
-
-  --role-admin-bg:      rgba(255,255,255,0.10); --role-admin-text:    #FAFAFA;
-  --role-manager-bg:    rgba(255,255,255,0.10); --role-manager-text:  #D4D4D4;
-  --role-marketer-bg:   rgba(255,255,255,0.10); --role-marketer-text: #B0B0B0;
-  --role-proiectant-bg: rgba(255,255,255,0.10); --role-proiectant-text:#9A9A9A;
-  --role-contabil-bg:   rgba(255,255,255,0.10); --role-contabil-text: #888888;
-  --role-hala-bg:       rgba(255,255,255,0.10); --role-hala-text:     #707070;
-  --role-admin-solid:      #FAFAFA;
-  --role-manager-solid:    #D4D4D4;
-  --role-marketer-solid:   #B0B0B0;
-  --role-proiectant-solid: #9A9A9A;
-  --role-contabil-solid:   #888888;
-  --role-hala-solid:       #707070;
-
-  --shadow-soft-sm: 0 1px 2px rgba(0, 0, 0, 0.55);
-  --shadow-soft:    0 2px 6px rgba(0, 0, 0, 0.5), 0 10px 24px -8px rgba(0, 0, 0, 0.6);
-  --shadow-soft-lg: 0 8px 24px -6px rgba(0, 0, 0, 0.6), 0 4px 10px -3px rgba(0, 0, 0, 0.5);
-  --shadow-inner:   inset 0 1px 2px rgba(0, 0, 0, 0.5);
-
-  --elevation-0: none;
-  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.45);
-  --elevation-2: 0 2px 6px rgba(0, 0, 0, 0.55), 0 8px 18px -6px rgba(0, 0, 0, 0.65);
-  --elevation-3: 0 4px 10px -2px rgba(0, 0, 0, 0.6), 0 16px 32px -10px rgba(0, 0, 0, 0.7);
-  --elevation-4: 0 10px 24px -6px rgba(0, 0, 0, 0.65), 0 32px 60px -14px rgba(0, 0, 0, 0.8);
-
-  --highlight-top: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 1.5px);
-  --highlight-edge: rgba(255, 255, 255, 0.05);
-  --sheen-top: rgba(255, 255, 255, 0.10);
-
-  --ring-soft:   0 0 0 4px var(--color-accent-muted);
-  --ring-strong: 0 0 0 3px rgba(0, 120, 212, 0.55);
-
-  --glow-accent:    0 0 0 1px rgba(255, 255, 255, 0.12), 0 8px 28px -8px rgba(255, 255, 255, 0.28);
-  --glow-accent-sm: 0 0 16px -4px rgba(255, 255, 255, 0.22);
-
-  /* Solid panels — VS Code is flat (no translucency / no mesh showing through). */
-  --glass-bg: #252526;
-  --card-bg:  #252526;
-  --glass-border: var(--color-border);
-  --glass-blur: 0px;
-  --glass-shadow: 0 14px 44px -10px rgba(0, 0, 0, 0.6), 0 2px 10px -2px rgba(0, 0, 0, 0.45);
+  accent-color: var(--accent);
 }
 
 /* ============================================================================
@@ -257,7 +53,7 @@
     min-height: 100vh;
     min-height: 100dvh;
     background-color: var(--color-bg-page);
-    background-image: radial-gradient(circle at top left, rgba(45, 91, 227, 0.04), transparent 18%), radial-gradient(circle at bottom right, rgba(11, 16, 32, 0.03), transparent 16%);
+    background-image: none;
     background-attachment: fixed;
     color: var(--color-text-primary);
     font-family: var(--font-display);
@@ -272,21 +68,29 @@
 
   *, *::before, *::after { border-color: var(--color-border); }
 
-  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-  :focus:not(:focus-visible) { outline: none; }
+  :focus-visible { outline: none; box-shadow: var(--ring-default); }
+  :focus:not(:focus-visible) { outline: none; box-shadow: none; }
 
   ::selection { background-color: var(--color-accent); color: var(--color-on-accent); }
 
-  /* Scrollbars — WebKit */
-  ::-webkit-scrollbar { width: 11px; height: 11px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb {
-    background: var(--color-border);
-    border-radius: 99px;
-    border: 3px solid var(--color-bg-page);
+  /* Custom scrollbars — global (WebKit + Firefox) */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
-  ::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
-  html { scrollbar-width: thin; scrollbar-color: var(--color-border) transparent; }
+  ::-webkit-scrollbar { width: var(--scrollbar-size); height: var(--scrollbar-size); }
+  ::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 999px;
+    border: var(--scrollbar-inset) solid transparent;
+    background-clip: padding-box;
+    transition: background-color var(--motion-fast) var(--motion-ease);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
+  ::-webkit-scrollbar-thumb:active { background: var(--scrollbar-thumb-active); }
+  ::-webkit-scrollbar-corner { background: transparent; }
+
   .scrollbar-none { scrollbar-width: none; }
   .scrollbar-none::-webkit-scrollbar { display: none; }
 
@@ -327,7 +131,7 @@
   }
   .card-interactive:hover { transform: translateY(-2px); box-shadow: var(--shadow-soft-lg); }
   .card-interactive:active { transform: scale(0.98); box-shadow: var(--shadow-soft); transition-duration: 80ms; }
-  .card-interactive:focus-visible { outline: none; box-shadow: var(--ring-soft); }
+  .card-interactive:focus-visible { outline: none; box-shadow: var(--ring-default); }
 
   .scroll-fade-y {
     mask-image: linear-gradient(to bottom, transparent, black 8px, black calc(100% - 8px), transparent);
@@ -340,6 +144,40 @@
 @layer utilities {
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* Opt-in custom scrollbar — thinner variant for sidebars / dense panes */
+  .scrollbar-thin,
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+  .scrollbar-thin::-webkit-scrollbar,
+  .custom-scrollbar::-webkit-scrollbar {
+    width: var(--scrollbar-size-thin);
+    height: var(--scrollbar-size-thin);
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb,
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    border-width: 1px;
+  }
+
+  /* Overlay scrollbar — thumb fades in on container hover (macOS-style) */
+  .scrollbar-overlay {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .scrollbar-overlay::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
+  .scrollbar-overlay:hover {
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
+  .scrollbar-overlay:hover::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+  }
+  .scrollbar-overlay:hover::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
 
   /* Full dynamic-viewport height with a static-vh fallback. Mirrors the
    * html/body rule so the app frame is never cut off by mobile browser
@@ -366,19 +204,12 @@
 
   /* Frosted materials — macOS/iOS vibrancy. Floating chrome: bars, menus,
      popovers, modals. The inset sheen replicates the top-lit glass edge. */
-  .surface-glass {
-    background-color: color-mix(in srgb, var(--color-bg-elevated) 80%, transparent);
-    border: 1px solid var(--color-border-subtle);
-    box-shadow: var(--elevation-2), inset 0 1px 0 var(--sheen-top);
-    -webkit-backdrop-filter: saturate(160%) blur(20px);
-            backdrop-filter: saturate(160%) blur(20px);
-  }
   .surface-glass-strong {
-    background-color: color-mix(in srgb, var(--color-bg-elevated) 85%, transparent);
-    border: 1px solid var(--color-border-subtle);
-    box-shadow: var(--elevation-3), inset 0 1px 0 var(--sheen-top);
-    -webkit-backdrop-filter: saturate(180%) blur(28px);
-            backdrop-filter: saturate(180%) blur(28px);
+    background-color: color-mix(in srgb, var(--bg-overlay) 78%, transparent);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-3), inset 0 1px 0 var(--sheen-top);
+    -webkit-backdrop-filter: saturate(180%) blur(var(--blur-lg));
+            backdrop-filter: saturate(180%) blur(var(--blur-lg));
   }
   /* Toolbar / bar frost — macOS-style frosted bar material. */
   .surface-frost {
@@ -415,21 +246,7 @@
   .pill-danger  { background: color-mix(in srgb, var(--status-red) 14%, transparent); color: var(--status-red); }
   .pill-warn    { background: color-mix(in srgb, var(--status-amber) 16%, transparent); color: var(--status-amber); }
 
-  .anim-scale-in      { animation: scaleIn 200ms var(--motion-ease-spring) both; will-change: transform, opacity; }
-  .anim-fade-in       { animation: fadeIn 200ms var(--motion-ease) both; will-change: opacity; }
-  .anim-slide-up      { animation: slideUp 200ms var(--motion-ease-emphasized) both; will-change: transform, opacity; }
-  .anim-fade-slide-in { animation: fadeSlideIn 200ms var(--motion-ease-emphasized) both; will-change: transform, opacity; }
-  .anim-slide-in-right { animation: slideInRight 220ms var(--motion-ease-spring) both; will-change: transform, opacity; }
-
-  .transition-smooth {
-    transition: transform var(--motion-fast) var(--motion-ease),
-                opacity var(--motion-fast) var(--motion-ease),
-                color var(--motion-fast) var(--motion-ease),
-                background-color var(--motion-fast) var(--motion-ease),
-                border-color var(--motion-fast) var(--motion-ease),
-                box-shadow var(--motion-fast) var(--motion-ease),
-                filter var(--motion-fast) var(--motion-ease);
-  }
+  /* anim-* entrance helpers → see motion/components.css */
 
   .sr-only {
     position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -437,39 +254,9 @@
   }
 }
 
-/* ============================================================================
- * Keyframes
- * ==========================================================================*/
-@keyframes scaleIn       { from { opacity: 0; transform: scale(0.96) translateY(4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-@keyframes fadeIn        { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp       { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes slideInRight  { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes shimmer     { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-@keyframes pulseDot    { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.18); opacity: 0.85; } }
+/* Keyframes → src/redesign/motion/keyframes.css */
+/* Reduced motion → src/redesign/motion/reduced-motion.css */
 
-/* ============================================================================
- * Accessibility preferences
- * ==========================================================================*/
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-/* Manual "reduce motion" toggle (Settings → Aspect) — same treatment as the OS
-   preference above, driven by data-motion="reduced" on <html>. The page-morph
-   view transition is skipped separately via pageTransitions.ts. */
-html[data-motion="reduced"] *,
-html[data-motion="reduced"] *::before,
-html[data-motion="reduced"] *::after {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
-  scroll-behavior: auto !important;
-}
 /* "Transparent card backgrounds" toggle (Settings → Aspect) — driven by
    data-card-bg="transparent" on <html>. Overrides the surface-ladder tokens
    so every card / panel becomes fully transparent, revealing the page canvas
@@ -483,9 +270,13 @@ html[data-card-bg="transparent"] {
   --card-bg:            transparent;
 }
 @media (prefers-contrast: more) {
-  :root { --color-border: #1A1A1A; --color-border-subtle: #444444; --color-text-muted: #333333; }
-  .dark { --color-border: #D4D4D4; --color-border-subtle: #8A8A8A; --color-text-muted: #D4D4D4; }
-  :focus-visible { outline-width: 3px; outline-offset: 3px; }
+  html[data-interface="v2"],
+  .v2-root {
+    --color-border: #D4D4D4;
+    --color-border-subtle: #8A8A8A;
+    --color-text-muted: #D4D4D4;
+  }
+  :focus-visible { box-shadow: var(--ring-strong); }
 }
 @media (forced-colors: active) {
   :focus-visible { outline: 2px solid CanvasText; outline-offset: 2px; }
@@ -534,10 +325,6 @@ html[data-nav-sync="on"] aside[aria-label="Navigare"] {
  * Shell layout customization (Settings → Aspect → Layout & Shell)
  * data-* attrs on <html> written by shellLayoutStore.ts
  * ==========================================================================*/
-
-/* Navbar height */
-html[data-navbar-h="compact"] .shell-nav { height: 36px !important; }
-html[data-navbar-h="relaxed"] .shell-nav { height: 52px !important; }
 
 /* Titlebar visibility */
 html[data-titlebar="off"] .shell-titlebar { display: none !important; }
@@ -617,9 +404,122 @@ html[data-content-width="full"]   .page-body { max-width: 100% !important; }
 html[data-card-radius="sharp"]   :is(.pm-card, .surface-card, .surface-glass, .surface-glass-strong) { border-radius: 0   !important; }
 html[data-card-radius="rounded"] :is(.pm-card, .surface-card, .surface-glass, .surface-glass-strong) { border-radius: 22px !important; }
 
+/* Sharp corners → FLAT cards: hide the border + drop shadow, and disable the
+   hover lift/glow, so square cards read as clean flat tiles (distinguished by
+   their surface fill, not a frame). Spacing stays normal. Covers the global
+   ("Drepte") and the per-page customizer (data-pc-card-radius) attributes. */
+html[data-card-radius="sharp"]    :is(.pm-card, .surface-card, .surface-card-elevated, .surface-glass, .surface-glass-strong),
+html[data-pc-card-radius="sharp"] :is(.pm-card, .surface-card, .surface-card-elevated, .surface-glass, .surface-glass-strong) {
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+html[data-card-radius="sharp"]    :is(.card-interactive, .pm-card, .surface-card, .surface-card-elevated, .surface-glass, .surface-glass-strong):hover,
+html[data-pc-card-radius="sharp"] :is(.card-interactive, .pm-card, .surface-card, .surface-card-elevated, .surface-glass, .surface-glass-strong):hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+/* …but keep the keyboard focus ring (the box-shadow:none above would eat it). */
+html[data-card-radius="sharp"]    .card-interactive:focus-visible,
+html[data-pc-card-radius="sharp"] .card-interactive:focus-visible {
+  box-shadow: var(--ring-soft) !important;
+}
+
+/* Sharp → the page HEADER joins the content as ONE coherent surface. By default
+   the header is a frosted secondary-tinted bar with a bottom divider (reads as a
+   separate strip above the flat content). In sharp mode: drop the tinted bg,
+   blur, divider and shadow so the title/actions sit on the same surface as the
+   cards, and align the header gutter to the content gutter (1.5rem) so the title
+   lines up with the cards below instead of being indented differently. Also
+   clears the in-body header dividers some pages render (e.g. the dashboard's
+   `.page-body > .shrink-0[border-b]`). */
+html[data-card-radius="sharp"]    .pm-page-header,
+html[data-pc-card-radius="sharp"] .pm-page-header {
+  background: transparent !important;
+  border-bottom-color: transparent !important;
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+html[data-card-radius="sharp"]    .pm-page-header > div,
+html[data-pc-card-radius="sharp"] .pm-page-header > div {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+html[data-card-radius="sharp"]    .page-body > .shrink-0[class*="border-b"],
+html[data-pc-card-radius="sharp"] .page-body > .shrink-0[class*="border-b"] {
+  border-bottom-color: transparent !important;
+}
+
 /* Global card padding — only padded cards carry .pm-card-pad (padding="none" cards excluded). */
 html[data-card-pad="tight"] .pm-card-pad { padding: 10px !important; }
 html[data-card-pad="loose"] .pm-card-pad { padding: 26px !important; }
+
+/* ============================================================================
+ * LAYOUT MODE: FLAT  (Settings → Aspect → "Aspect layout", layoutModeStore.ts).
+ * data-layout-mode="flat" on <html>. Default ("tiled") = attribute ABSENT →
+ * nothing below applies (current tiled look untouched, fully reversible).
+ * Collapses every card/tile primitive — .pm-card / .surface-* (Card, GlassCard,
+ * KpiCard), the legacy .glass-surface, and the Dashboard's .dash-* surfaces —
+ * into ONE continuous, dense, borderless sheet: no radius / border / shadow /
+ * blur / sheen, gutters removed, hairline dividers between blocks, tables edge-
+ * to-edge. Backgrounds stay OPAQUE (var(--color-bg-primary)) ON PURPOSE so text
+ * remains readable over the saturated accent wallpaper (see accent-wallpaper
+ * readability note). Placed AFTER the global data-card-* block and BEFORE the
+ * per-page data-pc-* block: equal specificity + !important → source order wins.
+ * ==========================================================================*/
+html[data-layout-mode="flat"] :is(.pm-card, .surface-card, .surface-card-elevated, .surface-glass, .surface-glass-strong, .glass-surface) {
+  border-radius: 0 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  /* fully-opaque card colour (NOT the translucent --color-bg-primary 0.72) so
+     text stays readable once the backdrop blur is removed below. */
+  background-color: var(--color-bg-elevated) !important;
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+}
+/* Drop the top-edge sheen pseudo-elements. */
+html[data-layout-mode="flat"] :is(.surface-card, .surface-glass, .surface-glass-strong)::before { display: none !important; }
+/* KpiCard hero: remove the accent gradient wash + the left accent bar. */
+html[data-layout-mode="flat"] .pm-card.bg-gradient-to-br { background-image: none !important; }
+html[data-layout-mode="flat"] .pm-card .rounded-r-full[aria-hidden] { display: none !important; }
+/* Dense uniform padding (only padded cards carry .pm-card-pad). */
+html[data-layout-mode="flat"] .pm-card-pad { padding: 12px 16px !important; }
+/* Section stack (Page.Body) → no gaps, hairline divider between blocks. */
+html[data-layout-mode="flat"] .page-body { gap: 0 !important; }
+html[data-layout-mode="flat"] .page-body > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0 !important;
+  border-top: 1px solid var(--color-border-subtle) !important;
+}
+/* Dashboard shell: keep breathing room between toolbar/KPI band and scrollable content. */
+html[data-layout-mode="flat"] .page-body.page-body-polish > .page-toolbar + :is(.kpi-strip, .page-content-shell, .page-content-grid),
+html[data-layout-mode="flat"] .page-body.page-body-polish > .kpi-strip + :is(.page-content-shell, .page-content-grid),
+html[data-layout-mode="flat"] .page-body.page-body-polish > :is(.page-content-shell, .page-content-grid) + .page-footer-band {
+  margin-top: var(--density-gap-section) !important;
+  border-top: none !important;
+}
+/* Card/KPI grids lose gutters; KPI strip cells get hairline separators. */
+html[data-layout-mode="flat"] :is(.grid):has(.pm-card) { gap: 0 !important; }
+html[data-layout-mode="flat"] :is(.grid):has(> .pm-card) > .pm-card {
+  border-right: 1px solid var(--color-border-subtle) !important;
+  border-bottom: 1px solid var(--color-border-subtle) !important;
+  min-height: 0 !important;
+}
+/* Tables edge-to-edge with unified row dividers. */
+html[data-layout-mode="flat"] table { width: 100% !important; }
+html[data-layout-mode="flat"] table :is(th, td) { border-color: transparent !important; }
+html[data-layout-mode="flat"] table tbody tr { border-bottom: 1px solid var(--color-border-subtle) !important; }
+/* Dashboard primitives (.dash-*): same flattening, opaque, gutters collapsed. */
+html[data-layout-mode="flat"] :is(.dash-glass, .dash-card, .dash-kpi, .dash-airy) {
+  border-radius: 0 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  background: var(--color-bg-elevated) !important;
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+}
+html[data-layout-mode="flat"] .dash-kpi::before { display: none !important; }
+html[data-layout-mode="flat"] :is(.dash-canvas, .dash-row-kpi, .dash-row-secondary, .dash-row-footer) { gap: 0 !important; }
+html[data-layout-mode="flat"] .dash-airy { padding: 14px 16px !important; }
 
 /* ============================================================================
  * PER-PAGE appearance overrides (data-pc-* on <html>, pageCustomizationStore).
@@ -689,32 +589,34 @@ html[data-pc-card-radius="sharp"] [class~="rounded-2xl"]:not(button):not(a):not(
 }
 
 /* ============================================================================
- * Sharp corners → SEAMLESS, edge-to-edge cards.
- * When the card-corner setting is "Drepte" (global data-card-radius="sharp" OR
- * per-page data-pc-card-radius="sharp"), drop the page gutter (cards sit flush
- * against the navbar/sidebar/edges), the section spacing, AND the gap inside any
- * card grid (cards touch each other). The cards keep their own inner padding.
- * Uses :has() — fine on the app's Chromium runtime.
+ * Sharp corners = square corners ONLY — deliberately NOT a layout reflow.
+ * An earlier version also zeroed the page gutter, inter-section margins and card-
+ * grid gaps to make cards sit flush ("seamless edge-to-edge"). But app pages nest
+ * spacing in many ways the override couldn't reach (header bands with pb-*,
+ * space-y wrappers, nested flex gaps, per-card margins), so it flattened only
+ * SOME spacing and left stray space above/below other cards. Keeping the normal,
+ * consistent spacing — just with square corners — is predictable and is what the
+ * "Drepte" toggle actually implies. (The border-radius rules above still apply.)
  * ==========================================================================*/
-html[data-card-radius="sharp"] .page-body,
-html[data-pc-card-radius="sharp"] .page-body {
-  padding: 0 !important;
-  gap: 0 !important;
-}
-html[data-card-radius="sharp"] .page-body > :not([hidden]) ~ :not([hidden]),
-html[data-pc-card-radius="sharp"] .page-body > :not([hidden]) ~ :not([hidden]) {
-  margin-top: 0 !important;
-}
-html[data-card-radius="sharp"] .page-body :where(.grid):has(.pm-card, .surface-card),
-html[data-pc-card-radius="sharp"] .page-body :where(.grid):has(.pm-card, .surface-card) {
-  gap: 0 !important;
-}
+
+/* Density tokens: see tokens/density.css */
 
 /* ============================================================================
- * Density — compact for power users / tablet
+ * Responsive Preview Mode (Builder.io-style)
+ * Constrain the app viewport to simulate device sizes for testing
+ * Applied to <html> element when previewing
  * ==========================================================================*/
-:root[data-density="compact"] .table-density thead th,
-:root[data-density="compact"] .table-density tbody td { padding-top: 5px; padding-bottom: 5px; }
-:root[data-density="compact"] .table-density tbody td { font-size: 12px; line-height: 16px; }
-:root[data-density="compact"] .nav-density { height: 34px; }
-:root[data-density="compact"] .nav-density button { height: 34px !important; }
+.responsive-preview {
+  max-width: var(--preview-width, 1200px);
+}
+
+/* Apply to main content when preview mode is active */
+html.responsive-preview .page-body {
+  max-width: var(--preview-width, 1200px) !important;
+  margin: 0 auto !important;
+}
+
+/* Add visual frame for preview mode */
+html.responsive-preview body {
+  background-color: var(--color-bg-elevated);
+}

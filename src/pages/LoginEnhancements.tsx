@@ -5,7 +5,7 @@
 
 
 import { useEffect, useMemo, useState } from 'react';
-import { ShieldCheck, Search, Lock, Fingerprint, History, Mail, Loader2, X, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Search, Lock, Fingerprint, History, Mail, Loader2, X, AlertTriangle } from '@/icons';
 import { useLocalStorage } from '@/components/enhancements/useLocalStorage';
 import { setServerUrl } from '@/config/server';
 import { toast } from '@/store/toastStore';

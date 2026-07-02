@@ -34,7 +34,7 @@ export default function Tabs<T extends string>({
   if (variant === 'segmented') {
     return (
       <div
-        className={`inline-flex items-center gap-0.5 rounded-xl border border-line/70 bg-surface-secondary surface-frost p-1 ${className}`}
+        className={`inline-flex items-center gap-0.5 rounded-xl border border-line/70 bg-surface-secondary p-1 ${className}`}
         role="tablist"
       >
         {tabs.map((tab) => {
@@ -70,7 +70,7 @@ export default function Tabs<T extends string>({
   if (variant === 'pill') {
     return (
       <div
-        className={`inline-flex items-center gap-1 rounded-full border border-line/70 bg-surface-secondary surface-frost p-1 ${className}`}
+        className={`inline-flex items-center gap-1 rounded-full border border-line/70 bg-surface-secondary p-1 ${className}`}
         role="tablist"
       >
         {tabs.map((tab) => {

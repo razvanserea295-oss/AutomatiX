@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   ChevronDown, LayoutDashboard, FolderKanban, Factory, ShoppingCart,
   Ruler, Wallet, TrendingUp, Plane, HelpCircle, ScrollText, BookOpen,
-} from 'lucide-react';
+} from '@/icons';
 
 import changelogRaw from '../../../CHANGELOG.md?raw';
 

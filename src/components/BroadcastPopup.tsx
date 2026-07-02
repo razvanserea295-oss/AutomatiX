@@ -14,7 +14,7 @@
 
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Megaphone, AlertTriangle, AlertOctagon, X } from 'lucide-react';
+import { Megaphone, AlertTriangle, AlertOctagon, X } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/store/toastStore';

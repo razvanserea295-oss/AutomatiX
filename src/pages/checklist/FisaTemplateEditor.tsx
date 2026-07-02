@@ -22,7 +22,7 @@
 
 
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, GripVertical, X, Loader2, CheckSquare, FileText, Save, Scale } from 'lucide-react';
+import { Plus, Trash2, GripVertical, X, Loader2, CheckSquare, FileText, Save, Scale } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 import { FISA_COLUMNS, type FisaColumn, type ColumnWeights, equalWeights, parseColumnWeights } from '@/lib/fisaProgress';

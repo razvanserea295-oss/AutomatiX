@@ -25,6 +25,7 @@ import path from 'path';
 import { ZipArchive } from 'archiver';
 import extract from 'extract-zip';
 import { getDb, saveDatabase, flushDatabase, getDataDir } from './db';
+import { CommandError } from '../electron/middleware/errors';
 
 
 const INCLUDE_DIRS = ['briefing-files', 'uploads', 'documents'];
@@ -317,9 +318,30 @@ export async function restoreInPlace(name: string): Promise<{ requiresRestart: b
   }
   fs.rmSync(tmp, { recursive: true, force: true });
 
-  
-  
+
+
   return { requiresRestart: true, safety: path.basename(safety.file) };
+}
+
+
+// ── Migration import: load an UPLOADED backup zip (e.g. from an old standalone
+// desktop) into THIS instance, then restore it in place. Reuses restoreInPlace,
+// which first makes a pre-restore safety backup and then swaps the DB (+ its
+// .dbkey) and the include-dirs — so a self-contained backup from another machine
+// becomes this tenant's data. Admin-gated by the caller. Requires a restart.
+export async function importUploadedBackup(
+  name: string,
+  base64: string,
+): Promise<{ requiresRestart: boolean; safety: string; name: string }> {
+  const safe = path.basename(String(name || 'import.zip'));
+  const finalName = safe.toLowerCase().endsWith('.zip') ? safe : `${safe}.zip`;
+  const buf = Buffer.from(String(base64 || ''), 'base64');
+  if (buf.length === 0) throw CommandError.badRequest('Arhivă goală sau invalidă');
+  // ZIP magic "PK\x03\x04" — reject anything that isn't a zip up front.
+  if (!(buf[0] === 0x50 && buf[1] === 0x4b)) throw CommandError.badRequest('Fișierul nu este o arhivă .zip validă');
+  fs.writeFileSync(path.join(autoDir(), finalName), buf);
+  const r = await restoreInPlace(finalName);
+  return { ...r, name: finalName };
 }
 
 

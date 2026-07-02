@@ -1,95 +1,111 @@
-
-import { useEffect, useState } from 'react';
-import { TrendingUp, Loader2 } from 'lucide-react';
-import { ComposedChart, Bar, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Label } from 'recharts';
+import { useEffect, useMemo, useState } from 'react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { Loader2 } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { useMoney } from '@/store/settingsStore';
+import MetricValue from '@/redesign/ui/MetricValue';
+import TrendBadge from '@/redesign/ui/TrendBadge';
+
+type Period = 'week' | 'month' | 'quarter' | 'year';
 
 interface CashFlowPoint { month: string; inflow?: number; amount?: number }
-interface FinanceInsights {
-  monthly_cash_flow: CashFlowPoint[];
-}
+interface FinanceInsights { monthly_cash_flow: CashFlowPoint[] }
+// Only the bits of a quotation we need for the "money on offers" series.
+interface QuotationLite { total?: number; created_at?: string | null }
 
-function pickAmount(p: CashFlowPoint): number {
-  return Number(p.inflow ?? p.amount ?? 0);
-}
+interface Point { date: Date; amount: number }
 
 const MONTH_LABELS = ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep', 'Oct', 'Noi', 'Dec'];
 
-// Returns "YYYY-MM-DD" for the Monday of the week containing d.
-// Matches the SQL: date(pr.date, '-' || CAST((strftime('%w', pr.date)+6)%7 AS INTEGER) || ' days')
-function getMondayKey(d: Date): string {
-  const mon = new Date(d);
-  mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-  mon.setHours(0, 0, 0, 0);
-  return `${mon.getFullYear()}-${String(mon.getMonth() + 1).padStart(2, '0')}-${String(mon.getDate()).padStart(2, '0')}`;
-}
+const PERIODS: { id: Period; label: string }[] = [
+  { id: 'week', label: 'Săpt.' },
+  { id: 'month', label: 'Lună' },
+  { id: 'quarter', label: 'Trim.' },
+  { id: 'year', label: 'An' },
+];
 
-function formatWeekLabel(key: string): string {
-  const d = new Date(key + 'T00:00:00');
-  return `${d.getDate()} ${MONTH_LABELS[d.getMonth()]}`;
-}
+// How many trailing buckets to show per granularity.
+const KEEP: Record<Period, number> = { week: 16, month: 12, quarter: 8, year: 5 };
+const NOUN: Record<Period, [string, string]> = {
+  week: ['săptămână', 'săptămâni'], month: ['lună', 'luni'], quarter: ['trimestru', 'trimestre'], year: ['an', 'ani'],
+};
+
+const C_REVENUE = 'var(--color-accent)';
+const C_OFFERS = 'var(--status-amber)';
 
 function formatCompact(v: number): string {
   if (Math.abs(v) >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
   if (Math.abs(v) >= 1_000) return `${(v / 1_000).toFixed(0)}k`;
-  return String(v);
+  return String(Math.round(v));
 }
 
-// 3-week centred rolling median (smoothing)
-function rollingMedian(data: number[], window = 3): number[] {
-  const half = Math.floor(window / 2);
-  return data.map((_, i) => {
-    const start = Math.max(0, i - half);
-    const end = Math.min(data.length, i + half + 1);
-    const slice = [...data.slice(start, end)].sort((a, b) => a - b);
-    const mid = Math.floor(slice.length / 2);
-    return slice.length % 2 === 0 ? (slice[mid - 1] + slice[mid]) / 2 : slice[mid];
-  });
-}
+interface Bucket { key: string; label: string; sort: number; revenue: number; offers: number; total: number }
 
-interface MKResult { tau: number; Z: number; label: string; pillClass: string }
-
-// Non-parametric Mann-Kendall monotonic trend test (two-tailed)
-function mannKendall(values: number[]): MKResult {
-  const n = values.length;
-  if (n < 4) return { tau: 0, Z: 0, label: '→ date insuficiente', pillClass: '' };
-
-  let S = 0;
-  for (let i = 0; i < n - 1; i++) {
-    for (let j = i + 1; j < n; j++) {
-      if (values[j] > values[i]) S++;
-      else if (values[j] < values[i]) S--;
-    }
+function bucketMeta(d: Date, period: Period): { key: string; label: string; sort: number } {
+  const y = d.getFullYear();
+  if (period === 'week') {
+    const mon = new Date(d);
+    mon.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    mon.setHours(0, 0, 0, 0);
+    return { key: `w${mon.getTime()}`, label: `${mon.getDate()} ${MONTH_LABELS[mon.getMonth()]}`, sort: mon.getTime() };
   }
+  if (period === 'year') return { key: `y${y}`, label: String(y), sort: y };
+  if (period === 'quarter') {
+    const q = Math.floor(d.getMonth() / 3) + 1;
+    return { key: `${y}q${q}`, label: `T${q} ${y}`, sort: y * 10 + q };
+  }
+  const m = d.getMonth();
+  return { key: `${y}m${m}`, label: `${MONTH_LABELS[m]} ${y}`, sort: y * 100 + m };
+}
 
-  const variance = (n * (n - 1) * (2 * n + 5)) / 18;
-  const Z = S === 0 ? 0 : S > 0 ? (S - 1) / Math.sqrt(variance) : (S + 1) / Math.sqrt(variance);
-  const tau = (2 * S) / (n * (n - 1));
-
-  if (Math.abs(Z) >= 1.96)
-    return tau > 0
-      ? { tau, Z, label: '↑ Tendință crescătoare', pillClass: 'pill-success' }
-      : { tau, Z, label: '↓ Tendință descrescătoare', pillClass: 'pill-danger' };
-
-  if (Math.abs(Z) >= 1.28)
-    return tau > 0
-      ? { tau, Z, label: '↗ Ușor crescătoare', pillClass: 'pill-warn' }
-      : { tau, Z, label: '↘ Ușor descrescătoare', pillClass: 'pill-warn' };
-
-  return { tau, Z, label: '→ Stabilă', pillClass: '' };
+// Roll realized revenue + offer money into the same period buckets so they can
+// be stacked (total height = revenue including offers).
+function buildBuckets(revenue: Point[], offers: Point[], period: Period): Bucket[] {
+  const map = new Map<string, Bucket>();
+  const at = (d: Date, rev: number, off: number) => {
+    if (Number.isNaN(d.getTime())) return;
+    const meta = bucketMeta(d, period);
+    let b = map.get(meta.key);
+    if (!b) { b = { key: meta.key, label: meta.label, sort: meta.sort, revenue: 0, offers: 0, total: 0 }; map.set(meta.key, b); }
+    b.revenue += rev; b.offers += off;
+  };
+  revenue.forEach(p => at(p.date, p.amount, 0));
+  offers.forEach(p => at(p.date, 0, p.amount));
+  return [...map.values()]
+    .map(b => ({ ...b, total: b.revenue + b.offers }))
+    .sort((a, b) => a.sort - b.sort)
+    .slice(-KEEP[period]);
 }
 
 export default function RevenueChartWidget() {
   const money = useMoney();
-  const [data, setData] = useState<CashFlowPoint[] | null>(null);
+  const [revenue, setRevenue] = useState<Point[]>([]);
+  const [offers, setOffers] = useState<Point[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [period, setPeriod] = useState<Period>('week');
 
   useEffect(() => {
     let cancelled = false;
-    apiCommand<FinanceInsights>('get_finance_insights')
-      .then(r => { if (!cancelled) setData(r.monthly_cash_flow ?? []); })
+    Promise.all([
+      apiCommand<FinanceInsights>('get_finance_insights'),
+      // Offers are best-effort: a finance-only user may lack sales access, in
+      // which case we just show realized revenue without the offers layer.
+      apiCommand<QuotationLite[]>('list_quotations').catch(() => [] as QuotationLite[]),
+    ])
+      .then(([ins, quotes]) => {
+        if (cancelled) return;
+        setRevenue((ins.monthly_cash_flow ?? []).map(p => ({
+          date: new Date(`${p.month}T00:00:00`),
+          amount: Number(p.inflow ?? p.amount ?? 0),
+        })));
+        setOffers((Array.isArray(quotes) ? quotes : [])
+          .filter(q => q && q.created_at)
+          .map(q => ({
+            date: new Date(String(q.created_at).replace(' ', 'T')),
+            amount: Number(q.total ?? 0),
+          })));
+      })
       .catch(err => {
         if (cancelled) return;
         const msg = err instanceof Error ? err.message : 'Eroare la încărcare';
@@ -99,154 +115,139 @@ export default function RevenueChartWidget() {
     return () => { cancelled = true; };
   }, []);
 
-  // Build last 24 weeks anchored on this week's Monday
-  const rawSeries = (() => {
-    const map = new Map<string, number>();
-    (data ?? []).forEach(p => map.set(p.month, pickAmount(p)));
-
-    const now = new Date();
-    const thisMonday = new Date(now);
-    thisMonday.setDate(now.getDate() - ((now.getDay() + 6) % 7));
-    thisMonday.setHours(0, 0, 0, 0);
-
-    const out: Array<{ weekKey: string; label: string; amount: number }> = [];
-    for (let i = 23; i >= 0; i--) {
-      const mon = new Date(thisMonday);
-      mon.setDate(thisMonday.getDate() - i * 7);
-      const weekKey = getMondayKey(mon);
-      out.push({ weekKey, label: formatWeekLabel(weekKey), amount: map.get(weekKey) ?? 0 });
-    }
-    return out;
-  })();
-
-  // 3-week centred rolling median overlaid as a smoothing line
-  const smoothed = rollingMedian(rawSeries.map(p => p.amount), 3);
-  const series = rawSeries.map((p, i) => ({ ...p, medSmooth: smoothed[i] }));
-
-  // Overall median — horizontal reference line
-  const median = (() => {
-    const xs = series.map(p => p.amount).filter(v => v > 0).sort((a, b) => a - b);
-    if (xs.length === 0) return null;
-    const mid = Math.floor(xs.length / 2);
-    return xs.length % 2 === 0 ? (xs[mid - 1] + xs[mid]) / 2 : xs[mid];
-  })();
-
-  const total = series.reduce((s, p) => s + p.amount, 0);
-  const mk = mannKendall(series.map(p => p.amount));
+  const buckets = useMemo(() => buildBuckets(revenue, offers, period), [revenue, offers, period]);
+  const current = buckets[buckets.length - 1];
+  const prior = buckets[buckets.length - 2];
+  const curTotal = current?.total ?? 0;
+  const deltaPct = prior && prior.total > 0 ? ((curTotal - prior.total) / prior.total) * 100 : null;
+  const windowTotal = buckets.reduce((s, b) => s + b.total, 0);
+  const hasOffers = useMemo(() => offers.some(o => o.amount > 0), [offers]);
 
   return (
-    <div className="bg-surface-secondary border-b border-line p-4">
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <TrendingUp className="h-4 w-4 text-accent shrink-0" />
-        <h3 className="text-sm font-semibold text-content-primary">Venituri săptămânale</h3>
-        <span className="text-pm-2xs text-content-muted">· ultimele 24 săpt</span>
-        <span
-          className={`text-xs font-medium ${mk.pillClass ? `${mk.pillClass} px-1.5 py-0.5 rounded` : 'text-content-muted'}`}
-          title={`Mann-Kendall τ=${mk.tau.toFixed(3)}, Z=${mk.Z.toFixed(2)}`}
-        >
-          {mk.label}
-        </span>
-        <span className="ml-auto flex items-center gap-3 text-xs tabular-nums">
-          {median != null && (
-            <span className="text-content-muted">Mediană: <span className="font-semibold text-content-secondary">{money(median, 'RON')}</span></span>
+    <div className="flex min-h-0 flex-col gap-3 lg:min-h-0 lg:flex-1 lg:gap-4">
+      {/* Hero figure + period toggle */}
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0">
+          <p className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted">
+            {hasOffers ? 'Venit + oferte' : 'Venit'} · {current?.label ?? '—'}
+          </p>
+          <div className="mt-1">
+            <MetricValue value={curTotal} format={(v) => money(v, 'RON')} size="display" />
+          </div>
+          {hasOffers && current && (
+            <p className="mt-1 text-pm-xs text-content-muted">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full" style={{ background: C_REVENUE }} />
+                Venit <span className="font-semibold text-content-secondary tabular-nums">{money(current.revenue, 'RON')}</span>
+              </span>
+              <span className="mx-2 text-line">·</span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full" style={{ background: C_OFFERS }} />
+                Oferte <span className="font-semibold text-content-secondary tabular-nums">{money(current.offers, 'RON')}</span>
+              </span>
+            </p>
           )}
-          <span className="font-semibold text-content-primary">Total: {money(total, 'RON')}</span>
-        </span>
+          <div className="mt-1.5 min-h-[1.25rem]">
+            {deltaPct != null
+              ? <TrendBadge value={deltaPct} pill suffix={`vs ${prior?.label ?? 'anterior'}`} />
+              : <span className="text-pm-xs text-content-muted">Fără perioadă de comparație</span>}
+          </div>
+        </div>
+
+        <div className="shrink-0 inline-flex items-center rounded-xl border border-line bg-surface-secondary p-0.5">
+          {PERIODS.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setPeriod(p.id)}
+              aria-pressed={period === p.id}
+              className={`rounded-lg px-2.5 py-1 text-pm-2xs font-semibold transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
+                period === p.id
+                  ? 'bg-accent text-[var(--color-on-accent)] shadow-[var(--elevation-1)]'
+                  : 'text-content-muted hover:text-content-primary'
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="h-56 w-full">
+      {/* Stacked trend chart: revenue + offers */}
+      <div className="h-44 w-full lg:min-h-[7rem] lg:flex-1">
         {loading ? (
-          <div className="flex h-full items-center justify-center text-content-muted">
-            <Loader2 className="h-4 w-4 animate-spin" />
-          </div>
+          <div className="flex h-full items-center justify-center text-content-muted"><Loader2 className="h-4 w-4 animate-spin" /></div>
         ) : error ? (
-          <div className="flex h-full items-center justify-center text-pm-xs text-content-muted">
-            {error}
-          </div>
+          <div className="flex h-full items-center justify-center px-4 text-center text-pm-xs text-content-muted">{error}</div>
+        ) : buckets.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-pm-xs text-content-muted">Fără date de afișat.</div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={series} margin={{ top: 10, right: 16, left: 0, bottom: 5 }}>
+            <AreaChart data={buckets} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="revArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={C_REVENUE} stopOpacity={0.28} />
+                  <stop offset="100%" stopColor={C_REVENUE} stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="offArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={C_OFFERS} stopOpacity={0.28} />
+                  <stop offset="100%" stopColor={C_OFFERS} stopOpacity={0} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-subtle)" vertical={false} />
               <XAxis
-                type="category"
                 dataKey="label"
-                allowDuplicatedCategory={false}
                 tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                 tickLine={false}
                 axisLine={{ stroke: 'var(--color-border)' }}
-                interval={3}
+                interval="preserveStartEnd"
+                minTickGap={16}
               />
               <YAxis
-                type="number"
                 tickFormatter={(v) => formatCompact(Number(v))}
-                tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                 tickLine={false}
-                axisLine={{ stroke: 'var(--color-border)' }}
-                width={48}
+                axisLine={false}
+                width={40}
               />
               <Tooltip
-                cursor={{ fill: 'var(--color-accent)', fillOpacity: 0.06 }}
+                cursor={{ stroke: C_REVENUE, strokeOpacity: 0.3 }}
                 contentStyle={{
                   background: 'var(--color-bg-elevated)',
                   border: '1px solid var(--color-border)',
-                  borderRadius: 0,
+                  borderRadius: 8,
                   fontSize: 12,
                   color: 'var(--color-text-primary)',
                   boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
                 }}
                 labelStyle={{ color: 'var(--color-text-primary)', fontWeight: 600 }}
                 itemStyle={{ color: 'var(--color-text-primary)' }}
-                formatter={(value: number | string, name: string) => {
-                  const v = money(Number(value), 'RON');
-                  return name === 'medSmooth' ? [v, 'Med. glisantă'] : [v, 'Venit'];
-                }}
+                formatter={(value: number | string, name: string) => [money(Number(value), 'RON'), name]}
               />
-              <defs>
-                <linearGradient id="revBar" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.95} />
-                  <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0.5} />
-                </linearGradient>
-              </defs>
-              <Bar
-                dataKey="amount"
-                name="Venit"
-                fill="url(#revBar)"
-                radius={[3, 3, 0, 0]}
-                maxBarSize={22}
-                isAnimationActive={false}
+              <Area
+                type="monotone" dataKey="revenue" name="Venit" stackId="1"
+                stroke={C_REVENUE} strokeWidth={2} fill="url(#revArea)"
+                dot={false} activeDot={{ r: 3, fill: C_REVENUE }}
+                isAnimationActive animationDuration={850} animationEasing="ease-out"
               />
-              {/* 3-week rolling median — smoothing line (mediana glisantă) */}
-              <Line
-                type="monotone"
-                dataKey="medSmooth"
-                name="medSmooth"
-                stroke="var(--status-amber)"
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 3, fill: 'var(--status-amber)' }}
-                isAnimationActive={false}
+              <Area
+                type="monotone" dataKey="offers" name="Oferte" stackId="1"
+                stroke={C_OFFERS} strokeWidth={2} fill="url(#offArea)"
+                dot={false} activeDot={{ r: 3, fill: C_OFFERS }}
+                isAnimationActive animationDuration={850} animationBegin={150} animationEasing="ease-out"
               />
-              {median != null && (
-                <ReferenceLine
-                  y={median}
-                  stroke="var(--color-text-secondary)"
-                  strokeDasharray="4 4"
-                  strokeWidth={1.5}
-                  ifOverflow="extendDomain"
-                >
-                  <Label
-                    value={`Mediană ${money(median, 'RON')}`}
-                    position="insideTopRight"
-                    fill="var(--color-text-secondary)"
-                    fontSize={11}
-                    offset={6}
-                  />
-                </ReferenceLine>
-              )}
-            </ComposedChart>
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </div>
+
+      {/* Footer — combined total across the visible window */}
+      {buckets.length > 0 && !loading && !error && (
+        <div className="flex items-center justify-between border-t border-line pt-2 text-pm-2xs text-content-muted">
+          <span>Total {buckets.length} {NOUN[period][buckets.length === 1 ? 0 : 1]}</span>
+          <span className="font-semibold tabular-nums text-content-secondary">{money(windowTotal, 'RON')}</span>
+        </div>
+      )}
     </div>
   );
 }

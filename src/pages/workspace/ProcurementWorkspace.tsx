@@ -1,21 +1,10 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
-import { Package, Boxes, ShoppingCart } from 'lucide-react';
 import type { User } from '@/core/types';
-import Page from '@/components/ui/Page';
-import WorkspaceTabs, { type WorkspaceTab } from '@/components/ui/WorkspaceTabs';
+import WorkspaceShell from './WorkspaceShell';
 import WorkspaceSkeleton from '@/redesign/ui/WorkspaceSkeleton';
-
-
-
 const WarehousePage = lazy(() => import('@/redesign/pages/warehouse/WarehousePage'));
 const InventoryPage = lazy(() => import('@/redesign/pages/InventoryPage'));
 const ProcurementWorkspacePage = lazy(() => import('@/redesign/pages/procurement/ProcurementWorkspacePage'));
-
-const TABS: WorkspaceTab[] = [
-  { id: 'warehouse',       label: 'Depozit',   icon: Package,      prefetch: () => import('@/redesign/pages/warehouse/WarehousePage') },
-  { id: 'materials',       label: 'Inventar',  icon: Boxes,        prefetch: () => import('@/redesign/pages/InventoryPage') },
-  { id: 'purchase-orders', label: 'Achiziții', icon: ShoppingCart, prefetch: () => import('@/redesign/pages/procurement/ProcurementWorkspacePage') },
-];
 
 interface Props {
   user: User | null;
@@ -23,7 +12,7 @@ interface Props {
   initialTab?: string;
 }
 
-export default function ProcurementWorkspace({ user, onNavigate, initialTab }: Props) {
+export default function ProcurementWorkspace({ user, onNavigate: _onNavigate, initialTab }: Props) {
   const REMOVED = ['three-way-match', 'goods-receipt', 'rfqs', 'receptii', 'furnizori', 'comenzi'];
   const safeInitial = (() => {
     if (!initialTab) return 'warehouse';
@@ -41,15 +30,8 @@ export default function ProcurementWorkspace({ user, onNavigate, initialTab }: P
     }
   }, [initialTab]);
 
-  const handleTabChange = (t: string) => {
-    setVisited(prev => { const s = new Set(prev); s.add(t); return s; });
-    setTab(t);
-    onNavigate(t);
-  };
-
   return (
-    <Page fit layout="row">
-      <WorkspaceTabs tabs={TABS} active={tab} onChange={handleTabChange} />
+    <WorkspaceShell>
       <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
         <div className={tab === 'warehouse' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
           <Suspense fallback={<WorkspaceSkeleton />}>
@@ -67,6 +49,6 @@ export default function ProcurementWorkspace({ user, onNavigate, initialTab }: P
           </Suspense>
         </div>
       </div>
-    </Page>
+    </WorkspaceShell>
   );
 }

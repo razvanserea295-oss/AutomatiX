@@ -1,31 +1,8 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import React, { lazy, Suspense, useState, useEffect, useCallback, useMemo } from 'react';
 import { flushSync } from 'react-dom';
-import { Search, Edit2, Trash2, FolderKanban, MessageSquare, Plus, CheckCircle2, Clock, Circle, Network, ChevronDown, History, Loader2, FileText, X as XIcon, Download as DownloadIcon, Eye, Link2, Copy, Trash, PanelLeft } from 'lucide-react';
+import { Search, Edit2, Trash2, FolderKanban, MessageSquare, Plus, CheckCircle2, Clock, Circle, Network, ChevronDown, History, Loader2, FileText, X as XIcon, Download as DownloadIcon, Eye, Link2, Copy, Trash, PanelLeft } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { ViewerBanner } from '@/components/ViewerBanner';
 import { useViewerMode } from '@/hooks/useViewerMode';
@@ -47,8 +24,8 @@ import { projectStatus } from '@/lib/statusTokens';
 import { confirmDialog } from '@/components/ConfirmDialog';
 import ProjectsEnhancements from '@/pages/projects/ProjectsEnhancements';
 
-
-import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout, CardSlot, PAGE_GRID_12 } from '@/app-ui';
+import PageLoadingShell from '@/redesign/ui/PageLoadingShell';
 import Card from '@/redesign/ui/Card';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
@@ -56,15 +33,10 @@ import StatusBadge from '@/redesign/ui/StatusBadge';
 import SectionHeader from '@/redesign/ui/SectionHeader';
 import EmptyState from '@/redesign/ui/EmptyState';
 import { filterSearchInputCls, filterSearchIconCls } from '@/redesign/ui/filterControls';
+import { THEAD_STICKY } from '@/redesign/ui/SortableTh';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
 
-
-
 const DxfViewer = lazy(() => import('@/components/DxfViewer'));
-
-
-
-
 
 interface StageRevision {
   stage: string;
@@ -73,22 +45,13 @@ interface StageRevision {
   note: string;
 }
 
-
-
-
-
 interface Comment {
   id: number;
-  
-  
+
   user_name: string;
   content: string;
   created_at: string;
 }
-
-
-
-
 
 interface ProjectsPageProps {
   user: User | null;
@@ -117,7 +80,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
   const [newComment, setNewComment] = useState('');
   const [postingComment, setPostingComment] = useState(false);
 
-  
   interface ProjectDoc {
     id: number;
     name: string;
@@ -127,22 +89,17 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
     category_name: string;
     uploaded_by_name: string;
     uploaded_at: string;
-    
-    
+
     source?: 'document' | 'contract';
   }
   const [projectDocs, setProjectDocs] = useState<ProjectDoc[]>([]);
   const [docsLoading, setDocsLoading] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<ProjectDoc | null>(null);
   const { isOpen, editingItem, openModal, closeModal, isEditing } = useFormModal();
-  
-  
-  
+
   const isViewer = useViewerMode('projects');
 
   const loading = projectsLoading || clientsLoading;
-
-
 
   useEffect(() => {
     void fetchProjects();
@@ -150,11 +107,14 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
     void fetchProductionBoard();
   }, [fetchProjects, fetchClients, fetchProductionBoard]);
 
-  
-  
   useEffect(() => {
-    const focusId = sessionStorage.getItem('promix_focus_project');
     const action = sessionStorage.getItem('promix_focus_project_action');
+    if (action === 'create') {
+      sessionStorage.removeItem('promix_focus_project_action');
+      openModal();
+      return;
+    }
+    const focusId = sessionStorage.getItem('promix_focus_project');
     if (!focusId || projects.length === 0) return;
     const target = projects.find(p => p.id === Number(focusId));
     if (!target) return;
@@ -164,7 +124,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
     if (action === 'edit') openModal(target);
   }, [projects, openModal]);
 
-  
   useEffect(() => {
     if (selectedId == null) {
       setComments([]);
@@ -188,8 +147,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
     return () => { cancelled = true; };
   }, [selectedId]);
 
-  
-  
   const postComment = useCallback(async () => {
     const text = newComment.trim();
     if (!text || selectedId == null) return;
@@ -206,7 +163,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
     }
   }, [newComment, selectedId]);
 
-  
   useEffect(() => {
     if (selectedId == null) { setProjectDocs([]); return; }
     let cancelled = false;
@@ -218,12 +174,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
     return () => { cancelled = true; };
   }, [selectedId]);
 
-  
-  
-  
-  
-
-  
   const [stageRevisions, setStageRevisions] = useState<StageRevision[]>([]);
   const [revisionNote, setRevisionNote] = useState('');
 
@@ -266,7 +216,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
     localStorage.setItem(`promix_stage_revisions_${selectedId}`, JSON.stringify(updated));
   };
 
-  
   const [treeCount, setTreeCount] = useState(0);
   useEffect(() => {
     if (selectedId == null) { setTreeCount(0); return; }
@@ -282,7 +231,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
       .catch(() => setTreeCount(0));
   }, [selectedId]);
 
-  
   const clientMap = useMemo(() => {
     const map = new Map<number, string>();
     clients.forEach((c) => map.set(c.id, c.name));
@@ -294,7 +242,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
     [clientMap],
   );
 
-  
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return projects;
@@ -319,9 +266,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
     if (filtered.length > 0) setSelectedId(filtered[0].id);
   }, [filtered, selectedId]);
 
-  
-  
-  
   const selectProject = (id: number) => {
     startMorphTransition(
       () => flushSync(() => setSelectedId(id)),
@@ -329,7 +273,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
     );
   };
 
-  
   const formFields: FormField[] = [
     { name: 'name', label: 'Nume proiect', type: 'text', required: true, placeholder: 'Nume proiect' },
     { name: 'description', label: 'Descriere', type: 'textarea', required: false, placeholder: 'Descriere proiect' },
@@ -340,22 +283,17 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
       required: true,
       options: clients.map(c => ({ value: c.id, label: c.name }))
     },
-    { name: 'estimated_value', label: 'Buget (EUR)', type: 'number', required: true, placeholder: '0.00' },
+    { name: 'estimated_value', label: 'Buget (lei)', type: 'number', required: true, placeholder: '0.00' },
     { name: 'deadline', label: 'Deadline', type: 'date', required: true },
     {
-      
-      
-      
+
       name: 'stage_id',
       label: 'Etapa productie',
       type: 'select',
       required: false,
       options: productionBoard.map(c => ({ value: c.stage.id, label: c.stage.name })),
     },
-    
-    
-    
-    
+
     {
       name: 'priority',
       label: 'Prioritate',
@@ -370,8 +308,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
   ];
 
   const handleSubmit = async (data: Record<string, any>) => {
-    
-    
+
     const name = String(data.name ?? '').trim();
     if (!name) throw new Error('Numele proiectului este obligatoriu');
     const clientId = Number(data.client_id);
@@ -409,72 +346,48 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
     }
   };
 
-  
   if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center bg-surface-page">
-        <Loader2 className="h-6 w-6 animate-spin text-content-muted" />
-      </div>
-    );
+    return <PageLoadingShell label="Se încarcă proiectele" />;
   }
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="wide" padding="comfortable" className="relative">
-        <ViewerBanner page="projects" />
-
-        {}
-        <header className="enter-up shrink-0 flex flex-col gap-4 pb-4 border-b border-line/60 xl:flex-row xl:items-center xl:justify-between" style={{ animationDelay: '0ms' }}>
-          <div className="flex items-center gap-4 min-w-0">
-            <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-              <FolderKanban className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              {/* No giant "Proiecte" title — the breadcrumb + tab already say where
-                  you are (design-system rule: location is conveyed by the shell, not
-                  a repeated page H1). One smaller, distinct title + a subtitle. */}
-              <h1 className="text-pm-lg font-semibold text-content-primary leading-tight truncate">Portofoliu proiecte</h1>
-              <p className="mt-0.5 text-pm-sm text-content-muted">
-                Etape de producție, piese și documente — toate într-un singur loc
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <SplitViewToggle enabled={splitView} onToggle={setSplitView} />
-            {!isViewer && (
-              <Button size="md" onClick={() => openModal()}>
-                <Plus className="h-4 w-4" /> Proiect nou
-              </Button>
-            )}
-          </div>
-        </header>
-
-        {}
-        <div className="enter-up flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-5" style={{ animationDelay: '160ms' }}>
-
-          {}
-          {splitView ? (
-            <Card padding="none" className="xl:col-span-4 min-w-0 min-h-0 flex flex-col overflow-hidden">
-              <div className="shrink-0 px-4 pt-4 pb-3 border-b border-line/70">
-                <div className="flex items-center justify-between gap-2 mb-3">
-                  <h2 className="text-pm-eyebrow font-semibold uppercase tracking-wide text-content-muted">Proiecte</h2>
-                  <span className="text-pm-2xs text-content-muted tabular-nums px-1.5 py-0.5 rounded-md bg-surface-tertiary">
-                    {filtered.length}
-                  </span>
-                </div>
-                <div className="relative group">
-                  <Search className={filterSearchIconCls} aria-hidden />
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Caută proiect..."
-                    aria-label="Caută proiect"
-                    className={`${filterSearchInputCls} !w-full`}
-                  />
-                </div>
+    <DashboardLayout
+        chrome={(
+          <PageChrome
+            toolbar={
+              <div className="relative">
+                <Search className={filterSearchIconCls} aria-hidden />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Caută proiect..."
+                  aria-label="Caută proiect"
+                  className={filterSearchInputCls}
+                />
               </div>
+            }
+            actions={
+              <>
+                <SplitViewToggle enabled={splitView} onToggle={setSplitView} />
+                {!isViewer && (
+                  <Button size="md" onClick={() => openModal()}>
+                    <Plus className="h-4 w-4" /> Proiect nou
+                  </Button>
+                )}
+              </>
+            }
+          />
+        )}
+      leading={<ViewerBanner page="projects" />}
+      bodyClassName="relative page-body-polish"
+      contentClassName="max-w-[var(--page-max-wide)] mx-auto stagger-in"
+    >
+        <div className={PAGE_GRID_12}>
 
+          {splitView ? (
+            <CardSlot size="md" as="div">
+            <Card padding="none" className="min-w-0 min-h-0 flex flex-col overflow-hidden">
               <div className="flex-1 min-h-0 overflow-y-auto">
                 {filtered.length === 0 ? (
                   <EmptyState
@@ -503,7 +416,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                             : 'hover:bg-surface-tertiary/40',
                         )}
                       >
-                        {}
                         <span
                           aria-hidden
                           className={cn(
@@ -548,22 +460,23 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                 )}
               </div>
             </Card>
+            </CardSlot>
           ) : (
-            
-            
+
+            <CardSlot size="xs" as="div" className="lg:col-span-1 xl:col-span-1 self-start">
             <button
               type="button"
               onClick={() => setSplitView(true)}
               aria-label="Arata lista proiecte"
               title="Arata lista proiecte"
-              className="xl:col-span-1 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-surface-primary text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] self-start"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-surface-primary text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
             >
               <PanelLeft className="h-4 w-4" />
             </button>
+            </CardSlot>
           )}
-
-          {}
-          <div className={cn('min-w-0 min-h-0 overflow-y-auto flex flex-col gap-5 pr-0.5', splitView ? 'xl:col-span-8' : 'xl:col-span-11')}>
+          <CardSlot size={splitView ? 'lg' : 'xl'} as="div" className={splitView ? undefined : 'xl:col-span-11 lg:col-span-11'}>
+          <div className="min-w-0 min-h-0 overflow-y-auto flex flex-col gap-5 lg:gap-6 pr-0.5">
             {!selected ? (
               <Card padding="lg" className="flex flex-col items-center justify-center min-h-[60vh]">
                 <EmptyState
@@ -573,14 +486,13 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                 />
               </Card>
             ) : (
-              
-              
+
               <div key={selected.id} className="stagger-in contents">
                 {
 }
                 <Card
                   padding="lg"
-                  tone="elevated"
+                  tone="default"
                   vtName={vtName('project', selected.id)}
                   className="min-w-0"
                 >
@@ -593,7 +505,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                       <p className="mt-1 text-pm-sm text-content-muted">{getClientName(selected)}</p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      {}
                       {selected.status !== 'blocat' && selected.status !== 'anulat' && (
                         <button
                           type="button"
@@ -656,11 +567,9 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                     </div>
                   </div>
                 </Card>
-
-                {}
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
-                  {}
-                  <Card padding="lg" className="xl:col-span-8 min-w-0">
+                <div className={PAGE_GRID_12}>
+                  <CardSlot size="lg" as="div">
+                  <Card padding="lg" className="min-w-0">
                     <SectionHeader title="Informatii generale" icon={FolderKanban} className="mb-4" />
                     <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                       <div>
@@ -695,12 +604,12 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                       </div>
                     </div>
                   </Card>
-
-                  {}
+                  </CardSlot>
+                  <CardSlot size="md" as="div">
                   <Card
                     padding="lg"
                     interactive
-                    className="xl:col-span-4 min-w-0"
+                    className="min-w-0"
                     onClick={() => onNavigate('parts-tree', { projectId: selectedId! })}
                   >
                     <SectionHeader
@@ -719,7 +628,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                           {Array.from({ length: Math.min(treeCount, 30) }, (_, i) => (
                             <div
                               key={i}
-                              className="h-2 w-2 rounded-sm bg-accent/40 enter-scale"
+                              className="h-2 w-2 rounded-sm bg-accent/40"
                               style={{ animationDelay: `${Math.min(i * 18, 360)}ms` }}
                             />
                           ))}
@@ -734,14 +643,11 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                       </div>
                     )}
                   </Card>
+                  </CardSlot>
                 </div>
-
-                {}
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-                  {}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 lg:gap-6">
                   <Card padding="lg" className="min-w-0">
                     <SectionHeader title="Revizuire stadii" icon={History} className="mb-4" />
-                    {}
                     <div className="flex items-center gap-2 mb-3">
                       <input
                         type="text"
@@ -755,8 +661,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                         <Plus className="h-3.5 w-3.5" /> Adaugă
                       </Button>
                     </div>
-
-                    {}
                     {stageRevisions.length === 0 ? (
                       <p className="text-pm-xs text-content-muted">Nicio revizuire înregistrată.</p>
                     ) : (
@@ -777,8 +681,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                       </div>
                     )}
                   </Card>
-
-                  {}
                   <Card padding="lg" className="min-w-0">
                     <SectionHeader
                       title="Documente atașate"
@@ -829,8 +731,6 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                     )}
                   </Card>
                 </div>
-
-                {}
                 <Card padding="lg" className="min-w-0">
                   <SectionHeader title="Comentarii" icon={MessageSquare} className="mb-4" />
                   <div className="space-y-3">
@@ -840,9 +740,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
                           value={newComment}
                           onChange={(e) => setNewComment(e.target.value)}
                           onKeyDown={(e) => {
-                            
-                            
-                            
+
                             if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
                               e.preventDefault();
                               void postComment();
@@ -906,6 +804,7 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
               </div>
             )}
           </div>
+          </CardSlot>
         </div>
 
         <FormModal
@@ -921,12 +820,9 @@ export default function ProjectsPage({ user: _user, onNavigate }: ProjectsPagePr
         {previewDoc && (
           <DocumentPreviewModal doc={previewDoc} onClose={() => setPreviewDoc(null)} />
         )}
-      </Page.Body>
-    </Page>
+    </DashboardLayout>
   );
 }
-
-
 
 function DocumentPreviewModal({
   doc,
@@ -940,8 +836,6 @@ function DocumentPreviewModal({
   const isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'].includes(ext);
   const isText = ['txt', 'md', 'csv', 'json', 'xml', 'yaml', 'yml', 'log'].includes(ext);
 
-  
-  
   const url = (() => {
     const p = doc.file_path || '';
     if (!p) return '';
@@ -993,7 +887,7 @@ function DocumentPreviewModal({
               <img src={url} alt={doc.name} className="max-h-full max-w-full object-contain" />
             </div>
           ) : isText ? (
-            <iframe src={url} title={doc.name} className="h-full w-full border-0 bg-white" />
+            <iframe src={url} title={doc.name} className="h-full w-full border-0 bg-surface-primary" />
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
               <FileText className="h-12 w-12 text-content-muted" />
@@ -1016,10 +910,6 @@ function DocumentPreviewModal({
     </div>
   );
 }
-
-
-
-
 
 const PHASE_COLS: { key: keyof ProductionTracking; label: string }[] = [
   { key: 'proiectare', label: 'Proiect.' },
@@ -1059,7 +949,7 @@ export function PiecesTrackingTable({ pieces }: { pieces: ProjectPiece[] }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left border-collapse min-w-[900px]">
-        <thead>
+        <thead className={THEAD_STICKY}>
           <tr className="bg-surface-tertiary/40">
             <th className="px-2 py-1.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted border-b border-line whitespace-nowrap">Piesa</th>
             <th className="px-2 py-1.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted border-b border-line whitespace-nowrap text-center">Cant.</th>
@@ -1117,7 +1007,6 @@ export function PiecesTrackingTable({ pieces }: { pieces: ProjectPiece[] }) {
               </tr>
               {
 
-
 }
               <tr key={`dxf-${piece.id}`} aria-hidden={expandedId !== piece.id}>
                 <td colSpan={PHASE_COLS.length + 3} className="border-0 p-0">
@@ -1166,8 +1055,6 @@ export function PiecesTrackingTable({ pieces }: { pieces: ProjectPiece[] }) {
           })}
         </tbody>
       </table>
-
-      {}
       {pieces.length > 0 && (() => {
         const allTrackings = pieces.map((p) => parseProductionTracking(p.production_tracking));
         const totalPhases = allTrackings.length * PHASE_COLS.length;

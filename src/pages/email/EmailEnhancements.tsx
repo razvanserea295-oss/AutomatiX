@@ -3,7 +3,7 @@
 
 
 import { useState } from 'react';
-import { Layout, Clock, Combine, Link2, Eye, FilterIcon, PenTool, Plus, Trash2 } from 'lucide-react';
+import { Layout, Clock, Combine, Link2, Eye, FilterIcon, PenTool, Plus, Trash2 } from '@/icons';
 import { useLocalStorage, SectionCard } from '@/components/enhancements';
 import Button from '@/components/ui/Button';
 import { toast } from '@/store/toastStore';

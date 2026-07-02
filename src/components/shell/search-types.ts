@@ -1,6 +1,6 @@
 import {
   Search, FolderKanban, Building2, Package, FileText, Wrench, Box,
-} from 'lucide-react';
+} from '@/icons';
 
 export interface SearchHit {
   type: 'project' | 'client' | 'material' | 'document' | 'station' | 'piece';

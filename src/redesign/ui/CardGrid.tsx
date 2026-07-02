@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw } from '@/icons';
 import { cn } from '@/lib/cn';
 import { useLayoutEditStore } from '@/store/layoutEditStore';
 import { useCardLayout } from '@/redesign/lib/useCardLayout';

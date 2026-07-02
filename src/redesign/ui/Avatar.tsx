@@ -1,88 +1,139 @@
+import { useEffect, useRef, type ImgHTMLAttributes, type ReactNode } from 'react';
+import { cn } from '@/lib/cn';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-import type { ReactNode } from 'react';
+type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+type AvatarStatus = 'online' | 'away' | 'offline';
+type AvatarShape = 'circle' | 'rounded';
 
 interface AvatarProps {
   name?: string;
   src?: string;
   alt?: string;
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  
-  online?: boolean;
-  
+  size?: AvatarSize;
+  shape?: AvatarShape;
+  status?: AvatarStatus;
   tone?: 'accent' | 'green' | 'red' | 'amber' | 'blue' | 'teal' | 'purple' | 'neutral';
   className?: string;
   children?: ReactNode;
 }
 
-const sizing = {
-  xs: { box: 'h-5 w-5',  text: 'text-pm-2xs', dot: 'h-1.5 w-1.5 ring-1' },
-  sm: { box: 'h-6 w-6',  text: 'text-pm-2xs', dot: 'h-2 w-2 ring-1' },
-  md: { box: 'h-8 w-8',  text: 'text-pm-xs',  dot: 'h-2.5 w-2.5 ring-2' },
-  lg: { box: 'h-10 w-10', text: 'text-pm-sm', dot: 'h-3 w-3 ring-2' },
-  xl: { box: 'h-12 w-12', text: 'text-pm-md', dot: 'h-3 w-3 ring-2' },
+const sizing: Record<AvatarSize, { status: string }> = {
+  xs: { status: 'h-1.5 w-1.5' },
+  sm: { status: 'h-2 w-2' },
+  md: { status: 'h-2.5 w-2.5' },
+  lg: { status: 'h-3 w-3' },
+  xl: { status: 'h-3.5 w-3.5' },
+  '2xl': { status: 'h-4 w-4' },
 };
 
-const palette = ['accent', 'teal', 'purple', 'blue', 'green', 'amber'] as const;
-type PaletteKey = typeof palette[number];
+const palette = ['#4D86FF', '#2dd4bf', '#a78bfa', '#60a5fa', '#34d399', '#fbbf24'] as const;
 
-
-const toneClasses: Record<NonNullable<AvatarProps['tone']>, string> = {
-  accent:  'bg-accent-muted text-accent ring-accent/20',
-  green:   'bg-status-green/15 text-status-green ring-status-green/20',
-  red:     'bg-status-red/15 text-status-red ring-status-red/20',
-  amber:   'bg-status-amber/15 text-status-amber ring-status-amber/20',
-  blue:    'bg-status-blue/15 text-status-blue ring-status-blue/20',
-  teal:    'bg-status-teal/15 text-status-teal ring-status-teal/20',
-  purple:  'bg-status-purple/15 text-status-purple ring-status-purple/20',
-  neutral: 'bg-surface-tertiary text-content-secondary ring-line/60',
+const toneBg: Record<NonNullable<AvatarProps['tone']>, string> = {
+  accent: '#4D86FF',
+  green: '#34d399',
+  red: '#f87171',
+  amber: '#fbbf24',
+  blue: '#60a5fa',
+  teal: '#2dd4bf',
+  purple: '#a78bfa',
+  neutral: '#6b7280',
 };
 
-function hashTone(s: string): PaletteKey {
+function hashColor(s: string): string {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
   return palette[Math.abs(h) % palette.length];
 }
 
 function getInitials(name: string): string {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map(s => s[0]).join('').toUpperCase();
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((s) => s[0]).join('').toUpperCase();
 }
 
-export default function Avatar({ name, src, alt, size = 'md', online, tone, className = '', children }: AvatarProps) {
-  const s = sizing[size];
-  const resolvedTone = tone ?? (name ? hashTone(name) : 'neutral');
+function AvatarImage({ src, alt, className, ...props }: ImgHTMLAttributes<HTMLImageElement>) {
+  const ref = useRef<HTMLImageElement>(null);
+
+  useEffect(() => {
+    const img = ref.current;
+    if (img?.complete) img.style.opacity = '1';
+  }, []);
 
   return (
-    <span className={`relative inline-flex shrink-0 ${s.box} ${className}`}>
+    <img
+      ref={ref}
+      src={src}
+      alt={alt}
+      className={className}
+      onLoad={(e) => { e.currentTarget.style.opacity = '1'; }}
+      {...props}
+    />
+  );
+}
+
+export default function Avatar({
+  name,
+  src,
+  alt,
+  size = 'md',
+  shape = 'circle',
+  status,
+  tone,
+  className = '',
+  children,
+}: AvatarProps) {
+  const bg = tone ? toneBg[tone] : name ? hashColor(name) : toneBg.neutral;
+
+  return (
+    <span
+      className={cn(
+        'ds-avatar',
+        `ds-avatar--${size}`,
+        shape === 'rounded' && 'ds-avatar--rounded',
+        className,
+      )}
+    >
       {src ? (
-        <img
-          src={src}
-          alt={alt ?? name ?? 'avatar'}
-          className="h-full w-full rounded-full object-cover ring-1 ring-line/60 transition-smooth duration-150"
-        />
+        <AvatarImage src={src} alt={alt ?? name ?? 'avatar'} />
       ) : (
-        <span className={`h-full w-full rounded-full inline-flex items-center justify-center font-semibold ring-1 transition-smooth duration-150 ${toneClasses[resolvedTone]}`}>
-          {children ?? (name ? <span className={s.text}>{getInitials(name)}</span> : null)}
+        <span className="ds-avatar__initials" style={{ backgroundColor: bg }}>
+          {children ?? (name ? getInitials(name) : null)}
         </span>
       )}
-      {online && (
+      {status && (
         <span
-          aria-label="Online"
-          className={`absolute bottom-0 right-0 rounded-full bg-status-green ring-surface-primary anim-scale-in ${s.dot}`}
+          className={cn(
+            'ds-avatar__status',
+            sizing[size].status,
+            status === 'online' && 'ds-avatar__status--online',
+            status === 'away' && 'ds-avatar__status--away',
+            status === 'offline' && 'ds-avatar__status--offline',
+          )}
+          aria-label={status}
         />
       )}
     </span>
+  );
+}
+
+export interface AvatarGroupProps {
+  max?: number;
+  size?: AvatarSize;
+  children: ReactNode;
+  className?: string;
+}
+
+export function AvatarGroup({ max = 4, size = 'md', children, className }: AvatarGroupProps) {
+  const items = Array.isArray(children) ? children : [children];
+  const visible = items.slice(0, max);
+  const overflow = items.length - max;
+
+  return (
+    <div className={cn('ds-avatar-group', className)}>
+      {visible.map((child, i) => (
+        <span key={i} className={cn(`ds-avatar--${size}`)}>
+          {child}
+        </span>
+      ))}
+      {overflow > 0 && <span className="ds-avatar-group__overflow">+{overflow}</span>}
+    </div>
   );
 }

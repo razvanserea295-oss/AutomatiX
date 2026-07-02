@@ -212,11 +212,20 @@ export function startScheduler(db: Database, save: () => void): void {
     escalationTimer = setInterval(() => {
       try { runEscalationStep(db, save); } catch (e) { console.error('[scheduler] escalation failed:', e); }
       try { PersonalTasksService.sweepDeadlineNotifications(db); save(); } catch (e) { console.error('[scheduler] task deadlines failed:', e); }
+      try {
+        const flipped = DeplasariService.autoMarkReturned(db);
+        if (flipped.length > 0) { console.log(`[scheduler] auto-marcat ${flipped.length} deplasare(i) ca "intors" (data întoarcerii trecută)`); save(); }
+      } catch (e) { console.error('[scheduler] deplasari auto-return failed:', e); }
     }, 15 * 60 * 1000);
-    
-    
+
+
     setTimeout(() => {
       try { PersonalTasksService.sweepDeadlineNotifications(db); save(); } catch {  }
+      // Boot catch-up: flip any trips whose return date passed while the server was down.
+      try {
+        const flipped = DeplasariService.autoMarkReturned(db);
+        if (flipped.length > 0) { console.log(`[boot] auto-marcat ${flipped.length} deplasare(i) ca "intors" (data întoarcerii trecută)`); save(); }
+      } catch {  }
     }, 5000);
   }
   
@@ -246,24 +255,9 @@ export function startScheduler(db: Database, save: () => void): void {
   
   
   
-  if (!exchangeRateTimer) {
-    const scheduleNextRate = () => {
-      const now = new Date();
-      const next = new Date(now);
-      next.setHours(13, 30, 0, 0);
-      if (next.getTime() <= now.getTime()) next.setDate(next.getDate() + 1);
-      exchangeRateTimer = setTimeout(async () => {
-        try { await ExchangeRateService.refreshRate(db, save); } catch (e) { console.error('[scheduler] BNR rate refresh failed:', e); }
-        exchangeRateTimer = null;
-        scheduleNextRate();
-      }, next.getTime() - now.getTime());
-    };
-    scheduleNextRate();
-    setTimeout(async () => {
-      try { if (ExchangeRateService.isStale(db)) await ExchangeRateService.refreshRate(db, save); }
-      catch (e) { console.error('[scheduler] BNR boot refresh failed:', e); }
-    }, 8000);
-  }
+  // BNR EUR/RON refresh retras — aplicația e mono-monedă (lei), nu mai există
+  // conversie valutară de sincronizat. (fostul timer zilnic la 13:30 + boot refresh)
+  void ExchangeRateService;
 }
 
 export function stopScheduler(): void {

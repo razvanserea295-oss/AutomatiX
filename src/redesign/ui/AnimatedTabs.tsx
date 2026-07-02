@@ -35,11 +35,11 @@ export default function AnimatedTabs({ tabs, active, onChange, className = '' }:
     <div
       ref={ref}
       role="tablist"
-      className={`relative inline-flex items-center gap-1 rounded-full border border-line/70 bg-surface-secondary surface-frost p-1 ${className}`}
+      className={`relative inline-flex items-center gap-1 rounded-full border border-line/70 bg-surface-secondary p-1 ${className}`}
     >
       <span
         aria-hidden
-        className="ds-tab-indicator absolute top-1 bottom-1 rounded-full bg-accent-muted shadow-[var(--elevation-1)]"
+        className="ds-tab-indicator ds-tab-indicator--pill absolute top-1 bottom-1 rounded-full bg-accent-muted shadow-[var(--elevation-1)]"
         style={{ left: ind.left, width: ind.width }}
       />
       {tabs.map((t) => {

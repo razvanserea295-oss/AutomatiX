@@ -7,7 +7,7 @@
 
 
 import { useEffect, useState } from 'react';
-import { Crown, Flame, AlertTriangle, Clock, ArrowRight, Shield, Loader2, Check, CheckCircle2 } from 'lucide-react';
+import { Crown, Flame, AlertTriangle, Clock, ArrowRight, Shield, Loader2, Check, CheckCircle2 } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { useEscClose } from '@/hooks/useEscClose';
 import { useHandoffStore, type ProjectHandoff } from '@/store/handoffStore';

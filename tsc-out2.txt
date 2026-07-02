@@ -1,0 +1,74 @@
+﻿node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm 
+help npmrc` for supported config options.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+src/redesign/pages/settings/SettingsPage.tsx(87,8): error TS2440: Import declaration conflicts with local declaration of 'AspectSection'.
+src/redesign/pages/settings/SettingsPage.tsx(412,18): error TS2304: Cannot find name 'useAccentStore'.
+src/redesign/pages/settings/SettingsPage.tsx(412,33): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(413,21): error TS2304: Cannot find name 'useAccentStore'.
+src/redesign/pages/settings/SettingsPage.tsx(413,36): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(414,19): error TS2304: Cannot find name 'useLayoutStore'.
+src/redesign/pages/settings/SettingsPage.tsx(414,34): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(415,22): error TS2304: Cannot find name 'useLayoutStore'.
+src/redesign/pages/settings/SettingsPage.tsx(415,37): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(416,18): error TS2304: Cannot find name 'useMotionStore'.
+src/redesign/pages/settings/SettingsPage.tsx(416,33): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(417,21): error TS2304: Cannot find name 'useMotionStore'.
+src/redesign/pages/settings/SettingsPage.tsx(417,36): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(418,17): error TS2304: Cannot find name 'useTextScaleStore'.
+src/redesign/pages/settings/SettingsPage.tsx(418,35): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(419,20): error TS2304: Cannot find name 'useTextScaleStore'.
+src/redesign/pages/settings/SettingsPage.tsx(419,38): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(420,28): error TS2552: Cannot find name 'useCardTransparencyStore'. Did you mean 'setCardTransparency'?
+src/redesign/pages/settings/SettingsPage.tsx(420,53): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(421,31): error TS2552: Cannot find name 'useCardTransparencyStore'. Did you mean 'setCardTransparency'?
+src/redesign/pages/settings/SettingsPage.tsx(421,56): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(422,19): error TS2304: Cannot find name 'useNavSyncStore'.
+src/redesign/pages/settings/SettingsPage.tsx(422,35): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(423,22): error TS2304: Cannot find name 'useNavSyncStore'.
+src/redesign/pages/settings/SettingsPage.tsx(423,38): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(424,23): error TS2304: Cannot find name 'useShellLayoutStore'.
+src/redesign/pages/settings/SettingsPage.tsx(424,43): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(425,26): error TS2304: Cannot find name 'useShellLayoutStore'.
+src/redesign/pages/settings/SettingsPage.tsx(425,46): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(426,18): error TS2304: Cannot find name 'useUiModeStore'.
+src/redesign/pages/settings/SettingsPage.tsx(426,33): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(427,21): error TS2304: Cannot find name 'useUiModeStore'.
+src/redesign/pages/settings/SettingsPage.tsx(427,36): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(439,10): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(500,14): error TS2304: Cannot find name 'Palette'.
+src/redesign/pages/settings/SettingsPage.tsx(517,16): error TS2304: Cannot find name 'RotateCcw'.
+src/redesign/pages/settings/SettingsPage.tsx(527,10): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(539,10): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(551,10): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(563,10): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(575,10): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(589,10): error TS2304: Cannot find name 'LayoutPresetPicker'.
+src/redesign/pages/settings/SettingsPage.tsx(606,14): error TS2304: Cannot find name 'Palette'.
+src/redesign/pages/settings/SettingsPage.tsx(609,25): error TS2304: Cannot find name 'PageCustomizerWizard'.
+src/redesign/pages/settings/SettingsPage.tsx(618,14): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(621,25): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(629,14): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(632,25): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(640,14): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(643,25): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(651,14): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(654,25): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(662,14): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(665,25): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(673,14): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(676,25): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(689,14): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(692,25): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(700,14): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(703,25): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(711,14): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(714,25): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(722,14): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(725,25): error TS7006: Parameter 'v' implicitly has an 'any' type.
+src/redesign/pages/settings/SettingsPage.tsx(733,14): error TS2304: Cannot find name 'Segmented'.
+src/redesign/pages/settings/SettingsPage.tsx(736,25): error TS7006: Parameter 'v' implicitly has an 'any' type.

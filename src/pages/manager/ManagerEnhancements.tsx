@@ -4,7 +4,7 @@
 
 
 import { useEffect, useMemo, useState } from 'react';
-import { TrendingUp, FileDown, ListChecks, Plus, ChevronDown } from 'lucide-react';
+import { TrendingUp, FileDown, ListChecks, Plus, ChevronDown } from '@/icons';
 import { useLocalStorage, SectionCard, ExportMenu } from '@/components/enhancements';
 import Button from '@/components/ui/Button';
 import StatusBadge from '@/components/ui/StatusBadge';

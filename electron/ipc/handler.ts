@@ -77,6 +77,8 @@ import { registerBroadcastHandlers } from './broadcasts';
 import { registerActivityLogHandlers } from './activityLog';
 import { registerSetupHandlers } from './setup';
 import { registerPdfExportHandlers } from './pdfExport';
+import { registerPrintingHandlers } from './printing';
+import { registerRemoteSupportHandlers } from './remoteSupport';
 
 
 
@@ -159,7 +161,9 @@ const REGISTRARS: ReadonlyArray<[string, () => void]> = [
   ['activityLog', registerActivityLogHandlers],
   ['setup', registerSetupHandlers],
   ['pdfExport', registerPdfExportHandlers],
+  ['printing', registerPrintingHandlers],
   ['sharedStorage', registerSharedStorageHandlers],
+  ['remoteSupport', registerRemoteSupportHandlers],
 ];
 
 export function registerAllHandlers(): void {

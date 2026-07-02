@@ -1,6 +1,7 @@
 import { useMemo, useState, useRef, useEffect, memo } from 'react';
 import { createPortal } from 'react-dom';
 import type { SidebarItem } from './WorkspacePanel';
+import { useLayoutStore } from '@/store/layoutStore';
 
 interface NavbarProps {
   items: SidebarItem[];
@@ -14,7 +15,28 @@ interface NavbarProps {
 // dependent) open a flyout menu to the RIGHT of the rail.
 const SETTINGS_IDS = new Set(['sistem-workspace', 'settings']);
 
+/** Short labels for the icon rail — keeps text readable at narrow width. */
+const RAIL_SHORT_LABEL: Record<string, string> = {
+  dashboard: 'Acasă',
+  'personal-workspace': 'Personal',
+  'sales-workspace': 'Vânzări',
+  'projects-contracts-workspace': 'Proiecte',
+  'engineering-workspace': 'Inginerie',
+  'production-workspace': 'Producție',
+  'procurement-workspace': 'Aproviz.',
+  'finance-workspace': 'Financiar',
+  'comunicare-workspace': 'Comunicare',
+  'instrumente-workspace': 'Instrumente',
+  'sistem-workspace': 'Sistem',
+  settings: 'Setări',
+};
+
+function railLabel(item: SidebarItem): string {
+  return RAIL_SHORT_LABEL[item.id] ?? item.label.split(/[&(/]/)[0].trim().slice(0, 10);
+}
+
 function Navbar({ items }: NavbarProps) {
+  const navbarCollapsed = useLayoutStore((s) => s.navbarCollapsed);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [dropdownAnchor, setDropdownAnchor] = useState<{ left: number; top: number } | null>(null);
   const dropdownButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -49,7 +71,7 @@ function Navbar({ items }: NavbarProps) {
     if (!openDropdown) { setDropdownAnchor(null); return; }
     const measure = () => {
       const r = dropdownButtonRef.current?.getBoundingClientRect();
-      if (r) setDropdownAnchor({ left: r.right + 6, top: r.top });
+      if (r) setDropdownAnchor({ left: r.right + 8, top: r.top });
     };
     let raf = 0;
     const onMove = () => {
@@ -65,6 +87,9 @@ function Navbar({ items }: NavbarProps) {
       window.removeEventListener('scroll', onMove, true);
     };
   }, [openDropdown]);
+
+  // Close flyout when navbar collapses.
+  useEffect(() => { if (navbarCollapsed) setOpenDropdown(null); }, [navbarCollapsed]);
 
   // Outside-click closes the flyout.
   useEffect(() => {
@@ -107,18 +132,21 @@ function Navbar({ items }: NavbarProps) {
         aria-label={item.label}
         aria-expanded={isCollapsibleGroup ? isOpen : undefined}
         aria-haspopup={isCollapsibleGroup ? 'menu' : undefined}
-        className={`group relative flex h-11 w-11 items-center justify-center rounded-xl transition-smooth duration-150 active:scale-[0.94] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
+        className={`group relative flex w-full flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
           active
-            ? 'text-content-primary bg-accent/10'
-            : 'text-content-muted hover:text-content-primary hover:bg-surface-nav-hover'
+            ? 'bg-accent/10 text-content-primary'
+            : 'text-content-muted hover:bg-surface-nav-hover hover:text-content-primary'
         }`}
       >
-        <Icon className="h-[22px] w-[22px] shrink-0" />
+        <Icon className="h-5 w-5 shrink-0" />
+        <span className="max-w-full truncate text-center text-[9px] font-medium leading-tight tracking-tight">
+          {railLabel(item)}
+        </span>
         {item.isActive && (
-          <span className="absolute left-0 top-1.5 bottom-1.5 w-[2.5px] rounded-r-full bg-accent" aria-hidden />
+          <span className="absolute left-0 top-2 bottom-2 w-[2.5px] rounded-r-full bg-accent" aria-hidden />
         )}
         {item.badge !== undefined && item.badge > 0 && (
-          <span className="absolute right-1 top-1 inline-flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-status-red px-1 text-[8px] font-bold leading-none tabular-nums text-white">
+          <span className="absolute right-0.5 top-0.5 inline-flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-status-red px-1 text-[8px] font-bold leading-none tabular-nums text-white">
             {item.badge > 99 ? '99' : item.badge}
           </span>
         )}
@@ -127,17 +155,19 @@ function Navbar({ items }: NavbarProps) {
   };
 
   return (
-    <nav className="shell-rail flex flex-col items-center gap-1 w-[52px] shrink-0 py-3 bg-surface-nav border-r border-line select-none overflow-y-auto overflow-x-hidden">
-      {topGroups.map(renderRailItem)}
+    <nav
+      className={`shell-rail shell-rail-desktop flex shrink-0 flex-col items-stretch gap-0.5 overflow-y-auto overflow-x-hidden scrollbar-thin bg-surface-nav px-1 py-2 select-none transition-[width] duration-200 ease-in-out ${navbarCollapsed ? 'w-0 px-0' : 'border-r border-line'}`}
+    >
+      {!navbarCollapsed && topGroups.map(renderRailItem)}
       <div className="flex-1 min-h-[8px]" />
-      {bottomGroups.map(renderRailItem)}
+      {!navbarCollapsed && bottomGroups.map(renderRailItem)}
 
-      {activeGroup && dropdownAnchor && createPortal(
+      {!navbarCollapsed && activeGroup && dropdownAnchor && createPortal(
         <div
           ref={dropdownPanelRef}
           role="menu"
           style={{ position: 'fixed', left: dropdownAnchor.left, top: dropdownAnchor.top, zIndex: 9999 }}
-          className="min-w-[200px] bg-surface-nav border border-line shadow-[var(--elevation-3)] overflow-hidden rounded-xl anim-fade-slide-in origin-left p-1"
+          className="min-w-[200px] overflow-hidden rounded-lg border border-line bg-surface-nav p-1 shadow-[var(--elevation-3)] origin-left"
         >
           {activeGroup.children.map(child => {
             const ChildIcon = child.icon;
@@ -147,9 +177,9 @@ function Navbar({ items }: NavbarProps) {
                 type="button"
                 role="menuitem"
                 onClick={() => { setOpenDropdown(null); child.onClick?.(); }}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-pm-sm text-left transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] rounded-lg ${
+                className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-pm-sm transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
                   child.isActive
-                    ? 'text-accent bg-accent/8'
+                    ? 'bg-accent/10 text-accent'
                     : 'text-content-primary hover:bg-surface-nav-hover'
                 }`}
               >

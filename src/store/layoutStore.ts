@@ -1,17 +1,27 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { debounce } from '@/lib/debounce';
+import { applyDensity, readPersistedDensity, type UiDensity } from '@/lib/density';
 
 export type Breakpoint = 'mobile' | 'tablet' | 'desktop';
-export type Density = 'comfortable' | 'compact';
+export type Density = UiDensity;
+export type SidebarVariant = 'enterprise' | 'contrast';
+/** Primary navigation surface. Alternatives to the left sidebar are admin-only. */
+export type NavLayout = 'sidebar' | 'launchpad' | 'radial';
 
 interface LayoutState {
   sidebarCollapsed: boolean;
+  sidebarVariant: SidebarVariant;
+  navLayout: NavLayout;
+  navbarCollapsed: boolean;
   breakpoint: Breakpoint;
   density: Density;
   commandPaletteOpen: boolean;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  setSidebarVariant: (variant: SidebarVariant) => void;
+  setNavLayout: (layout: NavLayout) => void;
+  toggleNavbar: () => void;
   setBreakpoint: (breakpoint: Breakpoint) => void;
   setDensity: (density: Density) => void;
   toggleDensity: () => void;
@@ -23,24 +33,42 @@ export const useLayoutStore = create<LayoutState>()(
   persist(
     (set) => ({
       sidebarCollapsed: false,
+      sidebarVariant: 'enterprise',
+      navLayout: 'sidebar',
+      navbarCollapsed: false,
       breakpoint: 'desktop',
-      density: 'comfortable',
+      density: readPersistedDensity(),
       commandPaletteOpen: false,
 
       toggleSidebar: () =>
         set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
 
+      setNavLayout: (layout) => set({ navLayout: layout }),
+
+      toggleNavbar: () =>
+        set((state) => ({ navbarCollapsed: !state.navbarCollapsed, sidebarCollapsed: !state.sidebarCollapsed })),
+
       setSidebarCollapsed: (collapsed) =>
         set({ sidebarCollapsed: collapsed }),
+
+      setSidebarVariant: (variant) =>
+        set({ sidebarVariant: variant }),
 
       setBreakpoint: (breakpoint) =>
         set({ breakpoint }),
 
-      setDensity: (density) =>
-        set({ density }),
+      setDensity: (density) => {
+        set({ density });
+        applyDensity(density);
+      },
 
       toggleDensity: () =>
-        set((state) => ({ density: state.density === 'comfortable' ? 'compact' : 'comfortable' })),
+        set((state) => {
+          const next: Density =
+            state.density === 'comfortable' ? 'compact' : state.density === 'compact' ? 'dense' : 'comfortable';
+          applyDensity(next);
+          return { density: next };
+        }),
 
       openCommandPalette: () =>
         set({ commandPaletteOpen: true }),
@@ -52,6 +80,9 @@ export const useLayoutStore = create<LayoutState>()(
       name: 'promix-layout-storage',
       partialize: (state) => ({
         sidebarCollapsed: state.sidebarCollapsed,
+        sidebarVariant: state.sidebarVariant,
+        navLayout: state.navLayout,
+        navbarCollapsed: state.navbarCollapsed,
         density: state.density,
       }),
     }

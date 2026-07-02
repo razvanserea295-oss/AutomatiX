@@ -1,49 +1,8 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { flushSync } from 'react-dom';
-import { Activity, Users, AlertOctagon, LogIn, LogOut, Shield, RefreshCw, ShieldCheck, History, Loader2, Clock } from 'lucide-react';
+import { Activity, Users, AlertOctagon, LogIn, LogOut, Shield, RefreshCw, ShieldCheck, History, Loader2, Clock } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
 import { confirmDialog } from '@/components/ConfirmDialog';
@@ -54,15 +13,12 @@ import { parseBackendTimestamp } from '@/lib/format';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import Page from '@/redesign/ui/Page';
-import Card, { CardBody } from '@/redesign/ui/Card';
+import { PageChrome, DashboardLayout, Panel, TablePanel, ListPanel, PAGE_GRID_12 } from '@/app-ui';
 import KpiCard from '@/redesign/ui/KpiCard';
 import StatusBadge from '@/redesign/ui/StatusBadge';
-import { GlassCard, MetricValue, SectionHeader, EmptyState } from '@/redesign/ui';
+import { EmptyState } from '@/redesign/ui';
+import { THEAD_STICKY } from '@/redesign/ui/SortableTh';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
-
-
-
-
 
 interface ActiveSession {
   session_id: string;
@@ -89,8 +45,6 @@ interface Summary {
   logins_today: number;
   failed_logins_today: number;
 }
-
-
 
 export default function UserSessionsPage({ user }: { user: User | null }) {
   const isAdmin = (user?.role_name || '').toLowerCase() === 'admin';
@@ -124,9 +78,7 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
   useEffect(() => {
     if (!isAdmin) { setLoading(false); return; }
     fetchAll();
-    
-    
-    
+
     let id: ReturnType<typeof setInterval> | null = null;
     const start = () => { if (id) return; id = setInterval(fetchAll, 5000); };
     const stop  = () => { if (id) { clearInterval(id); id = null; } };
@@ -137,13 +89,10 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
   }, [fetchAll, isAdmin]);
 
   const loadHistory = useCallback(async (userId: number) => {
-    
-    
+
     startMorphTransition(() => flushSync(() => setSelectedUserId(userId)), { dir: 'forward' });
     setHistoryLoading(true);
-    
-    
-    
+
     requestAnimationFrame(() => {
       historyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
@@ -157,11 +106,6 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
       setHistoryLoading(false);
     }
   }, []);
-
-  
-
-
-
 
   const usersConnected = useMemo(() => {
     const byUser = new Map<number, ActiveSession[]>();
@@ -221,96 +165,42 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
   const multiDevice = summary && summary.active_sessions > summary.active_users;
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="full" padding="comfortable">
-
-        {
-
-
-}
-        <div className="shrink-0 enter-up pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
-          <div className="flex flex-wrap items-center gap-4">
-            <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-              <Activity className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-              <h1 className="text-pm-xl font-semibold text-content-primary leading-tight truncate">
-                Sesiuni &amp; activitate
-              </h1>
-              <p className="text-pm-xs text-content-muted mt-0.5">
-                Cine e conectat acum, IP-uri, istoric login/logout
-              </p>
-            </div>
-
-            <div className="ml-auto flex items-center gap-3">
-              <span className="hidden sm:inline-flex h-8 items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3">
-                <span className="relative inline-flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-2.5 w-2.5 rounded-full bg-status-green opacity-75 animate-ping" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-status-green" />
-                </span>
-                <span className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">
-                  Live · auto-refresh 5s
-                </span>
-              </span>
-              <Button size="sm" variant="outline" onClick={fetchAll} disabled={refreshing}>
-                {refreshing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+    <DashboardLayout
+        
+        chrome={(
+          <PageChrome
+            actions={
+              <Button size="md" variant="outline" onClick={() => void fetchAll()} disabled={refreshing}>
+                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
                 Reîmprospătează
               </Button>
-            </div>
-          </div>
-        </div>
-
-        {
-
-}
-        <div className="shrink-0 grid grid-cols-2 lg:grid-cols-6 gap-4 enter-up" style={{ animationDelay: '60ms' }}>
-          {}
-          <GlassCard
-            size="regular"
-            className="col-span-2 lg:col-span-2 !p-5 flex flex-col justify-center bg-gradient-to-br from-status-green/10 to-transparent"
-          >
-            <p className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">
-              Conectați acum
-            </p>
-            <div className="mt-2 flex items-baseline gap-2">
-              <MetricValue value={summary?.active_users ?? 0} size="display-lg" />
-              <span className="text-pm-sm text-content-secondary">
-                {(summary?.active_users ?? 0) === 1 ? 'utilizator' : 'utilizatori'}
-              </span>
-            </div>
-            <p className="mt-2 text-pm-2xs text-content-muted min-h-[1rem]">
-              {multiDevice
-                ? `${summary!.active_sessions} sesiuni — unii pe mai multe device-uri`
-                : 'O sesiune per utilizator'}
-            </p>
-          </GlassCard>
-
-          <KpiCard label="Useri conectați"      value={summary?.active_users ?? 0}        icon={Users}        iconColor="text-status-blue"  loading={loading && !summary} />
+            }
+          />
+        )}
+      kpis={
+        <Page.Kpis cols={4}>
+          <KpiCard
+            label="Conectați acum"
+            value={summary?.active_users ?? 0}
+            hint={multiDevice ? `${summary!.active_sessions} sesiuni active` : 'O sesiune per utilizator'}
+            loading={loading && !summary}
+          />
           <KpiCard label="Sesiuni active"       value={summary?.active_sessions ?? 0}     icon={Activity}     iconColor="text-status-green" loading={loading && !summary} />
           <KpiCard label="Login-uri reușite azi" value={summary?.logins_today ?? 0}        icon={LogIn}                                      loading={loading && !summary} />
           <KpiCard label="Login-uri eșuate azi"  value={summary?.failed_logins_today ?? 0} icon={AlertOctagon} iconColor="text-status-red"   loading={loading && !summary} />
-        </div>
-
-        {
-
-
-}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 enter-up flex-1 min-h-0" style={{ animationDelay: '120ms' }}>
-
-          {}
-          <Card padding="none" className="lg:col-span-8 flex flex-col min-w-0 min-h-0">
-            <div className="shrink-0 px-6 pt-5">
-              <SectionHeader
-                icon={Users}
-                title="Utilizatori conectați acum"
-                meta={loading
-                  ? 'Se încarcă…'
-                  : `${usersConnected.length} ${usersConnected.length === 1 ? 'utilizator' : 'utilizatori'}` +
-                    (sessions.length > usersConnected.length ? ` · ${sessions.length} sesiuni totale` : '')}
-              />
-            </div>
-            <div className="px-3 pb-3 flex-1 min-h-0 flex flex-col">
+        </Page.Kpis>
+      }
+    >
+        <div className={PAGE_GRID_12}>
+          <TablePanel
+            size="lg"
+            title="Utilizatori conectați acum"
+            subtitle={loading
+              ? 'Se încarcă…'
+              : `${usersConnected.length} ${usersConnected.length === 1 ? 'utilizator' : 'utilizatori'}` +
+                (sessions.length > usersConnected.length ? ` · ${sessions.length} sesiuni totale` : '')}
+            bodyClassName="px-3 pb-3"
+          >
               {loading ? (
                 <div className="py-10 text-center text-pm-xs text-content-muted">
                   <Loader2 className="h-4 w-4 inline animate-spin mr-1" /> Se încarcă…
@@ -318,11 +208,9 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
               ) : usersConnected.length === 0 ? (
                 <EmptyState icon={Users} title="Niciun utilizator conectat acum." />
               ) : (
-                
-                
-                <div className="flex-1 min-h-0 overflow-y-auto px-3">
-                  <table className="w-full text-left text-pm-xs">
-                    <thead className="sticky top-0 z-10 bg-surface-secondary shadow-[inset_0_-1px_0_var(--color-border)]">
+
+                <table className="w-full text-left text-pm-xs">
+                    <thead className={THEAD_STICKY}>
                       <tr>
                         <th className="px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Utilizator</th>
                         <th className="px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Rol</th>
@@ -340,7 +228,6 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
                             selectedUserId === s.user_id ? 'bg-accent/5 shadow-[inset_3px_0_0_var(--color-accent)]' : ''}`}>
                           <td className="px-3 py-2">
                             <div className="flex items-center gap-2">
-                              {}
                               <span className="relative inline-flex h-2 w-2 shrink-0" aria-hidden>
                                 <span className="absolute inline-flex h-2 w-2 rounded-full bg-status-green opacity-70 animate-ping motion-reduce:animate-none" />
                                 <span className="relative inline-flex h-2 w-2 rounded-full bg-status-green" />
@@ -397,28 +284,18 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
                       ))}
                     </tbody>
                   </table>
-                </div>
               )}
-            </div>
-          </Card>
-
-          {}
-          <div ref={historyRef} className="lg:col-span-4 min-h-0 flex">
-            <Card
-              padding="none"
-              className="flex flex-col min-w-0 w-full min-h-0"
-              vtName={selectedUserId != null ? vtName('session-user', selectedUserId) : undefined}
-            >
-              <div className="shrink-0 px-6 pt-5">
-                <SectionHeader
-                  icon={History}
-                  title="Istoric login"
-                  meta={selectedSession
-                    ? `${selectedSession.full_name || selectedSession.username}`
-                    : 'Selectează un utilizator'}
-                />
-              </div>
-              <CardBody padding="sm" className="pt-0 flex-1 min-h-0 flex flex-col">
+          </TablePanel>
+          <div ref={historyRef}>
+          <ListPanel
+            size="md"
+            slotClassName="flex min-h-0"
+            title="Istoric login"
+            subtitle={selectedSession
+              ? `${selectedSession.full_name || selectedSession.username}`
+              : 'Selectează un utilizator'}
+            bodyClassName="px-2 pb-3"
+          >
                 {!selectedUserId ? (
                   <EmptyState
                     icon={History}
@@ -432,10 +309,8 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
                 ) : history.length === 0 ? (
                   <EmptyState icon={History} title="Niciun eveniment înregistrat." />
                 ) : (
-                  
-                  
-                  <div className="flex-1 min-h-0 overflow-y-auto px-2">
-                    <ul className="text-pm-xs divide-y divide-line/30 stagger-in" key={selectedUserId}>
+
+                  <ul className="text-pm-xs divide-y divide-line/30 stagger-in px-2" key={selectedUserId}>
                       {history.map(ev => (
                         <li key={ev.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
                           <StatusBadge
@@ -456,21 +331,16 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
                         </li>
                       ))}
                     </ul>
-                  </div>
                 )}
-              </CardBody>
-            </Card>
+          </ListPanel>
           </div>
         </div>
 
-        {
-
-}
-        <div className="shrink-0 grid grid-cols-1 lg:grid-cols-12 gap-4 enter-up" style={{ animationDelay: '180ms' }}>
+        <div className="grid shrink-0 grid-cols-1 gap-4 lg:grid-cols-12">
           <div className="lg:col-span-7">
             <TwoFAEnforcementCard />
           </div>
-          <Card className="lg:col-span-5 flex flex-col justify-center" padding="lg">
+          <Panel className="lg:col-span-5 flex flex-col justify-center" padding="lg">
             <div className="flex items-start gap-3">
               <span className="h-10 w-10 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                 <ShieldCheck className="h-5 w-5" />
@@ -483,52 +353,41 @@ export default function UserSessionsPage({ user }: { user: User | null }) {
                 </p>
               </div>
             </div>
-          </Card>
+          </Panel>
         </div>
 
-      </Page.Body>
-    </Page>
+    </DashboardLayout>
   );
 }
 
-
-
-
-
 function TwoFAEnforcementCard() {
-  
-  
   const [policy, setPolicy] = useLocalStorage<{ admin: boolean; manager: boolean; all: boolean }>(
     'promix_user_2fa_policy_v1', { admin: true, manager: true, all: false });
   return (
-    <Card padding="none" className="h-full">
-      <div className="px-6 pt-5">
-        <SectionHeader
-          icon={ShieldCheck}
-          title="2FA enforcement"
-          meta="Marchează ce roluri sunt obligate să aibă autentificare cu doi factori"
-        />
+    <Panel
+      className="h-full"
+      title="2FA enforcement"
+      subtitle="Marchează ce roluri sunt obligate să aibă autentificare cu doi factori"
+      bodyClassName="px-6 pb-5"
+    >
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-pm-base">
+        <label className="flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-2 cursor-pointer transition-smooth duration-150 hover:bg-surface-tertiary hover:border-line/80 focus-within:outline-none focus-within:shadow-[var(--ring-soft)] active:scale-[0.99]">
+          <input type="checkbox" className="accent-accent focus-visible:outline-none" checked={policy.admin}
+            onChange={(e) => setPolicy({ ...policy, admin: e.target.checked })} />
+          <Shield className="h-3.5 w-3.5 shrink-0 text-status-red" /> <span className="truncate">Admin</span>
+        </label>
+        <label className="flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-2 cursor-pointer transition-smooth duration-150 hover:bg-surface-tertiary hover:border-line/80 focus-within:outline-none focus-within:shadow-[var(--ring-soft)] active:scale-[0.99]">
+          <input type="checkbox" className="accent-accent focus-visible:outline-none" checked={policy.manager}
+            onChange={(e) => setPolicy({ ...policy, manager: e.target.checked })} />
+          <Shield className="h-3.5 w-3.5 shrink-0 text-status-amber" /> <span className="truncate">Manager</span>
+        </label>
+        <label className="flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-2 cursor-pointer transition-smooth duration-150 hover:bg-surface-tertiary hover:border-line/80 focus-within:outline-none focus-within:shadow-[var(--ring-soft)] active:scale-[0.99]">
+          <input type="checkbox" className="accent-accent focus-visible:outline-none" checked={policy.all}
+            onChange={(e) => setPolicy({ ...policy, all: e.target.checked })} />
+          <Shield className="h-3.5 w-3.5 shrink-0 text-content-muted" /> <span className="truncate">Toți</span>
+        </label>
       </div>
-      <CardBody>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-pm-base">
-          <label className="flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-2 cursor-pointer transition-smooth duration-150 hover:bg-surface-tertiary hover:border-line/80 focus-within:outline-none focus-within:shadow-[var(--ring-soft)] active:scale-[0.99]">
-            <input type="checkbox" className="accent-accent focus-visible:outline-none" checked={policy.admin}
-              onChange={(e) => setPolicy({ ...policy, admin: e.target.checked })} />
-            <Shield className="h-3.5 w-3.5 shrink-0 text-status-red" /> <span className="truncate">Admin</span>
-          </label>
-          <label className="flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-2 cursor-pointer transition-smooth duration-150 hover:bg-surface-tertiary hover:border-line/80 focus-within:outline-none focus-within:shadow-[var(--ring-soft)] active:scale-[0.99]">
-            <input type="checkbox" className="accent-accent focus-visible:outline-none" checked={policy.manager}
-              onChange={(e) => setPolicy({ ...policy, manager: e.target.checked })} />
-            <Shield className="h-3.5 w-3.5 shrink-0 text-status-amber" /> <span className="truncate">Manager</span>
-          </label>
-          <label className="flex items-center gap-2 rounded-xl border border-line bg-surface-secondary px-3 py-2 cursor-pointer transition-smooth duration-150 hover:bg-surface-tertiary hover:border-line/80 focus-within:outline-none focus-within:shadow-[var(--ring-soft)] active:scale-[0.99]">
-            <input type="checkbox" className="accent-accent focus-visible:outline-none" checked={policy.all}
-              onChange={(e) => setPolicy({ ...policy, all: e.target.checked })} />
-            <Shield className="h-3.5 w-3.5 shrink-0 text-content-muted" /> <span className="truncate">Toți</span>
-          </label>
-        </div>
-      </CardBody>
-    </Card>
+    </Panel>
   );
 }
 
@@ -540,9 +399,7 @@ function actionLabel(action: string): string {
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return '—';
-  
-  
-  
+
   const d = parseBackendTimestamp(iso);
   if (!d) return iso;
   return d.toLocaleString('ro-RO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });

@@ -1,0 +1,11 @@
+{
+  "version": "1.1.5",
+  "notes": "Automatix 1.1.5",
+  "pub_date": "2026-06-20T09:55:51.513Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVRZmxhUmZZNi9ZYjd2bnRUcHFXSmVNWlJIdXJlalhTNzYxUDdQR0JHbzNvTGFYbUlGRldaOE1JN1ZXTGc4Q2RHMmczdXRST29NSGNXY3J4eFRCRmhBQnVQNldKdDloMUEwPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzgxOTQ5MzIzCWZpbGU6QXV0b21hdGl4XzEuMS41X3g2NC1zZXR1cC5leGUKNVZyL1dWbXFNRk52NFpZMmdQL2locFVOMG84anFDekJvT1QxczhTb0hvWE1CWFVHTDBqVnRzSVh1UlpVUkRCUFRQK0NhSzZrb21mZWIxdms3OFhXQVE9PQo=",
+      "url": "https://automatix.online/api/update/Automatix_1.1.5_x64-setup.exe"
+    }
+  }
+}

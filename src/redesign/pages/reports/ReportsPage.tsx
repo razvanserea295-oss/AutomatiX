@@ -1,43 +1,16 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useCallback } from 'react';
-import { BarChart3, Download, Save, Trash2, Plus, Loader2, X, Bookmark, Table, SlidersHorizontal } from 'lucide-react';
+import { BarChart3, Download, Save, Trash2, Plus, Loader2, X, Bookmark, Table } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
 import { toast } from '@/store/toastStore';
 
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
-import Page from '@/redesign/ui/Page';
-import Card from '@/redesign/ui/Card';
-import SectionHeader from '@/redesign/ui/SectionHeader';
+import { THEAD_STICKY } from '@/redesign/ui/SortableTh';
 import { EmptyState } from '@/redesign/ui';
+import { PageChrome, DashboardLayout, Panel, TablePanel, CardSlot, PAGE_GRID_12 } from '@/app-ui';
 
 interface ColumnDef { field: string; label: string; type: 'string' | 'number' | 'date' | 'currency'; }
 interface SourceDef { name: string; label: string; columns: ColumnDef[]; filterable_fields: string[]; }
@@ -149,56 +122,52 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
   };
 
   return (
-    <Page fit>
-      <Page.Body maxWidth="full" padding="comfortable" fit>
-
-        {
-
-}
-        <div className="enter-up shrink-0 pb-4 border-b border-line/60" style={{ animationDelay: '0ms' }}>
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="min-w-0">
-              {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-                  <BarChart3 className="h-5 w-5" />
-                </span>
-                <h1 className="text-pm-2xl font-semibold text-content-primary truncate leading-tight">Generator rapoarte</h1>
-              </div>
-            </div>
-
-            {}
-            <label className="flex items-center gap-2">
-              <span className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted">Sursă</span>
+    <DashboardLayout
+        
+        chrome={(
+          <PageChrome
+            actions={
+              <>
+                {report && (
+                  <Button size="md" variant="outline" onClick={exportExcel}>
+                    <Download className="h-4 w-4" /> Export Excel
+                  </Button>
+                )}
+                <Button size="md" onClick={run} disabled={running}>
+                  {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <BarChart3 className="h-4 w-4" />} Ruleaza raportul
+                </Button>
+              </>
+            }
+            secondaryActions={
+              <>
+                <input value={presetName} onChange={e => setPresetName(e.target.value)} placeholder="Nume preset"
+                  className="text-pm-sm h-8 px-3 w-44 rounded-xl border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth duration-150 hover:border-line focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
+                <Button size="sm" variant="outline" onClick={savePreset}>
+                  <Save className="h-3.5 w-3.5" /> Salvează
+                </Button>
+              </>
+            }
+            toolbar={
               <select
                 value={sourceName}
                 onChange={e => switchSource(e.target.value)}
-                className="min-w-44 h-9 px-3 text-pm-sm rounded-xl border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth duration-150 hover:border-line focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-[var(--ring-soft)]"
+                className="min-w-[220px] rounded-xl border border-line bg-surface-primary px-3 py-2 text-pm-xs text-content-primary"
               >
-                {sources.map(s => <option key={s.name} value={s.name}>{s.label}</option>)}
+                {sources.map(s => (
+                  <option key={s.name} value={s.name}>{s.label}</option>
+                ))}
               </select>
-            </label>
-
-            <div className="flex items-center gap-2 ml-auto">
-              {report && (
-                <Button size="sm" variant="outline" onClick={exportExcel}>
-                  <Download className="h-3.5 w-3.5" /> Export Excel
-                </Button>
-              )}
-              <Button size="sm" onClick={run} disabled={running}>
-                {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <BarChart3 className="h-3.5 w-3.5" />} Ruleaza raportul
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {
-
-}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 flex-1 min-h-0 enter-up" style={{ animationDelay: '160ms' }}>
-
-          {}
-          <Card padding="none" className="xl:col-span-7 flex flex-col min-h-0 overflow-hidden">
+            }
+          />
+        )}
+      >
+        <div className={PAGE_GRID_12}>
+          <TablePanel
+            size="lg"
+            title={report
+              ? `Rezultate — ${report.total_rows} ${report.total_rows === 1 ? 'înregistrare' : 'înregistrări'}`
+              : 'Rezultate raport'}
+          >
             {!report ? (
               <EmptyState
                 icon={Table}
@@ -206,19 +175,8 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
                 description="Configurează coloanele, filtrele și sortarea în panoul din dreapta, apoi apasă „Ruleaza raportul”."
               />
             ) : (
-              <div key={`${sourceName}-${report.total_rows}`} className="flex flex-col h-full enter-fade">
-                {}
-                <div className="flex items-center justify-between px-5 py-3 bg-surface-secondary border-b border-line/70">
-                  <h2 className="text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">
-                    Rezultate — {report.total_rows} {report.total_rows === 1 ? 'înregistrare' : 'înregistrări'}
-                  </h2>
-                  <Button size="sm" variant="outline" onClick={exportExcel}><Download className="h-3 w-3" /> Export Excel</Button>
-                </div>
-
-                {}
-                <div className="flex-1 overflow-auto">
-                  <table className="w-full text-xs">
-                    <thead className="sticky top-0 z-10 bg-surface-secondary shadow-[inset_0_-1px_0_var(--color-border)]">
+              <table key={`${sourceName}-${report.total_rows}`} className="w-full text-xs">
+                    <thead className={THEAD_STICKY}>
                       <tr>
                         {report.columns.map(c => (
                           <th key={c.field} className="text-left px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">
@@ -244,7 +202,7 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
                     </tbody>
                     {report.totals && Object.keys(report.totals).length > 0 && (
                       <tfoot>
-                        <tr key={`${sourceName}-${report.total_rows}`} className="border-t-2 border-line bg-surface-tertiary/60 font-semibold enter-up" style={{ animationDelay: '220ms' }}>
+                        <tr key={`${sourceName}-${report.total_rows}`} className="border-t-2 border-line bg-surface-tertiary/60 font-semibold">
                           {report.columns.map(c => (
                             <td key={c.field} className={`px-3 py-2 ${c.type === 'currency' || c.type === 'number' ? 'text-right tabular-nums' : ''}`}>
                               {(c.type === 'currency' || c.type === 'number') && report.totals?.[c.field] != null
@@ -255,26 +213,18 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
                         </tr>
                       </tfoot>
                     )}
-                  </table>
-                </div>
-              </div>
+              </table>
             )}
-          </Card>
-
-          {}
-          <Card padding="none" className="xl:col-span-5 flex flex-col min-h-0 overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-line/70">
-              <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-                <SlidersHorizontal className="h-4 w-4" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-pm-md font-semibold text-content-primary leading-tight truncate">Configurare raport</p>
-                <p className="text-pm-2xs text-content-muted truncate">{source?.label ?? '—'}</p>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto">
-              {}
+          </TablePanel>
+          <CardSlot size="md">
+            <Panel
+              fill
+              scroll
+              className="w-full"
+              title="Configurare raport"
+              subtitle={source?.label ?? '—'}
+              bodyClassName="p-0"
+            >
               {source && (
                 <div className="p-4 border-b border-line">
                   <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted block mb-1">Coloane</label>
@@ -295,8 +245,6 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
                   </div>
                 </div>
               )}
-
-              {}
               {source && (
                 <div className="p-4 border-b border-line">
                   <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted block mb-1">Filtre</label>
@@ -328,8 +276,6 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
                   </div>
                 </div>
               )}
-
-              {}
               {source && (
                 <div className="p-4 border-b border-line">
                   <label className="text-pm-2xs font-bold uppercase tracking-wide text-content-muted block mb-1">Sortare</label>
@@ -347,35 +293,16 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
                   </div>
                 </div>
               )}
-
-              {}
               <div className="p-4">
                 <Button size="sm" onClick={run} disabled={running} block>
                   {running ? <Loader2 className="h-3 w-3 animate-spin" /> : <BarChart3 className="h-3 w-3" />} Ruleaza raportul
                 </Button>
               </div>
-            </div>
-          </Card>
+            </Panel>
+          </CardSlot>
         </div>
 
-        {
-}
-        <Card padding="md" className="shrink-0 enter-up" style={{ animationDelay: '240ms' }}>
-          <SectionHeader
-            eyebrow="Presete"
-            title="Configurări salvate"
-            icon={Bookmark}
-            meta="Salvează combinația curentă de coloane, filtre și sortare pentru reutilizare."
-            actions={
-              <div className="flex items-center gap-2">
-                <input value={presetName} onChange={e => setPresetName(e.target.value)} placeholder="Nume preset"
-                  className="text-pm-sm h-8 px-3 w-44 rounded-xl border border-line/70 bg-surface-secondary/40 text-content-primary transition-smooth duration-150 hover:border-line focus-visible:outline-none focus-visible:border-accent/50 focus-visible:shadow-[var(--ring-soft)]" />
-                <Button size="sm" variant="outline" onClick={savePreset}>
-                  <Save className="h-3.5 w-3.5" /> Salvează
-                </Button>
-              </div>
-            }
-          />
+        <Panel padding="md" className="shrink-0">
           {presets.length === 0 ? (
             <EmptyState
               icon={Bookmark}
@@ -397,9 +324,8 @@ export default function ReportsPage({ user: _user }: { user: User | null }) {
               ))}
             </div>
           )}
-        </Card>
+        </Panel>
 
-      </Page.Body>
-    </Page>
+    </DashboardLayout>
   );
 }

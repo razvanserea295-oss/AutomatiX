@@ -1,29 +1,29 @@
-import { lazy, Suspense, useState, useEffect } from 'react';
-import { GraduationCap, Mail, MessageCircle, Bell, Archive, LayoutDashboard, MonitorDown, Folder } from 'lucide-react';
+import { lazy, Suspense, useState, useEffect, useMemo } from 'react';
 import type { User } from '@/core/types';
-import Page from '@/components/ui/Page';
-import WorkspaceTabs, { type WorkspaceTab } from '@/components/ui/WorkspaceTabs';
 import WorkspaceSkeleton from '@/redesign/ui/WorkspaceSkeleton';
+import { apiCommand } from '@/api/commands';
+import { canAccessPage } from '@/lib/access';
+import SharedStoragePage from '@/pages/shared-storage/SharedStoragePage';
+import WorkspaceShell from './WorkspaceShell';
 
 const TutorialPage = lazy(() => import('@/redesign/pages/tutorial/TutorialPage'));
-const EmailPage = lazy(() => import('@/redesign/pages/email/EmailPage'));
-const ChatPage = lazy(() => import('@/redesign/pages/chat/ChatPage'));
-const AlertsPage = lazy(() => import('@/redesign/pages/alerts/AlertsPage'));
 const SourceArchivePanel = lazy(() => import('@/redesign/pages/backup/SourceArchivePanel'));
-const ManagerControlPage = lazy(() => import('@/pages/ManagerControlPage'));
+const ManagerControlPage = lazy(() => import('@/redesign/pages/ManagerControlPage'));
 const DownloadAppPage = lazy(() => import('@/redesign/pages/tools/DownloadAppPage'));
+const PrintPage = lazy(() => import('@/redesign/pages/tools/PrintPage'));
+const RemoteSupportPage = lazy(() => import('@/redesign/pages/remote/RemoteSupportPage'));
+const LicensesPage = lazy(() => import('@/redesign/pages/admin/LicensesPage'));
 
-const BASE_TABS: WorkspaceTab[] = [
-  { id: 'birou-control', label: 'Birou de control', icon: LayoutDashboard, prefetch: () => import('@/pages/ManagerControlPage') },
-  { id: 'tutorial',      label: 'Tutorial',          icon: GraduationCap,  prefetch: () => import('@/redesign/pages/tutorial/TutorialPage') },
-  { id: 'email',         label: 'Email',             icon: Mail,           prefetch: () => import('@/redesign/pages/email/EmailPage') },
-  { id: 'chat',          label: 'Mesaje',            icon: MessageCircle,  prefetch: () => import('@/redesign/pages/chat/ChatPage') },
-  { id: 'alerts',        label: 'Alerte',            icon: Bell,           prefetch: () => import('@/redesign/pages/alerts/AlertsPage') },
-  { id: 'download-app',  label: 'Aplicație desktop', icon: MonitorDown,    prefetch: () => import('@/redesign/pages/tools/DownloadAppPage') },
-  { id: 'shared-files',  label: 'Shared Files',      icon: Folder,         prefetch: () => import('@/pages/shared-storage/SharedStoragePage') },
-];
-// Source-archive download is admin-only.
-const ARHIVA_TAB: WorkspaceTab = { id: 'arhiva', label: 'Arhivă', icon: Archive };
+const BASE_TAB_IDS = [
+  'birou-control',
+  'tutorial',
+  'download-app',
+  'print',
+  'remote-support',
+  'shared-files',
+] as const;
+
+type InstrumenteTabId = (typeof BASE_TAB_IDS)[number] | 'licente' | 'arhiva';
 
 interface Props {
   user: User | null;
@@ -32,74 +32,97 @@ interface Props {
 }
 
 export default function InstrumenteWorkspace({ user, onNavigate, initialTab }: Props) {
-  const [tab, setTab] = useState(initialTab || 'birou-control');
-  const [visited, setVisited] = useState(() => new Set([initialTab || 'birou-control']));
+  const [tab, setTab] = useState<InstrumenteTabId>((initialTab as InstrumenteTabId) || 'birou-control');
+  const [visited, setVisited] = useState(() => new Set<InstrumenteTabId>([(initialTab as InstrumenteTabId) || 'birou-control']));
+  const [canIssue, setCanIssue] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    apiCommand<{ can_issue: boolean }>('get_license_issuer_state')
+      .then((s) => { if (alive) setCanIssue(!!s.can_issue); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
 
   useEffect(() => {
     if (initialTab) {
-      setTab(initialTab);
-      setVisited(p => { const s = new Set(p); s.add(initialTab); return s; });
+      setTab(initialTab as InstrumenteTabId);
+      setVisited((p) => { const s = new Set(p); s.add(initialTab as InstrumenteTabId); return s; });
     }
   }, [initialTab]);
 
   const isAdmin = (user?.role_name || '').toLowerCase() === 'admin';
-  const tabs = isAdmin ? [...BASE_TABS, ARHIVA_TAB] : BASE_TABS;
+  const canRemote = canAccessPage(user?.role_name, 'remote-support', user?.custom_pages);
 
-  const handleTabChange = (t: string) => {
-    setVisited(prev => { const s = new Set(prev); s.add(t); return s; });
-    setTab(t);
-    onNavigate(t);
-  };
+  const validTabIds = useMemo((): InstrumenteTabId[] => {
+    let ids: InstrumenteTabId[] = BASE_TAB_IDS.filter((id) => id !== 'remote-support' || canRemote);
+    if (isAdmin || canIssue) ids = [...ids, 'licente'];
+    if (isAdmin) ids = [...ids, 'arhiva'];
+    return ids;
+  }, [canRemote, isAdmin, canIssue]);
+
+  useEffect(() => {
+    if (!validTabIds.includes(tab)) {
+      const fallback = validTabIds[0] ?? 'birou-control';
+      setTab(fallback);
+      setVisited((p) => { const s = new Set(p); s.add(fallback); return s; });
+    }
+  }, [validTabIds, tab]);
+
+  const panelCls = (id: string) => (
+    tab === id ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'
+  );
 
   return (
-    <Page fit layout="row">
-      <WorkspaceTabs tabs={tabs} active={tab} onChange={handleTabChange} />
+    <WorkspaceShell>
       <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
-        <div className={tab === 'birou-control' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
+        <div className={panelCls('birou-control')}>
           <Suspense fallback={<WorkspaceSkeleton />}>
             {visited.has('birou-control') && user && <ManagerControlPage user={user} />}
           </Suspense>
         </div>
-        <div className={tab === 'tutorial' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
+        <div className={panelCls('tutorial')}>
           <Suspense fallback={<WorkspaceSkeleton />}>
             {visited.has('tutorial') && user && <TutorialPage user={user} onNavigate={onNavigate} />}
           </Suspense>
         </div>
-        <div className={tab === 'email' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
-          <Suspense fallback={<WorkspaceSkeleton />}>
-            {visited.has('email') && <EmailPage user={user} />}
-          </Suspense>
-        </div>
-        <div className={tab === 'chat' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
-          <Suspense fallback={<WorkspaceSkeleton />}>
-            {visited.has('chat') && <ChatPage user={user} />}
-          </Suspense>
-        </div>
-        <div className={tab === 'alerts' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
-          <Suspense fallback={<WorkspaceSkeleton />}>
-            {visited.has('alerts') && <AlertsPage user={user} />}
-          </Suspense>
-        </div>
-        <div className={tab === 'download-app' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
+        <div className={panelCls('download-app')}>
           <Suspense fallback={<WorkspaceSkeleton />}>
             {visited.has('download-app') && <DownloadAppPage />}
           </Suspense>
         </div>
+        <div className={panelCls('print')}>
+          <Suspense fallback={<WorkspaceSkeleton />}>
+            {visited.has('print') && user && <PrintPage user={user} />}
+          </Suspense>
+        </div>
+        {canRemote && (
+          <div className={panelCls('remote-support')}>
+            <Suspense fallback={<WorkspaceSkeleton />}>
+              {visited.has('remote-support') && user && <RemoteSupportPage user={user} />}
+            </Suspense>
+          </div>
+        )}
+        <div className={panelCls('shared-files')}>
+          <Suspense fallback={<WorkspaceSkeleton />}>
+            {visited.has('shared-files') && <SharedStoragePage />}
+          </Suspense>
+        </div>
+        {(isAdmin || canIssue) && (
+          <div className={panelCls('licente')}>
+            <Suspense fallback={<WorkspaceSkeleton />}>
+              {visited.has('licente') && <LicensesPage />}
+            </Suspense>
+          </div>
+        )}
         {isAdmin && (
-          <div className={tab === 'arhiva' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
+          <div className={panelCls('arhiva')}>
             <Suspense fallback={<WorkspaceSkeleton />}>
               {visited.has('arhiva') && <SourceArchivePanel user={user} />}
             </Suspense>
           </div>
         )}
-        <div className={tab === 'shared-files' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
-          <Suspense fallback={<WorkspaceSkeleton />}>
-            {visited.has('shared-files') && <SharedStoragePage />}
-          </Suspense>
-        </div>
       </div>
-    </Page>
+    </WorkspaceShell>
   );
 }
-
-import SharedStoragePage from '@/pages/shared-storage/SharedStoragePage';

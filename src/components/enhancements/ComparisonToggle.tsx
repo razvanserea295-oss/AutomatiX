@@ -1,4 +1,4 @@
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp } from '@/icons';
 
 export type CompareWindow = 'none' | 'wow' | 'mom' | 'yoy';
 

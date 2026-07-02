@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import {
-  Warehouse, Plus, AlertTriangle, X as XIcon, Loader2,
-} from 'lucide-react';
+import { Plus, Loader2, Package, RefreshCw } from '@/icons';
 
 import type { User } from '@/core/types';
 import { cn } from '@/lib/cn';
@@ -12,11 +10,12 @@ import { useDashboardStore } from '@/store/dashboardStore';
 import { useViewerMode } from '@/hooks/useViewerMode';
 import { toast } from '@/store/toastStore';
 
-import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
+import { PageChrome, DashboardLayout } from '@/app-ui';
 import Button from '@/redesign/ui/Button';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import type { StatusTone } from '@/lib/statusTokens';
+import { THEAD_STICKY } from '@/redesign/ui/SortableTh';
 
 // ── Domain types (preserved verbatim) ──
 interface Movement { id: number; material_name: string; material_code: string; location_name: string | null; movement_type: string; quantity: number; project_name: string | null; notes: string | null; created_by_name: string | null; created_at: string; }
@@ -93,7 +92,9 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
       apiCommand<Reservation[]>('get_stock_reservations').then(setReservations).catch(() => setReservations([])),
       apiCommand<Location[]>('get_warehouse_locations').then(setLocations).catch(() => setLocations([])),
       fetchProjects(),
-    ]).finally(() => setLoading(false));
+    ]).finally(() => {
+      setLoading(false);
+    });
   }, [fetchProjects, fetchMaterialsStore]);
 
   useEffect(() => { fetch(); }, [fetch]);
@@ -116,11 +117,6 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
     (m: { id: number; stock: number }) => Math.max(0, m.stock - (reservedByMaterial.get(m.id) ?? 0)),
     [reservedByMaterial],
   );
-  const lowStock = useMemo(
-    () => materials.filter(m => availableStock(m) <= m.min_stock && m.min_stock > 0),
-    [materials, availableStock],
-  );
-  const SEVEN_DAYS = 7 * 24 * 3600 * 1000;
   const isPending = (r: Reservation) => r.status === 'reserved' || r.status === 'partially_issued';
   const ageDays = (r: Reservation): number | null => {
     if (!r.created_at) return null;
@@ -128,12 +124,6 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
     if (isNaN(t)) return null;
     return Math.floor((Date.now() - t) / (24 * 3600 * 1000));
   };
-  const overdueReservations = useMemo(() => reservations.filter(r => {
-    if (!isPending(r) || !r.created_at) return false;
-    const t = new Date(r.created_at).getTime();
-    if (isNaN(t)) return false;
-    return Date.now() - t > SEVEN_DAYS;
-  }), [reservations, SEVEN_DAYS]);
 
   // ── Mutations (verbatim) ──
   const handleRecordMovement = useCallback(async () => {
@@ -269,75 +259,48 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
     tab === 'locations' ? { text: 'Locație nouă', onClick: openLoc } :
     null;
 
-  const viewLabel =
-    tab === 'stock' ? `Stoc curent — ${materials.length} materiale`
-      : tab === 'movements' ? `Mișcări stoc — ${movements.length}`
-        : tab === 'reservations' ? `Rezervări — ${reservations.length}`
-          : `Locații depozit — ${locations.length}`;
-
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="full" padding="flush" className="!gap-0 overflow-hidden">
-
-        {/* Header */}
-        <div className="px-6 pt-5 pb-4 shrink-0 border-b border-line/60">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex items-center gap-4 min-w-0">
-              <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-                <Warehouse className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <h1 className="text-pm-lg font-semibold text-content-primary leading-tight truncate">Depozit</h1>
-                <p className="mt-0.5 text-pm-sm text-content-muted">{viewLabel}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {!isViewer && primaryAction && (
-                <Button size="md" onClick={primaryAction.onClick}><Plus className="h-4 w-4" /> {primaryAction.text}</Button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Tab toggle */}
-        <div className="px-6 pt-4 shrink-0">
-          <div className="inline-flex items-center gap-0.5 rounded-xl border border-line bg-surface-secondary p-1" role="group" aria-label="Vizualizare depozit">
-            {TABS.map(t => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTab(t.id)}
-                aria-pressed={tab === t.id}
-                className={cn(
-                  'h-8 px-3 rounded-lg text-pm-xs font-semibold transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]',
-                  tab === t.id ? 'bg-accent text-[var(--color-on-accent)] shadow-[var(--elevation-1)]' : 'text-content-muted hover:text-content-primary hover:bg-surface-tertiary',
+    <>
+    <DashboardLayout
+        chrome={(
+          <PageChrome
+            actions={
+              <>
+                <Button variant="secondary" size="sm" onClick={fetch} disabled={loading} aria-label="Reîmprospătează datele">
+                  <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                </Button>
+                {!isViewer && primaryAction && (
+                  <Button size="md" onClick={primaryAction.onClick}><Plus className="h-4 w-4" /> {primaryAction.text}</Button>
                 )}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Alerts */}
-        <div className="px-6 pt-3 shrink-0 space-y-2">
-          {tab === 'stock' && lowStock.length > 0 && (
-            <AlertBanner>Stoc critic — <strong className="font-semibold">{lowStock.length}</strong> {lowStock.length === 1 ? 'material' : 'materiale'} sub minim: {lowStock.slice(0, 6).map(m => m.name).join(', ')}{lowStock.length > 6 ? '…' : ''}</AlertBanner>
-          )}
-          {tab === 'reservations' && overdueReservations.length > 0 && (
-            <AlertBanner><strong className="font-semibold">{overdueReservations.length}</strong> {overdueReservations.length === 1 ? 'rezervare restantă' : 'rezervări restante'} &gt; 7 zile: {overdueReservations.slice(0, 6).map(r => r.material_name).join(', ')}{overdueReservations.length > 6 ? '…' : ''}</AlertBanner>
-          )}
-        </div>
-
-        {/* Table */}
-        <div className="flex-1 min-h-0 overflow-auto px-6 py-4">
-          <Card padding="none" className="min-w-0 overflow-hidden">
-            {/* The Stoc tab reads `materials` from the store, which has its own
-                loading flag. Gate on BOTH so a forced refetch (store loading=true
-                while the page's local flag has already settled) can never render
-                the empty-state and the spinner at the same time. */}
+              </>
+            }
+            toolbar={
+              <div className="inline-flex items-center gap-0.5 rounded-xl border border-line bg-surface-secondary p-1" role="group" aria-label="Vizualizare depozit">
+                {TABS.map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTab(t.id)}
+                    aria-pressed={tab === t.id}
+                    className={cn(
+                      'h-8 px-3 rounded-lg text-pm-xs font-semibold transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]',
+                      tab === t.id ? 'bg-accent text-[var(--color-on-accent)] shadow-[var(--elevation-1)]' : 'text-content-muted hover:text-content-primary hover:bg-surface-tertiary',
+                    )}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            }
+          />
+        )}
+      bodyClassName="overflow-hidden page-body-polish"
+      contentClassName="flex flex-col flex-1 min-h-0 stagger-in"
+    >
+        <div className="flex flex-1 min-h-0 overflow-auto">
+          <Card padding="none" className="flex min-h-full w-full flex-col min-w-0 overflow-hidden">
             {(loading || (tab === 'stock' && materialsLoading)) ? (
-              <div className="flex items-center justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-content-muted" /></div>
+              <div className="flex flex-1 min-h-[40vh] items-center justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-content-muted" /></div>
             ) : tab === 'stock' ? (
               <DataTable columns={stockColumns} rows={materials} empty="Niciun material în stoc" />
             ) : tab === 'movements' ? (
@@ -349,7 +312,7 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
             )}
           </Card>
         </div>
-      </Page.Body>
+    </DashboardLayout>
 
       {/* Record stock movement */}
       {moveOpen && (
@@ -446,19 +409,24 @@ export default function WarehousePage({ user: _user }: { user: User | null }) {
           <p className="text-pm-xs text-content-muted">Rămas disponibil: <span className="font-semibold tabular-nums text-content-secondary">{issueTarget.remaining}</span></p>
         </Modal>
       )}
-    </Page>
+    </>
   );
 }
 
 // ── Reusable Tailwind table (fixes the UI5 AnalyticalTable blank-render bug) ──
 function DataTable<T>({ columns, rows, empty }: { columns: Col<T>[]; rows: T[]; empty: string }) {
   if (rows.length === 0) {
-    return <div className="py-16 text-center text-pm-sm text-content-muted">{empty}</div>;
+    return (
+      <div className="flex min-h-[45vh] flex-1 flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-tertiary/60 text-content-muted"><Package className="h-6 w-6 opacity-70" /></span>
+        <p className="text-pm-sm text-content-muted">{empty}</p>
+      </div>
+    );
   }
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left border-collapse">
-        <thead>
+        <thead className={THEAD_STICKY}>
           <tr className="bg-surface-tertiary/40">
             {columns.map(c => (
               <th key={c.key} className={cn('px-3 py-2 text-pm-2xs font-bold uppercase tracking-[0.08em] text-content-muted whitespace-nowrap border-b border-line', c.align === 'end' && 'text-right')}>
@@ -483,15 +451,6 @@ function DataTable<T>({ columns, rows, empty }: { columns: Col<T>[]; rows: T[]; 
   );
 }
 
-function AlertBanner({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="anim-fade-slide-in flex items-start gap-2 rounded-xl border border-status-red/30 bg-status-red/5 px-4 py-3 text-pm-xs text-status-red">
-      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-      <span>{children}</span>
-    </div>
-  );
-}
-
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
@@ -504,10 +463,13 @@ function Field({ label, required, children }: { label: string; required?: boolea
 function Modal({ title, onClose, children, footer }: { title: string; onClose: () => void; children: React.ReactNode; footer: React.ReactNode }) {
   return (
     <div className="anim-fade-in fixed inset-0 z-[1100] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="anim-scale-in w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)]" onClick={e => e.stopPropagation()}>
-        <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line/70 bg-surface-primary px-4 py-3">
-          <h3 className="text-pm-sm font-semibold text-content-primary truncate">{title}</h3>
-          <button onClick={onClose} className="inline-flex items-center justify-center p-1 rounded-lg text-content-muted transition-smooth duration-150 hover:bg-surface-tertiary hover:text-content-primary active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]" aria-label="Închide"><XIcon className="h-4 w-4" /></button>
+      <div
+        className="anim-scale-in w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl border border-line bg-surface-primary shadow-[var(--elevation-4)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line/70 bg-surface-primary px-4 py-3">
+          <h2 className="text-pm-sm font-semibold text-content-primary">{title}</h2>
+          <button type="button" onClick={onClose} className="text-content-muted hover:text-content-primary">×</button>
         </header>
         <div className="p-4 space-y-3">{children}</div>
         <div className="sticky bottom-0 flex items-center justify-end gap-2 border-t border-line/70 bg-surface-primary px-4 py-3">{footer}</div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Archive, Copy, Check, Download, ShieldAlert, Loader2, Upload, RotateCw, AlertTriangle } from 'lucide-react';
+import { Archive, Copy, Check, Download, ShieldAlert, Loader2, Upload, RotateCw, AlertTriangle } from '@/icons';
 import Card, { CardBody } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { apiCommand } from '@/api/commands';

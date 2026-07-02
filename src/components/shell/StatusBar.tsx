@@ -8,14 +8,13 @@ import { useEffect, useState } from 'react';
 import { isServerReachable } from '@/config/server';
 
 interface StatusBarProps {
-  currentPage: string;
   userName: string;
   roleName?: string;
 }
 
 const POLL_MS = 10_000;
 
-export default function StatusBar({ currentPage, userName, roleName }: StatusBarProps) {
+export default function StatusBar({ userName, roleName }: StatusBarProps) {
   const [serverConnected, setServerConnected] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -30,8 +29,8 @@ export default function StatusBar({ currentPage, userName, roleName }: StatusBar
   }, []);
 
   const dotClass =
-    serverConnected === null ? 'bg-content-muted' :
-    serverConnected ? 'bg-status-green' : 'bg-status-red';
+    serverConnected === null ? 'bg-content-muted shell-status-dot shell-status-dot--sync' :
+    serverConnected ? 'bg-status-green shell-status-dot shell-status-dot--live' : 'bg-status-red shell-status-dot';
   const label =
     serverConnected === null ? 'Verificare…' :
     serverConnected ? 'Conectat' : 'Deconectat';
@@ -40,17 +39,15 @@ export default function StatusBar({ currentPage, userName, roleName }: StatusBar
   const time = now.toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' });
 
   return (
-    <div className="shell-status h-6 bg-surface-rail border-t border-white/8 flex items-center justify-between px-4 text-pm-2xs text-white/50 shrink-0 select-none font-mono tracking-wide">
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="truncate">{currentPage}</span>
-        <span className="text-white/20 shrink-0">|</span>
+    <div className="shell-status flex shrink-0 items-center justify-between border-t border-white/[0.08] bg-surface-rail px-4 text-pm-2xs font-mono tracking-wide text-white/50 select-none">
+      <div className="flex min-w-0 items-center gap-2">
         <span className="truncate">{userName}{roleName ? ` · ${roleName}` : ''}</span>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex shrink-0 items-center gap-2">
         <span className="tabular-nums">{time}</span>
-        <span className="text-white/20">|</span>
-        <span className="flex items-center gap-1">
-          <span className={`inline-block h-1.5 w-1.5 rounded-full transition-colors duration-150 ${dotClass}`} />
+        <span className="text-white/20" aria-hidden>|</span>
+        <span className={`shell-status-connection ${serverConnected ? 'shell-status--connected' : ''}`}>
+          <span className={dotClass} aria-hidden />
           {label}
         </span>
       </div>

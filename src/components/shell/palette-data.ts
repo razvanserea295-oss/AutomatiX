@@ -5,12 +5,12 @@
 
 
 import type { ComponentType } from 'react';
-import { LayoutDashboard, Gauge } from 'lucide-react';
+import { LayoutDashboard, Gauge } from '@/icons';
 import { PAGE_IDS, PAGE_TITLES } from '@/config/constants';
 import { WORKSPACE_SUBPAGES } from '@/config/workspaceNav';
 import {
   FilePlus2, UserPlus, FolderPlus, Receipt, PackagePlus, Search, Keyboard,
-} from 'lucide-react';
+} from '@/icons';
 
 export type PaletteIcon = ComponentType<{ className?: string }>;
 

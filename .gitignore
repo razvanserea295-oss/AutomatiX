@@ -8,6 +8,7 @@ release/
 .claude/
 playwright-report/
 test-results/
+coverage/
 ai-service/target/
 ai-service/target-linux/
 ai-service/target-win/
@@ -19,11 +20,14 @@ ai-service/config.toml
 # Desktop build artifacts (large)
 dist-installer/
 public/downloads/*.exe
+public/support/*.exe
+public/support/RustDesk2.toml
 build/icon.png
 
 # ── Extra safety: keys/env + large binaries + local backups (added for upload) ──
 .env
 .env.*
+!.env.example
 *.pem
 *.key
 *.keystore
@@ -49,3 +53,28 @@ backups/
 .idea/
 .update-staging/
 .env.tauri
+
+# ── Runtime data, preview harnesses, dev clutter (2026-07-02 upload) ──
+.preview-data/
+.demo-preview-data/
+.cursor/
+preview-shots/
+screenshots/
+public/shots/
+logs/
+ds-bundle/
+tenants/*/data/
+deploy/rustdesk/bin/
+deploy/rustdesk/data/
+**/.keys/
+tools/license-generator/out/
+tools/license-generator/registry.json
+._mkzip.cjs
+build-out.txt
+tsc-now.txt
+*.patch
+*.lic
+
+# installer build artifacts
+updates/
+src-tauri/nsis/*.exe

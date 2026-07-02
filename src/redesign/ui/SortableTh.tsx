@@ -14,7 +14,7 @@
 
 
 
-import { ChevronDown, ChevronsUpDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronsUpDown, ChevronUp } from '@/icons';
 import type { SortState } from '@/hooks/useSort';
 
 
@@ -82,7 +82,7 @@ export default function SortableTh<TKey extends string>({
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className={`group inline-flex w-full items-center gap-1.5 ${justify} rounded-lg px-1.5 py-1 -mx-1.5 -my-1 text-pm-2xs font-bold uppercase tracking-[0.14em] transition-smooth duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
+        className={`ds-sortable-th group inline-flex w-full items-center gap-1.5 ${justify} rounded-lg px-1.5 py-1 -mx-1.5 -my-1 text-pm-2xs font-bold uppercase tracking-[0.14em] transition-smooth duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
           active
             ? 'text-accent hover:bg-accent-muted'
             : 'text-content-muted hover:bg-surface-tertiary hover:text-content-secondary'

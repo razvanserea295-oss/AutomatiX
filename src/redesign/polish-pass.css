@@ -1,0 +1,472 @@
+/* ============================================================================
+ * polish-pass.css — 5-pass UI refinement layer (Automatix SaaS)
+ *
+ * Pass 1: Micro-interaction tokens + surface primitives (card, panel, kpi)
+ * Pass 2: Shell chrome (sidebar, titlebar, command palette)
+ * Pass 3: Page chrome, toolbar rhythm, KPI strip, content grid
+ * Pass 4: Tables, lists, empty/loading/error states
+ * Pass 5: Drawers, modals, dialogs, form polish
+ * ==========================================================================*/
+
+/* ---- Pass 1: Micro-interaction tokens ------------------------------------ */
+:root {
+  --ixn-duration: var(--motion-fast, 160ms);
+  --ixn-ease: var(--motion-ease, cubic-bezier(0.22, 1, 0.36, 1));
+  --ixn-lift: -1px;
+  --ixn-press-scale: 0.98;
+  --ixn-border-hover: color-mix(in srgb, var(--color-border) 84%, var(--color-accent) 16%);
+  --ixn-surface-hover: color-mix(in srgb, var(--color-bg-tertiary) 42%, transparent);
+}
+
+/* ---- Pass 1: Micro-interaction primitives -------------------------------- */
+.ixn-base {
+    transition:
+      transform var(--ixn-duration) var(--ixn-ease),
+      box-shadow var(--ixn-duration) var(--ixn-ease),
+      border-color var(--ixn-duration) var(--ixn-ease),
+      background-color var(--ixn-duration) var(--ixn-ease),
+      color var(--ixn-duration) var(--ixn-ease),
+      filter var(--ixn-duration) var(--ixn-ease);
+  }
+
+  .ixn-press:active:not(:disabled) {
+    transform: scale(var(--ixn-press-scale));
+    transition-duration: var(--motion-instant, 80ms);
+  }
+
+  .ixn-focus:focus-visible {
+    outline: none;
+    box-shadow: var(--ring-soft);
+  }
+
+  .ixn-border-hover {
+    transition: border-color var(--ixn-duration) var(--ixn-ease);
+  }
+
+  @media (hover: hover) {
+    .ixn-border-hover:hover {
+      border-color: var(--ixn-border-hover);
+    }
+  }
+
+  /* Panel surfaces — subtle mount animation */
+  .pm-panel {
+    animation: polishPanelIn 240ms var(--motion-ease-emphasized, cubic-bezier(0.2, 0, 0, 1)) both;
+  }
+
+  .pm-kpi {
+    animation: polishKpiIn 260ms var(--motion-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+  }
+
+  .surface-panel {
+    box-shadow: var(--elevation-1);
+  }
+
+/* ---- Pass 2: Shell chrome (keyframes → motion/keyframes.css) ------------ */
+
+.page-chrome {
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.page-chrome::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-glow);
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-chrome::before {
+    opacity: 0;
+  }
+}
+
+.page-chrome::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-accent) 18%, transparent) 50%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.shell-app-sidebar button[class*='rounded'] {
+  border-radius: 10px;
+}
+
+.command-palette-row {
+  transition:
+    background-color var(--ixn-duration) var(--ixn-ease),
+    color var(--ixn-duration) var(--ixn-ease),
+    transform var(--ixn-duration) var(--ixn-ease);
+}
+
+@media (hover: hover) {
+  .command-palette-row:not(.is-active):hover {
+    transform: translateX(2px);
+  }
+}
+
+.command-palette-row.is-active {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%);
+}
+
+/* Titlebar window controls — softer press */
+.shell-titlebar button {
+  transition:
+    background-color var(--ixn-duration) ease,
+    color var(--ixn-duration) ease,
+    transform var(--motion-instant, 80ms) ease;
+}
+
+.shell-titlebar button:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+/* ---- Pass 3: Page layout rhythm ------------------------------------------ */
+.page-body-polish {
+  animation: polishBodyIn 300ms var(--motion-ease-emphasized, cubic-bezier(0.2, 0, 0, 1)) both;
+}
+
+.page-chrome-inner {
+  min-height: 48px;
+}
+
+.page-header-meta-row > * {
+  min-width: 0;
+}
+
+.page-chrome-actions-secondary:not(:empty) + .page-chrome-actions-primary {
+  padding-left: 0.25rem;
+  border-left: 1px solid color-mix(in srgb, var(--color-line) 55%, transparent);
+}
+
+.page-chrome-icon {
+  transition: transform var(--ixn-duration) var(--ixn-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+}
+
+@media (hover: hover) {
+  .page-chrome:hover .page-chrome-icon {
+    transform: scale(1.04);
+  }
+}
+
+.kpi-strip > * {
+  min-width: 0;
+  width: 100%;
+}
+
+.kpi-strip.stagger-in > *,
+.stagger-in.kpi-strip > * {
+  animation: polishKpiIn 260ms var(--motion-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+}
+
+.kpi-strip.stagger-in > *:nth-child(1),
+.stagger-in.kpi-strip > *:nth-child(1) { animation-delay: 0ms; }
+.kpi-strip.stagger-in > *:nth-child(2),
+.stagger-in.kpi-strip > *:nth-child(2) { animation-delay: 60ms; }
+.kpi-strip.stagger-in > *:nth-child(3),
+.stagger-in.kpi-strip > *:nth-child(3) { animation-delay: 120ms; }
+.kpi-strip.stagger-in > *:nth-child(4),
+.stagger-in.kpi-strip > *:nth-child(4) { animation-delay: 180ms; }
+
+.kpi-strip .grid {
+  align-items: stretch;
+}
+
+.kpi-strip .grid > * {
+  height: 100%;
+}
+
+/* Section stack: explicit rhythm via --density-gap-section (tiled, flat, gap-0 overrides). */
+.page-body.page-body-polish {
+  gap: 0 !important;
+}
+
+.page-body.page-body-polish > .page-toolbar + :is(.kpi-strip, .page-content-shell, .page-content-grid),
+.page-body.page-body-polish > .kpi-strip + :is(.page-content-shell, .page-content-grid),
+.page-body.page-body-polish > :is(.page-content-shell, .page-content-grid) + .page-footer-band {
+  margin-top: var(--density-gap-section) !important;
+}
+
+.page-content-shell {
+  min-width: 0;
+}
+
+.page-footer-band {
+  margin-top: 0.75rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+}
+
+@media (min-width: 1024px) {
+  .page-footer-band {
+    margin-top: 1rem;
+    padding-top: 0.5rem;
+  }
+}
+
+/* ---- Card slot grid — equal-height rows, no overlap ----------------------- */
+.page-content-grid {
+  align-items: stretch;
+}
+
+@media (min-width: 1024px) {
+  .page-content-grid {
+    grid-auto-rows: 1fr;
+  }
+}
+
+.card-slot {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .card-slot {
+    height: 100%;
+  }
+}
+
+.card-slot > .pm-panel,
+.card-slot > .pm-card {
+  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.page-content-grid > .pm-panel,
+.page-content-grid > .pm-card,
+.page-content-grid > .card-slot > .pm-panel,
+.page-content-grid > [class*='col-span'] > .pm-panel {
+  animation-delay: calc(var(--polish-stagger, 0) * 1ms);
+}
+
+.pm-table-panel .pm-table-scroll,
+.pm-list-panel .pm-list-scroll {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .pm-table-panel .pm-table-scroll,
+  .pm-list-panel .pm-list-scroll {
+    flex: 1 1 auto;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+.page-content-grid.stagger-in > .pm-panel:nth-child(1),
+.page-content-grid.stagger-in > *:nth-child(1) { --polish-stagger: 0; }
+.page-content-grid.stagger-in > .pm-panel:nth-child(2),
+.page-content-grid.stagger-in > *:nth-child(2) { --polish-stagger: 40; }
+.page-content-grid.stagger-in > .pm-panel:nth-child(3),
+.page-content-grid.stagger-in > *:nth-child(3) { --polish-stagger: 70; }
+.page-content-grid.stagger-in > .pm-panel:nth-child(4),
+.page-content-grid.stagger-in > *:nth-child(4) { --polish-stagger: 95; }
+
+/* ---- Pass 4: Data surfaces, lists, states -------------------------------- */
+:where(.app-surface) table tbody tr {
+  transition:
+    background-color var(--ixn-duration) ease,
+    box-shadow var(--ixn-duration) ease;
+}
+
+@media (hover: hover) {
+  :where(.app-surface) table tbody tr:hover {
+    background-color: var(--ixn-surface-hover);
+  }
+}
+
+:where(.app-surface) table tbody tr:focus-within {
+  background-color: color-mix(in srgb, var(--color-accent-muted) 55%, transparent);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.ds-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-bg-tertiary) 70%, transparent);
+}
+
+.ds-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--color-bg-elevated) 80%, transparent),
+    transparent
+  );
+  background-size: 800px 100%;
+  background-position: -400px 0;
+  animation: shimmer 1.4s var(--ease-in-out-expo, ease-in-out) infinite;
+}
+
+.anim-scale-in {
+  animation-duration: 260ms;
+}
+
+/* Empty / error states — gentler icon pulse on mount */
+.anim-scale-in > span:first-child {
+  animation: polishIconPop 400ms var(--motion-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+}
+
+/* Page loading shell */
+.page-loading-shell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 240px;
+  animation: fadeIn 280ms var(--motion-ease) both;
+}
+
+.page-loading-shell .ds-skeleton {
+  border-radius: 999px;
+}
+
+/* ---- Pass 5: Drawers, modals, dialogs ------------------------------------ */
+.page-drawer-host {
+  animation: polishScrimIn 220ms var(--motion-ease) both;
+}
+
+.page-drawer-host aside[role='dialog'] {
+  will-change: transform, opacity;
+  box-shadow:
+    var(--elevation-3),
+    -12px 0 40px color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+}
+
+.page-drawer-host aside[role='dialog'] button[aria-label='Închide'] {
+  transition:
+    transform var(--ixn-duration) var(--ixn-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    background-color var(--ixn-duration) ease,
+    color var(--ixn-duration) ease;
+}
+
+@media (hover: hover) {
+  .page-drawer-host aside[role='dialog'] button[aria-label='Închide']:hover {
+    transform: rotate(90deg);
+  }
+}
+
+/* Form modal fields inside drawer */
+.page-drawer-host label {
+  transition: color var(--ixn-duration) ease;
+}
+
+.page-drawer-host input:focus + label,
+.page-drawer-host textarea:focus + label,
+.page-drawer-host select:focus + label {
+  color: var(--color-accent);
+}
+
+/* Toast / confirm overlays → motion/components.css [data-sonner-toast] */
+
+/* View transition — disable polish animations during morph */
+html.vt-active .page-body-polish,
+html.vt-active .pm-panel,
+html.vt-active .pm-kpi,
+html.vt-active .page-chrome-inner,
+html.vt-active .page-drawer-host {
+  animation: none !important;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .page-body-polish,
+  .pm-panel,
+  .pm-kpi,
+  .page-drawer-host,
+  .anim-scale-in > span:first-child {
+    animation: none !important;
+  }
+
+  .command-palette-row:not(.is-active):hover {
+    transform: none;
+  }
+}
+
+html[data-motion='reduced'] .page-body-polish,
+html[data-motion='reduced'] .pm-panel,
+html[data-motion='reduced'] .pm-kpi,
+html[data-motion='reduced'] .page-drawer-host {
+  animation: none !important;
+}
+
+/* ---- Pass 2: Deeper desktop vitality (classic + shared primitives) -------- */
+
+.dash-widget-tile {
+  transition:
+    transform var(--ixn-duration) var(--ixn-ease),
+    box-shadow var(--ixn-duration) var(--ixn-ease),
+    border-color var(--ixn-duration) var(--ixn-ease),
+    background-color var(--ixn-duration) var(--ixn-ease);
+}
+
+.dash-widget-tile:active {
+  transform: scale(0.98);
+  transition-duration: var(--motion-instant, 80ms);
+}
+
+.ds-sortable-th {
+  border-radius: 8px;
+}
+
+.ds-status-badge {
+  transition:
+    box-shadow var(--ixn-duration) ease,
+    transform var(--ixn-duration) var(--ixn-ease);
+}
+
+.ds-tab-indicator--pill {
+  transition:
+    left var(--dur-base, 200ms) var(--motion-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    width var(--dur-base, 200ms) var(--motion-spring, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    box-shadow var(--ixn-duration) ease;
+}
+
+[role="tablist"] [role="tab"][aria-selected="true"] {
+  transform: translateY(-0.5px);
+}
+
+.ix-list-tile {
+  cursor: default;
+}
+
+.shell-status {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.shell-status-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-widget-tile:active,
+  [role="tablist"] [role="tab"][aria-selected="true"] {
+    transform: none;
+  }
+}

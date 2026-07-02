@@ -35,7 +35,15 @@ stamp(
   'package.json',
 );
 
-for (const rel of ['ai-service/Cargo.toml']) {
+// Tauri desktop config — top-level "version" key. Without this the installer's
+// version drifted from package.json and the semver-gated updater refused builds.
+stamp(
+  resolve(root, 'src-tauri/tauri.conf.json'),
+  /("version"\s*:\s*")([^"]+)(")/,
+  'src-tauri/tauri.conf.json',
+);
+
+for (const rel of ['ai-service/Cargo.toml', 'src-tauri/Cargo.toml']) {
   stamp(
     resolve(root, rel),
     /(\[package\][\s\S]*?\nversion\s*=\s*")([^"]+)(")/,

@@ -1,0 +1,462 @@
+/* ============================================================================
+ * UI Density System — enterprise information density
+ *
+ * Three global levels via data-density on <html>:
+ *   comfortable — default (classic card spacing: gap-5 / 20px)
+ *   compact     — tighter for power users (~20% tighter)
+ *   dense       — maximum data density (~35% tighter)
+ *
+ * Components consume --density-* tokens; never hardcode spacing in UI chrome.
+ * ========================================================================== */
+
+/* ---- Comfortable (baseline / consumer) ----------------------------------- */
+[data-density="comfortable"] {
+  /* Page & layout */
+  --density-page-px:        24px;
+  --density-page-py:        16px;
+  --density-gap-section:    20px;
+  --density-gap-card:       20px;
+  --density-toolbar-h:      52px;
+  --density-sidebar-w:      240px;
+  --density-sidebar-collapsed: 56px;
+
+  /* Cards & panels */
+  --density-card-p:         16px;
+  --density-card-p-compact: 12px;
+  --density-card-header-h:  44px;
+  --density-card-radius:    8px;
+  --density-kpi-h:          96px;
+
+  /* Tables */
+  --density-table-header-h: 36px;
+  --density-row-h:          44px;
+  --density-cell-py:        10px;
+  --density-cell-px:        14px;
+
+  /* Forms */
+  --density-field-gap:      14px;
+  --density-label-mb:       6px;
+  --density-input-h:        36px;
+  --density-input-px:       12px;
+  --density-form-actions-h: 48px;
+
+  /* Buttons & chips */
+  --density-btn-h:          36px;
+  --density-btn-h-sm:       30px;
+  --density-btn-px:         14px;
+  --density-chip-h:         26px;
+  --density-badge-h:        22px;
+
+  /* Navigation */
+  --density-nav-item-h:     40px;
+  --density-nav-nested-h:   34px;
+  --density-nav-indent:     20px;
+  --density-list-item-h:    44px;
+
+  /* Modals & tabs */
+  --density-modal-header-h: 52px;
+  --density-modal-footer-h: 56px;
+  --density-modal-body-p:   16px;
+  --density-tabs-h:         40px;
+  --density-tabs-px:        16px;
+
+  /* Icons & avatars */
+  --density-avatar:           28px;
+  --density-icon:             16px;
+  --density-icon-btn:         32px;
+  --density-checkbox:         16px;
+
+  /* Typography */
+  --density-fs-title:         18px;
+  --density-fs-section:       14px;
+  --density-fs-body:          14px;
+  --density-fs-label:         12px;
+  --density-fs-table-header:  12px;
+  --density-fs-table-cell:    14px;
+  --density-fs-btn:             14px;
+  --density-fs-input:           14px;
+  --density-fs-nav:             14px;
+  --density-fs-nav-section:     11px;
+  --density-fs-tooltip:         13px;
+  --density-fs-meta:            12px;
+  --density-fs-badge:           12px;
+  --density-fs-kpi-value:       26px;
+  --density-lh-dense:           1.5;
+  --density-lh-table:           1.35;
+  --density-lh-kpi:             1.2;
+  --density-tracking-table-header: 0.06em;
+
+  /* Search toolbar */
+  --density-search-w:         240px;
+  --density-search-h:         32px;
+  --density-pagination-h:     36px;
+}
+
+@media (min-width: 1024px) {
+  [data-density="comfortable"] {
+    --density-gap-card: 24px;
+  }
+}
+
+/* ---- Compact (default) --------------------------------------------------- */
+:root,
+[data-density="compact"] {
+  --density-page-px:        16px;
+  --density-page-py:        12px;
+  --density-gap-section:    12px;
+  --density-gap-card:       10px;
+  --density-toolbar-h:      44px;
+  --density-sidebar-w:      200px;
+  --density-sidebar-collapsed: 48px;
+
+  --density-card-p:         12px;
+  --density-card-p-compact: 8px;
+  --density-card-header-h:  36px;
+  --density-card-radius:    8px;
+  --density-kpi-h:          80px;
+
+  --density-table-header-h: 32px;
+  --density-row-h:          36px;
+  --density-cell-py:        6px;
+  --density-cell-px:        10px;
+
+  --density-field-gap:      10px;
+  --density-label-mb:       4px;
+  --density-input-h:        32px;
+  --density-input-px:       10px;
+  --density-form-actions-h: 40px;
+
+  --density-btn-h:          32px;
+  --density-btn-h-sm:       26px;
+  --density-btn-px:         12px;
+  --density-chip-h:         22px;
+  --density-badge-h:        18px;
+
+  --density-nav-item-h:     34px;
+  --density-nav-nested-h:   28px;
+  --density-nav-indent:     16px;
+  --density-list-item-h:    36px;
+
+  --density-modal-header-h: 48px;
+  --density-modal-footer-h: 48px;
+  --density-modal-body-p:   12px;
+  --density-tabs-h:         36px;
+  --density-tabs-px:        14px;
+
+  --density-avatar:           24px;
+  --density-icon:             14px;
+  --density-icon-btn:         24px;
+  --density-checkbox:         14px;
+
+  --density-fs-title:         16px;
+  --density-fs-section:       13px;
+  --density-fs-body:          13px;
+  --density-fs-label:         11px;
+  --density-fs-table-header:  11px;
+  --density-fs-table-cell:    13px;
+  --density-fs-btn:             13px;
+  --density-fs-input:           13px;
+  --density-fs-nav:             13px;
+  --density-fs-nav-section:     10px;
+  --density-fs-tooltip:         12px;
+  --density-fs-meta:            11px;
+  --density-fs-badge:           11px;
+  --density-fs-kpi-value:       22px;
+  --density-lh-dense:           1.4;
+  --density-lh-table:           1.2;
+  --density-lh-kpi:             1.15;
+  --density-tracking-table-header: 0.08em;
+
+  --density-search-w:         200px;
+  --density-search-h:         28px;
+  --density-pagination-h:     32px;
+}
+
+/* ---- Dense (power users) ------------------------------------------------- */
+[data-density="dense"] {
+  --density-page-px:        12px;
+  --density-page-py:        8px;
+  --density-gap-section:    8px;
+  --density-gap-card:       8px;
+  --density-toolbar-h:      40px;
+  --density-sidebar-w:      180px;
+  --density-sidebar-collapsed: 44px;
+
+  --density-card-p:         8px;
+  --density-card-p-compact: 6px;
+  --density-card-header-h:  32px;
+  --density-card-radius:    6px;
+  --density-kpi-h:          72px;
+
+  --density-table-header-h: 28px;
+  --density-row-h:          28px;
+  --density-cell-py:        4px;
+  --density-cell-px:        8px;
+
+  --density-field-gap:      8px;
+  --density-label-mb:       2px;
+  --density-input-h:        26px;
+  --density-input-px:       8px;
+  --density-form-actions-h: 36px;
+
+  --density-btn-h:          26px;
+  --density-btn-h-sm:       22px;
+  --density-btn-px:         10px;
+  --density-chip-h:         20px;
+  --density-badge-h:        16px;
+
+  --density-nav-item-h:     30px;
+  --density-nav-nested-h:   26px;
+  --density-nav-indent:     12px;
+  --density-list-item-h:    32px;
+
+  --density-modal-header-h: 44px;
+  --density-modal-footer-h: 40px;
+  --density-modal-body-p:   10px;
+  --density-tabs-h:         32px;
+  --density-tabs-px:        12px;
+
+  --density-avatar:           20px;
+  --density-icon:             12px;
+  --density-icon-btn:         22px;
+  --density-checkbox:         12px;
+
+  --density-fs-title:         13px;
+  --density-fs-section:       12px;
+  --density-fs-body:          12px;
+  --density-fs-label:         10px;
+  --density-fs-table-header:  10px;
+  --density-fs-table-cell:    12px;
+  --density-fs-btn:             12px;
+  --density-fs-input:           12px;
+  --density-fs-nav:             12px;
+  --density-fs-nav-section:     9px;
+  --density-fs-tooltip:         11px;
+  --density-fs-meta:            10px;
+  --density-fs-badge:           10px;
+  --density-fs-kpi-value:       20px;
+  --density-lh-dense:           1.35;
+  --density-lh-table:           1.15;
+  --density-lh-kpi:             1.1;
+  --density-tracking-table-header: 0.08em;
+
+  --density-search-w:         180px;
+  --density-search-h:         26px;
+  --density-pagination-h:     28px;
+}
+
+/* ============================================================================
+ * Component bindings — opt-in utility classes
+ * ========================================================================== */
+
+/* Shorthand aliases (spec) — resolve from active density level */
+:root {
+  --row-h: var(--density-row-h);
+  --input-h: var(--density-input-h);
+  --btn-h: var(--density-btn-h);
+  --card-p: var(--density-card-p);
+  --cell-py: var(--density-cell-py);
+  --cell-px: var(--density-cell-px);
+  --fs-body: var(--density-fs-body);
+  --fs-label: var(--density-fs-label);
+  --fs-title: var(--density-fs-title);
+  --gap-section: var(--density-gap-section);
+}
+
+.density-page {
+  padding: var(--density-page-py) var(--density-page-px);
+  gap: var(--density-gap-section);
+}
+
+/* Toolbar / KPI band → main content (see polish-pass .page-body-polish sibling rules). */
+.page-subheader-content-gap {
+  margin-top: var(--density-gap-section);
+}
+
+.density-section-heading {
+  font-size: var(--density-fs-section);
+  font-weight: 600;
+  line-height: var(--density-lh-dense);
+}
+
+.density-page-title {
+  font-size: var(--density-fs-title);
+  font-weight: 600;
+  line-height: var(--density-lh-dense);
+}
+
+.density-body {
+  font-size: var(--density-fs-body);
+  line-height: var(--density-lh-dense);
+}
+
+.density-label {
+  font-size: var(--density-fs-label);
+  font-weight: 500;
+  margin-bottom: var(--density-label-mb);
+  line-height: var(--density-lh-dense);
+}
+
+.density-meta {
+  font-size: var(--density-fs-meta);
+  line-height: var(--density-lh-dense);
+  color: var(--text-muted, hsl(var(--muted-foreground)));
+}
+
+.density-tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Tables — apply to <table> or wrapper */
+.table-density,
+.density-table {
+  font-size: var(--density-fs-table-cell);
+  line-height: var(--density-lh-table);
+}
+
+.table-density thead th,
+.density-table thead th,
+.v2-table-dense th {
+  height: var(--density-table-header-h);
+  padding: 0 var(--density-cell-px);
+  font-size: var(--density-fs-table-header);
+  font-weight: 600;
+  letter-spacing: var(--density-tracking-table-header);
+  text-transform: uppercase;
+  line-height: var(--density-lh-table);
+}
+
+.table-density tbody td,
+.density-table tbody td,
+.v2-table-dense td {
+  height: var(--density-row-h);
+  padding: var(--density-cell-py) var(--density-cell-px);
+  font-size: var(--density-fs-table-cell);
+  line-height: var(--density-lh-table);
+}
+
+.table-density tbody tr,
+.density-table tbody tr,
+.v2-table-dense tbody tr {
+  height: var(--density-row-h);
+}
+
+/* Navigation density */
+.nav-density .v2-nav-item,
+.nav-density button,
+[data-density] .v2-nav-item {
+  min-height: var(--density-nav-item-h);
+  font-size: var(--density-fs-nav);
+}
+
+[data-density] .v2-nav-section-label {
+  font-size: var(--density-fs-nav-section);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* KPI strip */
+.density-kpi {
+  min-height: var(--density-kpi-h);
+  max-height: var(--density-kpi-h);
+  padding: var(--density-card-p-compact) var(--density-card-p);
+}
+
+.density-kpi-value {
+  font-size: var(--density-fs-kpi-value);
+  font-weight: 700;
+  line-height: var(--density-lh-kpi);
+  font-variant-numeric: tabular-nums;
+}
+
+.density-kpi-label {
+  font-size: var(--density-fs-label);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: var(--density-lh-dense);
+}
+
+/* Form field stack */
+.density-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--density-field-gap);
+}
+
+.density-form-grid {
+  display: grid;
+  gap: var(--density-field-gap);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (min-width: 1280px) {
+  .density-form-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* List items (master-detail) */
+.density-list-item {
+  min-height: var(--density-list-item-h);
+  padding: var(--density-cell-py) var(--density-cell-px);
+  font-size: var(--density-fs-body);
+  line-height: var(--density-lh-dense);
+}
+
+/* Settings rows */
+.density-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--density-gap-card);
+  min-height: var(--density-toolbar-h);
+  padding: 0 var(--density-card-p);
+}
+
+/* Toolbar band */
+.density-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--density-gap-card);
+  min-height: var(--density-toolbar-h);
+  flex-shrink: 0;
+}
+
+/* Modals */
+.density-dialog-header {
+  min-height: var(--density-modal-header-h);
+  padding: var(--density-card-p) var(--density-modal-body-p);
+}
+
+.density-dialog-body {
+  padding: var(--density-modal-body-p);
+}
+
+.density-dialog-footer {
+  min-height: var(--density-modal-footer-h);
+  padding: var(--density-card-p) var(--density-modal-body-p);
+}
+
+/* Pagination */
+.density-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--density-gap-card);
+  height: var(--density-pagination-h);
+  font-size: var(--density-fs-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Chip / filter tag */
+.density-chip {
+  display: inline-flex;
+  align-items: center;
+  height: var(--density-chip-h);
+  padding: 0 10px;
+  font-size: var(--density-fs-label);
+  font-weight: 500;
+  border-radius: calc(var(--density-card-radius) - 2px);
+}

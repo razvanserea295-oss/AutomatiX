@@ -1,11 +1,11 @@
 /// <reference types="vite/client" />
 
-
-
-
 type ElectronUnsubscribe = () => void;
 
 declare global {
+  // Injected by Vite at build time (see vite.config.ts `define`) from package.json.
+  const __APP_VERSION__: string;
+
   interface Window {
     electron: {
       platform: 'win32' | 'darwin' | 'linux' | 'freebsd' | 'openbsd' | 'sunos' | 'aix' | string;

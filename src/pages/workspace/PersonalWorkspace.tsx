@@ -1,8 +1,6 @@
 import { Suspense, useState, useEffect } from 'react';
-import { CheckSquare, Calendar, MapPin } from 'lucide-react';
 import type { User } from '@/core/types';
-import Page from '@/components/ui/Page';
-import WorkspaceTabs, { type WorkspaceTab } from '@/components/ui/WorkspaceTabs';
+import WorkspaceShell from './WorkspaceShell';
 import WorkspaceSkeleton from '@/redesign/ui/WorkspaceSkeleton';
 import { lazyWithRetry } from '@/utils/lazyWithRetry';
 
@@ -10,19 +8,13 @@ const PersonalTasksPage = lazyWithRetry(() => import('@/redesign/pages/tasks/Per
 const CalendarPage = lazyWithRetry(() => import('@/redesign/pages/calendar/CalendarPage'));
 const DeplasariPage = lazyWithRetry(() => import('@/redesign/pages/deplasari/DeplasariPage'));
 
-const TABS: WorkspaceTab[] = [
-  { id: 'tasks',     label: 'Task-uri',  icon: CheckSquare, prefetch: () => import('@/redesign/pages/tasks/PersonalTasksPage') },
-  { id: 'calendar',  label: 'Calendar',  icon: Calendar,    prefetch: () => import('@/redesign/pages/calendar/CalendarPage') },
-  { id: 'deplasari', label: 'Deplasări', icon: MapPin,      prefetch: () => import('@/redesign/pages/deplasari/DeplasariPage') },
-];
-
 interface Props {
   user: User | null;
   onNavigate: (page: string, opts?: Record<string, unknown>) => void;
   initialTab?: string;
 }
 
-export default function PersonalWorkspace({ user, onNavigate, initialTab }: Props) {
+export default function PersonalWorkspace({ user, onNavigate: _onNavigate, initialTab }: Props) {
   const [tab, setTab] = useState(initialTab || 'tasks');
   const [visited, setVisited] = useState(() => new Set([initialTab || 'tasks']));
 
@@ -33,15 +25,8 @@ export default function PersonalWorkspace({ user, onNavigate, initialTab }: Prop
     }
   }, [initialTab]);
 
-  const handleTabChange = (t: string) => {
-    setVisited(prev => { const s = new Set(prev); s.add(t); return s; });
-    setTab(t);
-    onNavigate(t);
-  };
-
   return (
-    <Page fit layout="row">
-      <WorkspaceTabs tabs={TABS} active={tab} onChange={handleTabChange} />
+    <WorkspaceShell>
       <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
         <div className={tab === 'tasks' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
           <Suspense fallback={<WorkspaceSkeleton />}>
@@ -59,6 +44,6 @@ export default function PersonalWorkspace({ user, onNavigate, initialTab }: Prop
           </Suspense>
         </div>
       </div>
-    </Page>
+    </WorkspaceShell>
   );
 }

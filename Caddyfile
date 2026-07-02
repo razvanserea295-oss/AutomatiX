@@ -1,10 +1,22 @@
 # Caddy reverse proxy for Promix Automatix.
-# Terminates TLS (automatic Let's Encrypt certs for {$PROMIX_DOMAIN}) and
-# forwards to the app container on :3500. The domain comes from the
-# PROMIX_DOMAIN env var (set in .env / docker-compose).
+# Terminates TLS (automatic Let's Encrypt certs) and forwards to the app
+# container on :3500. The apex domain comes from PROMIX_DOMAIN (set in .env /
+# docker-compose); we also serve www.* and app.*.
+#
+# The SAME server serves the marketing landing (apex / www) and the app SPA
+# (app.*); it picks by the request Host, which Caddy forwards unchanged — so all
+# three hostnames share one block.
 
-{$PROMIX_DOMAIN} {
+{$PROMIX_DOMAIN}, www.{$PROMIX_DOMAIN}, app.{$PROMIX_DOMAIN} {
 	encode zstd gzip
+
+	# Keep HTML shell fresh so lazy-import chunk URLs always match the deployed build.
+	@html_shell path / /index.html /landing.html /m /m/*
+	header @html_shell Cache-Control "no-store"
+
+	# Fingerprinted Vite assets are safe to cache aggressively.
+	@hashed_assets path_regexp hashedAssets ^/assets/.+-[A-Za-z0-9_-]{8,}\.(?:js|mjs|cjs|css|woff2?|ttf|otf|svg|png|jpe?g|webp|gif|ico)$
+	header @hashed_assets Cache-Control "public, max-age=31536000, immutable"
 
 	# Stream Server-Sent Events (/api/events) without buffering so live
 	# updates and the 25s heartbeat reach the browser immediately.

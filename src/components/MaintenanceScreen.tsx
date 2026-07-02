@@ -4,7 +4,7 @@
 
 
 
-import { Wrench } from 'lucide-react';
+import { Wrench } from '@/icons';
 import DashboardBackground from '@/components/DashboardBackground';
 import '@/styles/dashboard.css';
 
@@ -26,7 +26,7 @@ export default function MaintenanceScreen({
           <Wrench className="h-7 w-7 text-accent" />
         </div>
 
-        <p className="text-pm-xs font-bold uppercase tracking-[0.16em] text-content-muted">Promix Automatix</p>
+        <p className="text-pm-xs font-bold uppercase tracking-[0.16em] text-content-muted">Automatix</p>
         <h1 className="mt-2 text-pm-2xl font-semibold text-content-primary">Mentenanță în curs</h1>
 
         <p className="mt-3 text-pm-sm text-content-secondary leading-relaxed">

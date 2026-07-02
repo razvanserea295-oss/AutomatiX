@@ -1,4 +1,4 @@
-import { Eye } from 'lucide-react';
+import { Eye } from '@/icons';
 import { useViewerMode } from '@/hooks/useViewerMode';
 import type { AppPage } from '@/lib/access';
 

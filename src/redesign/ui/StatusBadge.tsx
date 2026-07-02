@@ -58,11 +58,13 @@ function StatusBadge({
   uppercase = false,
   className = '',
 }: StatusBadgeProps) {
+  const pulse = tone === 'warning' || tone === 'danger';
   return (
     <span
       className={[
-        'inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold whitespace-nowrap',
+        'ds-status-badge inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold whitespace-nowrap',
         'anim-scale-in transition-smooth duration-150',
+        pulse ? 'ds-status-badge--pulse' : '',
         sizeClass[size],
         toneClass[tone],
         uppercase ? 'uppercase tracking-wide' : '',

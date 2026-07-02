@@ -3,8 +3,15 @@ import react from "@vitejs/plugin-react";
 import { resolve } from "path";
 import { fileURLToPath } from "node:url";
 import { dirname } from "node:path";
+import { readFileSync } from "node:fs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Single source of truth for the app version: package.json. Injected at build
+// time as __APP_VERSION__ so the UI never drifts from the real release number.
+const pkgVersion = JSON.parse(
+  readFileSync(resolve(__dirname, "package.json"), "utf8"),
+).version as string;
 
 export default defineConfig(({ mode }) => {
   // The Tauri desktop shell renders inside Windows WebView2 (evergreen Chromium),
@@ -17,6 +24,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     base,
+    define: {
+      __APP_VERSION__: JSON.stringify(pkgVersion),
+    },
     plugins: [react()],
     resolve: {
       alias: {
@@ -52,6 +62,8 @@ export default defineConfig(({ mode }) => {
           : {
               main: resolve(__dirname, 'index.html'),
               kitchensink: resolve(__dirname, 'kitchensink.html'),
+              landing: resolve(__dirname, 'landing.html'),
+              manager: resolve(__dirname, 'manager.html'),
             },
         output: {
           manualChunks: {
@@ -89,7 +101,21 @@ export default defineConfig(({ mode }) => {
       globals: true,
       environment: 'happy-dom',
       setupFiles: './src/test/setup.ts',
-      exclude: ['**/node_modules/**', '**/dist/**', 'tests/e2e/**'],
+      exclude: ['**/node_modules/**', '**/dist/**', '**/dist-server/**', '**/dist-electron/**', 'tests/e2e/**'],
+      coverage: {
+        provider: 'v8',
+        reporter: ['text-summary', 'html', 'lcov'],
+        // Report coverage only for the units we actually exercise today (utils +
+        // server/auth services). This keeps the signal honest and lets the floor
+        // below be meaningful instead of being diluted to ~1% by the whole app.
+        include: [
+          'src/lib/format.ts',
+          'server/eventLog.ts',
+          'electron/services/authService.ts',
+        ],
+        // Low starting floor — ratchet up as coverage grows. CI fails if it drops.
+        thresholds: { lines: 40, functions: 40, statements: 40, branches: 50 },
+      },
     },
   };
 });

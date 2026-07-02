@@ -7,7 +7,7 @@
 
 
 import { useMemo } from 'react';
-import { AlertOctagon, Check } from 'lucide-react';
+import { AlertOctagon, Check } from '@/icons';
 import { useLocalStorage, SectionCard } from '@/components/enhancements';
 import { formatDateRo } from '@/lib/format';
 

@@ -51,6 +51,8 @@ export const PAGE_IDS = {
   GOODS_RECEIPT: 'goods-receipt',
   TABLET: 'tablet',
   TUTORIAL: 'tutorial',
+  PRINT: 'print',
+  REMOTE_SUPPORT: 'remote-support',
   MANAGER_CONTROL: 'manager-control',
   
   SALES_WORKSPACE: 'sales-workspace',
@@ -60,6 +62,7 @@ export const PAGE_IDS = {
   FINANCE_WORKSPACE: 'finance-workspace',
   PROJECTS_CONTRACTS_WORKSPACE: 'projects-contracts-workspace',
   INSTRUMENTE_WORKSPACE: 'instrumente-workspace',
+  COMUNICARE_WORKSPACE: 'comunicare-workspace',
   PERSONAL_WORKSPACE: 'personal-workspace',
   SISTEM_WORKSPACE: 'sistem-workspace',
 } as const;
@@ -124,6 +127,8 @@ export const PAGE_TITLES: Record<PageId, string> = {
   [PAGE_IDS.GOODS_RECEIPT]: 'Recepție marfă',
   [PAGE_IDS.TABLET]: 'Stație tabletă',
   [PAGE_IDS.TUTORIAL]: 'Tutorial',
+  [PAGE_IDS.PRINT]: 'Imprimare',
+  [PAGE_IDS.REMOTE_SUPPORT]: 'Asistență la distanță',
   [PAGE_IDS.MANAGER_CONTROL]: 'Birou control',
   [PAGE_IDS.SALES_WORKSPACE]: 'Vânzări',
   [PAGE_IDS.ENGINEERING_WORKSPACE]: 'Proiectare',
@@ -132,6 +137,7 @@ export const PAGE_TITLES: Record<PageId, string> = {
   [PAGE_IDS.FINANCE_WORKSPACE]: 'Financiar',
   [PAGE_IDS.PROJECTS_CONTRACTS_WORKSPACE]: 'Proiecte & Contracte',
   [PAGE_IDS.INSTRUMENTE_WORKSPACE]: 'Instrumente',
+  [PAGE_IDS.COMUNICARE_WORKSPACE]: 'Comunicare',
   [PAGE_IDS.PERSONAL_WORKSPACE]: 'Personal',
   [PAGE_IDS.SISTEM_WORKSPACE]: 'Setări',
 };

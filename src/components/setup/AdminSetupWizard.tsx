@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import {
   Building2, Image as ImageIcon, Receipt, Users, CheckCircle2,
   ArrowRight, ArrowLeft, Loader2, Check, X, Plus, Trash2, Clock,
-} from 'lucide-react';
+} from '@/icons';
 import GearLogo from '@/components/ui/GearLogo';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
@@ -340,7 +340,6 @@ function FiscalStep({ form, set }: { form: SetupState; set: (p: Partial<SetupSta
         <Field label="Monedă implicită">
           <select className={inputCls} value={form.default_currency ?? 'RON'} onChange={e => set({ default_currency: e.target.value })}>
             <option value="RON">RON</option>
-            <option value="EUR">EUR</option>
           </select>
         </Field>
       </div>

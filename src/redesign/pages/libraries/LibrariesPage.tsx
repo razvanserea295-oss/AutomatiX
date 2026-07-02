@@ -1,42 +1,8 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { flushSync } from 'react-dom';
-import { Plus, ArrowUpCircle, Library, Pencil, Trash2, Boxes, Layers } from 'lucide-react';
+import { Plus, ArrowUpCircle, Pencil, Trash2, Boxes, Layers } from '@/icons';
 import LibrariesEnhancements from '@/pages/libraries/LibrariesEnhancements';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
@@ -46,13 +12,11 @@ import { toast } from '@/store/toastStore';
 import { confirmDialog } from '@/components/ConfirmDialog';
 import { useMoney } from '@/store/settingsStore';
 
-
-import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout, PAGE_GRID_12 } from '@/app-ui';
 import Card from '@/redesign/ui/Card';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import StatusBadge from '@/redesign/ui/StatusBadge';
-import SectionHeader from '@/redesign/ui/SectionHeader';
 import AnimatedTabs from '@/redesign/ui/AnimatedTabs';
 import ListReport, { type ListColumn } from '@/redesign/ui/ListReport';
 import { vtName, startMorphTransition } from '@/redesign/lib/viewTransition';
@@ -68,8 +32,7 @@ export default function LibrariesPage({ user: _user }: { user: User | null }) {
   const [stdParts, setStdParts] = useState<StdPart[]>([]);
   const [custParts, setCustParts] = useState<CustPart[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  
+
   const [flashId, setFlashId] = useState<number | null>(null);
   const { isOpen, editingItem, isEditing, openModal, closeModal } = useFormModal();
 
@@ -82,19 +45,6 @@ export default function LibrariesPage({ user: _user }: { user: User | null }) {
   }, []);
 
   useEffect(() => { fetch(); }, [fetch]);
-
-  
-  const stats = useMemo(() => {
-    const cats = new Set<string>();
-    stdParts.forEach(p => p.category && cats.add(p.category.toLowerCase()));
-    custParts.forEach(p => p.category && cats.add(p.category.toLowerCase()));
-    return {
-      standard: stdParts.length,
-      custom: custParts.length,
-      promoted: custParts.filter(p => p.promoted_to_standard_id).length,
-      categories: cats.size,
-    };
-  }, [stdParts, custParts]);
 
   const stdFields: FormField[] = [
     { name: 'code', label: 'Cod piesa', type: 'text', required: true, placeholder: 'ex: HYD-CYL-001' },
@@ -145,7 +95,6 @@ export default function LibrariesPage({ user: _user }: { user: User | null }) {
     catch (err) { toast.error(err instanceof Error ? err.message : 'Eroare la ștergere'); }
   };
 
-  
   const stdColumns: ListColumn<StdPart>[] = [
     { key: 'code', header: 'Cod', sortKey: 'code', render: p => <span className="text-accent font-mono">{p.code}</span> },
     { key: 'name', header: 'Nume', sortKey: 'name', render: p => <span className="font-medium">{p.name}</span> },
@@ -181,7 +130,6 @@ export default function LibrariesPage({ user: _user }: { user: User | null }) {
     },
   ];
 
-  
   const custColumns: ListColumn<CustPart>[] = [
     { key: 'code', header: 'Cod', sortKey: 'code', render: p => <span className="text-accent font-mono">{p.code}</span> },
     { key: 'name', header: 'Nume', sortKey: 'name', render: p => <span className="font-medium">{p.name}</span> },
@@ -238,76 +186,41 @@ export default function LibrariesPage({ user: _user }: { user: User | null }) {
     },
   ];
 
-  
-  
-  
   const switchTab = (id: Tab) => {
     startMorphTransition(() => flushSync(() => setTab(id)), { dir: 'forward' });
   };
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="wide" padding="comfortable">
-
-        {
-}
-        <header className="enter-up shrink-0 pb-3.5 border-b border-line/60 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between" style={{ animationDelay: '0ms' }}>
-          <div className="flex items-center gap-3.5 min-w-0">
-            <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-              <Library className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-              <h1 className="text-pm-2xl font-semibold text-content-primary truncate leading-tight">Biblioteci piese</h1>
-              <p className="mt-0.5 text-pm-sm text-content-muted">
-                Catalog reutilizabil — piese standard și custom, promovabile între proiecte
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <AnimatedTabs
-              active={tab}
-              onChange={(id) => switchTab(id as Tab)}
-              tabs={[
-                { id: 'standard', label: 'Piese standard' },
-                { id: 'custom', label: 'Piese custom' },
-              ]}
-            />
-            <Button size="md" onClick={() => openModal()}>
-              <Plus className="h-4 w-4" /> Adaugă piesa
-            </Button>
-          </div>
-        </header>
-
-        {
-
-}
-        <div className="enter-up flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-5" style={{ animationDelay: '160ms' }}>
-
-          {}
+    <DashboardLayout
+        bodyClassName="page-body-polish"
+        chrome={(
+          <PageChrome
+            actions={
+              <Button size="md" onClick={() => openModal()}>
+                <Plus className="h-4 w-4" /> Piesă nouă
+              </Button>
+            }
+            toolbar={
+              <AnimatedTabs
+                active={tab}
+                onChange={(id) => switchTab(id as Tab)}
+                tabs={[
+                  { id: 'standard', label: 'Standard', icon: Boxes },
+                  { id: 'custom', label: 'Custom', icon: Layers },
+                ]}
+              />
+            }
+          />
+        )}
+    >
+        <div className={`${PAGE_GRID_12} dash-widget`}>
           <div className="xl:col-span-8 min-w-0 min-h-0 flex flex-col">
             <Card
               padding="lg"
-              tone="elevated"
               vtName={vtName('lib-catalog', tab)}
               className="min-w-0 min-h-0 flex flex-col flex-1 !p-5"
             >
-              <SectionHeader
-                className="shrink-0 !mb-4"
-                eyebrow="Catalog"
-                title={tab === 'standard' ? 'Piese standard' : 'Piese custom'}
-                icon={tab === 'standard' ? Boxes : Layers}
-                meta={tab === 'standard'
-                  ? `${stats.standard} piese reutilizabile în toate proiectele`
-                  : `${stats.custom} piese specifice proiectului (${stats.promoted} promovate)`}
-              />
-              {
-
-
-
-
-}
-              <div key={tab} className="enter-up flex-1 min-h-0 overflow-hidden">
+              <div key={tab} className=" flex-1 min-h-0 overflow-hidden">
                 {tab === 'standard' ? (
                   <ListReport<StdPart>
                     key="std"
@@ -318,7 +231,7 @@ export default function LibrariesPage({ user: _user }: { user: User | null }) {
                     columns={stdColumns}
                     rowKey={p => p.id}
                     loading={loading}
-                    rowClassName={() => 'enter-up'}
+                    rowClassName={() => ''}
                     searchKeys={['code', 'name', 'category', 'supplier_name']}
                     searchPlaceholder="Caută piesă standard..."
                     emptyMessage="Nicio piesă standard."
@@ -333,7 +246,7 @@ export default function LibrariesPage({ user: _user }: { user: User | null }) {
                     columns={custColumns}
                     rowKey={p => p.id}
                     loading={loading}
-                    rowClassName={() => 'enter-up'}
+                    rowClassName={() => ''}
                     searchKeys={['code', 'name', 'category', 'originating_project_name']}
                     searchPlaceholder="Caută piesă custom..."
                     emptyMessage="Nicio piesă custom."
@@ -342,8 +255,6 @@ export default function LibrariesPage({ user: _user }: { user: User | null }) {
               </div>
             </Card>
           </div>
-
-          {}
           <aside className="xl:col-span-4 min-w-0 min-h-0 overflow-y-auto">
             <LibrariesEnhancements items={[
               ...stdParts.map(p => ({ id: p.id, name: p.name, category: p.category, type: 'standard' })),
@@ -362,8 +273,7 @@ export default function LibrariesPage({ user: _user }: { user: User | null }) {
             ? (isEditing ? handleUpdateStd : handleCreateStd)
             : (isEditing ? handleUpdateCust : handleCreateCust)}
           submitLabel={isEditing ? 'Actualizează' : 'Adaugă'} />
-      </Page.Body>
-    </Page>
+    </DashboardLayout>
   );
 }
 

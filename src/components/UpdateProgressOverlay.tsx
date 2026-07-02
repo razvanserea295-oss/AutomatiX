@@ -16,7 +16,7 @@
 
 
 import { useEffect, useState } from 'react';
-import { Download, Loader2, RotateCw, AlertTriangle, X, Sparkles } from 'lucide-react';
+import { Download, Loader2, RotateCw, AlertTriangle, X, Sparkles } from '@/icons';
 
 type Phase = 'idle' | 'available' | 'downloading' | 'downloaded' | 'error';
 

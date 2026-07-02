@@ -15,7 +15,7 @@ import {
   Sun, RefreshCw, Loader2, Flame, Clock, Calendar, AlertTriangle, Bell,
   Phone, Clipboard, Package, Box, Banknote, Activity, Target, Factory,
   Flag, ArrowRight, PenTool, ChevronRight,
-} from 'lucide-react';
+} from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 import StatusBadge from '@/components/ui/StatusBadge';

@@ -8,7 +8,7 @@ reimplementezi antetul, bara de filtrare, sortarea și stările goale.
 
 ```tsx
 import ListReport, { type ListColumn } from '@/components/ui/ListReport';
-import { Package } from 'lucide-react';
+import { Package } from '@/icons';
 
 const columns: ListColumn<Material>[] = [
   { key: 'name',  header: 'Material', sortKey: 'name',  render: m => m.name },

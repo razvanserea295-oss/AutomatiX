@@ -38,6 +38,7 @@ export type AppPage =
   | 'tasks'
   | 'maintenance'
   | 'tutorial'
+  | 'remote-support'
   | 'manager-control';
 
 
@@ -77,6 +78,7 @@ const pageAccess: Record<Exclude<AppPage, 'project-detail' | 'station-detail'>, 
   tasks:                    { roles: ['admin', 'manager', 'user'] },
   maintenance:              { roles: ['admin', 'manager', 'user'] },
   tutorial:                 { roles: ['admin', 'manager', 'user'] },
+  'remote-support':         { roles: ['admin', 'manager'] },
 
   
   'sales-hub':              { roles: ['admin', 'manager', 'user'] },

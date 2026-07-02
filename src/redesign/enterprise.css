@@ -1,0 +1,36 @@
+/* ============================================================================
+ * Enterprise UI — Stage 0 "flatten" pass (SAP Fiori Horizon / IBM Carbon look).
+ *
+ * Imported LAST in src/main.tsx so it wins the cascade. It neutralizes the
+ * consumer/SaaS visual effects only; the palette (SAP blue), radii and instant
+ * numbers are handled at their source (tokens/design-tokens.css + useCountUp).
+ *
+ * Reversible: delete this file + its import in main.tsx to restore the old look.
+ * ========================================================================== */
+
+/* 1 — Kill the colored "wallpaper" orbs → flat neutral canvas.
+       (.app-bg itself already uses --color-bg-page, so it stays.) */
+.mesh-blob,
+.mesh-blob-1,
+.mesh-blob-2,
+.mesh-blob-3 { display: none !important; }
+
+/* 2 — No frosted glass. Enterprise separates with opaque surfaces + 1px borders,
+       never blur. */
+.surface-glass,
+.surface-glass-strong,
+.surface-frost {
+  -webkit-backdrop-filter: none !important;
+          backdrop-filter: none !important;
+  background-color: var(--color-bg-elevated) !important;
+}
+
+/* 3 — No hover glow / lift. Data surfaces are static; keep the border-colour
+       shift (defined on the same rules) for affordance. */
+.hover-glow:hover,
+.hover-lift:hover,
+.card-interactive:hover,
+.btn-accent-glow:hover {
+  box-shadow: none !important;
+  transform: none !important;
+}

@@ -4,7 +4,7 @@
 
 
 import { useEffect, useMemo, useState } from 'react';
-import { ShieldCheck, Wand2, History, RefreshCcw, Send, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Wand2, History, RefreshCcw, Send, AlertTriangle } from '@/icons';
 import { useLocalStorage } from '@/components/enhancements/useLocalStorage';
 import { toast } from '@/store/toastStore';
 

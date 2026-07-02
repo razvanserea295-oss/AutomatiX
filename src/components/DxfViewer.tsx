@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Loader2, FileWarning, Search, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { Loader2, FileWarning, Search, ZoomIn, ZoomOut, Maximize } from '@/icons';
 import DOMPurify from 'dompurify';
 import { findDxfFile, loadDxfContent, pickDxfFile } from '@/utils/dxfResolver';
 

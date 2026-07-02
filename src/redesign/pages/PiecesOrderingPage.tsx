@@ -1,43 +1,11 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Truck, Package, CheckCircle2, Clock, Loader2, X,
   ChevronRight, AlertTriangle, FileText, StickyNote, Pencil, Save,
   Tag, RefreshCw,
-} from 'lucide-react';
+} from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { toast } from '@/store/toastStore';
 import { useProjectStore } from '@/store/projectStore';
@@ -46,24 +14,13 @@ import type { SupplierCode } from '@/pages/parts-tree/SupplierCodesModal';
 import { getErrorMessage } from '@/utils/errors';
 import { confirmDialog } from '@/components/ConfirmDialog';
 
-
-import Page from '@/redesign/ui/Page';
+import { PageChrome, DashboardLayout, PANEL_HEAD } from '@/app-ui';
 import Card from '@/redesign/ui/Card';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import StatusBadge from '@/redesign/ui/StatusBadge';
 import EmptyState from '@/redesign/ui/EmptyState';
 import { filterSelectCls } from '@/redesign/ui/filterControls';
-
-
-
-
-
-
-
-
-
-
 
 function fileKind(fileName: string | null | undefined): 'assembly' | 'part' | null {
   if (!fileName) return null;
@@ -101,10 +58,6 @@ interface OrderRow {
   project_id: number;
   project_name: string;
 }
-
-
-
-
 
 const COLUMNS: { status: Status; label: string; icon: typeof Truck; iconClass: string; accent: string }[] = [
   { status: 'requested', label: 'Cerute',    icon: Clock,        iconClass: 'text-status-amber',  accent: '#f59e0b' },
@@ -180,12 +133,6 @@ export default function PiecesOrderingPage() {
     }
   };
 
-  
-
-
-
-
-
   const saveNotes = async (row: OrderRow, notes: string) => {
     setBusy(row.id);
     try {
@@ -221,8 +168,6 @@ export default function PiecesOrderingPage() {
     return codes.find(c => c.code === code)?.color || '#f97316';
   };
 
-  
-  
   const ACTIVE_COLUMNS = COLUMNS.filter(c => c.status !== 'installed');
   const installedCol = COLUMNS.find(c => c.status === 'installed')!;
 
@@ -240,56 +185,39 @@ export default function PiecesOrderingPage() {
   );
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="wide" padding="comfortable">
-
-        {
-
-}
-        <div
-          className="enter-up shrink-0 pb-4 border-b border-line/60 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between"
-          style={{ animationDelay: '0ms' }}
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-              <Truck className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-              <h1 className="text-pm-2xl font-semibold text-content-primary truncate leading-tight">Piese de comandat</h1>
-              <p className="mt-1 text-pm-sm text-content-muted">
-                Tracking pe ciclul cerere → comandă → sosire → montaj
-              </p>
-            </div>
-          </div>
-
-          {}
-          <div className="flex items-center gap-2 flex-wrap shrink-0">
-            <select
-              value={projectFilter}
-              onChange={(e) => setProjectFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-              className={filterSelectCls(projectFilter !== 'all')}
-            >
-              <option value="all">Toate proiectele</option>
-              {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-            <select
-              value={codeFilter}
-              onChange={(e) => setCodeFilter(e.target.value)}
-              className={filterSelectCls(codeFilter !== 'all')}
-            >
-              <option value="all">Toate codurile</option>
-              {codes.map(c => <option key={c.id} value={c.code}>{c.code} — {c.label}</option>)}
-            </select>
-            <span className="text-pm-2xs font-semibold text-content-muted tabular-nums px-2 py-1 rounded-lg bg-surface-tertiary">
-              {rows.length} {rows.length === 1 ? 'cerere' : 'cereri'}
-            </span>
-            <Button size="md" variant="outline" onClick={refresh}>
-              <RefreshCw className="h-4 w-4" /> Actualizează
-            </Button>
-          </div>
-        </div>
-
+    <DashboardLayout
+        
+        chrome={(
+          <PageChrome
+            actions={
+              <Button size="md" variant="outline" onClick={() => void refresh()} disabled={loading}>
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                Reîmprospătează
+              </Button>
+            }
+            toolbar={(
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={projectFilter === 'all' ? '' : String(projectFilter)}
+                  onChange={e => setProjectFilter(e.target.value ? Number(e.target.value) : 'all')}
+                  className={filterSelectCls(projectFilter !== 'all')}
+                >
+                  <option value="">Toate proiectele</option>
+                  {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <select
+                  value={codeFilter === 'all' ? '' : codeFilter}
+                  onChange={e => setCodeFilter(e.target.value || 'all')}
+                  className={filterSelectCls(codeFilter !== 'all')}
+                >
+                  <option value="">Toate codurile</option>
+                  {codes.map(c => <option key={c.id} value={c.code}>{c.code}</option>)}
+                </select>
+              </div>
+            )}
+          />
+        )}
+      >
         {loading ? (
           <Card padding="lg" className="flex-1 min-h-0 flex items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin text-content-muted" />
@@ -304,11 +232,9 @@ export default function PiecesOrderingPage() {
           </Card>
         ) : (
           
-          <div className="enter-up flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-4" style={{ animationDelay: '160ms' }}>
-
-            {}
-            <Card padding="none" tone="elevated" className="xl:col-span-8 min-w-0 min-h-0 flex flex-col overflow-hidden">
-              <div className="shrink-0 px-5 py-4 border-b border-line/70 flex items-center gap-2">
+          <div className=" flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-4">
+            <Card padding="none" className="xl:col-span-8 min-w-0 min-h-0 flex flex-col overflow-hidden">
+              <div className={`shrink-0 ${PANEL_HEAD} flex items-center gap-2`}>
                 <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
                   <Truck className="h-4 w-4" />
                 </span>
@@ -324,8 +250,7 @@ export default function PiecesOrderingPage() {
                 {ACTIVE_COLUMNS.map((col) => {
                   const Icon = col.icon;
                   const cards = byStatus[col.status];
-                  
-                  
+
                   const activeTotal = byStatus.requested.length + byStatus.ordered.length + byStatus.arrived.length;
                   const share = activeTotal > 0 ? Math.round((cards.length / activeTotal) * 100) : 0;
                   return (
@@ -340,7 +265,6 @@ export default function PiecesOrderingPage() {
                           {cards.length}
                         </span>
                       </div>
-                      {}
                       <div className="shrink-0 h-1 bg-surface-tertiary/60">
                         <div
                           className="anim-bar-grow h-full motion-reduce:transition-none"
@@ -361,11 +285,7 @@ export default function PiecesOrderingPage() {
                 })}
               </div>
             </Card>
-
-            {}
             <div className="xl:col-span-4 min-w-0 min-h-0 flex flex-col gap-4">
-
-              {}
               <Card padding="none" className="min-w-0 min-h-0 flex-1 flex flex-col overflow-hidden">
                 <div
                   className="shrink-0 px-4 py-3 border-b border-line/70 flex items-center gap-2"
@@ -386,8 +306,6 @@ export default function PiecesOrderingPage() {
                   ) : byStatus.installed.map(renderCard)}
                 </div>
               </Card>
-
-              {}
               <Card padding="lg" className="min-w-0 shrink-0 max-h-[40%] overflow-y-auto">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="h-8 w-8 rounded-xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
@@ -419,8 +337,7 @@ export default function PiecesOrderingPage() {
             </div>
           </div>
         )}
-      </Page.Body>
-    </Page>
+    </DashboardLayout>
   );
 }
 
@@ -443,10 +360,6 @@ function PieceCard({ row, codeColor, busy, canEditNotes, onAdvance, onCancel, on
   const nxt = nextLabel[row.status];
   const kind = fileKind(row.source_file_name);
 
-  
-  
-  
-  
   const [editing, setEditing] = useState(false);
   const [noteBuffer, setNoteBuffer] = useState(row.notes || '');
   useEffect(() => { setNoteBuffer(row.notes || ''); }, [row.notes]);
@@ -475,7 +388,6 @@ function PieceCard({ row, codeColor, busy, canEditNotes, onAdvance, onCancel, on
 
       {
 
-
 }
       {kind && (
         <div className="mb-2">
@@ -497,9 +409,6 @@ function PieceCard({ row, codeColor, busy, canEditNotes, onAdvance, onCancel, on
       )}
 
       {
-
-
-
 
 }
       {editing ? (
@@ -537,10 +446,6 @@ function PieceCard({ row, codeColor, busy, canEditNotes, onAdvance, onCancel, on
         <div className="mt-2 flex items-start gap-1 group">
           <StickyNote className="h-3 w-3 shrink-0 mt-0.5 text-content-muted/70" />
           {
-
-
-
-
 
 }
           <p
@@ -598,8 +503,6 @@ function PieceCard({ row, codeColor, busy, canEditNotes, onAdvance, onCancel, on
           </p>
         )}
       </div>
-
-      {}
       {row.status !== 'installed' && row.status !== 'cancelled' && (
         <div className="flex items-center gap-1 mt-2 pt-2 border-t border-line/40">
           {nxt.next && (

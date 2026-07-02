@@ -1,6 +1,6 @@
 [package]
 name = "automatix"
-version = "1.1.4"
+version = "1.1.7"
 description = "Promix Automatix — desktop shell"
 authors = ["Promix"]
 edition = "2021"
@@ -23,6 +23,11 @@ serde_json = "1"
 # process plugin relaunches the app.
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
+
+# Windows-only: DWM call to round the frameless window's corners on Windows 11
+# (DWMWA_WINDOW_CORNER_PREFERENCE). Keeps the native drop shadow; no-op pre-Win11.
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Graphics_Dwm"] }
 
 [features]
 # Default release profile keeps the binary lean.

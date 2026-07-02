@@ -33,15 +33,18 @@ export function applyAccent(color: string | null): void {
   if (!color || !isHex(color)) {
     // Drop the inline overrides → CSS theme defaults take over again.
     root.style.removeProperty('--color-accent');
+    root.style.removeProperty('--accent');
     root.style.removeProperty('--color-accent-muted');
     root.style.removeProperty('--color-on-accent');
+    root.style.removeProperty('--accent-fg');
     return;
   }
-  // Inline styles on <html> win over the :root / .dark rules, so one accent
-  // applies in both light and dark mode.
+  // Inline styles on <html> win over theme rules — one accent in both modes.
   root.style.setProperty('--color-accent', color);
+  root.style.setProperty('--accent', color);
   root.style.setProperty('--color-accent-muted', `color-mix(in srgb, ${color} 12%, transparent)`);
   root.style.setProperty('--color-on-accent', contrastInk(color));
+  root.style.setProperty('--accent-fg', contrastInk(color));
 }
 
 interface AccentState {

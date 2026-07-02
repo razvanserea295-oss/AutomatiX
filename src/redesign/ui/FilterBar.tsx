@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Search, X as XIcon } from 'lucide-react';
+import { Search, X as XIcon } from '@/icons';
 import { filterSearchInputCls, filterSearchIconCls, filterClearInlineBtnCls, filterSelectCls, filterResetBtnCls } from '@/redesign/ui/filterControls';
 
 

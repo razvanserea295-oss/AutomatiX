@@ -40,6 +40,7 @@ const EXCLUDE_DIRS = new Set<string>([
   'node_modules', '.git', '.svn', '.hg',
   'dist', 'dist-server', 'dist-electron', 'dist-installer', 'release',
   'data', 'backups', 'updates', '.update-staging',
+  '.preview-data', '.demo-preview-data', // local preview/demo DBs + their .dbkey
   'target', 'target-linux', 'target-win',
   'playwright-report', 'test-results', 'coverage',
   '.vite', '.cache', '.turbo', '.next', '.idea', '.vscode-test',
@@ -76,6 +77,9 @@ export function isExcludedDir(name: string): boolean {
 
 export function isExcludedFile(relPosix: string, baseName: string): boolean {
   if (EXCLUDE_RELPATHS.has(relPosix)) return true;
+  // Any .dbkey anywhere is a DB encryption key — never ship it (path.extname
+  // returns '' for dotfiles, so an extension rule would miss these).
+  if (baseName === '.dbkey') return true;
   if (EXCLUDE_NAME_PREFIXES.some((p) => baseName.startsWith(p))) return true;
   if (DB_SIDECAR.test(baseName)) return true;
   const ext = path.extname(baseName).toLowerCase();

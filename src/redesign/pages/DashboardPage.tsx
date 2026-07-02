@@ -1,609 +1,159 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import { lazy, Suspense, useState, useEffect, useMemo } from 'react';
-import { FolderKanban, Factory, Warehouse, Loader2, TrendingUp, Bell, Activity, RefreshCw, Wallet, Receipt } from 'lucide-react';
+import { lazy, Suspense } from 'react';
+import { RefreshCw, TrendingUp, FolderKanban, Bell, AlertTriangle, Loader2, Wallet } from '@/icons';
 import type { User } from '@/core/types';
-import { parseDashboardConfig } from '@/core/types';
-import { normalizeRole, canAccessPage } from '@/lib/access';
-import type { AppPage } from '@/lib/access';
-import { formatNumber, formatDateRo } from '@/lib/format';
-import { useProjectStore } from '@/store/projectStore';
-import { useMaterialStore } from '@/store/materialStore';
-import { useAlertStore } from '@/store/alertStore';
-import { useDashboardStore } from '@/store/dashboardStore';
-import { useSettingsStore } from '@/store/settingsStore';
-import { useHandoffStore } from '@/store/handoffStore';
-import InboxWidget from '@/components/InboxWidget';
-import DailyBriefingWidget from '@/components/DailyBriefingWidget';
-
-
-
-const RevenueChartWidget = lazy(() => import('@/components/RevenueChartWidget'));
-import { filterToggleCls, filterDateInputCls } from '@/components/ui/filterControls';
-import { projectStatus } from '@/lib/statusTokens';
-import DashboardBackground from '@/components/DashboardBackground';
-import { useCountUp } from '@/hooks/useCountUp';
-import '@/styles/dashboard.css';
-
 import Page from '@/redesign/ui/Page';
-import Card from '@/redesign/ui/Card';
-import KpiCard from '@/redesign/ui/KpiCard';
 import Button from '@/redesign/ui/Button';
-import CardGrid, { type CardGridItem } from '@/redesign/ui/CardGrid';
-import EditLayoutButton from '@/redesign/ui/EditLayoutButton';
-import { useLayoutEditStore } from '@/store/layoutEditStore';
-import StatusBadge from '@/redesign/ui/StatusBadge';
-import SectionHeader from '@/redesign/ui/SectionHeader';
 import EmptyState from '@/redesign/ui/EmptyState';
-import { vtName } from '@/redesign/lib/viewTransition';
+import DashboardBackground from '@/components/DashboardBackground';
+import { useDeferredLoading } from '@/redesign/lib/loading';
+import { DashboardPageSkeleton, RefetchDim } from '@/redesign/ui/loading';
+import { PageChrome, DashboardLayout, Kpi } from '@/app-ui';
+import { useDashboardPage } from './dashboard/useDashboardPage';
+import AttentionFeed from './dashboard/AttentionFeed';
+import CriticalStock from './dashboard/CriticalStock';
+import ProjectsPipeline from './dashboard/ProjectsPipeline';
+import ProjectsStatusChart from './dashboard/ProjectsStatusChart';
+import { DASH_KPI_GRID } from './dashboard/density';
+import type { NavigateFn } from './dashboard/types';
 
+// recharts is heavy — keep the hero chart in its own chunk.
+const RevenueChartWidget = lazy(() => import('@/components/RevenueChartWidget'));
 
-type IconCmp = React.ComponentType<{ className?: string }>;
-
-
-
-
-
-interface DashboardPageProps { user: User | null; onNavigate: (page: string, opts?: Record<string, unknown>) => void; }
-interface DData {
-  total_projects: number; active_projects: number; in_production: number;
-  total_materials: number; low_stock_count: number; pending_alerts: number;
-  total_documents: number; revenue: number; costs: number; profit: number;
+interface DashboardPageProps {
+  user: User | null;
+  onNavigate: (page: string, opts?: Record<string, unknown>) => void;
 }
-
-
-
-
-
-type RangePreset = 'month' | '6m' | 'year' | 'custom' | 'all';
-
-interface TimeRange { from: string | null; to: string | null; preset: RangePreset }
-
-function isoDate(d: Date): string { return d.toISOString().slice(0, 10); }
-
-
-const fmtCount = (n: number): string => formatNumber(Math.round(n));
-
-// Sentence-case a data-derived label (DB stage/status strings arrive lowercase:
-// "în producție", "ofertă"…). Keeps card lists on ONE casing rule instead of
-// mixing lowercase data with capitalized labels on the same screen.
-const sentenceCase = (s: string): string => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
-
-function presetRange(preset: RangePreset): { from: string | null; to: string | null } {
-  if (preset === 'all') return { from: null, to: null };
-  const now = new Date();
-  const to = isoDate(now);
-  const start = new Date(now);
-  if (preset === 'month')  start.setMonth(start.getMonth() - 1);
-  if (preset === '6m')     start.setMonth(start.getMonth() - 6);
-  if (preset === 'year')   start.setFullYear(start.getFullYear() - 1);
-  return { from: isoDate(start), to };
-}
-
-
-
-
-// ── iOS-style editable widget grid: model + persistence ─────────────────────
-type WId = 'revenue_chart' | 'production_stages' | 'activity' | 'active_projects'
-  | 'alerts_panel' | 'briefing' | 'inbox' | 'critical_stock';
-
-const DEFAULT_WIDGET_ORDER: WId[] = [
-  'revenue_chart', 'production_stages', 'activity', 'active_projects',
-  'alerts_panel', 'briefing', 'inbox', 'critical_stock',
-];
-// 2 = full-width tile, 1 = half (the iOS "large/small widget" idea, kept simple
-// so a 2-column grid tiles without masonry gaps).
-const WIDGET_SPAN: Record<WId, 1 | 2> = {
-  revenue_chart: 2, production_stages: 1, activity: 1, active_projects: 2,
-  alerts_panel: 1, briefing: 1, inbox: 1, critical_stock: 1,
-};
-
-// Widget model (WId/order/span above) feeds CardGrid; layout engine lives in @/redesign/lib/useCardLayout.
 
 export default function DashboardPage({ user, onNavigate }: DashboardPageProps) {
-  const projects = useProjectStore(s => s.projects);
-  const fetchProjects = useProjectStore(s => s.fetchProjects);
-  const materials = useMaterialStore(s => s.materials);
-  const fetchMaterials = useMaterialStore(s => s.fetchMaterials);
-  const alerts = useAlertStore(s => s.alerts);
-  const fetchAlerts = useAlertStore(s => s.generateAndFetch);
-  const dashboardData = useDashboardStore(s => s.dashboardData);
-  const financeOverview = useDashboardStore(s => s.financeOverview);
-  const refreshDashboard = useDashboardStore(s => s.refreshAll);
-  const setRange = useDashboardStore(s => s.setRange);
-  const startDashPoll = useDashboardStore(s => s.startPolling);
-  const fetchHandoffs = useHandoffStore(s => s.fetchPending);
-  const startHandoffPoll = useHandoffStore(s => s.startPolling);
-  const loadSettings = useSettingsStore(s => s.load);
-  const eurRate = useSettingsStore(s => s.eurToRonRate);
-  const displayCurrency = useSettingsStore(s => s.defaultCurrency);
-  
-  
-  // Compact money for the KPI strip so the hero figures never truncate
-  // (e.g. "13,9 mil. RON" instead of a cut-off "13.938.520 …"). Converts
-  // RON → the display currency first, then compact-notates.
-  const moneyCompact = (n: number): string => {
-    const converted = displayCurrency === 'EUR' ? n / (eurRate || 4.97) : n;
+  const nav = onNavigate as NavigateFn;
+  const {
+    loading, refreshing, can, money, fmtCount, summary,
+    activeProjects, criticalStock, unackedAlerts, handoffs,
+    attentionCount, handleRefresh,
+    profit, marginPercent, costsKnown, dateLabel,
+  } = useDashboardPage(user);
+
+  const canFinance = can('finance');
+  const canProjects = can('projects');
+  const canWarehouse = can('warehouse') || can('materials');
+
+  const { showSkeleton, showExtended, elapsedMs, isPending } = useDeferredLoading(loading);
+
+  if (loading && (isPending || !showSkeleton)) {
+    return <div className="ix-loading-reserve flex-1" role="status" aria-busy aria-label="Se încarcă dashboard-ul" />;
+  }
+
+  if (loading && showSkeleton) {
     return (
-      new Intl.NumberFormat('ro-RO', { notation: 'compact', maximumFractionDigits: 1, compactDisplay: 'short' }).format(converted) +
-      ' ' + displayCurrency
-    );
-  };
-
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  
-  const [timeRange, setTimeRange] = useState<TimeRange>(() => ({ ...presetRange('all'), preset: 'all' }));
-  const [customFrom, setCustomFrom] = useState<string>(() => isoDate(new Date(Date.now() - 30 * 24 * 3600 * 1000)));
-  const [customTo, setCustomTo] = useState<string>(() => isoDate(new Date()));
-
-  const role = normalizeRole(user?.role_name);
-  const can = (p: AppPage) => canAccessPage(role, p, user?.custom_pages);
-  
-  
-  
-  const widgets = useMemo(() => parseDashboardConfig(user?.dashboard_config), [user?.dashboard_config]);
-
-  
-  
-  
-  const canFinance    = can('finance');
-  const canProjects   = can('projects');
-  const canProduction = can('production');
-  const canWarehouse  = can('warehouse');
-
-  const d: DData = useMemo(() => {
-    const s = (dashboardData?.summary || dashboardData) as Record<string, unknown>;
-    const fin = (financeOverview ?? {}) as Record<string, unknown>;
-    return {
-      total_projects:    (s.projects_total as number) || 0,
-      active_projects:   (s.projects_active as number) || 0,
-      in_production:     (s.projects_in_production as number) || 0,
-      total_materials:   materials.length,
-      low_stock_count:   (s.materials_critical_stock as number) || 0,
-      pending_alerts:    (s.active_alerts as number) || 0,
-      total_documents:   (s.documents_total as number) || 0,
-      revenue:           (s.revenue_total as number) ?? (fin.total_actual_revenue as number) ?? 0,
-      
-      
-      
-      costs:             (((s.costs_materials_total as number) || 0) + ((s.costs_labor_total as number) || 0) + ((s.costs_other_total as number) || 0)) || (fin.total_actual_cost as number) || 0,
-      profit:            (s.profit_total as number) ?? (fin.total_actual_profit as number) ?? 0,
-    };
-  }, [dashboardData, financeOverview, materials.length]);
-
-  const doRefresh = async () => {
-    await Promise.all([
-      refreshDashboard(), fetchMaterials(), fetchProjects(), fetchAlerts(), fetchHandoffs(true),
-    ]);
-  };
-
-  
-  useEffect(() => {
-    setLoading(true);
-    void loadSettings();
-    void doRefresh().finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  
-  useEffect(() => {
-    // SSE (useLiveEvents) already pushes these updates in real time; this poll
-    // is just a slow safety net. 5s was ~4 redundant requests every 5s per open
-    // dashboard — raised to 30s (audit T2.1).
-    const stopDash = startDashPoll(30000);
-    const stopHand = startHandoffPoll(30000);
-    return () => { stopDash(); stopHand(); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleRefresh = async () => { setRefreshing(true); await doRefresh(); setRefreshing(false); };
-
-  
-  useEffect(() => {
-    void setRange({ from: timeRange.from, to: timeRange.to });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeRange.from, timeRange.to]);
-
-  const profit = d.profit || (d.revenue - d.costs);
-  const margin = d.revenue > 0 ? (profit / d.revenue) * 100 : 0;
-
-  const activeProjects = useMemo(() =>
-    projects.filter(p => p.status !== 'finalizat' && p.status !== 'anulat')
-      .sort((a, b) => (a.deadline || '').localeCompare(b.deadline || ''))
-      .slice(0, 8),
-    [projects]
-  );
-
-  const criticalStock = useMemo(() => materials.filter(m => m.stock <= m.min_stock).slice(0, 6), [materials]);
-  
-  
-  
-  const recentAlerts = useMemo(() => alerts.filter(a => !a.acknowledged).slice(0, 5), [alerts]);
-
-  const projectsByStage = useMemo(() => {
-    const map = new Map<string, number>();
-    projects.forEach(p => { const k = p.stage || p.status || '—'; map.set(k, (map.get(k) || 0) + 1); });
-    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
-  }, [projects]);
-
-  const dateStr = useMemo(() => {
-    const now = new Date();
-    return now.toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  }, []);
-
-  const userFirst = (user?.full_name || user?.username || '').split(' ')[0] || 'utilizator';
-
-  // Per-user widget arrangement is now handled by the shared CardGrid engine.
-  const layoutKey = String(user?.id ?? user?.username ?? 'anon');
-  const editMode = useLayoutEditStore(s => s.editMode);
-
-  if (loading) {
-    return (
-      <div className="flex flex-1 items-center justify-center bg-surface-page">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-accent" />
-          <p className="text-pm-sm text-content-muted">Se încarcă tabloul...</p>
-        </div>
-      </div>
+      <DashboardPageSkeleton showExtended={showExtended} elapsedMs={elapsedMs} label="Se încarcă dashboard-ul" />
     );
   }
 
-  // Each dashboard card → a widget node, rendered in the user's arranged order.
-  const widgetNode: Record<WId, React.ReactNode> = {
-    revenue_chart: (
-      <Card padding="md" className="h-full min-w-0">
-        <SectionHeader eyebrow="Financiar" title="Evoluție venituri" icon={TrendingUp} className="mb-4" />
-        {widgets.revenue_chart && canFinance
-          ? (<Suspense fallback={<div className="ds-skeleton h-64 w-full rounded-xl" />}><RevenueChartWidget /></Suspense>)
-          : <EmptyState icon={TrendingUp} title="Fără date financiare" description="Nu există date financiare de afișat pentru intervalul selectat." />}
-      </Card>
-    ),
-    production_stages: (
-      <Card padding="md" className="h-full min-w-0">
-        <SectionHeader title="Producție pe etape" icon={Factory} className="mb-4" />
-        {!canProduction ? <EmptyState icon={Factory} title="Fără acces" />
-          : projectsByStage.length === 0 ? <EmptyState icon={Factory} title="Fără date" />
-          : (
-            <div key={projectsByStage.length} className="stagger-in space-y-3">
-              {projectsByStage.slice(0, 5).map(([stage, count]) => {
-                const max = projectsByStage[0]?.[1] || 1;
-                const pct = (count / max) * 100;
-                return (
-                  <div key={stage}>
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="min-w-0 text-pm-xs text-content-secondary truncate">{sentenceCase(stage)}</span>
-                      <span className="text-pm-sm font-semibold tabular-nums text-content-primary shrink-0">{count}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-surface-tertiary overflow-hidden">
-                      <div className="anim-bar-grow h-full bg-content-primary/80 rounded-full transition-[background-color] duration-150" style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-      </Card>
-    ),
-    activity: (
-      <Card padding="md" className="h-full min-w-0 flex flex-col">
-        <SectionHeader title="Operațional" icon={Activity} className="mb-4" />
-        <div className="stagger-in grid grid-cols-2 gap-3 flex-1 content-center">
-          <MiniStat label="Documente" value={d.total_documents} />
-          <MiniStat label="Materiale" value={d.total_materials} />
-          <MiniStat label="Stoc critic" value={canWarehouse ? d.low_stock_count : '—'} warn={canWarehouse && d.low_stock_count > 0} />
-          <MiniStat label="Alerte" value={d.pending_alerts} warn={d.pending_alerts > 0} />
-        </div>
-      </Card>
-    ),
-    active_projects: (
-      <Card padding="md" className="h-full min-w-0">
-        <SectionHeader title="Proiecte active" icon={FolderKanban} className="mb-3"
-          actions={canProjects ? (<button onClick={() => onNavigate('projects')} className="inline-flex items-center rounded-lg px-1.5 py-0.5 text-pm-xs text-accent hover:underline transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">Deschide</button>) : undefined} />
-        {!canProjects ? <EmptyState icon={FolderKanban} title="Fără acces" />
-          : activeProjects.length === 0 ? <EmptyState icon={FolderKanban} title="Niciun proiect activ" />
-          : (
-            <ul key={activeProjects.length} className="stagger-in space-y-1">
-              {activeProjects.slice(0, 6).map(p => (
-                <li key={p.id}>
-                  <button onClick={() => onNavigate('projects')} className="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-tertiary/40 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-pm-sm font-medium text-content-primary truncate">{p.name}</p>
-                      <p className="text-pm-2xs text-content-muted truncate">{p.client_name || '—'}</p>
-                    </div>
-                    <StatusBadge {...projectStatus(p.stage || p.status)} size="xs" />
-                    <span className="text-pm-2xs text-content-muted tabular-nums shrink-0 hidden sm:inline">{formatDateRo(p.deadline)}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-      </Card>
-    ),
-    alerts_panel: (
-      <Card padding="md" className="h-full min-w-0">
-        <SectionHeader title="Alerte" icon={Bell} className="mb-3"
-          meta={d.pending_alerts > 0 ? `${d.pending_alerts} active` : undefined}
-          actions={can('alerts') ? (<button onClick={() => onNavigate('alerts')} className="inline-flex items-center rounded-lg px-1.5 py-0.5 text-pm-xs text-accent hover:underline transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">Toate</button>) : undefined} />
-        {!can('alerts') ? <EmptyState icon={Bell} title="Fără acces" />
-          : recentAlerts.length === 0 ? <EmptyState icon={Bell} title="Nicio alertă activă" />
-          : (
-            <ul key={recentAlerts.length} className="stagger-in space-y-1">
-              {recentAlerts.map(a => (
-                <li key={a.id}>
-                  <button onClick={() => onNavigate('alerts')} className="w-full text-left flex items-start gap-3 px-3 py-2 rounded-lg hover:bg-surface-tertiary/40 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">
-                    <span className={`h-2 w-2 rounded-full mt-1.5 shrink-0 ${a.severity === 'critical' ? 'bg-status-red' : a.severity === 'high' ? 'bg-status-amber' : 'bg-status-blue'}`} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-pm-xs text-content-primary leading-snug">{a.title}</p>
-                      <p className="text-pm-2xs text-content-muted mt-0.5">{formatDateRo(a.created_at)}</p>
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-      </Card>
-    ),
-    briefing: (
-      <Card padding="md" className="h-full min-w-0 overflow-hidden"><DailyBriefingWidget onNavigate={onNavigate} /></Card>
-    ),
-    inbox: (
-      <Card padding="md" className="h-full min-w-0 overflow-hidden"><InboxWidget onOpenProject={(pid) => { sessionStorage.setItem('promix_focus_project', String(pid)); onNavigate('projects'); }} /></Card>
-    ),
-    critical_stock: (
-      <Card padding="md" className="h-full min-w-0">
-        <SectionHeader title="Stoc critic" icon={Warehouse} className="mb-3"
-          actions={(<button onClick={() => onNavigate('materials')} className="inline-flex items-center rounded-lg px-1.5 py-0.5 text-pm-xs text-accent hover:underline transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]">Deschide</button>)} />
-        {criticalStock.length === 0 ? <EmptyState icon={Warehouse} title="Niciun material sub minim" />
-          : (
-            <ul key={criticalStock.length} className="stagger-in space-y-0.5">
-              {criticalStock.map(m => (
-                <li key={m.id} className="flex items-center justify-between gap-3 px-2 py-2 rounded-lg hover:bg-surface-tertiary/30 transition-smooth duration-150">
-                  <span className="min-w-0 text-pm-sm text-content-primary truncate">{m.name}</span>
-                  <span className="shrink-0 pl-3"><span className="text-pm-sm font-semibold tabular-nums text-status-red">{m.stock}</span><span className="text-pm-2xs text-content-muted"> / {m.min_stock}</span></span>
-                </li>
-              ))}
-            </ul>
-          )}
-      </Card>
-    ),
-  };
-  const widgetMeta: Record<WId, { label: string; available: boolean }> = {
-    revenue_chart:     { label: 'Evoluție venituri', available: widgets.revenue_chart },
-    production_stages: { label: 'Producție pe etape', available: widgets.production_stages },
-    activity:          { label: 'Operațional', available: widgets.activity },
-    active_projects:   { label: 'Proiecte active', available: widgets.active_projects },
-    alerts_panel:      { label: 'Alerte', available: widgets.alerts_panel },
-    briefing:          { label: 'Briefing', available: widgets.briefing },
-    inbox:             { label: 'Inbox predări', available: widgets.inbox },
-    critical_stock:    { label: 'Stoc critic', available: widgets.critical_stock && canWarehouse },
-  };
-  // Available widgets, in default order → CardGrid items (the engine owns order/
-  // size/hidden + persistence + edit interactions).
-  const widgetItems: CardGridItem[] = DEFAULT_WIDGET_ORDER
-    .filter(id => widgetMeta[id].available)
-    .map(id => ({ id, label: widgetMeta[id].label, defaultSpan: WIDGET_SPAN[id], node: widgetNode[id] }));
+  const chartFallback = (
+    <div className="flex flex-1 items-center justify-center text-content-muted">
+      <Loader2 className="h-5 w-5 animate-spin" />
+    </div>
+  );
 
   return (
-    <Page>
-      {}
+    <>
       <DashboardBackground />
-      <Page.Body maxWidth="wide" padding="comfortable" className="relative z-[1]">
+      <RefetchDim isFetching={refreshing} className="flex flex-1 flex-col min-h-0">
+        <DashboardLayout
+          chrome={(
+            <PageChrome
+              actions={(
+                <div className="flex items-center gap-3">
+                  <span className="hidden capitalize md:inline text-pm-2xs text-content-muted">{dateLabel}</span>
+                  <Button variant="secondary" size="md" onClick={() => void handleRefresh()} disabled={refreshing}>
+                    <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                    <span className="hidden sm:inline">Reîmprospătează</span>
+                  </Button>
+                </div>
+              )}
+            />
+          )}
+          bodyClassName="!overflow-hidden"
+          contentClassName="flex min-h-0 flex-1 flex-col gap-2 lg:gap-2.5"
+        >
+          {/* ── Hero chart: the dashboard's main focal point ───────────────── */}
+          <section
+            aria-label={canFinance ? 'Evoluție venituri' : 'Portofoliu proiecte'}
+            className="dash-hero anim-fade-slide-in relative flex min-h-0 flex-[1.7] flex-col overflow-hidden rounded-2xl bg-transparent p-2 sm:p-3 lg:p-4"
+          >
+            {/* ambient accent glow */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 opacity-70"
+              style={{ background: 'radial-gradient(92% 72% at 100% 0%, var(--color-accent-muted), transparent 62%)' }}
+            />
+            <div className="relative flex min-h-0 flex-1 flex-col">
+              {canFinance ? (
+                <Suspense fallback={chartFallback}>
+                  <RevenueChartWidget />
+                </Suspense>
+              ) : canProjects ? (
+                <div className="flex min-h-0 flex-1 flex-col gap-3">
+                  <div className="min-w-0">
+                    <h2 className="text-pm-xs font-bold uppercase tracking-[0.14em] text-content-muted">Portofoliu proiecte</h2>
+                    <p className="mt-0.5 text-pm-2xs text-content-muted">Distribuție după status</p>
+                  </div>
+                  <div className="min-h-0 flex-1">
+                    <ProjectsStatusChart projects={activeProjects} variant="hero" />
+                  </div>
+                </div>
+              ) : (
+                <EmptyState
+                  icon={Wallet}
+                  title="Grafic indisponibil"
+                  description="Nu ai permisiunea necesară pentru graficul principal al tabloului de bord."
+                  className="!min-h-[240px] border-0 bg-transparent"
+                />
+              )}
+            </div>
+          </section>
 
-        {
+          {/* ── KPI cards: directly under the chart ───────────────────────── */}
+          <div className="kpi-strip shrink-0 stagger-in">
+            <Page.Kpis cols={4} className={DASH_KPI_GRID}>
+              <Kpi
+                label="Venituri" value={canFinance ? money(summary.revenue) : '—'} icon={TrendingUp} locked={!canFinance}
+                hint={canFinance
+                  ? (costsKnown && marginPercent != null
+                      ? `Profit ${money(profit)} · marjă ${marginPercent.toFixed(1)}%`
+                      : `Costuri ${money(summary.costs)}`)
+                  : undefined}
+              />
+              <Kpi
+                label="Proiecte active" value={canProjects ? fmtCount(summary.active_projects) : '—'} icon={FolderKanban} locked={!canProjects}
+                hint={canProjects ? `din ${fmtCount(summary.total_projects)} · ${fmtCount(summary.in_production)} în producție` : undefined}
+              />
+              <Kpi
+                label="Necesită atenție" value={attentionCount} icon={Bell} iconColor={attentionCount > 0 ? 'text-status-amber' : undefined}
+                hint={attentionCount > 0 ? `${unackedAlerts.length} alerte · ${handoffs.length} predări` : 'nimic urgent'}
+              />
+              <Kpi
+                label="Stoc critic" value={canWarehouse ? fmtCount(summary.low_stock_count) : '—'} icon={AlertTriangle} locked={!canWarehouse}
+                iconColor={canWarehouse && summary.low_stock_count > 0 ? 'text-status-red' : undefined}
+                hint={canWarehouse ? `din ${fmtCount(summary.total_materials)} materiale în stoc` : undefined}
+              />
+            </Page.Kpis>
+          </div>
 
-
-}
-        <header className="dash-enter shrink-0 pb-4 border-b border-line/60 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between" style={{ animationDelay: '0ms' }}>
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-              <Activity className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-pm-eyebrow text-content-muted mb-0.5 flex items-center gap-2">
-                <span className="inline-block h-px w-4 bg-content-muted/40" aria-hidden />
-                Tablou de bord
-              </p>
-              <h1 className="text-pm-xl font-semibold text-content-primary truncate leading-tight">Bună, {userFirst}</h1>
-              <p className="mt-1 text-pm-sm text-content-muted capitalize flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                <span>{dateStr}</span>
-                <span className="inline-flex items-center gap-1.5 text-status-green normal-case">
-                  <span className="h-1.5 w-1.5 rounded-full bg-status-green animate-pulse" /> Sistem operațional
-                </span>
-              </p>
+          {/* ── Supporting widgets ─────────────────────────────────────────── */}
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 stagger-in lg:grid-cols-3 lg:gap-2.5">
+            <div className="flex min-h-0 flex-col dash-widget">
+              <AttentionFeed alerts={unackedAlerts} handoffs={handoffs} attentionCount={attentionCount} onNavigate={nav} />
+            </div>
+            <div className="flex min-h-0 flex-col dash-widget">
+              <ProjectsPipeline canProjects={canProjects} activeCount={summary.active_projects} totalCount={summary.total_projects} projects={activeProjects} onNavigate={nav} />
+            </div>
+            <div className="flex min-h-0 flex-col dash-widget">
+              <CriticalStock canWarehouse={canWarehouse} materials={criticalStock} lowStockCount={summary.low_stock_count} onNavigate={nav} />
             </div>
           </div>
-          <div className="flex items-center gap-3 shrink-0">
-            {!editMode && widgets.time_range && (
-              <TimeRangeBar embedded
-                range={timeRange} setRange={setTimeRange}
-                customFrom={customFrom} setCustomFrom={setCustomFrom}
-                customTo={customTo} setCustomTo={setCustomTo} />
-            )}
-            <EditLayoutButton />
-            {!editMode && (
-              <Button variant="secondary" size="md" onClick={handleRefresh} disabled={refreshing}>
-                <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Reîmprospătează</span>
-              </Button>
-            )}
-          </div>
-        </header>
-
-        {}
-        {widgets.kpi_strip && (
-          <div className="dash-enter shrink-0 space-y-2" style={{ animationDelay: '80ms' }}>
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <DashKpi
-                hero
-                className="col-span-2 lg:col-span-2"
-                vtName={vtName('dash-kpi', 'profit')}
-                label="Profit net" icon={Wallet} amount={profit} format={moneyCompact} warn={profit < 0}
-                hint={`Marjă netă ${margin.toFixed(1)}%`}
-                noAccess={!canFinance}
-              />
-              <DashKpi
-                vtName={vtName('dash-kpi', 'revenue')}
-                label="Venituri" icon={TrendingUp} amount={d.revenue} format={moneyCompact}
-                noAccess={!canFinance}
-              />
-              <DashKpi
-                vtName={vtName('dash-kpi', 'projects')}
-                label="Proiecte active" icon={FolderKanban} amount={d.active_projects} format={fmtCount}
-                unit={`/ ${d.total_projects}`}
-                noAccess={!canProjects}
-              />
-              <DashKpi
-                vtName={vtName('dash-kpi', 'costs')}
-                label="Costuri" icon={Receipt} amount={d.costs} format={moneyCompact}
-                noAccess={!canFinance}
-              />
-            </div>
-            {canFinance && (
-              <p className="text-right text-pm-2xs text-content-muted">Valori financiare în {displayCurrency} · curs {formatNumber(eurRate, 4)} RON/EUR</p>
-            )}
-          </div>
-        )}
-
-        {/* Editable widget grid — drag · ◄ ► move · ⤢ resize · − ascunde (via CardGrid). */}
-        <CardGrid
-          region="dashboard:body"
-          userKey={layoutKey}
-          cols={2}
-          items={widgetItems}
-          className="dash-enter"
-        />
-
-      </Page.Body>
-    </Page>
-  );
-}
-
-
-
-
-
-function TimeRangeBar({
-  range, setRange, customFrom, setCustomFrom, customTo, setCustomTo, embedded,
-}: {
-  range: TimeRange; setRange: (r: TimeRange) => void;
-  customFrom: string; setCustomFrom: (v: string) => void;
-  customTo: string; setCustomTo: (v: string) => void;
-  
-  embedded?: boolean;
-}) {
-  const presets: Array<{ id: RangePreset; label: string }> = [
-    { id: 'all',   label: 'Tot timpul' },
-    { id: 'month', label: 'Ultima lună' },
-    { id: '6m',    label: 'Ultimele 6 luni' },
-    { id: 'year',  label: 'Ultimul an' },
-    { id: 'custom',label: 'Custom' },
-  ];
-  const apply = (preset: RangePreset) => {
-    if (preset === 'custom') {
-      setRange({ from: customFrom, to: customTo, preset });
-    } else {
-      setRange({ ...presetRange(preset), preset });
-    }
-  };
-  return (
-    <div className={embedded ? '' : 'bg-surface-primary border-b border-line'}>
-      <div className={`flex flex-wrap items-center gap-2 ${embedded ? '' : 'px-4 py-2.5'}`}>
-        <div className="flex flex-wrap gap-1">
-          {presets.map(p => (
-            <button
-              key={p.id}
-              onClick={() => apply(p.id)}
-              className={filterToggleCls(range.preset === p.id)}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-        {range.preset === 'custom' && (
-          <div className="flex items-center gap-2 ml-2">
-            <input
-              type="date"
-              value={customFrom}
-              max={customTo}
-              onChange={e => { setCustomFrom(e.target.value); setRange({ from: e.target.value, to: customTo, preset: 'custom' }); }}
-              className={filterDateInputCls}
-            />
-            <span className="text-pm-xs text-content-muted">→</span>
-            <input
-              type="date"
-              value={customTo}
-              min={customFrom}
-              onChange={e => { setCustomTo(e.target.value); setRange({ from: customFrom, to: e.target.value, preset: 'custom' }); }}
-              className={filterDateInputCls}
-            />
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-
-
-
-
-
-function DashKpi({ label, icon, amount, format, unit, warn, trend, trendValue, hint, noAccess, hero, className, vtName: vt }: {
-  label: string; icon: IconCmp;
-  amount?: number; format?: (n: number) => string; unit?: string;
-  warn?: boolean; trend?: 'up' | 'down' | 'flat'; trendValue?: string; hint?: string;
-  noAccess?: boolean; hero?: boolean; className?: string; vtName?: string;
-}) {
-  const animated = useCountUp(amount ?? 0);
-  const base = noAccess ? 'NaN' : (format ? format(animated) : fmtCount(animated));
-  const value = noAccess ? 'NaN' : (unit ? `${base} ${unit}` : base);
-  return (
-    <KpiCard
-      vtName={vt}
-      hero={hero}
-      className={className}
-      label={label}
-      value={value}
-      icon={icon}
-      iconColor={noAccess ? 'text-content-muted' : warn ? 'text-status-red' : 'text-content-muted'}
-      trend={noAccess ? undefined : trend}
-      trendValue={noAccess ? undefined : trendValue}
-      hint={noAccess ? 'nu ai acces la acest tip de date' : hint}
-    />
-  );
-}
-
-
-
-
-
-function MiniStat({ label, value, warn, accent }: {
-  label: string; value: string | number; warn?: boolean; accent?: boolean;
-}) {
-  return (
-    <div className="rounded-xl bg-surface-tertiary/40 p-3">
-      <p className="text-pm-2xs font-semibold uppercase tracking-wider text-content-muted">{label}</p>
-      <p className={`mt-0.5 text-pm-lg font-semibold tabular-nums ${warn ? 'text-status-red' : accent ? 'text-accent' : 'text-content-primary'}`}>
-        {value}
-      </p>
-    </div>
+        </DashboardLayout>
+      </RefetchDim>
+    </>
   );
 }

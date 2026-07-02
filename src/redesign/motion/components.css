@@ -1,0 +1,391 @@
+/* ============================================================================
+ * motion/components.css — Component motion presets
+ * Apply via class names or data-state attributes on Radix primitives.
+ * ========================================================================== */
+
+/* ── Page transition ─────────────────────────────────────────────────────── */
+
+.animate-page-out {
+  animation: page-out var(--duration-page-out) var(--ease-in-expo) forwards;
+}
+
+.animate-page-in {
+  animation: page-in var(--duration-page-in) var(--ease-out-expo) both;
+}
+
+/* Sequence helper: delay in until out completes (no overlap) */
+.animate-page-in.is-sequenced {
+  animation-delay: var(--duration-page-out);
+}
+
+/* ── Modal / dialog ────────────────────────────────────────────────────────── */
+
+.animate-modal-backdrop-in,
+[data-motion='modal-backdrop'][data-state='open'] {
+  animation: fade-in var(--duration-modal-backdrop) var(--ease-out-expo) forwards;
+}
+
+.animate-modal-backdrop-out,
+[data-motion='modal-backdrop'][data-state='closed'] {
+  animation: fade-out var(--duration-modal-backdrop-out) var(--ease-in-expo) forwards;
+  animation-delay: 0ms;
+}
+
+.animate-modal-panel-in,
+[data-motion='modal-panel'][data-state='open'] {
+  animation: modal-panel-in var(--duration-modal-panel-in) var(--spring-soft-ease) forwards;
+  transform-origin: center center;
+}
+
+.animate-modal-panel-out,
+[data-motion='modal-panel'][data-state='closed'] {
+  animation: modal-panel-out var(--duration-modal-panel-out) var(--ease-in-expo) forwards;
+  transform-origin: center center;
+}
+
+/* Backdrop out starts after panel begins exiting */
+.animate-modal-backdrop-out.is-sequenced,
+[data-motion='modal-backdrop'][data-state='closed'].is-sequenced {
+  animation-delay: 0ms;
+}
+
+/* ── Dropdown / menu ───────────────────────────────────────────────────────── */
+
+.animate-dropdown-in,
+[data-motion='dropdown'][data-state='open'] {
+  animation: dropdown-in var(--duration-dropdown-in) var(--ease-out-expo) forwards;
+  transform-origin: top center;
+}
+
+.animate-dropdown-out,
+[data-motion='dropdown'][data-state='closed'] {
+  animation: dropdown-out var(--duration-dropdown-out) var(--ease-in-expo) forwards;
+  transform-origin: top center;
+}
+
+/* ── Toast ─────────────────────────────────────────────────────────────────── */
+
+.animate-toast-in-right {
+  animation: toast-in-right var(--spring-snappy-duration) var(--spring-snappy-ease) both;
+}
+
+.animate-toast-in-left {
+  animation: toast-in-left var(--spring-snappy-duration) var(--spring-snappy-ease) both;
+}
+
+.animate-toast-out-right {
+  animation: toast-out-right var(--duration-toast-out) var(--ease-in-expo) forwards;
+}
+
+.animate-toast-out-left {
+  animation: toast-out-left var(--duration-toast-out) var(--ease-in-expo) forwards;
+}
+
+.animate-toast-progress {
+  transform-origin: left center;
+  animation: toast-progress-drain linear forwards;
+}
+
+/* ── Drawer / sheet ────────────────────────────────────────────────────────── */
+
+.animate-drawer-in-right {
+  animation: drawer-in-right var(--spring-soft-duration) var(--spring-soft-ease) forwards;
+}
+
+.animate-drawer-in-left {
+  animation: drawer-in-left var(--spring-soft-duration) var(--spring-soft-ease) forwards;
+}
+
+.animate-drawer-out-right {
+  animation: drawer-out-right var(--duration-drawer-out) var(--ease-in-expo) forwards;
+}
+
+.animate-drawer-out-left {
+  animation: drawer-out-left var(--duration-drawer-out) var(--ease-in-expo) forwards;
+}
+
+.animate-drawer-backdrop-in {
+  animation: fade-in var(--duration-modal-backdrop) var(--ease-out-expo) forwards;
+}
+
+.animate-drawer-backdrop-out {
+  animation: fade-out var(--duration-modal-backdrop-out) var(--ease-in-expo) forwards;
+}
+
+/* ── Tooltip ───────────────────────────────────────────────────────────────── */
+
+.animate-tooltip-in-top {
+  animation: tooltip-in-top var(--duration-tooltip-in) var(--ease-out-expo) both;
+  animation-delay: var(--duration-tooltip-delay);
+}
+
+.animate-tooltip-in-bottom {
+  animation: tooltip-in-bottom var(--duration-tooltip-in) var(--ease-out-expo) both;
+  animation-delay: var(--duration-tooltip-delay);
+}
+
+.animate-tooltip-in-left {
+  animation: tooltip-in-left var(--duration-tooltip-in) var(--ease-out-expo) both;
+  animation-delay: var(--duration-tooltip-delay);
+}
+
+.animate-tooltip-in-right {
+  animation: tooltip-in-right var(--duration-tooltip-in) var(--ease-out-expo) both;
+  animation-delay: var(--duration-tooltip-delay);
+}
+
+.animate-tooltip-out {
+  animation: fade-out var(--duration-tooltip-out) var(--ease-in-expo) forwards;
+  animation-delay: 0ms;
+}
+
+/* ── Command palette ───────────────────────────────────────────────────────── */
+
+.animate-command-backdrop-in {
+  animation: fade-in var(--duration-modal-backdrop) var(--ease-out-expo) forwards;
+}
+
+.animate-command-panel-in {
+  animation: scale-in-bounce var(--duration-command-in) var(--spring-bounce-ease) forwards;
+  transform-origin: center center;
+}
+
+.animate-command-panel-out {
+  animation: command-out var(--duration-command-out) var(--ease-in-expo) forwards;
+  transform-origin: center center;
+}
+
+.animate-command-backdrop-out {
+  animation: fade-out var(--duration-command-out) var(--ease-in-expo) forwards;
+}
+
+/* ── Button press ──────────────────────────────────────────────────────────── */
+
+.motion-btn {
+  transition:
+    background-color var(--duration-button-hover) var(--ease-out-expo),
+    color var(--duration-button-hover) var(--ease-out-expo),
+    border-color var(--duration-button-hover) var(--ease-out-expo),
+    box-shadow var(--duration-button-hover) var(--ease-out-expo),
+    filter var(--duration-button-hover) var(--ease-out-expo);
+}
+
+.motion-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.motion-btn:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: var(--duration-button-active);
+  transition-timing-function: var(--ease-in-expo);
+}
+
+.motion-btn.is-released:not(:disabled) {
+  animation: button-release var(--duration-button-release) var(--spring-bounce-ease) forwards;
+}
+
+/* ── Nav active indicator ──────────────────────────────────────────────────── */
+
+.motion-nav-indicator {
+  transition:
+    transform var(--spring-nav-duration) var(--spring-nav-ease),
+    top var(--spring-nav-duration) var(--spring-nav-ease),
+    height var(--spring-nav-duration) var(--spring-nav-ease),
+    background-color var(--duration-nav-color) var(--ease-out-expo);
+}
+
+/* ── Accordion ─────────────────────────────────────────────────────────────── */
+
+.motion-accordion-panel {
+  overflow: hidden;
+  transition:
+    max-height var(--spring-soft-duration) var(--spring-soft-ease),
+    opacity var(--duration-snappy) var(--ease-in-expo);
+}
+
+.motion-accordion-panel[data-state='open'] {
+  transition-timing-function: var(--spring-soft-ease);
+}
+
+.motion-accordion-panel[data-state='closed'] {
+  transition-timing-function: var(--ease-in-expo);
+}
+
+.motion-accordion-content {
+  transition: opacity var(--duration-snappy) var(--ease-out-expo);
+  transition-delay: 0ms;
+}
+
+.motion-accordion-panel[data-state='open'] .motion-accordion-content {
+  transition-delay: var(--duration-accordion-content-delay);
+}
+
+/* ── Tab content ───────────────────────────────────────────────────────────── */
+
+.animate-tab-out {
+  animation: tab-out var(--duration-tab-out) var(--ease-in-expo) forwards;
+}
+
+.animate-tab-in {
+  animation: tab-in var(--duration-tab-in) var(--ease-out-expo) both;
+}
+
+/* ── Utility entrances ─────────────────────────────────────────────────────── */
+
+.animate-fade-in    { animation: fade-in var(--duration-responsive) var(--ease-out-expo) both; }
+.animate-fade-out   { animation: fade-out var(--duration-snappy) var(--ease-in-expo) forwards; }
+.animate-slide-up   { animation: slide-up var(--duration-responsive) var(--ease-out-expo) both; }
+.animate-slide-down { animation: slide-down var(--duration-responsive) var(--ease-out-expo) both; }
+.animate-scale-in   { animation: scale-in var(--duration-responsive) var(--ease-out-expo) both; }
+.animate-scale-out  { animation: scale-out var(--duration-snappy) var(--ease-in-expo) forwards; }
+.animate-scale-in-bounce { animation: scale-in-bounce var(--duration-command-in) var(--spring-bounce-ease) both; }
+.animate-count-up   { animation: count-up var(--duration-responsive) var(--ease-out-expo) both; }
+.animate-shake      { animation: shake 300ms var(--ease-out-expo); }
+.animate-attention  { animation: attention 600ms var(--ease-in-out-expo); }
+.animate-float      { animation: float var(--duration-spin-slow) var(--ease-in-out-expo) infinite; }
+.animate-glow-pulse { animation: glow-pulse 3s var(--ease-in-out-expo) infinite; }
+.animate-pulse-ring { animation: pulse-ring 2s var(--ease-out-expo) infinite; }
+.animate-spin       { animation: spin var(--duration-spin) var(--ease-out-expo) infinite; }
+.animate-spin-slow  { animation: spin-slow var(--duration-spin-slow) var(--ease-in-out-expo) infinite; }
+
+/* ── Automatix logo reveal (GearLogo animated) ─────────────────────────────── */
+.axlogo-animated .axlogo-hex {
+  stroke-dasharray: 300;
+  stroke-dashoffset: 300;
+  animation: axlogo-draw 1s var(--ease-out-expo) forwards;
+}
+.axlogo-animated .axlogo-link {
+  stroke-dasharray: 42;
+  stroke-dashoffset: 42;
+  animation: axlogo-draw 0.5s var(--ease-out-expo) forwards 0.85s;
+}
+.axlogo-animated .axlogo-node {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.axlogo-animated .axlogo-node-1 { animation: axlogo-pop 0.4s var(--ease-out-expo) forwards 1.15s; }
+.axlogo-animated .axlogo-node-2 { animation: axlogo-pop 0.4s var(--ease-out-expo) forwards 1.35s; }
+.axlogo-animated .axlogo-node-3 { animation: axlogo-pop 0.4s var(--ease-out-expo) forwards 1.55s; }
+@keyframes axlogo-draw { to { stroke-dashoffset: 0; } }
+@keyframes axlogo-pop {
+  0%   { opacity: 0; transform: scale(0.3); }
+  60%  { opacity: 1; transform: scale(1.25); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .axlogo-animated .axlogo-hex,
+  .axlogo-animated .axlogo-link,
+  .axlogo-animated .axlogo-node {
+    animation: none !important;
+    opacity: 1 !important;
+    stroke-dashoffset: 0 !important;
+  }
+}
+
+/* ── Skeleton shimmer ──────────────────────────────────────────────────────── */
+
+.motion-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-hover, hsl(var(--muted)));
+}
+
+.motion-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent-500, hsl(var(--foreground))) 6%, transparent) 45%,
+    color-mix(in srgb, var(--accent-500, hsl(var(--foreground))) 10%, transparent) 50%,
+    color-mix(in srgb, var(--accent-500, hsl(var(--foreground))) 6%, transparent) 55%,
+    transparent 100%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.8s var(--ease-in-out-expo) infinite;
+}
+
+/* ── Progress indeterminate bar ────────────────────────────────────────────── */
+
+.motion-progress-indeterminate {
+  position: relative;
+  overflow: hidden;
+}
+
+.motion-progress-indeterminate::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  height: 100%;
+  animation: progress-indeterminate 1.4s var(--ease-in-out-expo) infinite;
+  background: var(--accent, hsl(var(--primary)));
+}
+
+/* ── SVG draw-line ─────────────────────────────────────────────────────────── */
+
+.motion-draw-line {
+  stroke-dasharray: 1000;
+  animation: draw-line var(--duration-deliberate) var(--ease-out-expo) forwards;
+}
+
+/* ── Legacy anim-* aliases (redesign/index.css consumers) ──────────────────── */
+
+.anim-scale-in      { animation: scaleIn var(--duration-snappy) var(--spring-bounce-ease) both; will-change: transform, opacity; }
+.anim-fade-in       { animation: fadeIn var(--duration-snappy) var(--ease-out-expo) both; will-change: opacity; }
+.anim-slide-up      { animation: slideUp var(--duration-snappy) var(--ease-in-out-expo) both; will-change: transform, opacity; }
+.anim-fade-slide-in { animation: fadeSlideIn var(--duration-snappy) var(--ease-in-out-expo) both; will-change: transform, opacity; }
+.anim-slide-in-right { animation: slideInRight var(--duration-responsive) var(--spring-bounce-ease) both; will-change: transform, opacity; }
+
+.transition-smooth {
+  transition:
+    transform var(--duration-snappy) var(--ease-out-expo),
+    opacity var(--duration-snappy) var(--ease-out-expo),
+    color var(--duration-snappy) var(--ease-out-expo),
+    background-color var(--duration-snappy) var(--ease-out-expo),
+    border-color var(--duration-snappy) var(--ease-out-expo),
+    box-shadow var(--duration-snappy) var(--ease-out-expo),
+    filter var(--duration-snappy) var(--ease-out-expo);
+}
+
+/* ── Spec-named motion-* aliases (same presets as animate-*) ───────────────── */
+
+.motion-page-exit    { animation: page-out var(--duration-page-out) var(--ease-in-expo) both; }
+.motion-page-enter   { animation: page-in var(--duration-page-in) var(--ease-out-expo) both; }
+
+.motion-modal-backdrop-in  { animation: fade-in var(--duration-modal-backdrop) var(--ease-out-expo) both; }
+.motion-modal-backdrop-out { animation: fade-out var(--duration-modal-backdrop-out) var(--ease-in-expo) both; }
+.motion-modal-panel-in     { animation: modal-panel-in var(--duration-modal-panel-in) var(--spring-soft-ease) both; transform-origin: center center; }
+.motion-modal-panel-out    { animation: modal-panel-out var(--duration-modal-panel-out) var(--ease-in-expo) both; transform-origin: center center; }
+
+.motion-dropdown-in  { animation: dropdown-in var(--duration-dropdown-in) var(--ease-out-expo) both; transform-origin: top center; }
+.motion-dropdown-out { animation: dropdown-out var(--duration-dropdown-out) var(--ease-in-expo) both; transform-origin: top center; }
+
+.motion-toast-in     { animation: toast-in-right var(--spring-snappy-duration) var(--spring-snappy-ease) both; }
+.motion-toast-out    { animation: toast-out-right var(--duration-toast-out) var(--ease-in-expo) forwards; }
+.motion-toast-progress { transform-origin: left center; animation: toast-progress-drain linear forwards; }
+
+.motion-drawer-in    { animation: drawer-in-right var(--spring-soft-duration) var(--spring-soft-ease) both; }
+.motion-drawer-out   { animation: drawer-out-right var(--duration-drawer-out) var(--ease-in-expo) forwards; }
+
+.motion-tooltip-in   { animation: tooltip-in-top var(--duration-tooltip-in) var(--ease-out-expo) both; animation-delay: var(--duration-tooltip-delay); }
+.motion-tooltip-out  { animation: fade-out var(--duration-tooltip-out) var(--ease-in-expo) forwards; animation-delay: 0ms; }
+
+.motion-command-in   { animation: scale-in-bounce var(--duration-command-in) var(--spring-bounce-ease) both; transform-origin: center center; }
+.motion-command-out  { animation: command-out var(--duration-command-out) var(--ease-in-expo) forwards; transform-origin: center center; }
+
+.motion-btn-press    { transition: transform var(--duration-button-hover) var(--ease-out-expo), box-shadow var(--duration-button-hover) var(--ease-out-expo), background-color var(--duration-button-hover) var(--ease-out-expo), border-color var(--duration-button-hover) var(--ease-out-expo), color var(--duration-button-hover) var(--ease-out-expo); }
+.motion-btn-press:active:not(:disabled) { transform: scale(0.97); transition-duration: var(--duration-button-active); transition-timing-function: var(--ease-in-expo); }
+
+.motion-tab-exit     { animation: tab-out var(--duration-tab-out) var(--ease-in-expo) forwards; }
+.motion-tab-enter    { animation: tab-in var(--duration-tab-in) var(--ease-out-expo) both; }
+
+.anim-rise           { animation: riseIn var(--duration-responsive) var(--ease-out-expo) both; }
+.anim-pop            { animation: popIn var(--duration-responsive) var(--spring-bounce-ease) both; }
+.anim-float          { animation: float var(--duration-spin-slow) var(--ease-in-out-expo) infinite; }
+.anim-glow           { animation: glow-pulse 3s var(--ease-in-out-expo) infinite; }
+.anim-spin-slow      { animation: spin-slow var(--duration-spin-slow) linear infinite; }
+.anim-shimmer        { animation: shimmer 1.4s var(--ease-in-out-expo) infinite; }
+
+[data-sonner-toast] { animation: toast-in-right var(--spring-snappy-duration) var(--spring-snappy-ease) both; }

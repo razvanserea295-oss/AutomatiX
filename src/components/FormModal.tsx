@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import Modal from './Modal';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle } from '@/icons';
 import { toast } from '@/store/toastStore';
 import { confirmDialog } from './ConfirmDialog';
 import { maskPhone, validatePhone, maskCui, validateCui, maskIban, validateIban } from '@/lib/inputMasks';

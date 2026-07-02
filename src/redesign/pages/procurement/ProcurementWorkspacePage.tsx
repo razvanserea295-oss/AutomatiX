@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Pencil, Trash2, Loader2, Download, Printer, Plus, Package, Truck, Clock, X as XIcon } from 'lucide-react';
-import { SupplierToolsBar } from '@/pages/procurement/ProcurementEnhancements';
+import { Pencil, Trash2, Loader2, Download, Printer, Plus, Package, Truck, Clock, X as XIcon } from '@/icons';
 import { apiCommand } from '@/api/commands';
 import type { User } from '@/core/types';
 import { useDashboardStore } from '@/store/dashboardStore';
@@ -11,9 +10,8 @@ import { useSort } from '@/hooks/useSort';
 import { useColumnWidths } from '@/hooks/useColumnWidths';
 import type { StatusTone } from '@/lib/statusTokens';
 
-
-import Page from '@/redesign/ui/Page';
 import Card from '@/redesign/ui/Card';
+import { PageChrome, DashboardLayout } from '@/app-ui';
 import Button from '@/redesign/ui/Button';
 import IconButton from '@/redesign/ui/IconButton';
 import StatusBadge from '@/redesign/ui/StatusBadge';
@@ -22,13 +20,9 @@ import Skeleton from '@/redesign/ui/Skeleton';
 import { AnimatedTabs } from '@/redesign/ui';
 import FormModal, { type FormField } from '@/redesign/ui/FormModal';
 import { confirmDialog } from '@/redesign/ui/ConfirmDialog';
-import SortableTh from '@/redesign/ui/SortableTh';
+import SortableTh, { THEAD_STICKY } from '@/redesign/ui/SortableTh';
 import ColResizeHandle from '@/redesign/ui/ColResizeHandle';
 import TableFiller from '@/redesign/ui/TableFiller';
-
-
-
-
 
 interface Supplier {
   id: number;
@@ -69,18 +63,12 @@ interface PurchaseOrder {
   total: number;
 }
 
-
-
 type TabId = 'furnizori' | 'comenzi' | 'receptii';
 
 interface ProcurementWorkspacePageProps {
   user: User | null;
   initialTab?: TabId;
 }
-
-
-
-
 
 const formatDate = formatDateRo;
 const formatCurrency = formatCurrencyRon;
@@ -134,10 +122,6 @@ function exportOrdersCSV(orders: PurchaseOrder[]) {
   URL.revokeObjectURL(url);
 }
 
-
-
-
-
 function orderStatusTone(status: string): StatusTone {
   const s = status.toLowerCase();
   if (s === 'livrata' || s === 'finalizata') return 'success';
@@ -146,17 +130,19 @@ function orderStatusTone(status: string): StatusTone {
   return 'accent';
 }
 
-
-
-
-
 type SupplierSortKey = 'name' | 'category' | 'products' | 'contact_person' | 'email' | 'phone' | 'cui' | 'payment_terms';
 
-function SuppliersTab() {
+function SuppliersTab({ createNonce = 0, onData }: { createNonce?: number; onData?: (suppliers: Supplier[]) => void }) {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isOpen, editingItem, isEditing, openModal, closeModal } = useFormModal();
+
+  useEffect(() => {
+    if (createNonce > 0) openModal();
+  }, [createNonce, openModal]);
+
+  useEffect(() => { onData?.(suppliers); }, [suppliers, onData]);
 
   const { sorted: sortedSuppliers, sort, toggle } = useSort<Supplier, SupplierSortKey>(
     suppliers,
@@ -259,29 +245,6 @@ function SuppliersTab() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0">
-      {
-}
-      <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3 border-b border-line/70 flex-wrap">
-        <span className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted">
-          {suppliers.length} furnizori
-        </span>
-        <div className="flex items-center gap-2">
-          {suppliers.length > 0 && (
-            <>
-              <Button variant="outline" size="sm" onClick={() => exportSuppliersCSV(suppliers)}>
-                <Download className="h-3.5 w-3.5" /> Export CSV
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => printSuppliers(suppliers)}>
-                <Printer className="h-3.5 w-3.5" /> Printeaza
-              </Button>
-            </>
-          )}
-          <Button size="sm" onClick={() => openModal()}>
-            <Plus className="h-3.5 w-3.5" aria-hidden /> Adaugă furnizor
-          </Button>
-        </div>
-      </div>
-
       <div className="flex-1 min-h-0 overflow-auto">
         <table className="table-density w-full text-left table-fixed">
           <colgroup>
@@ -295,7 +258,7 @@ function SuppliersTab() {
             <col style={{ width: widths.payment_terms + 'px' }} />
             <col style={{ width: widths.actions + 'px' }} />
           </colgroup>
-          <thead className="sticky top-0 z-10 bg-surface-secondary shadow-[inset_0_-1px_0_var(--color-border)]">
+          <thead className={THEAD_STICKY}>
             <tr>
               <SortableTh sortKey="name"           sort={sort} onSort={toggle} resizeHandle={<ColResizeHandle onResize={(d) => nudge('name',           d)} />}>Nume</SortableTh>
               <SortableTh sortKey="category"       sort={sort} onSort={toggle} resizeHandle={<ColResizeHandle onResize={(d) => nudge('category',       d)} />}>Categorie</SortableTh>
@@ -379,11 +342,7 @@ function SuppliersTab() {
   );
 }
 
-
-
-
-
-function PurchaseOrdersTab() {
+function PurchaseOrdersTab({ createNonce = 0, onData }: { createNonce?: number; onData?: (orders: PurchaseOrder[]) => void }) {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [materials, setMaterials] = useState<{ id: number; code: string; name: string; unit: string }[]>([]);
@@ -391,6 +350,12 @@ function PurchaseOrdersTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+
+  useEffect(() => {
+    if (createNonce > 0) setShowCreate(true);
+  }, [createNonce]);
+
+  useEffect(() => { onData?.(orders); }, [orders, onData]);
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -440,25 +405,9 @@ function PurchaseOrdersTab() {
 
   return (
     <div className="flex flex-1 flex-col min-h-0">
-      <div className="shrink-0 flex items-center justify-between gap-3 px-5 py-3 border-b border-line/70 flex-wrap">
-        <span className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted">
-          {orders.length} comenzi
-        </span>
-        <div className="flex items-center gap-2">
-          {orders.length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => exportOrdersCSV(orders)}>
-              <Download className="h-3.5 w-3.5" /> Export CSV
-            </Button>
-          )}
-          <Button size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="h-3.5 w-3.5" aria-hidden /> Comanda noua
-          </Button>
-        </div>
-      </div>
-
       <div className="flex-1 min-h-0 overflow-auto">
         <table className="w-full text-left">
-          <thead className="sticky top-0 z-10 bg-surface-secondary shadow-[inset_0_-1px_0_var(--color-border)]">
+          <thead className={THEAD_STICKY}>
             <tr className="border-b border-line">
               <th className="px-5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Nr. comanda</th>
               <th className="px-5 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Furnizor</th>
@@ -513,7 +462,6 @@ function PurchaseOrdersTab() {
   );
 }
 
-
 function PurchaseOrderCreateModal({
   suppliers, materials, projects, onClose, onCreated,
 }: {
@@ -560,7 +508,7 @@ function PurchaseOrderCreateModal({
   const labelCls = 'text-pm-xs font-semibold uppercase tracking-wider text-content-secondary mb-1.5 block';
 
   return (
-    <div className="fixed inset-0 z-[1200] flex items-center justify-center surface-glass p-4 anim-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/55 p-4 anim-fade-in" onClick={onClose}>
       <div className="bg-surface-elevated border border-line rounded-2xl shadow-[var(--elevation-4)] w-full max-w-2xl max-h-[85vh] overflow-y-auto anim-scale-in" onClick={e => e.stopPropagation()}>
         <div className="px-6 py-4 border-b border-line/70 flex items-center justify-between">
           <h3 className="text-pm-md font-semibold text-content-primary">Comanda noua de achizitie</h3>
@@ -628,10 +576,6 @@ function PurchaseOrderCreateModal({
   );
 }
 
-
-
-
-
 interface POLine {
   id: number;
   material_name: string;
@@ -650,17 +594,13 @@ interface PODetail {
   lines: POLine[];
 }
 
-
-
-
 export function ReceptionsTab() {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPO, setSelectedPO] = useState<PODetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [receiving, setReceiving] = useState<Set<number>>(new Set());
-  
-  
+
   const [receivingLine, setReceivingLine] = useState<{ id: number; remaining: number } | null>(null);
 
   useEffect(() => { void loadOrders(); }, []);
@@ -730,7 +670,6 @@ export function ReceptionsTab() {
 
   return (
     <div className="flex flex-1 min-h-0 overflow-hidden">
-      {}
       <div className="w-80 shrink-0 bg-surface-secondary border-r border-line overflow-hidden flex flex-col min-h-0">
         <div className="px-4 py-2.5 border-b border-line">
           <span className="text-pm-2xs font-semibold uppercase tracking-wide text-content-muted">
@@ -762,8 +701,6 @@ export function ReceptionsTab() {
           )}
         </div>
       </div>
-
-      {}
       <div className="flex-1 min-h-0 overflow-y-auto bg-surface-primary">
         {!selectedPO ? (
           <div className="flex flex-1 items-center justify-center h-full">
@@ -779,7 +716,6 @@ export function ReceptionsTab() {
           </div>
         ) : (
           <div>
-            {}
             <div className="bg-surface-secondary border-b border-line px-4 py-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
@@ -789,11 +725,9 @@ export function ReceptionsTab() {
                 <StatusBadge tone={orderStatusTone(selectedPO.status)} label={selectedPO.status} size="xs" />
               </div>
             </div>
-
-            {}
             <div className="bg-surface-secondary overflow-hidden">
               <table className="w-full text-left">
-                <thead>
+                <thead className={THEAD_STICKY}>
                   <tr className="border-b border-line">
                     <th className="px-4 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted">Material</th>
                     <th className="px-4 py-2.5 text-pm-2xs font-bold uppercase tracking-[0.14em] text-content-muted text-right">Comandat</th>
@@ -872,103 +806,70 @@ export function ReceptionsTab() {
   );
 }
 
-
-
-
-
 const TABS: { id: TabId; label: string }[] = [
   { id: 'furnizori', label: 'Furnizori' },
   { id: 'comenzi', label: 'Comenzi achizitie' },
 ];
 
 export default function ProcurementWorkspacePage({ initialTab = 'furnizori' }: ProcurementWorkspacePageProps) {
-  
-  
-  
+
   const safeInitial: TabId = initialTab === 'receptii' ? 'furnizori' : initialTab;
   const [activeTab, setActiveTab] = useState<TabId>(safeInitial);
+  const [createNonce, setCreateNonce] = useState(0);
+  const [suppliersData, setSuppliersData] = useState<Supplier[]>([]);
+  const [ordersData, setOrdersData] = useState<PurchaseOrder[]>([]);
 
   useEffect(() => {
     if (initialTab && initialTab !== 'receptii') setActiveTab(initialTab);
   }, [initialTab]);
 
-  
-  
-  
-  
-  const [toolSuppliers, setToolSuppliers] = useState<{ id: number; name: string }[]>([]);
-  useEffect(() => {
-    apiCommand<Supplier[]>('get_suppliers')
-      .then(s => setToolSuppliers(s.map(x => ({ id: x.id, name: x.name }))))
-      .catch(() => {  });
-  }, []);
+  const exportActions = activeTab === 'furnizori'
+    ? (suppliersData.length > 0 ? (
+        <>
+          <Button variant="outline" size="sm" onClick={() => exportSuppliersCSV(suppliersData)}>
+            <Download className="h-3.5 w-3.5" /> Export CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => printSuppliers(suppliersData)}>
+            <Printer className="h-3.5 w-3.5" /> Printeaza
+          </Button>
+        </>
+      ) : undefined)
+    : (ordersData.length > 0 ? (
+        <Button variant="outline" size="sm" onClick={() => exportOrdersCSV(ordersData)}>
+          <Download className="h-3.5 w-3.5" /> Export CSV
+        </Button>
+      ) : undefined);
 
   return (
-    <Page fit>
-      <Page.Body fit maxWidth="wide" padding="comfortable">
-
-        {
-
-
-
-}
-        <header
-          className="enter-up shrink-0 pb-4 border-b border-line/70 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
-          style={{ animationDelay: '0ms' }}
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="h-11 w-11 rounded-2xl bg-accent-muted text-accent flex items-center justify-center shrink-0">
-              <Package className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              {/* Eyebrow removed — breadcrumb already conveys the workspace. */}
-              <h1 className="text-pm-2xl font-semibold text-content-primary leading-tight truncate">Achiziții</h1>
-              <p className="text-pm-sm text-content-muted">Furnizori, comenzi de achiziție și recepții pentru proiecte</p>
-            </div>
-          </div>
-        </header>
-
-        {
-
-
-
-
-}
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-5">
-
-          {
-
-}
-          <aside className="enter-up lg:col-span-3 min-h-0 flex flex-col gap-5" style={{ animationDelay: '160ms' }}>
-            <Card tone="default" className="flex flex-col min-h-0 overflow-hidden">
-              <div className="shrink-0 flex items-center gap-2 px-5 pt-5 pb-1">
-                <Truck className="h-3.5 w-3.5 text-accent shrink-0" />
-                <span className="text-pm-2xs font-bold uppercase tracking-[0.12em] text-content-muted">Unelte furnizori</span>
-              </div>
-              <div className="min-h-0 overflow-y-auto">
-                <SupplierToolsBar suppliers={toolSuppliers} />
-              </div>
-            </Card>
-          </aside>
-
-          {
-
-}
-          <Card tone="default" className="enter-up lg:col-span-9 min-h-0 flex flex-col overflow-hidden" style={{ animationDelay: '200ms' }}>
-            <div className="shrink-0 px-5 pt-5 pb-3 border-b border-line/70">
+    <DashboardLayout
+        chrome={(
+          <PageChrome
+            title="Aprovizionare"
+            subtitle="Furnizori, comenzi și RFQ"
+            actions={(
+              <Button size="md" onClick={() => setCreateNonce((n) => n + 1)}>
+                <Plus className="h-4 w-4" />
+                {activeTab === 'furnizori' ? 'Adaugă furnizor' : 'Comanda noua'}
+              </Button>
+            )}
+            secondaryActions={exportActions}
+            toolbar={
               <AnimatedTabs
                 active={activeTab}
                 onChange={(id) => setActiveTab(id as TabId)}
                 tabs={TABS.map(t => ({ id: t.id, label: t.label }))}
               />
-            </div>
-            <div key={activeTab} className="enter-up density-compact flex-1 min-h-0 flex flex-col">
-              {activeTab === 'furnizori' && <SuppliersTab />}
-              {activeTab === 'comenzi' && <PurchaseOrdersTab />}
-            </div>
-          </Card>
-        </div>
-      </Page.Body>
-    </Page>
+            }
+          />
+        )}
+      contentClassName="stagger-in"
+      >
+        <Card tone="default" className="stagger-in flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div key={activeTab} className="density-compact flex-1 min-h-0 flex flex-col">
+            {activeTab === 'furnizori' && <SuppliersTab createNonce={createNonce} onData={setSuppliersData} />}
+            {activeTab === 'comenzi' && <PurchaseOrdersTab createNonce={createNonce} onData={setOrdersData} />}
+          </div>
+        </Card>
+    </DashboardLayout>
   );
 }

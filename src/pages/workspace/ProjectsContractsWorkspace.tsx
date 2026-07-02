@@ -1,17 +1,10 @@
 import { lazy, Suspense, useState, useEffect } from 'react';
-import { FolderKanban, ScrollText } from 'lucide-react';
 import type { User } from '@/core/types';
-import Page from '@/components/ui/Page';
-import WorkspaceTabs, { type WorkspaceTab } from '@/components/ui/WorkspaceTabs';
+import WorkspaceShell from './WorkspaceShell';
 import WorkspaceSkeleton from '@/redesign/ui/WorkspaceSkeleton';
 
 const ProjectsPage = lazy(() => import('@/redesign/pages/ProjectsPage'));
 const ContractPage = lazy(() => import('@/redesign/pages/contract/ContractPage'));
-
-const TABS: WorkspaceTab[] = [
-  { id: 'projects',  label: 'Proiecte',  icon: FolderKanban, prefetch: () => import('@/redesign/pages/ProjectsPage') },
-  { id: 'contracts', label: 'Contracte', icon: ScrollText,   prefetch: () => import('@/redesign/pages/contract/ContractPage') },
-];
 
 interface Props {
   user: User | null;
@@ -30,15 +23,8 @@ export default function ProjectsContractsWorkspace({ user, onNavigate, initialTa
     }
   }, [initialTab]);
 
-  const handleTabChange = (t: string) => {
-    setVisited(prev => { const s = new Set(prev); s.add(t); return s; });
-    setTab(t);
-    onNavigate(t);
-  };
-
   return (
-    <Page fit layout="row">
-      <WorkspaceTabs tabs={TABS} active={tab} onChange={handleTabChange} />
+    <WorkspaceShell>
       <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
         <div className={tab === 'projects' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'hidden'}>
           <Suspense fallback={<WorkspaceSkeleton />}>
@@ -51,6 +37,6 @@ export default function ProjectsContractsWorkspace({ user, onNavigate, initialTa
           </Suspense>
         </div>
       </div>
-    </Page>
+    </WorkspaceShell>
   );
 }

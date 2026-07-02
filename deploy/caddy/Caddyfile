@@ -19,6 +19,14 @@
 promix.example.com {
     encode gzip
 
+    # Keep HTML shell fresh so clients never hold stale chunk references.
+    @html_shell path / /index.html /landing.html /m /m/*
+    header @html_shell Cache-Control "no-store"
+
+    # Fingerprinted bundles are immutable and should stay hot in caches.
+    @hashed_assets path_regexp hashedAssets ^/assets/.+-[A-Za-z0-9_-]{8,}\.(?:js|mjs|cjs|css|woff2?|ttf|otf|svg|png|jpe?g|webp|gif|ico)$
+    header @hashed_assets Cache-Control "public, max-age=31536000, immutable"
+
     # Reasonable header hygiene for a public ERP endpoint.
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"

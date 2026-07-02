@@ -1,50 +1,81 @@
 ;(function () {
-  var MSGS = [
-    'Se inițializează mediul de lucru…',
-    'Se verifică sesiunea utilizatorului…',
-    'Se încarcă modulele de interfață…',
-    'Se pregătesc componentele…',
-    'Se conectează la server…',
-    'Gata.'
-  ];
-
-  var idx      = 0;
   var statusEl = document.getElementById('boot-status');
   var barEl    = document.getElementById('boot-bar');
   var screenEl = document.getElementById('boot-screen');
-  var logoEl   = document.getElementById('boot-logo');
-  var titleEl  = document.getElementById('boot-title');
+  var isReady  = false;
+  var didFail  = false;
 
-  // Animate icon in, then slide title up
-  requestAnimationFrame(function () {
-    setTimeout(function () {
-      if (logoEl)  { logoEl.style.opacity  = '1'; logoEl.style.transform  = 'scale(1)'; }
-      setTimeout(function () {
-        if (titleEl) { titleEl.style.opacity = '1'; titleEl.style.transform = 'translateY(0)'; }
-      }, 250);
-    }, 60);
+  function showBootError(message) {
+    if (didFail || isReady) return;
+    didFail = true;
+    if (statusEl) statusEl.textContent = message;
+    if (barEl) {
+      barEl.style.width = '100%';
+      barEl.style.background = 'linear-gradient(90deg, #7F1D1D, #DC2626)';
+    }
+    if (!screenEl || document.getElementById('boot-recovery')) return;
+    var wrap = document.createElement('div');
+    wrap.id = 'boot-recovery';
+    wrap.style.cssText = 'position:absolute;left:24px;right:24px;bottom:56px;padding:12px;border:1px solid rgba(239,68,68,.45);border-radius:8px;background:rgba(30,10,10,.65);color:#fca5a5;font:12px/1.45 "72",system-ui,sans-serif;';
+    wrap.textContent = 'Interfața nu s-a putut încărca. Serverul poate fi căzut sau restartat incomplet.';
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Reîncarcă';
+    btn.style.cssText = 'margin-left:10px;padding:4px 10px;border:1px solid rgba(252,165,165,.5);border-radius:6px;background:#1f2937;color:#f3f4f6;font:12px "72",system-ui,sans-serif;cursor:pointer;';
+    btn.onclick = function () { location.reload(); };
+    wrap.appendChild(btn);
+    screenEl.appendChild(wrap);
+  }
+
+  // Static boot state — no progress/message cycling on refresh.
+  if (statusEl) statusEl.textContent = 'Se încarcă…';
+  if (barEl) barEl.style.width = '36%';
+
+  // Let the boot animation (hexagon draw-in + nodes) play before dismissing,
+  // even when React mounts faster than the ~2s reveal.
+  var BOOT_MIN_MS = 2000;
+  var bootStart = Date.now();
+  var prefersReducedMotion =
+    window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function removeBootScreen() {
+    if (!screenEl || !screenEl.parentNode) return;
+    if (prefersReducedMotion) {
+      screenEl.parentNode.removeChild(screenEl);
+      return;
+    }
+    // Graceful fade-out, then remove.
+    if (barEl) barEl.style.width = '100%';
+    screenEl.classList.add('boot-exit');
+    var fallback = setTimeout(function () {
+      if (screenEl && screenEl.parentNode) screenEl.parentNode.removeChild(screenEl);
+    }, 600);
+    screenEl.addEventListener('transitionend', function onEnd() {
+      clearTimeout(fallback);
+      if (screenEl && screenEl.parentNode) screenEl.parentNode.removeChild(screenEl);
+    });
+  }
+
+  // If the module bundle fails to load (e.g. backend crashed mid-load),
+  // avoid leaving users on a silent black splash forever.
+  var bootGuard = setTimeout(function () {
+    if (!isReady) showBootError('Pornirea durează prea mult…');
+  }, 15000);
+  window.addEventListener('error', function () {
+    showBootError('Eroare la încărcarea aplicației.');
+  });
+  window.addEventListener('unhandledrejection', function () {
+    showBootError('Eroare la pornire.');
   });
 
-  // Advance loading message and progress bar
-  function tick() {
-    if (statusEl) statusEl.textContent = MSGS[Math.min(idx, MSGS.length - 1)];
-    var pct = idx === 0 ? 5 : Math.min(88, Math.round((idx / (MSGS.length - 1)) * 88));
-    if (barEl) barEl.style.width = pct + '%';
-    idx++;
-    if (idx < MSGS.length) setTimeout(tick, 520 + Math.floor(Math.random() * 180));
-  }
-  setTimeout(tick, 80);
-
-  // Dismiss: fill bar → short pause → fade out → remove from DOM
+  // Once the app is ready, hold for the remainder of the boot animation, then
+  // fade the splash out gracefully.
   window.addEventListener('app:ready', function () {
-    if (barEl) barEl.style.width = '100%';
-    setTimeout(function () {
-      if (screenEl) {
-        screenEl.style.opacity = '0';
-        setTimeout(function () {
-          if (screenEl && screenEl.parentNode) screenEl.parentNode.removeChild(screenEl);
-        }, 520);
-      }
-    }, 160);
+    isReady = true;
+    clearTimeout(bootGuard);
+    if (didFail) return;
+    var elapsed = Date.now() - bootStart;
+    var wait = Math.max(0, (prefersReducedMotion ? 0 : BOOT_MIN_MS) - elapsed);
+    setTimeout(removeBootScreen, wait);
   });
 })();

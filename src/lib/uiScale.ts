@@ -1,23 +1,27 @@
 import { getStorage, STORAGE_KEYS } from '@/config/localStorage';
+import type { UiDensity } from '@/lib/density';
 
-// Single source of truth for the root font-size, combining two Aspect controls:
-//   • Density   (comfortable / compact)  — overall tightness
-//   • TextScale (small / normal / large) — text size
-// Both are rem-based in this app, so a root font-size change scales spacing AND
-// type together — the only reliable way to make "density" visibly affect the
-// whole UI (the old data-density CSS only touched a couple of table classes).
+// Root font-size combines density + text-scale. CSS custom properties handle
+// component sizing; rem scaling provides a second global tightening pass.
 
-type Density = 'comfortable' | 'compact';
 type TextScale = 'small' | 'normal' | 'large';
 
-const DENSITY_FACTOR: Record<Density, number> = { comfortable: 1, compact: 0.9 };
+const DENSITY_FACTOR: Record<UiDensity, number> = {
+  comfortable: 1,
+  compact: 0.92,
+  dense: 0.85,
+};
 const SCALE_FACTOR: Record<TextScale, number> = { small: 0.94, normal: 1, large: 1.12 };
 
-export function readDensity(): Density {
+export function readDensity(): UiDensity {
   try {
+    const direct = getStorage(STORAGE_KEYS.UI_DENSITY);
+    if (direct === 'comfortable' || direct === 'compact' || direct === 'dense') return direct;
     const s = JSON.parse(localStorage.getItem('promix-layout-storage') || '{}');
-    return s?.state?.density === 'compact' ? 'compact' : 'comfortable';
-  } catch { return 'comfortable'; }
+    const d = s?.state?.density;
+    if (d === 'comfortable' || d === 'compact' || d === 'dense') return d;
+  } catch { /* ignore */ }
+  return 'compact';
 }
 
 export function readTextScale(): TextScale {
@@ -25,15 +29,13 @@ export function readTextScale(): TextScale {
   return v === 'small' || v === 'large' ? v : 'normal';
 }
 
-// Pass the value being changed explicitly (the store's persist may not have
-// flushed to localStorage yet); the other is read from storage.
-export function applyUiScale(opts?: { density?: Density; scale?: TextScale }): void {
+export function applyUiScale(opts?: { density?: UiDensity; scale?: TextScale }): void {
   if (typeof document === 'undefined') return;
   const d = opts?.density ?? readDensity();
   const s = opts?.scale ?? readTextScale();
   const root = document.documentElement;
   if (d === 'comfortable' && s === 'normal') {
-    root.style.removeProperty('font-size'); // back to browser default (16px)
+    root.style.removeProperty('font-size');
     return;
   }
   const px = Math.max(12, 16 * DENSITY_FACTOR[d] * SCALE_FACTOR[s]);

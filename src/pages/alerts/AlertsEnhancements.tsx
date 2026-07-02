@@ -6,7 +6,7 @@
 import { useMemo, useState } from 'react';
 import {
   BellRing, BellOff, ListChecks, Search, Mail, ChevronsRight, MoonStar, Plus, Trash2,
-} from 'lucide-react';
+} from '@/icons';
 import { useLocalStorage, SectionCard, SnoozeMenu } from '@/components/enhancements';
 import Button from '@/components/ui/Button';
 import { toast } from '@/store/toastStore';

@@ -31,7 +31,13 @@ export const useToastStore = create<ToastState>((set) => ({
   
   addToast: (toast) => {
     const id = Math.random().toString(36).substring(7);
-    const duration = toast.duration ?? 5000;
+    const defaultDuration: Record<ToastType, number> = {
+      success: 2500,
+      error: 0,
+      warning: 5000,
+      info: 3000,
+    };
+    const duration = toast.duration ?? defaultDuration[toast.type];
     
     set((state) => {
       

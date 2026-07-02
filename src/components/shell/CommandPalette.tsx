@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react';
+import type { CSSProperties, RefObject } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Search, X, Loader2, Clock, Zap, Files, Trash2,
-} from 'lucide-react';
+} from '@/icons';
 import { apiCommand } from '@/api/commands';
 import { formatKeys } from '@/hooks/useKeyboardShortcuts';
 import { type SearchHit, type SearchResult, TYPE_META } from './search-types';
@@ -14,12 +15,16 @@ import {
 interface CommandPaletteProps {
   open: boolean;
   onClose: () => void;
-  
+
   onSearchNavigate?: (hit: SearchHit) => void;
-  
+
   onNavigatePage?: (pageId: string) => void;
-  
+
   onOpenShortcuts?: () => void;
+  query?: string;
+  onQueryChange?: (value: string) => void;
+  anchorRef?: RefObject<HTMLElement | null>;
+  showInput?: boolean;
 }
 
 const RECENTS_KEY = 'promix_palette_recents';
@@ -79,6 +84,19 @@ const PAGE_SHORTCUT: Record<string, string> = {
   finance: 'g f',
 };
 
+function scoreMatch(field: string, query: string): number {
+  if (!field || !query) return 0;
+  if (field === query) return 420;
+  if (field.startsWith(query)) return 320;
+
+  const tokenPrefix = field.split(/\s+/).some((token) => token.startsWith(query));
+  if (tokenPrefix) return 260;
+
+  const idx = field.indexOf(query);
+  if (idx === -1) return 0;
+  return Math.max(140, 210 - Math.min(idx, 70));
+}
+
 function readRecents(): PaletteRecent[] {
   try {
     const raw = localStorage.getItem(RECENTS_KEY);
@@ -87,31 +105,113 @@ function readRecents(): PaletteRecent[] {
 }
 
 export default function CommandPalette({
-  open, onClose, onSearchNavigate, onNavigatePage, onOpenShortcuts,
+  open,
+  onClose,
+  onSearchNavigate,
+  onNavigatePage,
+  onOpenShortcuts,
+  query,
+  onQueryChange,
+  anchorRef,
+  showInput = true,
 }: CommandPaletteProps) {
-  const [query, setQuery] = useState('');
+  const [internalQuery, setInternalQuery] = useState('');
   const [result, setResult] = useState<SearchResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const [recents, setRecents] = useState<PaletteRecent[]>([]);
+  const [panelStyle, setPanelStyle] = useState<CSSProperties>({});
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const queryValue = query ?? internalQuery;
+  const setQueryValue = useCallback((value: string) => {
+    if (query === undefined) setInternalQuery(value);
+    onQueryChange?.(value);
+  }, [onQueryChange, query]);
 
-  
+  const updatePanelPosition = useCallback(() => {
+    const anchor = anchorRef?.current
+      ?? Array.from(document.querySelectorAll<HTMLElement>('[data-global-search-anchor="true"]')).find((el) => {
+        const rect = el.getBoundingClientRect();
+        const style = window.getComputedStyle(el);
+        return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+      });
+    const gutter = 12;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    if (viewportWidth < 640) {
+      const rect = anchor?.getBoundingClientRect();
+      setPanelStyle({
+        left: gutter,
+        top: rect ? Math.max(rect.top - 2, gutter) : gutter,
+        width: `calc(100vw - ${gutter * 2}px)`,
+        maxHeight: rect ? viewportHeight - Math.max(rect.top - 2, gutter) - gutter : undefined,
+      });
+      return;
+    }
+
+    if (!anchor) {
+      const width = Math.min(600, viewportWidth - gutter * 2);
+      setPanelStyle({
+        left: Math.max((viewportWidth - width) / 2, gutter),
+        top: 46,
+        width,
+      });
+      return;
+    }
+
+    const rect = anchor.getBoundingClientRect();
+    const preferredWidth = showInput ? (rect.width < 160 ? 360 : rect.width) : rect.width;
+    const width = Math.min(preferredWidth, viewportWidth - gutter * 2);
+    const left = Math.min(Math.max(rect.left, gutter), viewportWidth - width - gutter);
+    const top = Math.max(rect.bottom + (showInput ? 6 : 2), gutter);
+
+    setPanelStyle({
+      left,
+      top,
+      width,
+      maxHeight: viewportHeight - top - gutter,
+      transformOrigin: `${Math.max(12, rect.width * 0.14)}px top`,
+    });
+  }, [anchorRef, showInput]);
+
   useEffect(() => {
-    if (open) {
-      setQuery('');
+    if (!open) return undefined;
+
+    setActiveIdx(0);
+    setRecents(readRecents());
+
+    if (showInput && query === undefined) {
+      setInternalQuery('');
       setResult(null);
-      setActiveIdx(0);
-      setRecents(readRecents());
+    } else if (!(query ?? '').trim()) {
+      setResult(null);
+    }
+
+    if (showInput) {
       const t = setTimeout(() => inputRef.current?.focus(), 50);
       return () => clearTimeout(t);
     }
-  }, [open]);
+    return undefined;
+  }, [open, query, showInput]);
 
-  
+  useLayoutEffect(() => {
+    if (!open) return;
+
+    updatePanelPosition();
+    window.addEventListener('resize', updatePanelPosition);
+    window.addEventListener('scroll', updatePanelPosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updatePanelPosition);
+      window.removeEventListener('scroll', updatePanelPosition, true);
+    };
+  }, [open, updatePanelPosition]);
+
   useEffect(() => {
-    const q = query.trim();
+    const q = queryValue.trim();
     if (!q) { setResult(null); setLoading(false); return; }
     const t = setTimeout(async () => {
       setLoading(true);
@@ -125,7 +225,26 @@ export default function CommandPalette({
       }
     }, 200);
     return () => clearTimeout(t);
-  }, [query]);
+  }, [queryValue]);
+
+  useEffect(() => {
+    setActiveIdx(0);
+  }, [queryValue]);
+
+  useEffect(() => {
+    if (!open || showInput) return;
+
+    const onOutsidePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (!target) return;
+      if (panelRef.current?.contains(target)) return;
+      if (anchorRef?.current?.contains(target)) return;
+      onClose();
+    };
+
+    document.addEventListener('pointerdown', onOutsidePointerDown);
+    return () => document.removeEventListener('pointerdown', onOutsidePointerDown);
+  }, [anchorRef, onClose, open, showInput]);
 
   const persistRecent = useCallback((rec: PaletteRecent) => {
     try {
@@ -159,8 +278,13 @@ export default function CommandPalette({
 
   
   const { sections, rows } = useMemo(() => {
-    const q = normalizeText(query.trim());
+    const q = normalizeText(queryValue.trim());
     const out: { group: string; rows: Row[] }[] = [];
+    const recentRank = new Map<string, number>();
+    recents.forEach((rec, idx) => {
+      recentRank.set(`${rec.kind}:${rec.id}`, Math.max(6, 60 - idx * 6));
+    });
+    const recentBoost = (kind: PaletteRecent['kind'], id: string) => recentRank.get(`${kind}:${id}`) ?? 0;
 
     if (!q) {
       
@@ -197,39 +321,76 @@ export default function CommandPalette({
         })),
       });
     } else {
-      
-      const actionRows: Row[] = PALETTE_ACTIONS
-        .filter((a) => normalizeText(a.title).includes(q) || a.keywords.includes(q))
-        .map((a) => ({
-          uid: `action-${a.id}`,
-          group: 'Acțiuni', icon: a.icon, iconColor: 'text-accent',
-          title: a.title, subtitle: a.subtitle,
-          shortcut: a.command === 'shortcuts' ? 'Shift+?' : undefined,
-          recent: { kind: 'action', id: a.id, title: a.title, subtitle: a.subtitle },
-          activate: a.command === 'shortcuts'
-            ? () => onOpenShortcuts?.()
-            : () => onNavigatePage?.(a.page!),
-        }));
+      const scoredActions: Array<{ score: number; row: Row }> = [];
+      for (const a of PALETTE_ACTIONS) {
+        const score = Math.max(
+          scoreMatch(normalizeText(a.title), q),
+          scoreMatch(normalizeText(a.subtitle), q) - 18,
+          scoreMatch(a.keywords, q) - 36,
+        ) + recentBoost('action', a.id);
+        if (score <= 0) continue;
+        scoredActions.push({
+          score,
+          row: {
+            uid: `action-${a.id}`,
+            group: 'Acțiuni', icon: a.icon, iconColor: 'text-accent',
+            title: a.title, subtitle: a.subtitle,
+            shortcut: a.command === 'shortcuts' ? 'Shift+?' : undefined,
+            recent: { kind: 'action', id: a.id, title: a.title, subtitle: a.subtitle },
+            activate: a.command === 'shortcuts'
+              ? () => { onOpenShortcuts?.(); }
+              : () => { if (a.page) onNavigatePage?.(a.page); },
+          },
+        });
+      }
+      const actionRows = scoredActions
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 8)
+        .map((entry) => entry.row);
       if (actionRows.length) out.push({ group: 'Acțiuni', rows: actionRows });
 
-      const pageRows: Row[] = PALETTE_PAGES
-        .filter((p) => normalizeText(p.title).includes(q) || p.keywords.includes(q))
+      const scoredPages: Array<{ score: number; row: Row }> = [];
+      for (const p of PALETTE_PAGES) {
+        const score = Math.max(
+          scoreMatch(normalizeText(p.title), q),
+          scoreMatch(normalizeText(p.breadcrumb), q) - 18,
+          scoreMatch(p.keywords, q) - 32,
+        ) + recentBoost('page', p.id);
+        if (score <= 0) continue;
+        scoredPages.push({
+          score,
+          row: {
+            uid: `page-${p.id}`,
+            group: 'Pagini', icon: p.icon, iconColor: 'text-status-blue',
+            title: p.title, subtitle: p.breadcrumb,
+            shortcut: PAGE_SHORTCUT[p.id],
+            recent: { kind: 'page', id: p.id, title: p.title, subtitle: p.breadcrumb },
+            activate: () => onNavigatePage?.(p.id),
+          },
+        });
+      }
+      const pageRows = scoredPages
+        .sort((a, b) => b.score - a.score)
         .slice(0, 6)
-        .map((p) => ({
-          uid: `page-${p.id}`,
-          group: 'Pagini', icon: p.icon, iconColor: 'text-status-blue',
-          title: p.title, subtitle: p.breadcrumb,
-          shortcut: PAGE_SHORTCUT[p.id],
-          recent: { kind: 'page', id: p.id, title: p.title, subtitle: p.breadcrumb },
-          activate: () => onNavigatePage?.(p.id),
-        }));
+        .map((entry) => entry.row);
       if (pageRows.length) out.push({ group: 'Pagini', rows: pageRows });
 
-      
       const hits = result?.hits ?? [];
       const order: SearchHit['type'][] = ['client', 'project', 'material', 'document', 'station', 'piece'];
       for (const type of order) {
-        const typed = hits.filter((h) => h.type === type);
+        const typed = hits
+          .filter((h) => h.type === type)
+          .map((h) => {
+            const score = Math.max(
+              scoreMatch(normalizeText(h.title), q),
+              scoreMatch(normalizeText(h.subtitle), q) - 16,
+              scoreMatch(normalizeText(h.match_field), q),
+            ) + recentBoost('hit', String(h.id));
+            return { h, score };
+          })
+          .filter(({ score }) => score > 0)
+          .sort((a, b) => b.score - a.score)
+          .map(({ h }) => h);
         if (!typed.length) continue;
         const meta = TYPE_META[type];
         out.push({
@@ -247,7 +408,7 @@ export default function CommandPalette({
 
     const flat = out.flatMap((s) => s.rows);
     return { sections: out, rows: flat };
-  }, [query, recents, result, activateFor, onNavigatePage, onSearchNavigate, onOpenShortcuts]);
+  }, [activateFor, onNavigatePage, onOpenShortcuts, onSearchNavigate, queryValue, recents, result]);
 
   
   useEffect(() => { setActiveIdx((i) => (rows.length ? Math.min(i, rows.length - 1) : 0)); }, [rows.length]);
@@ -259,21 +420,46 @@ export default function CommandPalette({
     el?.scrollIntoView({ block: 'nearest' });
   }, [activeIdx, open]);
 
-  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'ArrowDown' && rows.length) {
-      e.preventDefault();
+  const handleKeyboardNavigate = useCallback((key: string, preventDefault: () => void) => {
+    if (key === 'ArrowDown' && rows.length) {
+      preventDefault();
       setActiveIdx((i) => (i + 1) % rows.length);
-    } else if (e.key === 'ArrowUp' && rows.length) {
-      e.preventDefault();
-      setActiveIdx((i) => (i - 1 + rows.length) % rows.length);
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      if (rows[activeIdx]) run(rows[activeIdx]);
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      onClose();
+      return true;
     }
+    if (key === 'ArrowUp' && rows.length) {
+      preventDefault();
+      setActiveIdx((i) => (i - 1 + rows.length) % rows.length);
+      return true;
+    }
+    if (key === 'Enter') {
+      preventDefault();
+      if (rows[activeIdx]) run(rows[activeIdx]);
+      return true;
+    }
+    if (key === 'Escape') {
+      preventDefault();
+      onClose();
+      return true;
+    }
+    return false;
+  }, [activeIdx, onClose, rows, run]);
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    handleKeyboardNavigate(e.key, () => e.preventDefault());
   }
+
+  useEffect(() => {
+    if (!open || showInput) return;
+
+    const onKeyDownExternal = (event: KeyboardEvent) => {
+      const active = document.activeElement;
+      if (!active || !anchorRef?.current?.contains(active)) return;
+      handleKeyboardNavigate(event.key, () => event.preventDefault());
+    };
+
+    window.addEventListener('keydown', onKeyDownExternal);
+    return () => window.removeEventListener('keydown', onKeyDownExternal);
+  }, [anchorRef, handleKeyboardNavigate, open, showInput]);
 
   function clearRecents() {
     try { localStorage.removeItem(RECENTS_KEY); } catch {  }
@@ -282,61 +468,71 @@ export default function CommandPalette({
 
   if (!open) return null;
 
-  const q = query.trim();
+  const q = queryValue.trim();
   const searching = q.length > 0;
   const showEmpty = searching && !loading && result && rows.length === 0;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[14vh]">
-      {}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm anim-fade-in" onClick={onClose} />
+    <div className="fixed inset-0 z-50 pointer-events-none">
+      {showInput && (
+        <button
+          type="button"
+          aria-label="Închide căutarea"
+          className="absolute inset-0 cursor-default pointer-events-auto"
+          onClick={onClose}
+        />
+      )}
 
-      {}
       <div
         role="dialog"
-        aria-modal="true"
+        aria-modal={showInput ? 'false' : undefined}
         aria-label="Paletă de comenzi"
-        className="surface-glass-strong relative w-full max-w-[640px] mx-4 rounded-2xl overflow-hidden shadow-[var(--elevation-4)] anim-scale-in"
+        style={panelStyle}
+        ref={panelRef}
+        className={`command-palette-surface fixed z-10 overflow-hidden rounded-lg pointer-events-auto ${
+          showInput ? '' : 'command-palette-anchored command-palette-attached'
+        }`}
       >
-        {}
-        <div className="flex items-center gap-3 px-4 h-14 border-b border-line">
-          <Search className="h-4 w-4 text-content-muted shrink-0" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => { setQuery(e.target.value); setActiveIdx(0); }}
-            onKeyDown={onKeyDown}
-            placeholder="Caută aplicații, acțiuni, pagini, parteneri, articole..."
-            className="flex-1 min-w-0 bg-transparent text-pm-md text-content-primary placeholder:text-content-muted outline-none"
-          />
-          {loading && <Loader2 className="h-4 w-4 animate-spin text-content-muted" />}
-          {query && !loading && (
-            <button
-              type="button"
-              onClick={() => { setQuery(''); setResult(null); inputRef.current?.focus(); }}
-              aria-label="Șterge căutarea"
-              className="h-5 w-5 inline-flex items-center justify-center rounded-lg text-content-muted hover:text-content-primary hover:bg-surface-tertiary transition-smooth duration-150 active:scale-95 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] anim-scale-in"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-          <kbd className="shrink-0 px-1.5 py-0.5 rounded-lg border border-line bg-surface-secondary text-pm-2xs font-medium text-content-muted">
-            Esc
-          </kbd>
-        </div>
+        {showInput && (
+          <div className="command-palette-input-row flex items-center gap-2 px-3">
+            <Search className="h-4 w-4 shrink-0 text-content-muted" strokeWidth={2.25} />
+            <input
+              ref={inputRef}
+              type="text"
+              value={queryValue}
+              onChange={(e) => { setQueryValue(e.target.value); setActiveIdx(0); }}
+              onKeyDown={onKeyDown}
+              placeholder="Caută…"
+              aria-label="Caută"
+              className="command-palette-input min-w-0 flex-1 bg-transparent outline-none"
+            />
+            {loading && <Loader2 className="h-4 w-4 animate-spin text-content-muted" />}
+            {queryValue && !loading && (
+              <button
+                type="button"
+                onClick={() => { setQueryValue(''); setResult(null); inputRef.current?.focus(); }}
+                aria-label="Șterge căutarea"
+                className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-content-muted hover:bg-surface-tertiary hover:text-content-primary transition-smooth duration-150 focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+            <kbd className="command-palette-kbd shrink-0">
+              Esc
+            </kbd>
+          </div>
+        )}
 
-        {}
-        <div ref={listRef} className="max-h-[52vh] overflow-y-auto py-1.5">
+        <div ref={listRef} className="command-palette-list overflow-y-auto py-1">
           {showEmpty && (
-            <div className="px-4 py-10 text-center anim-fade-in">
+            <div className="px-4 py-8 text-center">
               <p className="text-pm-base text-content-secondary">Nimic găsit — încearcă alt termen.</p>
               <p className="text-pm-sm text-content-muted mt-1">Caută pagini, acțiuni, parteneri sau articole.</p>
             </div>
           )}
 
           {searching && loading && rows.length === 0 && (
-            <div className="flex items-center gap-2 px-4 py-6 text-pm-sm text-content-muted anim-fade-in">
+            <div className="flex items-center gap-2 px-4 py-6 text-pm-sm text-content-muted">
               <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" /> Se caută...
             </div>
           )}
@@ -345,13 +541,13 @@ export default function CommandPalette({
             const gm = GROUP_META[section.group];
             const GroupIcon = gm?.icon;
             return (
-              <div key={section.group} className="mb-1">
-                <div className="flex items-center gap-2 px-4 pt-2 pb-1">
+              <div key={section.group} className="command-palette-section">
+                <div className="command-palette-section-label flex items-center gap-1.5">
                   {GroupIcon && <GroupIcon className={`h-3 w-3 shrink-0 ${gm.color}`} />}
-                  <span className="text-pm-eyebrow uppercase text-content-muted truncate">
+                  <span className="truncate">
                     {section.group}
                   </span>
-                  <span className="ml-auto shrink-0 text-pm-2xs text-content-muted tabular-nums">{section.rows.length}</span>
+                  <span className="ml-auto shrink-0 tabular-nums">{section.rows.length}</span>
                 </div>
                 <ul className="px-1.5">
                   {section.rows.map((row) => {
@@ -365,21 +561,21 @@ export default function CommandPalette({
                           data-row-idx={flatIdx}
                           onClick={() => run(row)}
                           onMouseEnter={() => setActiveIdx(flatIdx)}
-                          className={`w-full text-left px-2.5 rounded-lg py-2 flex items-center gap-3 transition-smooth duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)] ${
-                            isActive ? 'bg-accent/10' : 'hover:bg-surface-tertiary/50'
+                          className={`command-palette-row flex w-full items-center gap-2 text-left transition-smooth duration-150 focus-visible:outline-none ${
+                            isActive ? 'is-active' : ''
                           }`}
                         >
-                          <RowIcon className={`h-4 w-4 shrink-0 ${isActive ? row.iconColor : 'text-content-muted'}`} />
+                          <RowIcon className={`h-4 w-4 shrink-0 ${isActive ? 'text-white' : 'text-content-muted'}`} />
                           <span className="min-w-0 flex-1">
-                            <span className={`block text-pm-base truncate ${isActive ? 'text-content-primary font-medium' : 'text-content-secondary'}`}>
+                            <span className="command-palette-row-title block truncate">
                               {row.title}
                             </span>
                             {row.subtitle && (
-                              <span className="block text-pm-xs text-content-muted truncate">{row.subtitle}</span>
+                              <span className="command-palette-row-subtitle block truncate">{row.subtitle}</span>
                             )}
                           </span>
                           {row.shortcut && (
-                            <kbd className="shrink-0 font-mono text-pm-2xs px-1.5 py-0.5 rounded-lg border border-line bg-surface-secondary text-content-muted">
+                            <kbd className="command-palette-kbd shrink-0 font-mono">
                               {formatKeys(row.shortcut)}
                             </kbd>
                           )}
@@ -396,15 +592,14 @@ export default function CommandPalette({
             <button
               type="button"
               onClick={clearRecents}
-              className="mt-1 mx-1.5 px-3 py-1.5 inline-flex items-center gap-1.5 rounded-lg text-pm-2xs text-content-muted hover:text-content-secondary hover:bg-surface-tertiary/50 transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
+              className="mt-1 mx-1.5 px-3 py-1.5 inline-flex items-center gap-1.5 rounded-md text-pm-2xs text-content-muted hover:text-content-secondary hover:bg-surface-tertiary/50 transition-smooth duration-150 active:scale-[0.98] focus-visible:outline-none focus-visible:shadow-[var(--ring-soft)]"
             >
               <Trash2 className="h-3 w-3 shrink-0" /> Curăță istoricul
             </button>
           )}
         </div>
 
-        {}
-        <div className="flex items-center gap-4 px-4 py-2 border-t border-line text-pm-2xs text-content-muted">
+        <div className="command-palette-footer flex items-center gap-4 px-3 py-1.5 text-pm-2xs text-content-muted">
           <span><kbd className="font-mono">↑↓</kbd> navighează</span>
           <span><kbd className="font-mono">↵</kbd> deschide</span>
           <span><kbd className="font-mono">Esc</kbd> închide</span>

@@ -1,7 +1,43 @@
 import { STORAGE_KEYS, getStorage, setStorage, removeStorage } from './localStorage';
 import { getRuntimeWindow, isBrowserWebRuntime } from '@/lib/runtime';
 
-const BUILD_DEFAULT_SERVER_URL: string = (import.meta.env.VITE_DEFAULT_SERVER_URL || 'https://automatix.online').trim().replace(/\/+$/, '');
+const BUILD_DEFAULT_SERVER_URL: string = (import.meta.env.VITE_DEFAULT_SERVER_URL || 'https://app.automatix.online').trim().replace(/\/+$/, '');
+
+// Raw backend base (no /t/<slug> suffix): the in-app override or the build default.
+function rawServerBase(): string {
+  const stored = getStorage(STORAGE_KEYS.SERVER_URL) || BUILD_DEFAULT_SERVER_URL;
+  return stored || '';
+}
+
+// A base counts as "remote cloud" when it's an https host that isn't loopback —
+// i.e. app.automatix.online, not a localhost/LAN dev server. Cloud clients use
+// the login broker + /t/<slug> tenant routing (multi-tenant), exactly like the
+// browser web app; a desktop pointed at a loopback/http server stays in the
+// classic single-server (direct login) mode.
+function isRemoteCloudBase(base: string): boolean {
+  if (!base) return false;
+  try {
+    const u = new URL(base);
+    if (u.protocol !== 'https:') return false;
+    const h = u.hostname;
+    return h !== 'localhost' && h !== '127.0.0.1' && h !== '::1';
+  } catch { return false; }
+}
+
+/** True for the browser web app OR a desktop shell pointed at the remote cloud.
+ *  Both go through the login broker and per-tenant /t/<slug> routing. */
+export function isCloudClient(): boolean {
+  if (isBrowserWebRuntime()) return true;
+  return isRemoteCloudBase(rawServerBase());
+}
+
+/** Server ORIGIN without any /t/<slug> suffix — where the login broker lives.
+ *  Web → the page origin; desktop → the configured/default backend base. */
+export function getServerOrigin(): string {
+  const w = getRuntimeWindow();
+  if (isBrowserWebRuntime() && w) return w.location.origin;
+  return rawServerBase();
+}
 
 
 
@@ -39,8 +75,15 @@ export function getServerUrl(): string {
     return slug ? `${w.location.origin}/t/${slug}` : w.location.origin;
   }
 
-  const stored = getStorage(STORAGE_KEYS.SERVER_URL) || BUILD_DEFAULT_SERVER_URL;
-  return stored || '';
+  // Desktop / configured-server mode. A desktop pointed at the remote cloud gets
+  // the SAME per-tenant /t/<slug> routing once the broker resolves the firm, so
+  // it behaves exactly like the web client; a loopback/LAN server does not.
+  const base = rawServerBase();
+  if (isRemoteCloudBase(base)) {
+    const slug = getStorage(STORAGE_KEYS.TENANT_SLUG);
+    return slug ? `${base}/t/${slug}` : base;
+  }
+  return base;
 }
 
 
